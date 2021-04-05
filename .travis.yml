@@ -1,0 +1,61 @@
+language: python
+cache: pip
+python:
+  - "3.6"      # current default Python on Travis CI
+  - "3.7"
+  - "3.8"
+
+# command to install dependencies
+install:
+  - python -m pip install --upgrade pip  
+  - pip install .
+  - pip install -r requirements-test.txt
+  - pip install codecov
+
+
+# before_script:
+#   export PYTHONPATH=deeplite_torch_zoo/src/objectdetection/mb_ssd/repo/:deeplite_torch_zoo/src/segmentation/deeplab/repo:$PYTHONPATH
+
+# command to run tests
+script:
+  - pylint deeplite_torch_zoo/wrappers/ --ignore-docstrings yes --ignore-comments yes --disable=W0614,W0401,W0613,C0301,E0401
+  - pytest
+  - codecov
+
+before_deploy:
+  - python setup.py install
+  - python setup.py bdist_wheel
+  - pip install -U s3pypi
+
+deploy:
+  # Prod deployment
+  - provider: releases
+    token: $GITHUB_TOKEN
+    skip_cleanup: true
+    name: v$TRAVIS_TAG
+    overwrite: true
+    file_glob: true
+    file: dist/*
+    on:
+      branch: master
+      tags: true
+      condition: "$TRAVIS_TAG =~ -release$"
+
+  # Prod deployment
+  # - provider: pypi
+  #   username: "__token__"
+  #   password: $PYPITOKEN
+  #   skip_existing: true
+  #   on:
+  #     branch: master
+  #     tags: true
+  #     condition: "$TRAVIS_TAG =~ -release$"
+
+  #Stage deployment
+  - provider: script
+    script: s3pypi --bucket $AWS_BUCKET --region $AWS_REGION --force --private --no-sdist --dist-path dist --secret deeplite-stage
+    skip_cleanup: true
+    on:
+      branch: master
+      tags: true
+      condition: "$TRAVIS_TAG =~ -stage$"

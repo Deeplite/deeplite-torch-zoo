@@ -1,0 +1,21 @@
+Net:
+  enc_type: 'resnet18'
+  dec_type: 'unet_scse'
+  num_filters: 8
+  pretrained: True
+Data:
+  dataset: 'pascal'
+  target_size: (512, 512)
+Train:
+  max_epoch: 20
+  batch_size: 2
+  fp16: True
+  resume: False
+  pretrained_path:
+Loss:
+  loss_type: 'Lovasz'
+  ignore_index: 255
+Optimizer:
+  mode: 'adam'
+  base_lr: 0.001
+  t_max: 10

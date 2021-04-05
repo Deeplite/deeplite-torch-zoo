@@ -1,0 +1,21 @@
+Net:
+  enc_type: 'xception65'
+  dec_type: 'aspp'
+  output_stride: 8
+  output_channels: 21
+Data:
+  dataset: 'pascal'
+  target_size: (512, 512)
+Train:
+  max_epoch: 200
+  batch_size: 2
+  fp16: False
+  resume: False
+  pretrained_path: data/model/segmentation/pascal21/pascal_deeplabv3p/model.pth
+Loss:
+  loss_type: 'Lovasz'
+  ignore_index: 255
+Optimizer:
+  mode: 'sgd'
+  base_lr: 0.007
+  t_max: 30

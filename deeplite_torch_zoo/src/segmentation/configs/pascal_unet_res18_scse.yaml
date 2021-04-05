@@ -1,0 +1,22 @@
+Net:
+  enc_type: 'resnet18'
+  dec_type: 'unet_scse'
+  num_filters: 8
+  pretrained: True
+  output_channels: 3
+Data:
+  dataset: 'pascal'
+  target_size: (512, 512)
+Train:
+  max_epoch: 300
+  batch_size: 8
+  fp16: False
+  resume: False
+  pretrained_path: #'deeplite_torch_zoo/data/model/segmentation/pascal/pascal_unet_res18_scse/model.pth'
+Loss:
+  loss_type: 'CrossEntropy2d'
+  ignore_index: 255
+Optimizer:
+  mode: 'adam'
+  base_lr: 0.001
+  t_max: 10
