@@ -42,14 +42,16 @@ deploy:
       condition: "$TRAVIS_TAG =~ -release$"
 
   # Prod deployment
-  # - provider: pypi
-  #   username: "__token__"
-  #   password: $PYPITOKEN
-  #   skip_existing: true
-  #   on:
-  #     branch: master
-  #     tags: true
-  #     condition: "$TRAVIS_TAG =~ -release$"
+  - provider: pypi
+    username: "__token__"
+    password: $PYPITOKEN
+    skip_existing: true
+    distributions: "bdist_wheel"
+    #skip_cleanup: true
+    on:
+      branch: master
+      tags: true
+      condition: "$TRAVIS_TAG =~ -release$"
 
   #Stage deployment
   - provider: script
