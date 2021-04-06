@@ -6,6 +6,8 @@ from setuptools.command.sdist import sdist
 from setuptools import setup, find_packages
 from subprocess import check_call
 
+with open('LICENSE.md') as f:
+    license = f.read()
 
 # Package
 HERE = pathlib.Path(__file__).parent
@@ -94,7 +96,7 @@ setup(
     },
     name="deeplite-torch-zoo",
     version="1.0.0",
-    description="deeplite Torch Zoo",
+    description="Deeplite Torch Zoo",
     long_description="The deeplite-torch-zoo package is a collection of popular model architectures and their datasets for deep learning for pytorch framework.",
     author="Deeplite",
     author_email="info@deeplite.ai",

@@ -1,0 +1,25 @@
+Deeplite Torch Zoo
+Copyright 2021 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+This product includes software from the NVIDIA's DeepLearningExamples project (Apache 2.0)
+https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD
+
+This product includes software from the Yolov3 project (GNU General Public License v3.0)
+* Copyright (c) 2007 Free Software Foundation, Inc.
+* https://github.com/ultralytics/yolov3
+
+This product includes software from the Yolov5 project (GNU General Public License v3.0)
+* Copyright (c) 2007 Free Software Foundation, Inc.
+* https://github.com/ultralytics/yolov5
+
+This product includes software from the pytorch-fcn project
+ * https://github.com/wkentaro/pytorch-fcn
+ * Copyright (C) 2017 - 2019 Kentaro Wada.
+ * Licensed under the MIT License;
+
+This product includes software from the Pytorch-UNet project (GNU General Public License v3.0)
+* Copyright (c) 2007 Free Software Foundation, Inc.
+* https://github.com/milesial/Pytorch-UNet

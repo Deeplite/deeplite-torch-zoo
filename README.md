@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.com/Deeplite/deeplite-torch-zoo.svg?token=kodd5rKMpjxQDqRCxwiV&branch=master)](https://travis-ci.com/Deeplite/deeplite-torch-zoo) [![codecov](https://codecov.io/gh/Deeplite/deeplite-torch-zoo/branch/master/graph/badge.svg?token=AVTp3PW5UP)](https://codecov.io/gh/Deeplite/deeplite-torch-zoo)
 
-
 # Deeplite Torch Zoo
 
 The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and their benchmark datasets for PyTorch framework. The models are grouped under different benchmark datasets and also under different task types such as classification, object detection, and segmentation. The primary aim of this ``deeplite-torch-zoo`` is to boostrap applications by starting with the most suitable pretrained models. In addition, the pretrained models from ``deeplite-torch-zoo`` could be used as a good starting point for optimizing model architectures using our [deeplite_engine](https://deeplite.deeplite.ai/) 
@@ -195,11 +194,20 @@ We always welcome community contributions to expand the scope of `deeplite-torch
 NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
 
-
-
-
-
 ## Credit
 
-- The implementation of VOC dataset and its models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)  
-- The implementation of CIFAR100 models: [weiaicunzai/pytorch-cifar100](https://github.com/weiaicunzai/pytorch-cifar100)  
+### Object Detection
+- The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)  
+- The implementation of resnet-ssd: [Nvidia-SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
+- The implementation of yolov3: [ultralytics/yolov3](https://github.com/ultralytics/yolov3)
+- The implementation of yolov4: [WongKinYiu/PyTorch_YOLOv4](https://github.com/WongKinYiu/PyTorch_YOLOv4)
+- The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
+
+### Segmentation
+- The implementation of deeplab: [pytorch-deeplab-xception](https://github.com/jfzhang95/pytorch-deeplab-xception)
+- The implementation of unet_scse: [nyoki-mtl/pytorch-segmentation](https://github.com/nyoki-mtl/pytorch-segmentation)
+- The implementation of fcn: [wkentaro/pytorch-fcn](https://github.com/wkentaro/pytorch-fcn)
+- The implementation of Unet: [milesial/Pytorch-UNet](https://github.com/milesial/Pytorch-UNet)
+
+### Classification
+- The implementation of CIFAR100 models: [weiaicunzai/pytorch-cifar100](https://github.com/weiaicunzai/pytorch-cifar100)
