@@ -26,6 +26,9 @@ before_deploy:
   - python setup.py install
   - python setup.py bdist_wheel
   - pip install -U s3pypi
+  - pip install sphinx
+  - pip install sphinx_rtd_theme
+  - make -C docs html
 
 deploy:
   # Prod deployment
