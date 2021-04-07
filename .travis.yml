@@ -52,6 +52,15 @@ deploy:
       branch: master
       tags: true
       condition: "$TRAVIS_TAG =~ -release$"
+  
+  - provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    local_dir: docs/_build/html
+    on:
+      branch: master
+      tags: true
+      condition: "$TRAVIS_TAG =~ -release$"
 
   #Stage deployment
   - provider: script

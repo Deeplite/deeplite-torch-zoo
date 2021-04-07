@@ -9,6 +9,9 @@ from subprocess import check_call
 with open('LICENSE.md') as f:
     license = f.read()
 
+with open('README.md') as f:
+    long_description = f.read()
+
 # Package
 HERE = pathlib.Path(__file__).parent
 
@@ -96,12 +99,13 @@ setup(
     },
     name="deeplite-torch-zoo",
     version="1.0.0",
-    description="Deeplite Torch Zoo",
-    long_description="The deeplite-torch-zoo package is a collection of popular model architectures and their datasets for deep learning for pytorch framework.",
+    description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    license="Multi-licensing",
     author="Deeplite",
-    author_email="info@deeplite.ai",
-    url="https://www.deeplite.ai",
-    license=license,
+    author_email="support@deeplite.ai",
+    url="https://github.com/Deeplite/deeplite-torch-zoo",
     include_package_data=True,
     packages=find_packages(exclude=["tests*"]),
     tests_require=['pytest', 'pylint'],
