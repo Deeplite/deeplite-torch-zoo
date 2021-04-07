@@ -31,7 +31,6 @@ INSTALL_REQUIRES = [
     "tensorboardX",
     "mmcv==1.2.0",
     "json-tricks>=3.15.4",
-    "poseval@git+https://github.com/svenkreiss/poseval.git#egg=poseval-0.1.0",
     "black",
     "isort",
 ]
