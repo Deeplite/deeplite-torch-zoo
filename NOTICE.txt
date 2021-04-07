@@ -1,8 +1,12 @@
 Deeplite Torch Zoo
-Copyright 2021 The Apache Software Foundation
 
-This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
+=======================================================================
+Software under third_party
+=======================================================================
+Software libraries under third_party are provided as github submodule
+links, and their content is not part of the "Deeplite Torch Zoo" codebase. Their
+licences can be found under the respective software repositories.
+
 
 This product includes software from the NVIDIA's DeepLearningExamples project (Apache 2.0)
 https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD
