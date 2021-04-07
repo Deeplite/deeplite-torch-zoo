@@ -23,3 +23,13 @@ This product includes software from the pytorch-fcn project
 This product includes software from the Pytorch-UNet project (GNU General Public License v3.0)
 * Copyright (c) 2007 Free Software Foundation, Inc.
 * https://github.com/milesial/Pytorch-UNet
+
+This product includes software from the pytorch-cifar project
+ * https://github.com/kuangliu/pytorch-cifar
+ * Copyright (c) 2017 liukuang
+ * Licensed under the MIT License;
+
+This product includes software from the pytorch-ssd project
+ * https://github.com/qfgaohao/pytorch-ssd
+ * Copyright (c) 2019 Hao Gao
+ * Licensed under the MIT License;
