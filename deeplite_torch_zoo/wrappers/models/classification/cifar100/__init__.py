@@ -1,6 +1,5 @@
 from .densenet import *
 from .googlenet import *
-from .inceptionv4 import *
 from .mobilenetv1 import *
 from .mobilenetv2 import *
 from .preact_resnet import *
