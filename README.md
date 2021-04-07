@@ -214,4 +214,6 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - The implementation of Unet: [milesial/Pytorch-UNet](https://github.com/milesial/Pytorch-UNet)
 
 ### Classification
-- The implementation of CIFAR100 models: [weiaicunzai/pytorch-cifar100](https://github.com/weiaicunzai/pytorch-cifar100)
+- The implementation of models on CIFAR100 dataset: [kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
+- The implementation of Mobilenetv1 model on VWW dataset: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
+- The implementation of models on Imagenet dataset: [pytorch/vision](https://github.com/pytorch/vision)
