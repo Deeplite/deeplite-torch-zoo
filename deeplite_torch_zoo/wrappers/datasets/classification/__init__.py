@@ -6,3 +6,4 @@ except ImportError:
 from .cifar100 import *
 from .imagenet import *
 from .mnist import *
+from .vww import *

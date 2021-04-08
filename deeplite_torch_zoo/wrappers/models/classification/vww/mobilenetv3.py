@@ -1,24 +1,33 @@
 from torch.hub import load_state_dict_from_url
 
-from deeplite_torch_zoo.src.classification.mobilenetv3 import MobileNetV3
+from deeplite_torch_zoo.src.classification.mobilenetv3 import mobilenetv3_large, mobilenetv3_small
 
-__all__ = ["mobilenet_v3_vww"]
+__all__ = ["mobilenetv3_small_vww", "mobilenetv3_large_vww"]
 
 model_urls = {
-    "mobilenetv3": "http://download.deeplite.ai/zoo/models/mobilenetv3-vww-1d2be1e7d5473081.pth",
+    "mobilenetv3_small": "http://download.deeplite.ai/zoo/models/mobilenetv3-small-vww-75_89-c7dca1dbe9eb5629.pth",
+    "mobilenetv3_large": "http://download.deeplite.ai/zoo/models/mobilenetv3-large-vww-77_42-36fb23e3d8c3664b.pth",
 }
 
 
-def _mobilenetv3_vww(arch, pretrained=False, progress=True, device='cuda'):
-    model = MobileNetV3(num_classes=2)
+def _mobilenetv3_vww(arch="small", pretrained=False, progress=True, device='cuda'):
+    if arch == "small":
+        model = mobilenetv3_small(num_classes=2)
+    elif arch == "large":
+        model = mobilenetv3_large(num_classes=2)
+
 
     if pretrained:
         state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True
+            model_urls[f"mobilenetv3_{arch}"], progress=progress, check_hash=True
         )
         model.load_state_dict(state_dict)
     return model.to(device)
 
 
-def mobilenet_v3_vww(pretrained=False, progress=True, device='cuda'):
-    return _mobilenetv3_vww("mobilenetv3", pretrained=pretrained, progress=progress, device=device)
+def mobilenetv3_small_vww(pretrained=False, progress=True, device='cuda'):
+    return _mobilenetv3_vww(arch="small", pretrained=pretrained, progress=progress, device=device)
+
+
+def mobilenetv3_large_vww(pretrained=False, progress=True, device='cuda'):
+    return _mobilenetv3_vww(arch="large", pretrained=pretrained, progress=progress, device=device)
