@@ -12,9 +12,6 @@ __all__ = ["get_vww"]
 def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", **kwargs):
 
     def assign_device(x, device="cuda"):
-        #if device == "cuda":
-        #    return x
-        #import pdb; pdb.set_trace()
         return [v.to(device) for v in x]
 
     train_dataset = pyvww.pytorch.VisualWakeWordsClassification(
@@ -47,7 +44,6 @@ def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", **kwargs
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
-        #pin_memory=True,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x), device=device),
     )
@@ -56,7 +52,6 @@ def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", **kwargs
         test_dataset,
         batch_size=batch_size,
         shuffle=False,
-        #pin_memory=True,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x)),
     )
