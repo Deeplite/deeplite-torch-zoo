@@ -83,16 +83,6 @@ class TestModelsFake(unittest.TestCase):
         y = model(self._random_imagenet_input_tensor)
         self.assertEqual(y.shape, (3, 2))
 
-    def test_mobilenetv3_vww(self):
-        model = get_model_by_name(
-            model_name="mobilenet_v3",
-            dataset_name="vww",
-            pretrained=True,
-            progress=False,
-            device="cpu",
-        )
-        y = model(self._random_imagenet_input_tensor)
-        self.assertEqual(y.shape, (3, 2))
 
     def test_mobilenetv1_vww(self):
         model = get_model_by_name(
@@ -141,17 +131,6 @@ class TestModelsFake(unittest.TestCase):
     def test_densenet121_cifar100(self):
         model = get_model_by_name(
             model_name="densenet121",
-            dataset_name="cifar100",
-            pretrained=True,
-            progress=False,
-            device="cpu",
-        )
-        y = model(self._random_cifar100_input_tensor)
-        self.assertEqual(y.shape, (1, 100))
-
-    def test_inceptionv4_cifar100(self):
-        model = get_model_by_name(
-            model_name="inception_v4",
             dataset_name="cifar100",
             pretrained=True,
             progress=False,

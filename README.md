@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="deeplite-logo-color.png" />
+  <img src="https://github.com/Deeplite/deeplite-torch-zoo/raw/master/deeplite-logo-color.png" />
 </p>
 
 [![Build Status](https://travis-ci.com/Deeplite/deeplite-torch-zoo.svg?token=kodd5rKMpjxQDqRCxwiV&branch=master)](https://travis-ci.com/Deeplite/deeplite-torch-zoo) [![codecov](https://codecov.io/gh/Deeplite/deeplite-torch-zoo/branch/master/graph/badge.svg?token=AVTp3PW5UP)](https://codecov.io/gh/Deeplite/deeplite-torch-zoo)
@@ -181,13 +181,13 @@ For instance ``list_models("yolo3")`` will provide the following result. Similar
 
 # Benchmark Results
 
-Please refer to our [documentation](https://neutrino.deeplite.ai/documentation/zoo.html#zoo-benchmark-results) for the detailed performance metrics of the pretrained models available in the ``deeplite-torch-zoo``. After downloading a model, please evaluate the model using [deeplite-profiler](https://neutrino.deeplite.ai/documentation/profiler.html) to verify the performance metric values. However, one may see different numbers for the execution time as the target hardware and/or the load on the system may impact it.
+Please refer to our [documentation](https://docs.deeplite.ai/neutrino/zoo.html#zoo-benchmark-results) for the detailed performance metrics of the pretrained models available in the ``deeplite-torch-zoo``. After downloading a model, please evaluate the model using [deeplite-profiler](https://docs.deeplite.ai/neutrino/profiler.html) to verify the performance metric values. However, one may see different numbers for the execution time as the target hardware and/or the load on the system may impact it.
 
 # Contribute a Model/Dataset to the Zoo
 
 > **_NOTE:_**  If you looking for an SDK documentation, please head over [here](https://deeplite.github.io/deeplite-torch-zoo/).
 
-We always welcome community contributions to expand the scope of `deeplite-torch-zoo` and also to have additional new models and datasets. Please refer to the [documentation](https://neutrino.deeplite.ai/documentation/zoo.html#contribute-a-model-dataset-to-the-zoo) for the detailed steps on how to add a model and dataset. In general, we follow the `fork-and-pull` Git workflow.
+We always welcome community contributions to expand the scope of `deeplite-torch-zoo` and also to have additional new models and datasets. Please refer to the [documentation](https://docs.deeplite.ai/neutrino/zoo.html#contribute-a-model-dataset-to-the-zoo) for the detailed steps on how to add a model and dataset. In general, we follow the `fork-and-pull` Git workflow.
 
  1. **Fork** the repo on GitHub
  2. **Clone** the project to your own machine
@@ -214,4 +214,6 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - The implementation of Unet: [milesial/Pytorch-UNet](https://github.com/milesial/Pytorch-UNet)
 
 ### Classification
-- The implementation of CIFAR100 models: [weiaicunzai/pytorch-cifar100](https://github.com/weiaicunzai/pytorch-cifar100)
+- The implementation of models on CIFAR100 dataset: [kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
+- The implementation of Mobilenetv1 model on VWW dataset: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
+- The implementation of models on Imagenet dataset: [pytorch/vision](https://github.com/pytorch/vision)
