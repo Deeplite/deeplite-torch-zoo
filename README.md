@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="https://github.com/Deeplite/deeplite-torch-zoo/raw/master/deeplite-logo-color.png" />
+  <img src="https://docs.deeplite.ai/neutrino/_static/content/deeplite-logo-color.png" />
 </p>
 
 [![Build Status](https://travis-ci.com/Deeplite/deeplite-torch-zoo.svg?token=kodd5rKMpjxQDqRCxwiV&branch=master)](https://travis-ci.com/Deeplite/deeplite-torch-zoo) [![codecov](https://codecov.io/gh/Deeplite/deeplite-torch-zoo/branch/master/graph/badge.svg?token=AVTp3PW5UP)](https://codecov.io/gh/Deeplite/deeplite-torch-zoo)
 
 # Deeplite Torch Zoo
 
-The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and their benchmark datasets for PyTorch framework. The models are grouped under different benchmark datasets and also under different task types such as classification, object detection, and segmentation. The primary aim of this ``deeplite-torch-zoo`` is to boostrap applications by starting with the most suitable pretrained models. In addition, the pretrained models from ``deeplite-torch-zoo`` could be used as a good starting point for optimizing model architectures using our [deeplite_engine](https://deeplite.deeplite.ai/) 
+The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and benchmark datasets for PyTorch framework. The models are grouped under different datasets and different task types such as classification, object detection, and segmentation. The primary aim of this ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html) 
 
 * [Installation](#Installation)
     * [Install using pip](#Install-using-pip)
