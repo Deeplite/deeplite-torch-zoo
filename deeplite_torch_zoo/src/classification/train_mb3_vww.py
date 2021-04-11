@@ -40,7 +40,7 @@ def test_loop(dataloader, model, loss_fn):
 
 
 
-def train(arch_type="small", BATCH_SIZE=128, learning_rate=1e-3):
+def train(arch_type="small", BATCH_SIZE=128, learning_rate=1e-2):
     if arch_type == "small":
         model = mobilenetv3_small_vww(pretrained=True)
     elif arch_type == "large":
@@ -57,14 +57,14 @@ def train(arch_type="small", BATCH_SIZE=128, learning_rate=1e-3):
     train_dataloader = datasplit["train"]
     test_dataloader = datasplit["test"]
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    epochs = 30
+    epochs = 100
     for t in range(0, epochs):
         print(f"Epoch {t+1}\n-------------------------------")
         train_loop(train_dataloader, model, loss_fn, optimizer)
         ac = test_loop(test_dataloader, model, loss_fn)
-        if t % 10 == 0:
+        if t % 5 == 0:
             torch.save(model.state_dict(), f'mobilenetv3-vww/{arch_type}/mobilenetv3-{arch_type}-vww-{ac}.pth')
     print("Done!")
 

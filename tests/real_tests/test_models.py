@@ -27,7 +27,7 @@ class TestModels(unittest.TestCase):
             batch_size=128,
         )["test"]
         ACC = mb3_vww_eval(model, test_loader)
-        self.assertEqual(abs(ACC["acc"] - 0.774) < 0.001, True)
+        self.assertEqual(abs(ACC["acc"] - 0.891) < 0.001, True)
 
     @pytest.mark.test_mb3_small_vww
     def test_mb3_small_vww(self):
@@ -43,7 +43,7 @@ class TestModels(unittest.TestCase):
             batch_size=128,
         )["test"]
         ACC = mb3_vww_eval(model, test_loader)
-        self.assertEqual(abs(ACC["acc"] - 0.758) < 0.001, True)
+        self.assertEqual(abs(ACC["acc"] - 0.892) < 0.001, True)
 
     @pytest.mark.test_vgg16_ssd_voc
     def test_vgg16_ssd_voc(self):

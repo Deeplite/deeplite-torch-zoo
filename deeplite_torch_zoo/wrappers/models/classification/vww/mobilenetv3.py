@@ -5,8 +5,8 @@ from deeplite_torch_zoo.src.classification.mobilenetv3 import mobilenetv3_large,
 __all__ = ["mobilenetv3_small_vww", "mobilenetv3_large_vww"]
 
 model_urls = {
-    "mobilenetv3_small": "http://download.deeplite.ai/zoo/models/mobilenetv3-small-vww-75_89-c7dca1dbe9eb5629.pth",
-    "mobilenetv3_large": "http://download.deeplite.ai/zoo/models/mobilenetv3-large-vww-77_42-36fb23e3d8c3664b.pth",
+    "mobilenetv3_small": "http://download.deeplite.ai/zoo/models/mobilenetv3-small-vww-89_20-5224256355d8fbfa.pth",
+    "mobilenetv3_large": "http://download.deeplite.ai/zoo/models/mobilenetv3-large-vww-89_14-e80487ebdbb41d5a.pth",
 }
 
 
