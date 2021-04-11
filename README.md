@@ -216,4 +216,5 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 ### Classification
 - The implementation of models on CIFAR100 dataset: [kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
 - The implementation of Mobilenetv1 model on VWW dataset: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
+- The implementation of Mobilenetv3 model on VWW dataset: [d-li14/mobilenetv3.pytorch](https://github.com/d-li14/mobilenetv3.pytorch)
 - The implementation of models on Imagenet dataset: [pytorch/vision](https://github.com/pytorch/vision)
