@@ -4,7 +4,7 @@ import os
 from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.coco import CocoDetectionBoundingBox
 
 
-__all__ = ["get_coco_for_fasterrcnn_resnet50_fpn"]
+__all__ = ["get_coco_for_fasterrcnn_resnet50_fpn", "get_coco_for_maskrcnn_resnet50_fpn"]
 
 
 def _get_coco_for_rcnn(
@@ -56,3 +56,13 @@ def get_coco_for_fasterrcnn_resnet50_fpn(
             val_ann_file="annotations/instances_val2017.json",
             val_dir="val2017",
         )
+def get_coco_for_maskrcnn_resnet50_fpn(
+    data_root,
+    batch_size=32,
+    **kwargs,
+):
+    return get_coco_for_fasterrcnn_resnet50_fpn(
+        data_root=data_root,
+        batch_size=batch_size,
+    )
+

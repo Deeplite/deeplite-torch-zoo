@@ -518,6 +518,25 @@ class TestModels(unittest.TestCase):
         )
         self.assertEqual(abs(APs["mAP"] - 0.369) < 0.001, True)
 
+    @pytest.mark.test_maskrcnn_resnet50_fpn_coco
+    def test_maskrcnn_resnet50_fpn_coco(self):
+        model = get_model_by_name(
+            model_name="maskrcnn_resnet50_fpn",
+            dataset_name="coco_80",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/coco2017/",
+            dataset_name="coco",
+            model_name="maskrcnn_resnet50_fpn",
+            batch_size=32,
+        )["test"]
+        cocoGt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
+        APs = rcnn_eval_coco(
+            model, test_loader, gt=cocoGt
+        )
+        self.assertEqual(abs(APs["mAP"] - 0.3789) < 0.001, True)
 
     @pytest.mark.test_unet_carvana
     def test_unet_carvana(self):
