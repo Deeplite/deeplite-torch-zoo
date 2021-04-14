@@ -8,10 +8,43 @@ from pycocotools.coco import COCO
 from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_splits_by_name
 
 from deeplite_torch_zoo.wrappers.eval import (yolo_eval_func, seg_eval_func, rcnn_eval_coco,
-    vgg16_ssd_eval_func, mb1_ssd_eval_func, mb2_ssd_eval_func, mb2_ssd_lite_eval_func)
+    vgg16_ssd_eval_func, mb1_ssd_eval_func, mb2_ssd_eval_func, mb2_ssd_lite_eval_func, mb3_vww_eval)
 
 
 class TestModels(unittest.TestCase):
+
+    @pytest.mark.test_mb3_large_vww
+    def test_mb3_large_vww(self):
+        model = get_model_by_name(
+            model_name="mobilenetv3_large",
+            dataset_name="vww",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/vww",
+            dataset_name="vww",
+            batch_size=128,
+        )["test"]
+        ACC = mb3_vww_eval(model, test_loader)
+        self.assertEqual(abs(ACC["acc"] - 0.891) < 0.001, True)
+
+    @pytest.mark.test_mb3_small_vww
+    def test_mb3_small_vww(self):
+        model = get_model_by_name(
+            model_name="mobilenetv3_small",
+            dataset_name="vww",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/vww",
+            dataset_name="vww",
+            batch_size=128,
+        )["test"]
+        ACC = mb3_vww_eval(model, test_loader)
+        self.assertEqual(abs(ACC["acc"] - 0.892) < 0.001, True)
+
     @pytest.mark.test_vgg16_ssd_voc
     def test_vgg16_ssd_voc(self):
         model = get_model_by_name(
