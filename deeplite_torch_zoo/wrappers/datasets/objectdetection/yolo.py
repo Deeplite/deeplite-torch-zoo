@@ -22,7 +22,7 @@ def get_coco_for_yolo(
 ):
     train_trans = random_transform_fn
     train_annotate = os.path.join(data_root, "annotations/instances_train2017.json")
-    train_coco_root = os.path.join(data_root, "images/train2017")
+    train_coco_root = os.path.join(data_root, "train2017")
     train_coco = CocoDetectionBoundingBox(
         train_coco_root,
         train_annotate,
@@ -41,7 +41,7 @@ def get_coco_for_yolo(
     )
 
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
-    val_coco_root = os.path.join(data_root, "images/val2017")
+    val_coco_root = os.path.join(data_root, "val2017")
     val_coco = CocoDetectionBoundingBox(
         val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size
     )
@@ -55,7 +55,7 @@ def get_coco_for_yolo(
         collate_fn=val_coco.collate_img_label_fn,
     )
 
-    return {"train": train_loader, "val": val_loader}
+    return {"train": train_loader, "val": val_loader, "test": val_loader}
 
 
 def get_image_to_folder_for_yolo(data_root, batch_size=128, num_workers=4, **kwargs):

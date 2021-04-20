@@ -49,6 +49,49 @@ def default_transform_fn(img_size):
     )
 
 
+def tesnorize_transform_fn(img_size):
+    return ComposeWithLabel(
+        [
+            tv_tf.ToTensor(),
+        ]
+    )
+
+
+class Compose(object):
+    """Composes several augmentations together.
+    Args:
+        transforms (List[Transform]): list of transforms to compose.
+    Example:
+        >>> augmentations.Compose([
+        >>>     transforms.CenterCrop(10),
+        >>>     transforms.ToTensor(),
+        >>> ])
+    """
+
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, img, boxes=None, labels=None):
+        for t in self.transforms:
+            img, boxes, labels = t(img, boxes, labels)
+        return img, boxes, labels
+
+
+class ToTensor(object):
+    def __call__(self, cvimage, boxes=None, labels=None):
+        return torch.from_numpy(cvimage.astype(np.float32)).permute(2, 0, 1), boxes, labels
+
+
+class TensorizeTransform:
+    def __init__(self, **kwargs):
+        self.transform = Compose([
+            ToTensor(),
+        ])
+
+    def __call__(self, image, boxes, labels):
+        return self.transform(image, boxes, labels)
+
+
 def random_transform_fn(img_size):
     return ComposeWithLabel(
         [

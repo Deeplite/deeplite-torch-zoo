@@ -30,6 +30,7 @@ INSTALL_REQUIRES = [
     "torchfcn",
     "tensorboardX",
     "mmcv==1.2.0",
+    "xtcocotools",
     "json-tricks>=3.15.4",
     "black",
     "isort",

@@ -8,10 +8,30 @@ from pycocotools.coco import COCO
 from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_splits_by_name
 
 from deeplite_torch_zoo.wrappers.eval import (yolo_eval_func, seg_eval_func, rcnn_eval_coco,
-    vgg16_ssd_eval_func, mb1_ssd_eval_func, mb2_ssd_eval_func, mb2_ssd_lite_eval_func)
+    vgg16_ssd_eval_func, mb1_ssd_eval_func, mb2_ssd_eval_func, mb2_ssd_lite_eval_func,
+    keypoint_rcnn_eval_coco)
 
 
 class TestModels(unittest.TestCase):
+
+    @pytest.mark.test_keypointrcnn_resnet50_fpn_coco
+    def test_keypointrcnn_resnet50_fpn_coco(self):
+        model = get_model_by_name(
+            model_name="keypointrcnn_resnet50_fpn",
+            dataset_name="coco_80",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            dataset_name="coco",
+            model_name="keypointrcnn_resnet50_fpn",
+        )["test"]
+        res = keypoint_rcnn_eval_coco(
+            model, data_loader=test_loader, _set="coco_384x288"
+        )
+        mAP = res["AP"]
+        self.assertEqual(abs(mAP - 0.639) < 0.001, True)
+
     @pytest.mark.test_vgg16_ssd_voc
     def test_vgg16_ssd_voc(self):
         model = get_model_by_name(
