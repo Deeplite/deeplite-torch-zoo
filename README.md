@@ -166,17 +166,17 @@ For instance ``list_models("yolo3")`` will provide the following result. Similar
 
 # Available Datasets
 
-| # | Dataset (dataset_name) | Training Instances | Test Instances       | Resolution | Comments                               | download                                                                         |
-| --|------------------------| -------------------|----------------------|----------- |----------------------------------------| -------------------------------------------------------------------------------- |
-| 1 | MNIST                  | 60,000             | 10,000               | 28x28      | Downloadable through torchvision API   | N/A                                                                              |
-| 2 | CIFAR100               | 50,000             | 10,000               | 32x32      | Downloadable through torchvision API   | N/A                                                                              |
-| 3 | VWW                    | 40,775             | 8,059                | 224x224    | Based on COCO dataset                  | [download](https://download.deeplite.ai/zoo/datasets/vww.tar.gz)   |
-| 4 | Imagenet10             | 385,244            | 15,011               | 224x224    | Subset of Imagenet2012 with 10 classes | [download](https://s3.us-east-2.amazonaws.com/download.deeplite.ai/zoo/datasets/imagenet10.tar.gz)   |
-| 5 | Imagenet16             | 180,119            | 42,437               | 224x224    | Subset of Imagenet2012 with 16 classes | [download](https://download.deeplite.ai/zoo/datasets/imagenet16.tar.gz)   |
-| 6 | Imagenet               | 1,282,168          | 50,000               | 224x224    | Imagenet2012                           | [download](https://s3.us-east-2.amazonaws.com/download.deeplite.ai/zoo/datasets/imagenet.tar.gz)   |
-| 7 | VOC2007 (Detection)    | 5,011              | 4,952                | 500xH/Wx500| 20 classes, 24,640 annotated objects   | [download](https://download.deeplite.ai/zoo/datasets/voc2007.tar.gz)   |
-| 8 | VOC2012 (Detection)    | 11,530 (train/val) | N/A                  | 500xH/Wx500| 20 classes, 27,450 annotated objects   | [download](https://download.deeplite.ai/zoo/datasets/voc2012.tar.gz)   |
-| 9 | COCO2017 (Detection)   | 117,266, 5,000(val)| 40,670               | 300x300    | 80 Classes, 1.5M object instances      | [download](https://download.deeplite.ai/zoo/datasets/coco17.tar.gz)   |
+| # | Dataset (dataset_name) | Training Instances | Test Instances       | Resolution | Comments                               |
+| --|------------------------| -------------------|----------------------|----------- |----------------------------------------|
+| 1 | MNIST                  | 60,000             | 10,000               | 28x28      | Downloadable through torchvision API   |
+| 2 | CIFAR100               | 50,000             | 10,000               | 32x32      | Downloadable through torchvision API   |
+| 3 | VWW                    | 40,775             | 8,059                | 224x224    | Based on COCO dataset                  |
+| 4 | Imagenet10             | 385,244            | 15,011               | 224x224    | Subset of Imagenet2012 with 10 classes |
+| 5 | Imagenet16             | 180,119            | 42,437               | 224x224    | Subset of Imagenet2012 with 16 classes |
+| 6 | Imagenet               | 1,282,168          | 50,000               | 224x224    | Imagenet2012                           |
+| 7 | VOC2007 (Detection)    | 5,011              | 4,952                | 500xH/Wx500| 20 classes, 24,640 annotated objects   |
+| 8 | VOC2012 (Detection)    | 11,530 (train/val) | N/A                  | 500xH/Wx500| 20 classes, 27,450 annotated objects   |
+| 9 | COCO2017 (Detection)   | 117,266, 5,000(val)| 40,670               | 300x300    | 80 Classes, 1.5M object instances      |
 
 
 # Benchmark Results
