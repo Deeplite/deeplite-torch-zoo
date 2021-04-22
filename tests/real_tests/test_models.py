@@ -29,6 +29,7 @@ class TestModels(unittest.TestCase):
         res = keypoint_rcnn_eval_coco(
             model, data_loader=test_loader, _set="coco_384x288"
         )
+        print(res)
         mAP = res["AP"]
         self.assertEqual(abs(mAP - 0.639) < 0.001, True)
 
