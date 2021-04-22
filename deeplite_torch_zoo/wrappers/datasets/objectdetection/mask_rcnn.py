@@ -101,4 +101,3 @@ def get_coco_for_maskrcnn_resnet50_fpn(
         batch_size=batch_size,
         num_workers=num_workers
     )
-
