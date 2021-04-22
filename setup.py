@@ -16,7 +16,7 @@ with open('README.md') as f:
 HERE = pathlib.Path(__file__).parent
 
 INSTALL_REQUIRES = [
-    "numpy==1.20.0",
+    "numpy==1.18.5",
     "torch==1.4.0",
     "torchvision==0.5.0",
     "opencv-python",
@@ -30,7 +30,7 @@ INSTALL_REQUIRES = [
     "torchfcn",
     "tensorboardX",
     "mmcv==1.2.0",
-    "xtcocotools",
+    "xtcocotools==1.0",
     "json-tricks>=3.15.4",
     "pyvww==0.1.1",
     "black",
