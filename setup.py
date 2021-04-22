@@ -32,6 +32,7 @@ INSTALL_REQUIRES = [
     "mmcv==1.2.0",
     "xtcocotools",
     "json-tricks>=3.15.4",
+    "pyvww==0.1.1",
     "black",
     "isort",
 ]

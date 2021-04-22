@@ -37,3 +37,8 @@ This product includes software from the pytorch-ssd project
  * https://github.com/qfgaohao/pytorch-ssd
  * Copyright (c) 2019 Hao Gao
  * Licensed under the MIT License;
+
+ This product includes software from the mobilenetv3.pytorch project
+ * https://github.com/d-li14/mobilenetv3.pytorch
+ * Copyright (c) 2019 Duo LI
+ * Licensed under the MIT License;

@@ -9,29 +9,43 @@ from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_spli
 
 from deeplite_torch_zoo.wrappers.eval import (yolo_eval_func, seg_eval_func, rcnn_eval_coco,
     vgg16_ssd_eval_func, mb1_ssd_eval_func, mb2_ssd_eval_func, mb2_ssd_lite_eval_func,
-    keypoint_rcnn_eval_coco)
+    keypoint_rcnn_eval_coco, mb3_vww_eval)
 
 
 class TestModels(unittest.TestCase):
 
-    @pytest.mark.test_keypointrcnn_resnet50_fpn_coco
-    def test_keypointrcnn_resnet50_fpn_coco(self):
+
+    @pytest.mark.test_mb3_large_vww
+    def test_mb3_large_vww(self):
         model = get_model_by_name(
-            model_name="keypointrcnn_resnet50_fpn",
-            dataset_name="coco_80",
+            model_name="mobilenetv3_large",
+            dataset_name="vww",
             pretrained=True,
             progress=False,
         )
         test_loader = get_data_splits_by_name(
-            dataset_name="coco",
-            model_name="keypointrcnn_resnet50_fpn",
+            data_root="/neutrino/datasets/vww",
+            dataset_name="vww",
+            batch_size=128,
         )["test"]
-        res = keypoint_rcnn_eval_coco(
-            model, data_loader=test_loader, _set="coco_384x288"
+        ACC = mb3_vww_eval(model, test_loader)
+        self.assertEqual(abs(ACC["acc"] - 0.891) < 0.001, True)
+
+    @pytest.mark.test_mb3_small_vww
+    def test_mb3_small_vww(self):
+        model = get_model_by_name(
+            model_name="mobilenetv3_small",
+            dataset_name="vww",
+            pretrained=True,
+            progress=False,
         )
-        print(res)
-        mAP = res["AP"]
-        self.assertEqual(abs(mAP - 0.639) < 0.001, True)
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/vww",
+            dataset_name="vww",
+            batch_size=128,
+        )["test"]
+        ACC = mb3_vww_eval(model, test_loader)
+        self.assertEqual(abs(ACC["acc"] - 0.892) < 0.001, True)
 
     @pytest.mark.test_vgg16_ssd_voc
     def test_vgg16_ssd_voc(self):
@@ -558,6 +572,25 @@ class TestModels(unittest.TestCase):
             model, test_loader, gt=cocoGt
         )
         self.assertEqual(abs(APs["mAP"] - 0.3789) < 0.001, True)
+
+    @pytest.mark.test_keypointrcnn_resnet50_fpn_coco
+    def test_keypointrcnn_resnet50_fpn_coco(self):
+        model = get_model_by_name(
+            model_name="keypointrcnn_resnet50_fpn",
+            dataset_name="coco_80",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            dataset_name="coco",
+            model_name="keypointrcnn_resnet50_fpn",
+        )["test"]
+        res = keypoint_rcnn_eval_coco(
+            model, data_loader=test_loader, _set="coco_384x288"
+        )
+        print(res)
+        mAP = res["AP"]
+        self.assertEqual(abs(mAP - 0.639) < 0.001, True)
 
     @pytest.mark.test_unet_carvana
     def test_unet_carvana(self):
