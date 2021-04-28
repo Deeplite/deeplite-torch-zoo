@@ -1,8 +1,8 @@
 import os
 import torchvision.datasets as datasets
-import torch.utils.data as data
 import torchvision.transforms as transforms
 
+import torch.utils.data as data
 from torch.utils.data.dataloader import default_collate
 
 
@@ -25,7 +25,7 @@ def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda"):
             transforms.Normalize([0.4802, 0.4481, 0.3975], [0.2302, 0.2265, 0.2262]),
         ]),
     }
-    image_datasets = {x: datasets.ImageFolder(os.path.join(data_root, x), data_transforms[x]) 
+    image_datasets = {x: datasets.ImageFolder(os.path.join(data_root, x), data_transforms[x])
                       for x in ['train', 'val']}
     dataloaders = {
             x: data.DataLoader(
