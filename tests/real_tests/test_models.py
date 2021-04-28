@@ -8,10 +8,64 @@ from pycocotools.coco import COCO
 from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_splits_by_name
 
 from deeplite_torch_zoo.wrappers.eval import (yolo_eval_func, seg_eval_func, rcnn_eval_coco,
-    vgg16_ssd_eval_func, mb1_ssd_eval_func, mb2_ssd_eval_func, mb2_ssd_lite_eval_func, mb3_vww_eval)
+    vgg16_ssd_eval_func, mb1_ssd_eval_func, mb2_ssd_eval_func, mb2_ssd_lite_eval_func, classification_eval)
 
 
 class TestModels(unittest.TestCase):
+
+    @pytest.mark.test_resnet18_tinyimagenet
+    def test_resnet18_tinyimagenet(self):
+        model = get_model_by_name(
+            model_name="resnet18",
+            dataset_name="tinyimagenet",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/TinyImageNet/",
+            dataset_name="tinyimagenet",
+            batch_size=128,
+            num_workers=0,
+        )["val"]
+        ACC = classification_eval(model, test_loader)
+        print(ACC)
+        self.assertEqual(abs(ACC["acc"] - 0.663) < 0.001, True)
+
+    @pytest.mark.test_resnet34_tinyimagenet
+    def test_resnet34_tinyimagenet(self):
+        model = get_model_by_name(
+            model_name="resnet34",
+            dataset_name="tinyimagenet",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/TinyImageNet/",
+            dataset_name="tinyimagenet",
+            batch_size=128,
+            num_workers=0,
+        )["val"]
+        ACC = classification_eval(model, test_loader)
+        print(ACC)
+        self.assertEqual(abs(ACC["acc"] - 0.686) < 0.001, True)
+
+    @pytest.mark.test_resnet50_tinyimagenet
+    def test_resnet50_tinyimagenet(self):
+        model = get_model_by_name(
+            model_name="resnet50",
+            dataset_name="tinyimagenet",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/TinyImageNet/",
+            dataset_name="tinyimagenet",
+            batch_size=128,
+            num_workers=0,
+        )["val"]
+        ACC = classification_eval(model, test_loader)
+        print(ACC)
+        self.assertEqual(abs(ACC["acc"] - 0.730) < 0.001, True)
 
     @pytest.mark.test_mb3_large_vww
     def test_mb3_large_vww(self):
@@ -26,7 +80,7 @@ class TestModels(unittest.TestCase):
             dataset_name="vww",
             batch_size=128,
         )["test"]
-        ACC = mb3_vww_eval(model, test_loader)
+        ACC = classification_eval(model, test_loader)
         self.assertEqual(abs(ACC["acc"] - 0.891) < 0.001, True)
 
     @pytest.mark.test_mb3_small_vww
@@ -42,7 +96,7 @@ class TestModels(unittest.TestCase):
             dataset_name="vww",
             batch_size=128,
         )["test"]
-        ACC = mb3_vww_eval(model, test_loader)
+        ACC = classification_eval(model, test_loader)
         self.assertEqual(abs(ACC["acc"] - 0.892) < 0.001, True)
 
     @pytest.mark.test_vgg16_ssd_voc
