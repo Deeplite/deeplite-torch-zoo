@@ -158,7 +158,7 @@ class VocDataset(Dataset):
         img, bboxes = Resize((self._img_size, self._img_size), True)(
             np.copy(img), np.copy(bboxes)
         )
-        return img, bboxes, int(Path(img_path).stem.replace("_", ""))
+        return img, bboxes, str(Path(img_path).stem)
 
 
 if __name__ == "__main__":
