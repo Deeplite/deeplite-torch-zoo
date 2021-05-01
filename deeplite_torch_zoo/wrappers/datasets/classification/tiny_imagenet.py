@@ -9,7 +9,7 @@ from torch.utils.data.dataloader import default_collate
 __all__ = ["get_tinyimagenet"]
 
 
-def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda"):
+def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda", **kwargs):
     def assign_device(x):
         return [v.to(device) for v in x]
 
@@ -32,7 +32,7 @@ def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda"):
                 image_datasets[x],
                 batch_size=batch_size,
                 shuffle=(x=="train"),
-                num_workers=num_workers,
+                num_workers=0,
                 collate_fn=lambda x: assign_device(default_collate(x))
             ) for x in ['train', 'val']
         }
