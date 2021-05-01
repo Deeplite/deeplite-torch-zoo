@@ -75,11 +75,3 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     os.makedirs(f"mobilenetv3-vww/{opt.arch}", exist_ok=True)
     train(opt.arch)
-
-
-
-
-
-
-
-
