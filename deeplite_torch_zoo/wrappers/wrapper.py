@@ -63,3 +63,15 @@ def list_models(key_word="*"):
     for _f in globals().keys():
         if key_word == "*" or key_word in _f:
             print(_f)
+
+
+def get_models_names_for(dataset_name="imagenet"):
+    dataset_name = f"_{dataset_name}*"
+    model_names = []
+    for _f in globals().keys():
+        _f += "*"
+        if dataset_name in _f:
+            model_name = _f.replace(dataset_name, '')
+            assert model_name not in model_names
+            model_names.append(model_name)
+    return model_names
