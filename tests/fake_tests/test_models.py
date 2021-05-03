@@ -3,7 +3,7 @@ import unittest
 import pytest
 import torch
 
-from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_splits_by_name
+from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_splits_by_name, get_models_names_for
 from tests.fake_tests.Datasets.FakeDataset import *
 
 
@@ -11,6 +11,27 @@ class TestModelsFake(unittest.TestCase):
     _random_mnist_input_tensor = torch.randn(1, 1, 28, 28)
     _random_cifar100_input_tensor = torch.randn(1, 3, 32, 32)
     _random_imagenet_input_tensor = torch.randn(3, 3, 224, 224)
+
+    @pytest.mark.test_torchvision_models_imagenet
+    def test_torchvision_models_imagenet(self):
+        model_names = [
+            'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'alexnet', 'vgg16', 'squeezenet1_0',
+            'densenet161', 'densenet201', 'googlenet', 'shufflenet_v2_x0_5', 'shufflenet_v2_x1_0', 'mobilenet_v2',
+            'resnext50_32x4d', 'resnext101_32x8d', 'wide_resnet50_2', 'wide_resnet101_2', 'mnasnet1_0', 'mnasnet0_5',
+            'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16_bn', 'vgg19', 'vgg19_bn', 'q_resnet18', 'q_resnet50',
+            'q_googlenet', 'q_shufflenet_v2_x0_5', 'q_shufflenet_v2_x1_0', 'q_mobilenet_v2', 'q_resnext101_32x8d',
+            #'q_inception_v3' # Commented for faster testing
+        ]
+        for model_name in model_names:
+            model = get_model_by_name(
+                model_name=model_name,
+                dataset_name="imagenet",
+                pretrained=True,
+                progress=False,
+                device="cpu",
+            )
+            y = model(self._random_imagenet_input_tensor)
+            self.assertEqual(y.shape, (3, 1000))
 
     def test_resnet18_imagenet16(self):
         model = get_model_by_name(
