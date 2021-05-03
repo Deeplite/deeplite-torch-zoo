@@ -41,8 +41,23 @@ def squeezenet1_0_imagenet(pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
+def squeezenet1_1_imagenet(pretrained=False, progress=True, device="cuda"):
+    model = models.squeezenet1_1(pretrained=pretrained)
+    return model.to(device)
+
+
+def densenet121_imagenet(pretrained=False, progress=True, device="cuda"):
+    model = models.densenet121(pretrained=pretrained)
+    return model.to(device)
+
+
 def densenet161_imagenet(pretrained=False, progress=True, device="cuda"):
     model = models.densenet161(pretrained=pretrained)
+    return model.to(device)
+
+
+def densenet169_imagenet(pretrained=False, progress=True, device="cuda"):
+    model = models.densenet169(pretrained=pretrained)
     return model.to(device)
 
 
@@ -141,11 +156,6 @@ def vgg19_bn_imagenet(pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
-def vgg13_imagenet(pretrained=False, progress=True, device="cuda"):
-    model = models.vgg13(pretrained=pretrained)
-    return model.to(device)
-
-
-def vgg13_imagenet(pretrained=False, progress=True, device="cuda"):
-    model = models.vgg13(pretrained=pretrained)
+def inception_v3_imagenet(pretrained=False, progress=True, device="cuda"):
+    model = models.inception_v3(pretrained=pretrained)
     return model.to(device)
