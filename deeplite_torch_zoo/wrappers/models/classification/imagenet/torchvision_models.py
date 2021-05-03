@@ -136,11 +136,6 @@ def vgg13_bn_imagenet(pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
-def vgg16_imagenet(pretrained=False, progress=True, device="cuda"):
-    model = models.vgg16(pretrained=pretrained)
-    return model.to(device)
-
-
 def vgg16_bn_imagenet(pretrained=False, progress=True, device="cuda"):
     model = models.vgg16_bn(pretrained=pretrained)
     return model.to(device)

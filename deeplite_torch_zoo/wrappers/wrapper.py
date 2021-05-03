@@ -75,4 +75,3 @@ def get_models_names_for(dataset_name="imagenet"):
             assert model_name not in model_names
             model_names.append(model_name)
     return model_names
-
