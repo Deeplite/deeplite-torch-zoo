@@ -17,7 +17,7 @@ def train_model(output_path, model, dataloaders, criterion, optimizer, num_epoch
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        for phase in ['train', 'val']:
+        for phase in ['train', 'test']:
             if phase == 'train':
                 model.train()
             else:
@@ -57,11 +57,11 @@ def train_model(output_path, model, dataloaders, criterion, optimizer, num_epoch
                 avg_loss = epoch_loss
                 t_acc = epoch_acc
             else:
-                val_loss = epoch_loss
-                val_acc = epoch_acc
+                test_loss = epoch_loss
+                test_acc = epoch_acc
 
         print('\nTrain Loss: {:.4f} Acc: {:.4f}'.format(avg_loss, t_acc))
-        print(  'Val Loss: {:.4f} Acc: {:.4f}'.format(val_loss, val_acc))
+        print(  'Test Loss: {:.4f} Acc: {:.4f}'.format(test_loss, test_acc))
         print()
         save_path = './models/' + str(output_path) + '/model_{}_epoch.pt'.format(epoch+1)
         torch.save(model.state_dict(), save_path)
@@ -89,6 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("--data-root", type=str, default="/neutrino/datasets/TinyImageNet/")
     parser.add_argument("--dataset-name", type=str, default="tinyimagenet")
     parser.add_argument("--num-classes", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--pretrained", type=bool, default=True)
     opt = parser.parse_args()
 
@@ -105,5 +106,5 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     # Observe that all parameters are being optimized
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    train_model(f"{opt.dataset_name}/{opt.arch}", model, dataloaders, criterion, optimizer, num_epochs=20)
+    train_model(f"{opt.dataset_name}/{opt.arch}", model, dataloaders, criterion, optimizer, num_epochs=opt.epochs)
 
