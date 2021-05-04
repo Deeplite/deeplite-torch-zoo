@@ -76,7 +76,7 @@ def get_model(arch="resnet18", num_classes=100, pretrained=True, device="cuda"):
         return eval(f"models.{arch}")(num_classes=num_classes).to(device) 
 
     weights = eval(f"models.{arch}")(pretrained=pretrained).state_dict()
-    weights = {k: v for k, v in weights.items() if 'fc' not in k}
+    weights = {k: v for k, v in weights.items() if 'fc' not in k and 'classifier' not in k}
     model = eval(f"models.{arch}")(num_classes=num_classes)
     model.load_state_dict(weights, strict=False)
     return model.to(device)
