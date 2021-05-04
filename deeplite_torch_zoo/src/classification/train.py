@@ -1,22 +1,17 @@
+import argparse
 import time, copy, sys, os
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision.datasets as datasets
-import torch.utils.data as data
-import torchvision.transforms as transforms
 import torchvision.models as models
 from deeplite_torch_zoo.wrappers import get_data_splits_by_name
 
-def train_model(output_path, model, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=5, scheduler=None):
-    if not os.path.exists('models/'+str(output_path)):
-        os.makedirs('models/'+str(output_path))
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+def train_model(output_path, model, dataloaders, criterion, optimizer, num_epochs=5):
+    if not os.path.exists('models/' + str(output_path)):
+        os.makedirs('models/' + str(output_path))
     since = time.time()
-    best_model_wts = copy.deepcopy(model.state_dict())
-    best_acc = 0.0
-    best = 0
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch+1, num_epochs))
         print('-' * 10)
@@ -24,19 +19,15 @@ def train_model(output_path, model, dataloaders, dataset_sizes, criterion, optim
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
-                if scheduler != None:
-                    scheduler.step()
-                model.train()  # Set model to training mode
+                model.train()
             else:
-                model.eval()   # Set model to evaluate mode
+                model.eval()
 
             running_loss = 0.0
             running_corrects = 0
 
             # Iterate over data.
-            for i,(inputs, labels) in enumerate(dataloaders[phase]):
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+            for i, (inputs, labels) in enumerate(dataloaders[phase]):
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -57,28 +48,17 @@ def train_model(output_path, model, dataloaders, dataset_sizes, criterion, optim
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
                 print("\rIteration: {}/{}, Loss: {}.".format(i+1, len(dataloaders[phase]), loss.item() * inputs.size(0)), end="")
-
-#                 print( (i+1)*100. / len(dataloaders[phase]), "% Complete" )
                 sys.stdout.flush()
-                
-                
-            epoch_loss = running_loss / dataset_sizes[phase]
-            epoch_acc = running_corrects.double() / dataset_sizes[phase]
+
+            num_samples = len(dataloaders[phase].dataset)
+            epoch_loss = running_loss / num_samples
+            epoch_acc = running_corrects.double() / num_samples
             if phase == 'train':
                 avg_loss = epoch_loss
                 t_acc = epoch_acc
             else:
                 val_loss = epoch_loss
                 val_acc = epoch_acc
-            
-#             print('{} Loss: {:.4f} Acc: {:.4f}'.format(
-#                 phase, epoch_loss, epoch_acc))
-
-            # deep copy the model
-            if phase == 'val' and epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best = epoch + 1
-                best_model_wts = copy.deepcopy(model.state_dict())
 
         print('\nTrain Loss: {:.4f} Acc: {:.4f}'.format(avg_loss, t_acc))
         print(  'Val Loss: {:.4f} Acc: {:.4f}'.format(val_loss, val_acc))
@@ -89,31 +69,41 @@ def train_model(output_path, model, dataloaders, dataset_sizes, criterion, optim
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
-    print('Best Validation Accuracy: {}, Epoch: {}'.format(best_acc, best))
+
+
+def get_model(arch="resnet18", num_classes=100, pretrained=True, device="cuda"):
+    if not pretrained:
+        return eval(f"models.{arch}")(num_classes=num_classes).to(device) 
+
+    weights = eval(f"models.{arch}")(pretrained=pretrained).state_dict()
+    weights = {k: v for k, v in weights.items() if 'fc' not in k}
+    model = eval(f"models.{arch}")(num_classes=num_classes)
+    model.load_state_dict(weights, strict=False)
+    return model.to(device)
 
 
 if __name__ == "__main__":
-    data_dir = '/neutrino/datasets/TinyImageNet/'
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--arch", type=str, default="resnet18")
+    parser.add_argument("--data-root", type=str, default="/neutrino/datasets/TinyImageNet/")
+    parser.add_argument("--dataset-name", type=str, default="tinyimagenet")
+    parser.add_argument("--num-classes", type=int, default=100)
+    parser.add_argument("--pretrained", type=bool, default=True)
+    opt = parser.parse_args()
+
     dataloaders = get_data_splits_by_name(
-        dataset_name="tinyimagenet",
-        data_root=data_dir,
+        dataset_name=opt.dataset_name,
+        data_root=opt.data_root,
         num_workers=0,
         batch_size=128,
         device="cuda",
     )
-    dataset_sizes = {x: len(dataloaders[x].dataset) for x in ['train', 'val']}
+    model = get_model(arch=opt.arch, num_classes=opt.num_classes, pretrained=opt.pretrained, device="cuda")
 
-    weights = models.resnet50(pretrained=True).state_dict()
-    weights = {k: v for k, v in weights.items() if 'fc' not in k}
-
-    model = models.resnet50(num_classes=100)
-    model.load_state_dict(weights, strict=False)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = model.to(device)
     #Loss Function
     criterion = nn.CrossEntropyLoss()
     # Observe that all parameters are being optimized
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    train_model("64_pre_50", model, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=20)
-
+    train_model(f"{opt.dataset_name}/{opt.arch}", model, dataloaders, criterion, optimizer, num_epochs=20)
 
