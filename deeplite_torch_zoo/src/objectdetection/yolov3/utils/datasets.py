@@ -84,13 +84,11 @@ class VocDataset(Dataset):
         labels = []
         lengths = []
         labels_with_tail = []
-        img_ids = []
         max_num_obj = 0
         for image, label, length, img_id in sample:
             images.append(image)
             labels.append(label)
             lengths.append(length)
-            img_ids.append(torch.tensor([img_id]))
             max_num_obj = max(max_num_obj, length)
         for label in labels:
             num_obj = label.size(0)
@@ -104,8 +102,7 @@ class VocDataset(Dataset):
         image_tensor = torch.stack(images)
         label_tensor = torch.stack(labels_with_tail)
         length_tensor = torch.tensor(lengths)
-        img_ids_tensor = torch.stack(img_ids)
-        return image_tensor, label_tensor, length_tensor, img_ids_tensor
+        return image_tensor, label_tensor, length_tensor, None
 
     def __load_annotations(self, anno_type):
 
