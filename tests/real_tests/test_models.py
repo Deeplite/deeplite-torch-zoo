@@ -13,6 +13,42 @@ from deeplite_torch_zoo.wrappers.eval import (yolo_eval_func, seg_eval_func, rcn
 
 class TestModels(unittest.TestCase):
 
+    @pytest.mark.test_vgg19_tinyimagenet
+    def test_vgg19_tinyimagenet(self):
+        model = get_model_by_name(
+            model_name="vgg19",
+            dataset_name="tinyimagenet",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/TinyImageNet/",
+            dataset_name="tinyimagenet",
+            batch_size=128,
+            num_workers=0,
+        )["val"]
+        ACC = classification_eval(model, test_loader)
+        print(ACC)
+        self.assertEqual(abs(ACC["acc"] - 0.728) < 0.001, True)
+
+    @pytest.mark.test_mobilenet_v2_tinyimagenet
+    def test_mobilenet_v2_tinyimagenet(self):
+        model = get_model_by_name(
+            model_name="mobilenet_v2",
+            dataset_name="tinyimagenet",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/TinyImageNet/",
+            dataset_name="tinyimagenet",
+            batch_size=128,
+            num_workers=0,
+        )["val"]
+        ACC = classification_eval(model, test_loader)
+        print(ACC)
+        self.assertEqual(abs(ACC["acc"] - 0.680) < 0.001, True)
+
     @pytest.mark.test_resnet18_tinyimagenet
     def test_resnet18_tinyimagenet(self):
         model = get_model_by_name(
