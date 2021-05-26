@@ -17,8 +17,7 @@ HERE = pathlib.Path(__file__).parent
 
 INSTALL_REQUIRES = [
     "numpy==1.18.5",
-    "torch==1.8.0",
-    "torchvision==0.9.0",
+    "torch>=1.4, <=1.8.1",
     "opencv-python",
     "scipy>=1.4.1",
     "pycocotools",
