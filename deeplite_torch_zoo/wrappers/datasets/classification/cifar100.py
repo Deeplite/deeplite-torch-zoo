@@ -5,13 +5,14 @@ import torch
 import torchvision
 from torchvision import transforms
 from torch.utils.data.dataloader import default_collate
+from torch.utils.data.distributed import DistributedSampler as DS
 
 
 __all__ = ["get_cifar100"]
 
 
 def get_cifar100(
-    data_root="", batch_size=128, num_workers=1, download=True, device="cuda", **kwargs
+    data_root="", batch_size=128, num_workers=1, download=True, device="cuda", distributed=False, **kwargs
 ):
     def assign_device(x):
         if device == "cuda":
@@ -50,10 +51,11 @@ def get_cifar100(
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=False if distributed else True,
         pin_memory=True,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x)),
+        sampler=DS(train_dataset) if distributed else None,
     )
 
     test_loader = torch.utils.data.DataLoader(
@@ -63,6 +65,7 @@ def get_cifar100(
         pin_memory=True,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x)),
+        sampler=DS(test_dataset) if distributed else None,
     )
 
     return {"train": train_loader, "test": test_loader}
