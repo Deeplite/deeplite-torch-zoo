@@ -154,7 +154,7 @@ if __name__ == "__main__":
     parser.add_argument("--data-root", type=str, default="/neutrino/datasets/TinyImageNet/")
     parser.add_argument("--dataset-name", type=str, default="tinyimagenet")
     parser.add_argument("--num-classes", type=int, default=100)
-    parser.add_argument("--epochs", type=int, default=6)
+    parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--pretrained", type=bool, default=True)
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--world_size', type=int, default=8)
