@@ -206,8 +206,8 @@ class Trainer(object):
 
                 # Print batch results
                 if (i + 1) % opt.print_freq == 0:
-                    s = ("Epoch:[ %d | %d ]    Batch:[ %d | %d ]    loss_giou: %.4f    loss_conf: %.4f    loss_cls: %.4f    loss: %.4f    lr: %g")
-                    % (epoch, self.epochs - 1, i, len(self.train_dataloader) - 1, mloss[0], mloss[1], mloss[2], mloss[3], self.optimizer.param_groups[0]["lr"])
+                    s = ("Epoch:[ %d | %d ]    Batch:[ %d | %d ]    loss_giou: %.4f    loss_conf: %.4f    loss_cls: %.4f    loss: %.4f    lr: %g") % (epoch,
+                        self.epochs - 1, i, len(self.train_dataloader) - 1, mloss[0], mloss[1], mloss[2], mloss[3], self.optimizer.param_groups[0]["lr"])
                     print(s)
 
                 # multi-sclae training (320-608 pixels) every 10 batches
@@ -217,11 +217,11 @@ class Trainer(object):
             mAP = 0
             if epoch % opt.eval_freq == 0:
                 eval_func = get_eval_func(opt.dataset_type)
-
+                test_set = opt.img_dir
+                gt = None
                 if opt.dataset_type == "voc":
                     test_set = opt.img_dir / "VOC2007"
                 elif opt.dataset_type == "coco":
-                    test_set = opt.img_dir
                     gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
                 Aps = eval_func(self.model, test_set, gt=gt, data_loader=self.val_dataloader,
                     num_classes=self.num_classes, _set=opt.dataset_type, device=self.device, net=opt.net)

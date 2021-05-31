@@ -1,10 +1,12 @@
 import cv2
 import os
 import torch
+import random
 import numpy as np
 from pathlib import Path
 from torch.utils.data import Dataset
 
+from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import (
     Mixup, RandomAffine, RandomCrop, RandomHorizontalFilp, Resize)
 
@@ -15,6 +17,7 @@ class NSSOLDataset(Dataset):
         classes_file = os.path.join(data_root, "classes.txt")
         setfile = os.path.join(data_root, f"{_set}.txt")
         self._img_size = img_size
+        self.data_root = data_root
         self._set = _set
         self.classes = self.__load_classes(classes_file)
         self.num_classes = len(self.classes)
@@ -93,15 +96,26 @@ class NSSOLDataset(Dataset):
 
     def _get_image(self, idx):
         file_path = self.__elements[idx][0]
+        file_path = os.path.join(self.data_root, 'images/', os.path.basename(file_path))
         img = cv2.imread(file_path)
-        anno_file = Path(img_file).with_suffix(".txt")
+        h, w, _ = img.shape
+        assert img is not None, f'File Not Found {file_path}'
+        anno_file = Path(file_path).with_suffix(".txt")
 
         assert anno_file.exists(), f'File Not Found {anno_file}'
         annotations = anno_file.open('r').readlines()
         anno = np.array([x.split() for x in annotations], dtype=np.float32)
 
-        bboxes = np.zeros((len(boxes), 5))
+        bboxes = np.zeros((len(anno), 5))
         bboxes[:, :4] = anno[:, 1:]
+        bboxes[:, 0] = bboxes[:, 0] * w
+        bboxes[:, 2] = bboxes[:, 2] * w
+        bboxes[:, 1] = bboxes[:, 1] * h
+        bboxes[:, 3] = bboxes[:, 3] * h
+        bboxes = xywh_to_xyxy(bboxes)
+        bboxes[bboxes[:, 2] >= w, 2] = w - 1
+        bboxes[bboxes[:, 3] >= h, 3] = h -1
+
         if self._set == "train":
             img, bboxes = self._augment(img, bboxes)
         bboxes[:, 4] = anno[:, 0]

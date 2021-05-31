@@ -44,8 +44,9 @@ class NSSOLEval(Evaluator):
         results = []
         start = time.time()
         avg_loss = 0
+        img_idx = 0
         for image, labels, _, _ in self.dataset:
-
+            img_idx = img_idx + 1
             print("Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r")
             bboxes_prd = self.get_bbox(image)
             if len(bboxes_prd) == 0:
