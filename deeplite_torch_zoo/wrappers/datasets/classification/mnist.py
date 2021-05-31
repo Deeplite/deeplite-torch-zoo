@@ -40,7 +40,7 @@ def get_mnist(data_root="", batch_size=128, num_workers=1, download=True, device
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=False if distributed else True,
+        shuffle=not distributed,
         pin_memory=True,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x)),

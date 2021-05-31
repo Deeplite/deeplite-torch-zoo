@@ -49,7 +49,7 @@ def get_cifar100(
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=False if distributed else True,
+        shuffle=not distributed,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x)),
         sampler=DS(train_dataset) if distributed else None,

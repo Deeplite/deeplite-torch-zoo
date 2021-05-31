@@ -44,7 +44,7 @@ def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", distribu
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=False if distributed else True,
+        shuffle=not distributed,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x), device=device),
         sampler=DS(train_dataset) if distributed else None,
