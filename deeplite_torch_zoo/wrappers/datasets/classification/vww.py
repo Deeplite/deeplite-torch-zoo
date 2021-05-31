@@ -4,12 +4,13 @@ import pyvww
 import torch
 from torchvision import transforms
 from torch.utils.data.dataloader import default_collate
+from torch.utils.data.distributed import DistributedSampler as DS
 
 
 __all__ = ["get_vww"]
 
 
-def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", **kwargs):
+def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", distributed=False, **kwargs):
 
     def assign_device(x, device="cuda"):
         return [v.to(device) for v in x]
@@ -43,9 +44,10 @@ def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", **kwargs
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=not distributed,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x), device=device),
+        sampler=DS(train_dataset) if distributed else None,
     )
 
     test_loader = torch.utils.data.DataLoader(
@@ -54,6 +56,7 @@ def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", **kwargs
         shuffle=False,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(default_collate(x)),
+        sampler=DS(test_dataset) if distributed else None,
     )
 
     return {"train": train_loader, "test": test_loader}

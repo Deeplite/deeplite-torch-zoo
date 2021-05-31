@@ -4,12 +4,13 @@ import torchvision.transforms as transforms
 
 import torch.utils.data as data
 from torch.utils.data.dataloader import default_collate
+from torch.utils.data.distributed import DistributedSampler as DS
 
 
 __all__ = ["get_tinyimagenet"]
 
 
-def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda", **kwargs):
+def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda", distributed=False, **kwargs):
     def assign_device(x):
         return [v.to(device) for v in x]
 
@@ -31,9 +32,11 @@ def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda", **
             x: data.DataLoader(
                 image_datasets[x],
                 batch_size=batch_size,
-                shuffle=(x=="train"),
+                shuffle=False if distributed else (x=="train"),
                 num_workers=0,
-                collate_fn=lambda x: assign_device(default_collate(x))
+                #pin_memory=True,
+                collate_fn=lambda x: assign_device(default_collate(x)),
+                sampler=DS(image_datasets[x]) if distributed else None
             ) for x in ['train', 'val']
         }
     dataloaders["test"] = dataloaders["val"]
