@@ -22,7 +22,7 @@ class VOCEvaluator(Evaluator):
         voc2007_data_root,
         num_classes=20,
         visiual=False,
-        net="yolov3",
+        net="yolo3",
         img_size=448,
     ):
 
@@ -148,7 +148,7 @@ class VOCEvaluator(Evaluator):
 
 
 def yolo_eval_voc(
-    model, data_root, num_classes=20, device="cuda", net="yolov3", img_size=448
+    model, data_root, num_classes=20, device="cuda", net="yolo3", img_size=448, **kwargs
 ):
 
     mAP = 0

@@ -6,16 +6,15 @@ from pathlib import Path
 import torch
 import torch.optim as optim
 from tqdm import tqdm
+from pycocotools.coco import COCO
 
-import deeplite_torch_zoo.src.objectdetection.configs.coco_config as coco_cfg
 import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.configs.hyp_finetune as hyp_cfg_finetune
-import deeplite_torch_zoo.src.objectdetection.configs.lisa_config as lisa_cfg
-import deeplite_torch_zoo.src.objectdetection.configs.voc_config as voc_cfg
+
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
-from deeplite_torch_zoo.wrappers.models import (yolo3, yolo4, yolo4_lisa, yolo5,
-                                            yolo_eval_func)
+from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5
+from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.eval.lisa_eval import LISAEval
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
     YoloV3Loss
@@ -32,26 +31,20 @@ class Trainer(object):
         init_seeds(0)
         assert opt.n_cpu == 0, "multi-sclae need to be fixed if you must use multi cpus"
 
-        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11"]
+        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "nssol"]
         assert opt.net in [
-            "yolov3",
-            "yolov5s",
-            "yolov5m",
-            "yolov5l",
-            "yolov5x",
-            "yolov4s",
-            "yolov4m",
-            "yolov4l",
-            "yolov4x",
+            "yolo3",
+            "yolo5s",
+            "yolo5m",
+            "yolo5l",
+            "yolo5x",
+            "yolo4s",
+            "yolo4m",
+            "yolo4l",
+            "yolo4x",
         ]
-        if "yolov4" in opt.net or "yolov5" in opt.net:
+        if "yolo4" in opt.net or "yolo5" in opt.net:
             assert opt.net == opt.arch_cfg
-        if opt.dataset_type == "voc":
-            self.cfg = voc_cfg
-        elif opt.dataset_type == "coco":
-            self.cfg = coco_cfg
-        elif "lisa" in opt.dataset_type:
-            self.cfg = lisa_cfg
 
         # self.hyp_config = hyp_cfg_finetune if opt.pretrained else hyp_cfg_scratch
         self.hyp_config = hyp_cfg_scratch
@@ -69,7 +62,6 @@ class Trainer(object):
             model_name=opt.net,
             batch_size=opt.batch_size,
             num_workers=opt.n_cpu,
-            num_classes=self.cf.DATA["NUM"],
             img_size=self.hyp_config.TRAIN["TRAIN_IMG_SIZE"]
         )
 
@@ -84,9 +76,6 @@ class Trainer(object):
         )
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
 
-        # self.yolov3 = yolo3().to(self.device)
-        # self.yolov3 = yolo3(pretrained=opt.pretrained, progress=True, dataset=opt.dataset_type).to(self.device)
-        # self.yolov3.apply(weights_init_normal)
         self.model = self._get_model()
 
         self.optimizer = optim.SGD(
@@ -95,7 +84,6 @@ class Trainer(object):
             momentum=self.hyp_config.TRAIN["MOMENTUM"],
             weight_decay=self.hyp_config.TRAIN["WEIGHT_DECAY"],
         )
-        # self.optimizer = optim.Adam(self.yolov3.parameters(), lr = lr_init, weight_decay=0.9995)
 
         self.criterion = self._get_loss()
         if resume:
@@ -110,21 +98,21 @@ class Trainer(object):
         )
 
     def _get_model(self):
-        if "yolov3" in opt.net:
+        if "yolo3" in opt.net:
             return yolo3(
                 pretrained=opt.pretrained,
                 progress=True,
                 num_classes=self.num_classes,
                 device=self.device,
             )
-        elif "yolov5" in opt.net:
+        elif "yolo5" in opt.net:
             return yolo5(
                 pretrained=opt.pretrained,
                 num_classes=self.num_classes,
                 net=opt.arch_cfg,
                 device=self.device,
             )
-        elif "yolov4" in opt.net:
+        elif "yolo4" in opt.net:
             if "lisa" in opt.dataset_type:
                 return yolo4_lisa(
                     pretrained=opt.pretrained,
@@ -141,7 +129,7 @@ class Trainer(object):
 
     def _get_loss(self):
         return YoloV3Loss(num_classes=self.num_classes, device=self.device)
-        if opt.net == "yolov3":
+        if opt.net == "yolo3":
             return YoloV3Loss(num_classes=self.num_classes, device=self.device)
         else:
             return YoloV5Loss(
@@ -218,55 +206,26 @@ class Trainer(object):
 
                 # Print batch results
                 if (i + 1) % opt.print_freq == 0:
-                    s = (
-                        "Epoch:[ %d | %d ]    Batch:[ %d | %d ]    loss_giou: %.4f    loss_conf: %.4f    loss_cls: %.4f    loss: %.4f    "
-                        "lr: %g"
-                    ) % (
-                        epoch,
-                        self.epochs - 1,
-                        i,
-                        len(self.train_dataloader) - 1,
-                        mloss[0],
-                        mloss[1],
-                        mloss[2],
-                        mloss[3],
-                        self.optimizer.param_groups[0]["lr"],
-                    )
+                    s = ("Epoch:[ %d | %d ]    Batch:[ %d | %d ]    loss_giou: %.4f    loss_conf: %.4f    loss_cls: %.4f    loss: %.4f    lr: %g") % (epoch,
+                        self.epochs - 1, i, len(self.train_dataloader) - 1, mloss[0], mloss[1], mloss[2], mloss[3], self.optimizer.param_groups[0]["lr"])
                     print(s)
 
                 # multi-sclae training (320-608 pixels) every 10 batches
                 if self.multi_scale_train and (i + 1) % 10 == 0:
                     self.train_dataset._img_size = random.choice(range(10, 20)) * 32
-                    # print("multi_scale_img_size : {}".format(self.train_dataset._img_size))
-            # mAP = 0
-            # if epoch >= 20:
-            #     print('*' * 20 + "Validate" + '*' * 20)
-            #     with torch.no_grad():
-            #         APs = Evaluator(self.yolov3).APs_voc()
-            #         for i in APs:
-            #             print("{} --> mAP : {}".format(i, APs[i]))
-            #             mAP += APs[i]
-            #         mAP = mAP / self.num_classes
-            #         print('mAP:%g' % (mAP))
+
             mAP = 0
             if epoch % opt.eval_freq == 0:
-                if opt.dataset_type in ["voc", "coco"]:
-                    if opt.dataset_type == "voc":
-                        test_set = opt.img_dir / "VOC2007"
-                    elif opt.dataset_type == "coco":
-                        test_set = opt.img_dir
-                    Aps = yolo_eval_func(
-                        self.model,
-                        test_set,
-                        num_classes=self.num_classes,
-                        _set=opt.dataset_type,
-                        device=self.device,
-                        net=opt.net,
-                    )
-                    mAP = Aps["mAP"]
-                elif "lisa" in opt.dataset_type:
-                    mAP = LISAEval(self.model, opt.img_dir).evaluate()
-
+                eval_func = get_eval_func(opt.dataset_type)
+                test_set = opt.img_dir
+                gt = None
+                if opt.dataset_type == "voc":
+                    test_set = opt.img_dir / "VOC2007"
+                elif opt.dataset_type == "coco":
+                    gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
+                Aps = eval_func(self.model, test_set, gt=gt, data_loader=self.val_dataloader,
+                    num_classes=self.num_classes, _set=opt.dataset_type, device=self.device, net=opt.net)
+                mAP = Aps["mAP"]
                 self.__save_model_weights(epoch, mAP)
                 print("best mAP : %g" % (self.best_mAP))
 
@@ -277,7 +236,7 @@ if __name__ == "__main__":
         "--img-dir",
         dest="img_dir",
         type=Path,
-        default="data/VOC/VOCdevkit",  #'data/LISA', #'data/coco', #
+        default="/neutrino/datasets/VOCdevkit",
         help="The path to the folder containing images to be detected or trained.",
     )
     parser.add_argument(
@@ -298,7 +257,7 @@ if __name__ == "__main__":
         "--print-freq",
         dest="print_freq",
         type=int,
-        default=500,
+        default=5000,
         help="The number of sample in one batch during training or inference.",
     )
     parser.add_argument(
@@ -334,14 +293,14 @@ if __name__ == "__main__":
         dest="dataset_type",
         type=str,
         default="voc",
-        help="The type of the dataset used. Currently support 'coco', 'voc', 'lisa', 'lisa_subset11' and 'image_folder'",
+        help="The type of the dataset used. Currently support 'coco', 'voc', and 'lisa'",
     )
     parser.add_argument(
         "--net",
         dest="net",
         type=str,
-        default="yolov4m",
-        help="The type of the network used. Currently support 'yolov3' and'yolov5'",
+        default="yolo4m",
+        help="The type of the network used. Currently support 'yolo3', 'yolo4' and 'yolo5'",
     )
     opt = parser.parse_args()
 

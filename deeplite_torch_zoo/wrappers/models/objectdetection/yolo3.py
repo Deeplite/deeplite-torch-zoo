@@ -4,6 +4,7 @@ from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.yolov3 import Yolov3
 
 __all__ = [
+    "yolo3",
     "yolo3_voc_1",
     "yolo3_voc_2",
     "yolo3_voc_6",

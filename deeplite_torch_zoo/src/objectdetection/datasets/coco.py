@@ -33,7 +33,7 @@ from torchvision.datasets import CocoDetection
 
 from deeplite_torch_zoo.src.objectdetection.datasets.transforms import (default_transform_fn,
                                                     random_transform_fn)
-from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS
+from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
 from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
 
 __all__ = ["get_coco_dataset"]
@@ -111,6 +111,7 @@ class CocoDetectionBoundingBox(CocoDetection):
         self._tf = transform
         self.num_classes = num_classes
         self._img_size = img_size
+        self.classes = ["BACKGROUND"] + DATA["CLASSES"]
         if category == "all":
             self.all_categories = True
             self.category_id = -1
