@@ -65,61 +65,42 @@ class CocoDetectionBoundingBox(CocoDetection):
             self.category_id = category
         ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-    def _parse_targets(self, targets):
-        labels = []
-        for target in targets:
-            bbox = target["bbox"]  # in xywh format
-            category_id = target["category_id"]
-            if (not self.all_categories) and (category_id != self.category_id):
-                continue
-            conf = [1.0]
-            category_id = self._delete_coco_empty_category(category_id)
-            category_id = [float(category_id)]
-            label = np.concatenate((bbox, category_id, conf), axis=0)
-            labels.append(label)
-        if labels:
-            labels = np.array(labels)
-        else:
-            labels = np.zeros((0, 6))
-        return labels
-
-    def _read_data(self, index):
-        coco = self.coco
-        img_id = self.ids[index]
-        ann_ids = coco.getAnnIds(imgIds=img_id)
-        target = coco.loadAnns(ann_ids)
-        labels = self._parse_targets(target)
-        path = coco.loadImgs(img_id)[0]['file_name']
-        img_path = os.path.join(self.root, path)
-        img = cv2.imread(img_path)
-        if self._tf == None:
-            return np.array(img), self.ids[index]
-        transformed_img_tensor, label_tensor = self._tf(self._img_size)(
-            Image.fromarray(img), torch.from_numpy(labels).float()
-        )
-        return transformed_img_tensor, label_tensor
-
     def __getitem__(self, index):
         """
         return:
             label_tensor of shape nx6, where n is number of labels in the image and x1,y1,x2,y2, class_id and confidence.
         """
-        img, labels = self._read_data(index)
-        if self._tf is None:
-            return img, labels
+        img, targets = super(CocoDetectionBoundingBox, self).__getitem__(index)
+        labels = []
+        for target in targets:
+            bbox = torch.tensor(target["bbox"], dtype=torch.float32)  # in xywh format
+            category_id = target["category_id"]
+            if (not self.all_categories) and (category_id != self.category_id):
+                continue
+            conf = torch.tensor([1.0])
+            category_id = _delete_coco_empty_category(category_id)
+            category_id = torch.tensor([float(category_id)])
+            label = torch.cat((bbox, category_id, conf))
+            labels.append(label)
+        if labels:
+            label_tensor = torch.stack(labels)
+        else:
+            label_tensor = torch.zeros((0, 6))
+        del labels
 
-        item_mix = random.randint(0, len(self.ids) - 1)
-        img_mix, labels_mix = self._read_data(item_mix)
-
-        img, labels = Mixup()(np.array(img), labels, np.array(img_mix), labels_mix)
-        label_tensor = torch.tensor(labels)
+        if self._tf == None:
+            return np.array(img), self.ids[index]
+        transformed_img_tensor, label_tensor = self._tf(self._img_size)(
+            img, label_tensor
+        )
         label_tensor = xywh_to_xyxy(label_tensor)
         return (
-            torch.from_numpy(img).float(),
+            transformed_img_tensor,
             label_tensor,
             label_tensor.size(0),
             self.ids[index],
         )
+
 
     def collate_img_label_fn(self, sample):
         images = []
