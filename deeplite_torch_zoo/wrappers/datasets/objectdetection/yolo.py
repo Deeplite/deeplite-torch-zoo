@@ -17,7 +17,8 @@ __all__ = [
     "get_image_to_folder_for_yolo",
     "get_lisa_for_yolo",
     "get_voc_for_yolo",
-    "get_nssol_for_yolo"
+    "get_nssol_for_yolo",
+    "get_lego_for_yolo",
 ]
 
 
@@ -47,6 +48,49 @@ def get_coco_for_yolo(
 
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
     val_coco_root = os.path.join(data_root, "val2017")
+    val_coco = CocoDetectionBoundingBox(
+        val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size
+    )
+
+    val_loader = torch.utils.data.DataLoader(
+        val_coco,
+        batch_size=batch_size,
+        shuffle=False,
+        pin_memory=True,
+        num_workers=num_workers,
+        collate_fn=val_coco.collate_img_label_fn,
+        sampler=DS(val_coco) if distributed else None,
+    )
+
+    return {"train": train_loader, "val": val_loader}
+
+
+def get_lego_for_yolo(
+    data_root, batch_size=32, num_workers=1, num_classes=80, img_size=416, distributed=False, **kwargs
+):
+    train_trans = random_transform_fn
+    train_annotate = os.path.join(data_root, "train.json")
+    train_coco_root = os.path.join(data_root, "train")
+    train_coco = CocoDetectionBoundingBox(
+        train_coco_root,
+        train_annotate,
+        num_classes=num_classes,
+        transform=train_trans,
+        img_size=img_size,
+    )
+
+    train_loader = torch.utils.data.DataLoader(
+        train_coco,
+        batch_size=batch_size,
+        shuffle=not distributed,
+        pin_memory=True,
+        num_workers=num_workers,
+        collate_fn=train_coco.collate_img_label_fn,
+        sampler=DS(train_coco) if distributed else None,
+    )
+
+    val_annotate = os.path.join(data_root, "val.json")
+    val_coco_root = os.path.join(data_root, "val")
     val_coco = CocoDetectionBoundingBox(
         val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size
     )

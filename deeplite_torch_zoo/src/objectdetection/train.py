@@ -31,7 +31,7 @@ class Trainer(object):
         init_seeds(0)
         assert opt.n_cpu == 0, "multi-sclae need to be fixed if you must use multi cpus"
 
-        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "nssol"]
+        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "nssol", "lego"]
         assert opt.net in [
             "yolo3",
             "yolo5s",
@@ -222,6 +222,9 @@ class Trainer(object):
                     test_set = opt.img_dir / "VOC2007"
                 elif opt.dataset_type == "coco":
                     gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
+                elif opt.dataset_type == "lego":
+                    gt = COCO(opt.img_dir / "val.json")
+
                 Aps = eval_func(self.model, test_set, gt=gt, data_loader=self.val_dataloader,
                     num_classes=self.num_classes, _set=opt.dataset_type, device=self.device, net=opt.net)
                 mAP = Aps["mAP"]
@@ -269,7 +272,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--weight_path",
         type=Path,
-        default="deeplite_torch_zoo/weight/",
+        default="models/",
         help="where weights should be stored",
     )
     parser.add_argument(
