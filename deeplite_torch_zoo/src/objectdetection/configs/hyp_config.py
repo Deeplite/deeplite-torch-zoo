@@ -26,7 +26,7 @@ TRAIN = {
     "BATCH_SIZE": 8,
     "MULTI_SCALE_TRAIN": True,
     "IOU_THRESHOLD_LOSS": 0.5,
-    "EPOCHS": 51,
+    "EPOCHS": 101,
     "NUMBER_WORKERS": 4,
     "LR_INIT": 1e-4,  # 0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)
     "LR_END": 1e-6,  # 0.2,  # final OneCycleLR learning rate (lr0 * lrf)

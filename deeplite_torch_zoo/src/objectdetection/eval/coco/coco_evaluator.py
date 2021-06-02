@@ -16,6 +16,7 @@ from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import nms
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
+from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
 
 
 class COCOEvaluator(Evaluator):
@@ -141,9 +142,13 @@ def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", ne
         ).evaluate()
 
 
-def yolo_eval_coco(model, data_loader, gt=None, device="cuda", net="yolo3", **kwargs):
+def yolo_eval_coco(model, data_root, gt=None, device="cuda", net="yolo3", **kwargs):
     mAP = 0
     result = {}
+    val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
+    val_coco_root = os.path.join(data_root, "val2017")
+    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate)
+
     model.to(device)
     with torch.no_grad():
-        return YoloCOCOEvaluator(model, data_loader.dataset, gt=gt, net=net).evaluate()
+        return YoloCOCOEvaluator(model, dataset, gt=gt, net=net).evaluate()

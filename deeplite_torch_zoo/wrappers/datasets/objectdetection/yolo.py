@@ -2,6 +2,8 @@ import os
 import torch
 from pathlib import Path
 
+from torch.utils.data.distributed import DistributedSampler as DS
+
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils import VocDataset
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.voc import prepare_data
 from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
@@ -20,7 +22,7 @@ __all__ = [
 
 
 def get_coco_for_yolo(
-    data_root, batch_size=32, num_workers=1, num_classes=80, img_size=416, **kwargs
+    data_root, batch_size=32, num_workers=1, num_classes=80, img_size=416, distributed=False, **kwargs
 ):
     train_trans = random_transform_fn
     train_annotate = os.path.join(data_root, "annotations/instances_train2017.json")
@@ -36,10 +38,11 @@ def get_coco_for_yolo(
     train_loader = torch.utils.data.DataLoader(
         train_coco,
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=not distributed,
         pin_memory=True,
         num_workers=num_workers,
         collate_fn=train_coco.collate_img_label_fn,
+        sampler=DS(train_coco) if distributed else None,
     )
 
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
@@ -55,6 +58,7 @@ def get_coco_for_yolo(
         pin_memory=True,
         num_workers=num_workers,
         collate_fn=val_coco.collate_img_label_fn,
+        sampler=DS(val_coco) if distributed else None,
     )
 
     return {"train": train_loader, "val": val_loader}
@@ -126,7 +130,7 @@ def _get_voc_for_yolo(annotation_path, num_classes=None, img_size=448):
 
 
 def get_voc_for_yolo(
-    data_root, batch_size=32, num_workers=4, num_classes=None, img_size=448, device="cuda", **kwargs
+    data_root, batch_size=32, num_workers=4, num_classes=None, img_size=448, device="cuda", distributed=False, **kwargs
 ):
     def assign_device(x):
         if device == "cuda":
@@ -142,10 +146,11 @@ def get_voc_for_yolo(
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=not distributed,
         pin_memory=True,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(train_dataset.collate_img_label_fn(x)),
+        sampler=DS(train_dataset) if distributed else None,
     )
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
@@ -154,6 +159,7 @@ def get_voc_for_yolo(
         pin_memory=True,
         num_workers=num_workers,
         collate_fn=lambda x: assign_device(test_dataset.collate_img_label_fn(x)),
+        sampler=DS(test_dataset) if distributed else None,
     )
     return {"train": train_loader, "val": test_loader, "test": test_loader}
 

@@ -38,7 +38,7 @@ class YoloV3Loss(nn.Module):
         self._anchors = np.array(hyp_cfg.MODEL["ANCHORS"], dtype=float)
         self._anchors_per_scale = hyp_cfg.MODEL["ANCHORS_PER_SCLAE"]
 
-    def forward(self, p, p_d, targets, labels_length, img_size):
+    def forward(self, p, p_d, targets, labels_length, img_size, rank=0):
         (
             label_sbbox,
             label_mbbox,
@@ -46,13 +46,13 @@ class YoloV3Loss(nn.Module):
             sbboxes,
             mbboxes,
             lbboxes,
-        ) = self.make_targets_batch(targets, labels_length, img_size)
-        label_sbbox = label_sbbox.to(self.__device)
-        label_mbbox = label_mbbox.to(self.__device)
-        label_lbbox = label_lbbox.to(self.__device)
-        sbboxes = sbboxes.to(self.__device)
-        mbboxes = mbboxes.to(self.__device)
-        lbboxes = lbboxes.to(self.__device)
+        ) = self.make_targets_batch(targets.cpu(), labels_length.cpu(), img_size)
+        label_sbbox = label_sbbox.to(rank)
+        label_mbbox = label_mbbox.to(rank)
+        label_lbbox = label_lbbox.to(rank)
+        sbboxes = sbboxes.to(rank)
+        mbboxes = mbboxes.to(rank)
+        lbboxes = lbboxes.to(rank)
 
         return self._forward(
             p, p_d, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes

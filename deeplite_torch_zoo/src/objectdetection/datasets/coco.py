@@ -28,74 +28,16 @@ import os
 
 import numpy as np
 import torch
+import random
+import cv2
+
 from PIL import ImageFile
+from PIL import Image
 from torchvision.datasets import CocoDetection
 
-from deeplite_torch_zoo.src.objectdetection.datasets.transforms import (default_transform_fn,
-                                                    random_transform_fn)
 from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
 from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
-
-__all__ = ["get_coco_dataset"]
-
-
-def get_coco_dataset(
-    data_root, net, num_classes=80, num_torch_workers=1, batch_size=32, img_size=416
-):
-    if "yolo" in net:
-        return get_coco_dataset_for_yolo(
-            data_root,
-            num_classes=num_classes,
-            num_torch_workers=num_torch_workers,
-            batch_size=batch_size,
-            img_size=img_size,
-        )
-    else:
-        raise ValueError
-
-
-def get_coco_dataset_for_yolo(
-    data_root, num_classes=80, num_torch_workers=1, batch_size=32, img_size=416
-):
-
-    train_trans = random_transform_fn
-
-    train_annotate = os.path.join(data_root, "annotations/instances_train2017.json")
-    train_coco_root = os.path.join(data_root, "images/train2017")
-    train_coco = CocoDetectionBoundingBox(
-        train_coco_root,
-        train_annotate,
-        num_classes=num_classes,
-        transform=train_trans,
-        img_size=img_size,
-    )
-
-    train_loader = torch.utils.data.DataLoader(
-        train_coco,
-        batch_size=batch_size,
-        shuffle=True,
-        pin_memory=True,
-        num_workers=num_torch_workers,
-        collate_fn=train_coco.collate_img_label_fn,
-    )
-
-    val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
-    val_coco_root = os.path.join(data_root, "images/val2017")
-    val_coco = CocoDetectionBoundingBox(
-        val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size
-    )
-
-    val_loader = torch.utils.data.DataLoader(
-        val_coco,
-        batch_size=batch_size,
-        shuffle=False,
-        pin_memory=True,
-        num_workers=num_torch_workers,
-        collate_fn=val_coco.collate_img_label_fn,
-    )
-
-    return {"train": train_loader, "val": val_loader}
-
+from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import Mixup
 
 class CocoDetectionBoundingBox(CocoDetection):
     def __init__(
@@ -120,37 +62,57 @@ class CocoDetectionBoundingBox(CocoDetection):
             self.category_id = category
         ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+    def _parse_targets(self, targets):
+        labels = []
+        for target in targets:
+            bbox = target["bbox"]  # in xywh format
+            category_id = target["category_id"]
+            if (not self.all_categories) and (category_id != self.category_id):
+                continue
+            conf = [1.0]
+            category_id = _delete_coco_empty_category(category_id)
+            category_id = [float(category_id)]
+            label = np.concatenate((bbox, category_id, conf), axis=0)
+            labels.append(label)
+        if labels:
+            labels = np.array(labels)
+        else:
+            labels = np.zeros((0, 6))
+        return labels
+
+    def _read_data(self, index):
+        coco = self.coco
+        img_id = self.ids[index]
+        ann_ids = coco.getAnnIds(imgIds=img_id)
+        target = coco.loadAnns(ann_ids)
+        labels = self._parse_targets(target)
+        path = coco.loadImgs(img_id)[0]['file_name']
+        img_path = os.path.join(self.root, path)
+        img = cv2.imread(img_path)
+        if self._tf == None:
+            return np.array(img), self.ids[index]
+        transformed_img_tensor, label_tensor = self._tf(self._img_size)(
+            Image.fromarray(img), torch.from_numpy(labels).float()
+        )
+        return transformed_img_tensor, label_tensor
+
     def __getitem__(self, index):
         """
         return:
             label_tensor of shape nx6, where n is number of labels in the image and x1,y1,x2,y2, class_id and confidence.
         """
-        img, targets = super(CocoDetectionBoundingBox, self).__getitem__(index)
-        labels = []
-        for target in targets:
-            bbox = torch.tensor(target["bbox"], dtype=torch.float32)  # in xywh format
-            category_id = target["category_id"]
-            if (not self.all_categories) and (category_id != self.category_id):
-                continue
-            conf = torch.tensor([1.0])
-            category_id = _delete_coco_empty_category(category_id)
-            category_id = torch.tensor([float(category_id)])
-            label = torch.cat((bbox, category_id, conf))
-            labels.append(label)
-        if labels:
-            label_tensor = torch.stack(labels)
-        else:
-            label_tensor = torch.zeros((0, 6))
-        del labels
+        img, labels = self._read_data(index)
+        if self._tf is None:
+            return img, labels
 
-        if self._tf == None:
-            return np.array(img), self.ids[index]
-        transformed_img_tensor, label_tensor = self._tf(self._img_size)(
-            img, label_tensor
-        )
+        item_mix = random.randint(0, len(self.ids) - 1)
+        img_mix, labels_mix = self._read_data(item_mix)
+
+        img, labels = Mixup()(np.array(img), labels, np.array(img_mix), labels_mix)
+        label_tensor = torch.tensor(labels)
         label_tensor = xywh_to_xyxy(label_tensor)
         return (
-            transformed_img_tensor,
+            torch.from_numpy(img).float(),
             label_tensor,
             label_tensor.size(0),
             self.ids[index],

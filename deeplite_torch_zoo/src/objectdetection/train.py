@@ -128,8 +128,7 @@ class Trainer(object):
             )
 
     def _get_loss(self):
-        return YoloV3Loss(num_classes=self.num_classes, device=self.device)
-        if opt.net == "yolo3":
+        if "yolo3" in opt.net:
             return YoloV3Loss(num_classes=self.num_classes, device=self.device)
         else:
             return YoloV5Loss(
