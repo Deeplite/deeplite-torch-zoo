@@ -1,21 +1,10 @@
 import os
-import shutil
-from os.path import expanduser
-from pathlib import Path
-
-import cv2
 import numpy as np
 import torch
 from pycocotools.cocoeval import COCOeval
 from tqdm import tqdm
 
-import deeplite_torch_zoo.src.objectdetection.configs.coco_config as cfg
-from deeplite_torch_zoo.src.objectdetection.datasets.coco import add_coco_empty_category
-
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import Resize
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import nms
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
 
 
@@ -92,7 +81,7 @@ class YoloCOCOEvaluator(COCOEvaluator):
                     xmax - xmin,
                     ymax - ymin,
                     score,
-                    add_coco_empty_category(class_ind),
+                    self.dataset.add_coco_empty_category(class_ind),
                 ]
             )
         return results
@@ -143,12 +132,26 @@ def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", ne
 
 
 def yolo_eval_coco(model, data_root, gt=None, device="cuda", net="yolo3", **kwargs):
+    from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
     mAP = 0
     result = {}
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
     val_coco_root = os.path.join(data_root, "val2017")
-    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate)
+    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate, classes=DATA["CLASSES"], missing_ids=MISSING_IDS)
 
+    model.to(device)
+    with torch.no_grad():
+        return YoloCOCOEvaluator(model, dataset, gt=gt, net=net).evaluate()
+
+
+def yolo_eval_lego(model, data_root, num_classes=90, gt=None, device="cuda", net="yolo3", **kwargs):
+    mAP = 0
+    result = {}
+    val_annotate = os.path.join(data_root, "val.json")
+    val_coco_root = os.path.join(data_root, "val")
+    _classes = [f"class_{i}" for i in range(num_classes)]
+    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate, classes=_classes)
+    import pdb; pdb.set_trace()
     model.to(device)
     with torch.no_grad():
         return YoloCOCOEvaluator(model, dataset, gt=gt, net=net).evaluate()

@@ -48,12 +48,15 @@ class CocoDetectionBoundingBox(CocoDetection):
         transform=None,
         category="all",
         img_size=416,
+        classes=[],
+        missing_ids=[]
     ):
         super(CocoDetectionBoundingBox, self).__init__(img_root, ann_file_name)
         self._tf = transform
-        self.num_classes = num_classes
         self._img_size = img_size
-        self.classes = ["BACKGROUND"] + DATA["CLASSES"]
+        self.classes = ["BACKGROUND"] + classes
+        self.num_classes = len(self.classes)
+        self.missing_ids = missing_ids
         if category == "all":
             self.all_categories = True
             self.category_id = -1
@@ -70,7 +73,7 @@ class CocoDetectionBoundingBox(CocoDetection):
             if (not self.all_categories) and (category_id != self.category_id):
                 continue
             conf = [1.0]
-            category_id = _delete_coco_empty_category(category_id)
+            category_id = self._delete_coco_empty_category(category_id)
             category_id = [float(category_id)]
             label = np.concatenate((bbox, category_id, conf), axis=0)
             labels.append(label)
@@ -148,36 +151,36 @@ class CocoDetectionBoundingBox(CocoDetection):
         return image_tensor, label_tensor, length_tensor, img_ids_tensor
 
 
-def _delete_coco_empty_category(old_id):
-    """The COCO dataset has 91 categories but 11 of them are empty.
-    This function will convert the 80 existing classes into range [0-79].
-    Note the COCO original class index starts from 1.
-    The converted index starts from 0.
-    Args:
-        old_id (int): The category ID from COCO dataset.
-    Return:
-        new_id (int): The new ID after empty categories are removed."""
-    starting_idx = 1
-    new_id = old_id - starting_idx
-    for missing_id in MISSING_IDS:
-        if old_id > missing_id:
-            new_id -= 1
-        elif old_id == missing_id:
-            raise KeyError(
-                "illegal category ID in coco dataset! ID # is {}".format(old_id)
-            )
-        else:
-            break
-    return new_id
+    def _delete_coco_empty_category(self, old_id):
+        """The COCO dataset has 91 categories but 11 of them are empty.
+        This function will convert the 80 existing classes into range [0-79].
+        Note the COCO original class index starts from 1.
+        The converted index starts from 0.
+        Args:
+            old_id (int): The category ID from COCO dataset.
+        Return:
+            new_id (int): The new ID after empty categories are removed."""
+        starting_idx = 1
+        new_id = old_id - starting_idx
+        for missing_id in self.missing_ids:
+            if old_id > missing_id:
+                new_id -= 1
+            elif old_id == missing_id:
+                raise KeyError(
+                    "illegal category ID in coco dataset! ID # is {}".format(old_id)
+                )
+            else:
+                break
+        return new_id
 
 
-def add_coco_empty_category(old_id):
-    """The reverse of delete_coco_empty_category."""
-    starting_idx = 1
-    new_id = old_id + starting_idx
-    for missing_id in MISSING_IDS:
-        if new_id >= missing_id:
-            new_id += 1
-        else:
-            break
-    return new_id
+    def add_coco_empty_category(self, old_id):
+        """The reverse of delete_coco_empty_category."""
+        starting_idx = 1
+        new_id = old_id + starting_idx
+        for missing_id in self.missing_ids:
+            if new_id >= missing_id:
+                new_id += 1
+            else:
+                break
+        return new_id

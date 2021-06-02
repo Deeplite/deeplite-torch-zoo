@@ -203,11 +203,7 @@ class Trainer(object):
                 loss_items = torch.tensor([loss_giou, loss_conf, loss_cls, loss])
                 mloss = (mloss * i + loss_items) / (i + 1)
 
-                # Print batch results
-                if (i + 1) % opt.print_freq == 0:
-                    s = ("Epoch:[ %d | %d ]    Batch:[ %d | %d ]    loss_giou: %.4f    loss_conf: %.4f    loss_cls: %.4f    loss: %.4f    lr: %g") % (epoch,
-                        self.epochs - 1, i, len(self.train_dataloader) - 1, mloss[0], mloss[1], mloss[2], mloss[3], self.optimizer.param_groups[0]["lr"])
-                    print(s)
+                print(f"\repoch {epoch}/{self.epochs} - Iteration: {i}/{len(self.train_dataloader)}, loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    loss {mloss[3]:0.4f}", end="")
 
                 # multi-sclae training (320-608 pixels) every 10 batches
                 if self.multi_scale_train and (i + 1) % 10 == 0:
