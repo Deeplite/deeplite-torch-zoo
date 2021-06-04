@@ -74,7 +74,7 @@ def get_coco_for_yolo(
 def get_lego_for_yolo(
     data_root, batch_size=32, num_workers=1, num_classes=90, img_size=416, distributed=False, **kwargs
 ):
-    _classes = [str(i) for i in range(num_classes)]
+    from deeplite_torch_zoo.src.objectdetection.configs.lego_config import DATA
     train_trans = random_transform_fn
     train_annotate = os.path.join(data_root, "train.json")
     train_coco_root = os.path.join(data_root, "train")
@@ -84,8 +84,7 @@ def get_lego_for_yolo(
         num_classes=num_classes,
         transform=train_trans,
         img_size=img_size,
-        classes=_classes,
-        missing_ids=[],
+        classes=DATA["CLASSES"],
     )
 
     train_loader = torch.utils.data.DataLoader(
@@ -102,8 +101,7 @@ def get_lego_for_yolo(
     val_coco_root = os.path.join(data_root, "val")
     val_coco = CocoDetectionBoundingBox(
         val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size,
-        classes=_classes,
-        missing_ids=[],
+        classes=DATA["CLASSES"],
     )
 
     val_loader = torch.utils.data.DataLoader(

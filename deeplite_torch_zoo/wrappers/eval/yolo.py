@@ -5,7 +5,7 @@ from deeplite_torch_zoo.src.objectdetection.eval.voc.voc_evaluator import yolo_e
 from deeplite_torch_zoo.src.objectdetection.eval.nssol_eval import yolo_eval_nssol
 
 
-__all__ = ["get_eval_func"]
+__all__ = ["get_eval_func", "yolo_eval_coco", "yolo_eval_voc", "yolo_eval_lisa", "yolo_eval_nssol", "yolo_eval_lego"]
 
 
 def get_eval_func(_set):

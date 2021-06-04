@@ -11,18 +11,17 @@ from pycocotools.coco import COCO
 from mmcv.runner import init_dist
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.tensorboard import SummaryWriter
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
 from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
-from deeplite_torch_zoo.src.objectdetection.eval.lisa_eval import LISAEval
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import YoloV3Loss
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.cosine_lr_scheduler import CosineDecayLR
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import init_seeds, weights_init_normal
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import YoloV5Loss
+
 
 class AverageMeter(object):
     """
@@ -54,7 +53,7 @@ class Trainer(object):
         init_seeds(0)
         assert opt.n_cpu == 0, "multi-sclae need to be fixed if you must use multi cpus"
 
-        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "nssol"]
+        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "nssol", "lego"]
         assert opt.net in ["yolo3", "yolo5s", "yolo5m", "yolo5l", "yolo5x", "yolo4s", "yolo4m", "yolo4l", "yolo4x"]
         if "yolo4" in opt.net or "yolo5" in opt.net:
             assert opt.net == opt.arch_cfg
@@ -81,12 +80,7 @@ class Trainer(object):
         self.val_dataloader = dataset_splits["val"]
         self.val_dataset = self.val_dataloader.dataset
         self.num_classes = self.train_dataset.num_classes
-        self.weight_path = (
-            weight_path
-            / opt.net
-            / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
-        )
-        self.writer = SummaryWriter(f"{self.weight_path}/tensorboard/")
+        self.weight_path = (weight_path / opt.net / "{}_{}_cls".format(opt.dataset_type, self.num_classes))
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
 
         self.model = self._get_model()
@@ -234,8 +228,10 @@ class Trainer(object):
                     test_set = opt.img_dir / "VOC2007"
                 elif opt.dataset_type == "coco":
                     gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
-                Aps = eval_func(self.model, test_set, gt=gt,
-                    num_classes=self.num_classes, _set=opt.dataset_type, device=self.device, net=opt.net)
+                elif opt.dataset_type == "lego":
+                    gt = COCO(opt.img_dir / "val.json")
+
+                Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes, _set=opt.dataset_type, device=self.device, net=opt.net)
                 mAP = Aps["mAP"]
                 self.__save_model_weights(epoch, mAP)
                 print("best mAP : %g" % (self.best_mAP))
@@ -267,13 +263,6 @@ if __name__ == "__main__":
         help="The number of sample in one batch during training or inference.",
     )
     parser.add_argument(
-        "--print-freq",
-        dest="print_freq",
-        type=int,
-        default=5000,
-        help="The number of sample in one batch during training or inference.",
-    )
-    parser.add_argument(
         "--eval-freq",
         dest="eval_freq",
         type=int,
@@ -283,7 +272,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--weight_path",
         type=Path,
-        default="deeplite_torch_zoo/weight/",
+        default="models/",
         help="where weights should be stored",
     )
     parser.add_argument(
@@ -292,7 +281,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--pretrained", default=True, help="Train Model from scratch if False"
     )
-
     parser.add_argument("--gpu_id", type=int, default=0, help="gpu id")
     parser.add_argument(
         "--n-cpu",

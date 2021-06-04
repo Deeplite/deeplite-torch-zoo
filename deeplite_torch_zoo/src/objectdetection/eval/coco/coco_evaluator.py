@@ -144,14 +144,16 @@ def yolo_eval_coco(model, data_root, gt=None, device="cuda", net="yolo3", **kwar
         return YoloCOCOEvaluator(model, dataset, gt=gt, net=net).evaluate()
 
 
-def yolo_eval_lego(model, data_root, num_classes=90, gt=None, device="cuda", net="yolo3", **kwargs):
+def yolo_eval_lego(model, data_root, gt=None, device="cuda", net="yolo3", **kwargs):
+    from deeplite_torch_zoo.src.objectdetection.configs.lego_config import DATA
     mAP = 0
     result = {}
     val_annotate = os.path.join(data_root, "val.json")
     val_coco_root = os.path.join(data_root, "val")
-    _classes = [f"class_{i}" for i in range(num_classes)]
-    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate, classes=_classes)
-    import pdb; pdb.set_trace()
+    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate, classes=DATA["CLASSES"])
+    for ann in gt.dataset["annotations"]:
+        ann['iscrowd'] = 0
+
     model.to(device)
     with torch.no_grad():
         return YoloCOCOEvaluator(model, dataset, gt=gt, net=net).evaluate()

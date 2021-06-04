@@ -6,9 +6,7 @@ import torch
 from pycocotools.coco import COCO
 
 from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_splits_by_name
-
-from deeplite_torch_zoo.wrappers.eval import (yolo_eval_func, seg_eval_func, rcnn_eval_coco,
-    vgg16_ssd_eval_func, mb1_ssd_eval_func, mb2_ssd_eval_func, mb2_ssd_lite_eval_func, classification_eval)
+from deeplite_torch_zoo.wrappers.eval import *
 
 
 class TestModels(unittest.TestCase):
@@ -304,7 +302,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov3"
         )
         print(APs)
@@ -318,7 +316,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model,
             "/neutrino/datasets/VOCdevkit/VOC2007/",
             num_classes=1,
@@ -336,7 +334,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model,
             "/neutrino/datasets/VOCdevkit/VOC2007/",
             num_classes=2,
@@ -359,7 +357,7 @@ class TestModels(unittest.TestCase):
         )
 
         model = yolo3_voc_6(pretrained=True, progress=False)
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model,
             "/neutrino/datasets/VOCdevkit/VOC2007/",
             _set="voc",
@@ -376,7 +374,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4s"
         )
         print(APs)
@@ -390,7 +388,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4m"
         )
         print(APs)
@@ -404,7 +402,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4l"
         )
         print(APs)
@@ -418,7 +416,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4x"
         )
         print(APs)
@@ -432,7 +430,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc"
         )
         print(APs)
@@ -446,7 +444,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model, "/neutrino/datasets//VOC/VOCdevkit/VOC2007/", _set="voc"
         )
         print(APs)
@@ -460,7 +458,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc")
+        APs = yolo_eval_voc(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.900) < 0.001, True)
 
@@ -472,7 +470,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model, "/neutrino/datasetss/VOCdevkit/VOC2007/", _set="voc"
         )
         print(APs)
@@ -486,7 +484,8 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(model, "/neutrino/datasets/coco", _set="coco")
+        gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
+        APs = yolo_eval_coco(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
@@ -498,7 +497,8 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(model, "/neutrino/datasets/coco", _set="coco")
+        gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
+        APs = yolo_eval_coco(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
@@ -510,7 +510,8 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(model, "/neutrino/datasets/coco", _set="coco")
+        gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
+        APs = yolo_eval_coco(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
@@ -522,7 +523,8 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(model, "/neutrino/datasets/coco", _set="coco")
+        gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
+        APs = yolo_eval_coco(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
@@ -534,7 +536,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model,
             "/neutrino/datasets/VOCdevkit/VOC2007",
             _set="voc",
@@ -552,7 +554,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model,
             "/neutrino/datasets/VOCdevkit/VOC2007",
             _set="voc",
@@ -570,7 +572,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model,
             "/neutrino/datasets/VOCdevkit/VOC2007",
             _set="voc",
@@ -588,7 +590,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(
+        APs = yolo_eval_voc(
             model,
             "/neutrino/datasets/VOCdevkit/VOC2007",
             _set="voc",
@@ -606,7 +608,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(model, "/neutrino/datasets/lisa", _set="lisa")
+        APs = yolo_eval_lisa(model, "/neutrino/datasets/lisa", _set="lisa")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.968) < 0.001, True)
 
@@ -618,7 +620,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        APs = yolo_eval_func(model, "/neutrino/datasets/lisa", _set="lisa")
+        APs = yolo_eval_lisa(model, "/neutrino/datasets/lisa", _set="lisa")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.836) < 0.001, True)
 

@@ -78,7 +78,7 @@ class CocoDetectionBoundingBox(CocoDetection):
             if (not self.all_categories) and (category_id != self.category_id):
                 continue
             conf = torch.tensor([1.0])
-            category_id = _delete_coco_empty_category(category_id)
+            category_id = self._delete_coco_empty_category(category_id)
             category_id = torch.tensor([float(category_id)])
             label = torch.cat((bbox, category_id, conf))
             labels.append(label)
