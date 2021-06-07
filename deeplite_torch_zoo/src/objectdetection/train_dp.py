@@ -8,21 +8,44 @@ import torch.optim as optim
 from tqdm import tqdm
 from pycocotools.coco import COCO
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scratch
-import deeplite_torch_zoo.src.objectdetection.configs.hyp_finetune as hyp_cfg_finetune
+from mmcv.runner import init_dist
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 
+import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
 from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
-from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
-    YoloV3Loss
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.cosine_lr_scheduler import \
-    CosineDecayLR
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (
-    init_seeds, weights_init_normal)
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
-    YoloV5Loss
+from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import YoloV3Loss
+from deeplite_torch_zoo.src.objectdetection.yolov3.utils.cosine_lr_scheduler import CosineDecayLR
+from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import init_seeds, weights_init_normal
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import YoloV5Loss
+
+
+class AverageMeter(object):
+    """
+    Keeps track of most recent, average, sum, and count of a metric.
+    """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val
+        self.count += n
+        self.avg = self.sum / self.count
+
+
+def cleanup():
+    dist.destroy_process_group()
 
 
 class Trainer(object):
@@ -34,10 +57,7 @@ class Trainer(object):
         assert opt.net in ["yolo3", "yolo5s", "yolo5m", "yolo5l", "yolo5x", "yolo4s", "yolo4m", "yolo4l", "yolo4x"]
         if "yolo4" in opt.net or "yolo5" in opt.net:
             assert opt.net == opt.arch_cfg
-
-        # self.hyp_config = hyp_cfg_finetune if opt.pretrained else hyp_cfg_scratch
         self.hyp_config = hyp_cfg_scratch
-
         self.device = gpu.select_device(gpu_id, force_cpu=False)
         self.start_epoch = 0
         self.best_mAP = 0.0
@@ -51,21 +71,23 @@ class Trainer(object):
             model_name=opt.net,
             batch_size=opt.batch_size,
             num_workers=opt.n_cpu,
-            img_size=self.hyp_config.TRAIN["TRAIN_IMG_SIZE"]
+            img_size=self.hyp_config.TRAIN["TRAIN_IMG_SIZE"],
+            distributed=True
         )
 
         self.train_dataloader = dataset_splits["train"]
         self.train_dataset = self.train_dataloader.dataset
         self.val_dataloader = dataset_splits["val"]
+        self.val_dataset = self.val_dataloader.dataset
         self.num_classes = self.train_dataset.num_classes
-        self.weight_path = weight_path / opt.net / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
+        self.weight_path = (weight_path / opt.net / "{}_{}_cls".format(opt.dataset_type, self.num_classes))
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
 
         self.model = self._get_model()
 
         self.optimizer = optim.SGD(
             self.model.parameters(),
-            lr=self.hyp_config.TRAIN["LR_INIT"],
+            lr=self.hyp_config.TRAIN["LR_INIT"] * opt.world_size,
             momentum=self.hyp_config.TRAIN["MOMENTUM"],
             weight_decay=self.hyp_config.TRAIN["WEIGHT_DECAY"],
         )
@@ -122,7 +144,6 @@ class Trainer(object):
 
     def __load_model_weights(self, weight_path, resume):
         if resume:
-            # last_weight = os.path.join(os.path.split(weight_path)[0], "last.pt")
             last_weight = self.weight_path / "last.pt"
             chkpt = torch.load(last_weight, map_location=self.device)
             self.model.load_state_dict(chkpt["model"])
@@ -138,8 +159,6 @@ class Trainer(object):
     def __save_model_weights(self, epoch, mAP):
         if mAP > self.best_mAP:
             self.best_mAP = mAP
-        # best_weight = os.path.join(os.path.split(self.weight_path)[0], "best.pt")
-        # last_weight = os.path.join(os.path.split(self.weight_path)[0], "last.pt")
         best_weight = self.weight_path / "best.pt"
         last_weight = self.weight_path / "last.pt"
         chkpt = {
@@ -162,38 +181,46 @@ class Trainer(object):
             )
         del chkpt
 
-    def train(self):
-        print(self.model)
-        print("Train datasets number is : {}".format(len(self.train_dataset)))
+    def train(self, rank, world_size):
+        if rank == 0:
+            print(self.model)
+            print("Train datasets number is : {}".format(len(self.train_dataset)))
+        self.criterion.cuda(rank)
+        self.model = DDP(self.model.to(rank), device_ids=[rank], output_device=rank)
+
+
         for epoch in range(self.start_epoch, self.epochs):
             self.model.train()
 
             mloss = torch.zeros(4)
             for i, (imgs, targets, labels_length, _) in enumerate(self.train_dataloader):
                 self.scheduler.step()
-                imgs = imgs.to(self.device)
+                imgs = imgs.to(rank)
+                targets = targets.to(rank)
+                labels_length = labels_length.to(rank)
 
-                # p, p_d = self.model(imgs)
-                p, p_d = self.model(imgs)
-                loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                    p, p_d, targets, labels_length, self.train_dataset._img_size
-                )
+                # zero the parameter gradients
                 self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+
+                with torch.set_grad_enabled(True):
+                    p, p_d = self.model(imgs.cuda(non_blocking=True))
+                    loss, loss_giou, loss_conf, loss_cls = self.criterion(
+                        p, p_d, targets, labels_length, self.train_dataset._img_size, rank
+                    )
+                    loss.backward()
+                    self.optimizer.step()
 
                 # Update running mean of tracked metrics
                 loss_items = torch.tensor([loss_giou, loss_conf, loss_cls, loss])
                 mloss = (mloss * i + loss_items) / (i + 1)
-
-                print(f"\repoch {epoch}/{self.epochs} - Iteration: {i}/{len(self.train_dataloader)}, loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    loss {mloss[3]:0.4f}", end="")
+                print(f"\repoch {epoch}/{self.epochs} - Iteration: {i*world_size+rank+1}/{len(self.train_dataloader)*world_size}, loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    loss {mloss[3]:0.4f}", end="")
 
                 # multi-sclae training (320-608 pixels) every 10 batches
                 if self.multi_scale_train and (i + 1) % 10 == 0:
                     self.train_dataset._img_size = random.choice(range(10, 20)) * 32
 
             mAP = 0
-            if epoch % opt.eval_freq == 0:
+            if rank == 0 and epoch % opt.eval_freq == 0:
                 eval_func = get_eval_func(opt.dataset_type)
                 test_set = opt.img_dir
                 gt = None
@@ -206,6 +233,8 @@ class Trainer(object):
                 mAP = Aps["mAP"]
                 self.__save_model_weights(epoch, mAP)
                 print("best mAP : %g" % (self.best_mAP))
+
+        cleanup()
 
 
 if __name__ == "__main__":
@@ -272,6 +301,19 @@ if __name__ == "__main__":
         default="yolo4m",
         help="The type of the network used. Currently support 'yolo3', 'yolo4' and 'yolo5'",
     )
-    opt = parser.parse_args()
+    parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--world_size', type=int, default=8)
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
+        default='pytorch',
+        help='job launcher')
 
-    Trainer(weight_path=opt.weight_path, resume=opt.resume, gpu_id=opt.gpu_id).train()
+    opt = parser.parse_args()
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(opt.local_rank)
+
+    dist_params = dict(backend='nccl')
+    init_dist(opt.launcher, **dist_params)
+
+    Trainer(weight_path=opt.weight_path, resume=opt.resume, gpu_id=opt.gpu_id).train(opt.local_rank, opt.world_size)

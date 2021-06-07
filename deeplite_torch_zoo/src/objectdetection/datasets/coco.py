@@ -28,73 +28,12 @@ import os
 
 import numpy as np
 import torch
+import random
+import cv2
+
 from PIL import ImageFile
+from PIL import Image
 from torchvision.datasets import CocoDetection
-
-from deeplite_torch_zoo.src.objectdetection.datasets.transforms import (default_transform_fn,
-                                                    random_transform_fn)
-from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
-from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
-
-__all__ = ["get_coco_dataset"]
-
-
-def get_coco_dataset(
-    data_root, net, num_classes=80, num_torch_workers=1, batch_size=32, img_size=416
-):
-    if "yolo" in net:
-        return get_coco_dataset_for_yolo(
-            data_root,
-            num_classes=num_classes,
-            num_torch_workers=num_torch_workers,
-            batch_size=batch_size,
-            img_size=img_size,
-        )
-    else:
-        raise ValueError
-
-
-def get_coco_dataset_for_yolo(
-    data_root, num_classes=80, num_torch_workers=1, batch_size=32, img_size=416
-):
-
-    train_trans = random_transform_fn
-
-    train_annotate = os.path.join(data_root, "annotations/instances_train2017.json")
-    train_coco_root = os.path.join(data_root, "images/train2017")
-    train_coco = CocoDetectionBoundingBox(
-        train_coco_root,
-        train_annotate,
-        num_classes=num_classes,
-        transform=train_trans,
-        img_size=img_size,
-    )
-
-    train_loader = torch.utils.data.DataLoader(
-        train_coco,
-        batch_size=batch_size,
-        shuffle=True,
-        pin_memory=True,
-        num_workers=num_torch_workers,
-        collate_fn=train_coco.collate_img_label_fn,
-    )
-
-    val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
-    val_coco_root = os.path.join(data_root, "images/val2017")
-    val_coco = CocoDetectionBoundingBox(
-        val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size
-    )
-
-    val_loader = torch.utils.data.DataLoader(
-        val_coco,
-        batch_size=batch_size,
-        shuffle=False,
-        pin_memory=True,
-        num_workers=num_torch_workers,
-        collate_fn=val_coco.collate_img_label_fn,
-    )
-
-    return {"train": train_loader, "val": val_loader}
 
 
 class CocoDetectionBoundingBox(CocoDetection):
@@ -106,12 +45,15 @@ class CocoDetectionBoundingBox(CocoDetection):
         transform=None,
         category="all",
         img_size=416,
+        classes=[],
+        missing_ids=[]
     ):
         super(CocoDetectionBoundingBox, self).__init__(img_root, ann_file_name)
         self._tf = transform
-        self.num_classes = num_classes
         self._img_size = img_size
-        self.classes = ["BACKGROUND"] + DATA["CLASSES"]
+        self.classes = ["BACKGROUND"] + classes
+        self.num_classes = len(self.classes)
+        self.missing_ids = missing_ids
         if category == "all":
             self.all_categories = True
             self.category_id = -1
@@ -133,7 +75,7 @@ class CocoDetectionBoundingBox(CocoDetection):
             if (not self.all_categories) and (category_id != self.category_id):
                 continue
             conf = torch.tensor([1.0])
-            category_id = _delete_coco_empty_category(category_id)
+            category_id = self._delete_coco_empty_category(category_id)
             category_id = torch.tensor([float(category_id)])
             label = torch.cat((bbox, category_id, conf))
             labels.append(label)
@@ -144,7 +86,7 @@ class CocoDetectionBoundingBox(CocoDetection):
         del labels
 
         if self._tf == None:
-            return np.array(img), self.ids[index]
+            return np.array(img), None, None, self.ids[index]
         transformed_img_tensor, label_tensor = self._tf(self._img_size)(
             img, label_tensor
         )
@@ -155,6 +97,7 @@ class CocoDetectionBoundingBox(CocoDetection):
             label_tensor.size(0),
             self.ids[index],
         )
+
 
     def collate_img_label_fn(self, sample):
         images = []
@@ -186,36 +129,36 @@ class CocoDetectionBoundingBox(CocoDetection):
         return image_tensor, label_tensor, length_tensor, img_ids_tensor
 
 
-def _delete_coco_empty_category(old_id):
-    """The COCO dataset has 91 categories but 11 of them are empty.
-    This function will convert the 80 existing classes into range [0-79].
-    Note the COCO original class index starts from 1.
-    The converted index starts from 0.
-    Args:
-        old_id (int): The category ID from COCO dataset.
-    Return:
-        new_id (int): The new ID after empty categories are removed."""
-    starting_idx = 1
-    new_id = old_id - starting_idx
-    for missing_id in MISSING_IDS:
-        if old_id > missing_id:
-            new_id -= 1
-        elif old_id == missing_id:
-            raise KeyError(
-                "illegal category ID in coco dataset! ID # is {}".format(old_id)
-            )
-        else:
-            break
-    return new_id
+    def _delete_coco_empty_category(self, old_id):
+        """The COCO dataset has 91 categories but 11 of them are empty.
+        This function will convert the 80 existing classes into range [0-79].
+        Note the COCO original class index starts from 1.
+        The converted index starts from 0.
+        Args:
+            old_id (int): The category ID from COCO dataset.
+        Return:
+            new_id (int): The new ID after empty categories are removed."""
+        starting_idx = 1
+        new_id = old_id - starting_idx
+        for missing_id in self.missing_ids:
+            if old_id > missing_id:
+                new_id -= 1
+            elif old_id == missing_id:
+                raise KeyError(
+                    "illegal category ID in coco dataset! ID # is {}".format(old_id)
+                )
+            else:
+                break
+        return new_id
 
 
-def add_coco_empty_category(old_id):
-    """The reverse of delete_coco_empty_category."""
-    starting_idx = 1
-    new_id = old_id + starting_idx
-    for missing_id in MISSING_IDS:
-        if new_id >= missing_id:
-            new_id += 1
-        else:
-            break
-    return new_id
+    def add_coco_empty_category(self, old_id):
+        """The reverse of delete_coco_empty_category."""
+        starting_idx = 1
+        new_id = old_id + starting_idx
+        for missing_id in self.missing_ids:
+            if new_id >= missing_id:
+                new_id += 1
+            else:
+                break
+        return new_id
