@@ -76,8 +76,8 @@ def get_lego_for_yolo(
 ):
     from deeplite_torch_zoo.src.objectdetection.configs.lego_config import DATA
     train_trans = random_transform_fn
-    train_annotate = os.path.join(data_root, "train.json")
-    train_coco_root = os.path.join(data_root, "train")
+    train_annotate = os.path.join(data_root, "train/labels.json")
+    train_coco_root = os.path.join(data_root, "train/data")
     train_coco = CocoDetectionBoundingBox(
         train_coco_root,
         train_annotate,
@@ -97,8 +97,8 @@ def get_lego_for_yolo(
         sampler=DS(train_coco) if distributed else None,
     )
 
-    val_annotate = os.path.join(data_root, "val.json")
-    val_coco_root = os.path.join(data_root, "val")
+    val_annotate = os.path.join(data_root, "val/labels.json")
+    val_coco_root = os.path.join(data_root, "val/data")
     val_coco = CocoDetectionBoundingBox(
         val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size,
         classes=DATA["CLASSES"],
@@ -114,7 +114,23 @@ def get_lego_for_yolo(
         sampler=DS(val_coco) if distributed else None,
     )
 
-    return {"train": train_loader, "val": val_loader}
+    test_annotate = os.path.join(data_root, "test/labels.json")
+    test_coco_root = os.path.join(data_root, "test/data")
+    test_coco = CocoDetectionBoundingBox(
+        test_coco_root, test_annotate, num_classes=num_classes, img_size=img_size,
+        classes=DATA["CLASSES"],
+    )
+
+    test_loader = torch.utils.data.DataLoader(
+        test_coco,
+        batch_size=batch_size,
+        shuffle=False,
+        pin_memory=True,
+        num_workers=num_workers,
+        collate_fn=test_coco.collate_img_label_fn,
+        sampler=DS(test_coco) if distributed else None,
+    )
+    return {"train": train_loader, "val": val_loader, "test": test_loader}
 
 
 def get_image_to_folder_for_yolo(data_root, batch_size=128, num_workers=4, **kwargs):
@@ -186,7 +202,7 @@ def get_voc_for_yolo(
     data_root, batch_size=32, num_workers=4, num_classes=None, img_size=448, device="cuda", distributed=False, **kwargs
 ):
     def assign_device(x):
-        if device == "cuda":
+        if x[0].is_cuda ^ (device == "cuda"):
             return x
         return [v.to(device) for v in x]
 
