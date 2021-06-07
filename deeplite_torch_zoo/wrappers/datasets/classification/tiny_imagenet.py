@@ -12,6 +12,8 @@ __all__ = ["get_tinyimagenet"]
 
 def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda", distributed=False, **kwargs):
     def assign_device(x):
+        if x[0].is_cuda ^ (device == "cuda"):
+            return x
         return [v.to(device) for v in x]
 
     data_transforms = {

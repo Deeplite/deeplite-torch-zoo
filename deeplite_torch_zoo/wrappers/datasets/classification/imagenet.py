@@ -10,7 +10,7 @@ __all__ = ["get_imagenet"]
 
 def get_imagenet(data_root="", batch_size=128, num_workers=4, device="cuda", **kwargs):
     def assign_device(x):
-        if device == "cuda":
+        if x[0].is_cuda ^ (device == "cuda"):
             return x
         return [v.to(device) for v in x]
 
