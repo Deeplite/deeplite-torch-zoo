@@ -5,7 +5,25 @@ from torchvision import datasets, transforms
 from torch.utils.data.dataloader import default_collate
 
 
-__all__ = ["get_imagenet"]
+__all__ = ["get_imagenet", "get_imagenet10", "get_imagenet16"]
+
+
+def get_imagenet10(data_root="", batch_size=128, num_workers=4, device="cuda", **kwargs):
+    return get_imagenet(
+            data_root=data_root,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            device=device
+        )
+
+
+def get_imagenet16(data_root="", batch_size=128, num_workers=4, device="cuda", **kwargs):
+    return get_imagenet(
+            data_root=data_root,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            device=device
+        )
 
 
 def get_imagenet(data_root="", batch_size=128, num_workers=4, device="cuda", **kwargs):
