@@ -32,7 +32,7 @@ class COCOEvaluator(Evaluator):
 
     def evaluate(self, multi_test=False, flip_test=False):
         results = []
-        for img, img_ind in tqdm(self.dataset):
+        for img, _, _, img_ind in tqdm(self.dataset):
             results += self.process_image(img, int(img_ind))
 
         results = np.array(results).astype(np.float32)

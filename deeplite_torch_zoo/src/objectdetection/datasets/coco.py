@@ -89,7 +89,7 @@ class CocoDetectionBoundingBox(CocoDetection):
         del labels
 
         if self._tf == None:
-            return np.array(img), self.ids[index]
+            return np.array(img), None, None, self.ids[index]
         transformed_img_tensor, label_tensor = self._tf(self._img_size)(
             img, label_tensor
         )
