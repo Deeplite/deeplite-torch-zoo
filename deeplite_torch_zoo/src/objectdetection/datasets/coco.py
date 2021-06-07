@@ -35,9 +35,6 @@ from PIL import ImageFile
 from PIL import Image
 from torchvision.datasets import CocoDetection
 
-from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
-from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import Mixup
 
 class CocoDetectionBoundingBox(CocoDetection):
     def __init__(

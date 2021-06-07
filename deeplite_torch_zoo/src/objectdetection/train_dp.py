@@ -53,7 +53,7 @@ class Trainer(object):
         init_seeds(0)
         assert opt.n_cpu == 0, "multi-sclae need to be fixed if you must use multi cpus"
 
-        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "nssol", "lego"]
+        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11"]
         assert opt.net in ["yolo3", "yolo5s", "yolo5m", "yolo5l", "yolo5x", "yolo4s", "yolo4m", "yolo4l", "yolo4x"]
         if "yolo4" in opt.net or "yolo5" in opt.net:
             assert opt.net == opt.arch_cfg
@@ -228,8 +228,6 @@ class Trainer(object):
                     test_set = opt.img_dir / "VOC2007"
                 elif opt.dataset_type == "coco":
                     gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
-                elif opt.dataset_type == "lego":
-                    gt = COCO(opt.img_dir / "val.json")
 
                 Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes, _set=opt.dataset_type, device=self.device, net=opt.net)
                 mAP = Aps["mAP"]

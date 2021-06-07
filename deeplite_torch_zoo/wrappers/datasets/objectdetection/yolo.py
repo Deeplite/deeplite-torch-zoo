@@ -7,7 +7,6 @@ from torch.utils.data.distributed import DistributedSampler as DS
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils import VocDataset
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.voc import prepare_data
 from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
-from deeplite_torch_zoo.src.objectdetection.datasets.nssol import NSSOLDataset
 from deeplite_torch_zoo.src.objectdetection.datasets.image import ImageFolder
 from deeplite_torch_zoo.src.objectdetection.datasets.transforms import random_transform_fn
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
@@ -17,8 +16,6 @@ __all__ = [
     "get_image_to_folder_for_yolo",
     "get_lisa_for_yolo",
     "get_voc_for_yolo",
-    "get_nssol_for_yolo",
-    "get_lego_for_yolo",
 ]
 
 
@@ -69,68 +66,6 @@ def get_coco_for_yolo(
     )
 
     return {"train": train_loader, "val": val_loader}
-
-
-def get_lego_for_yolo(
-    data_root, batch_size=32, num_workers=1, num_classes=90, img_size=416, distributed=False, **kwargs
-):
-    from deeplite_torch_zoo.src.objectdetection.configs.lego_config import DATA
-    train_trans = random_transform_fn
-    train_annotate = os.path.join(data_root, "train/labels.json")
-    train_coco_root = os.path.join(data_root, "train/data")
-    train_coco = CocoDetectionBoundingBox(
-        train_coco_root,
-        train_annotate,
-        num_classes=num_classes,
-        transform=train_trans,
-        img_size=img_size,
-        classes=DATA["CLASSES"],
-    )
-
-    train_loader = torch.utils.data.DataLoader(
-        train_coco,
-        batch_size=batch_size,
-        shuffle=not distributed,
-        pin_memory=True,
-        num_workers=num_workers,
-        collate_fn=train_coco.collate_img_label_fn,
-        sampler=DS(train_coco) if distributed else None,
-    )
-
-    val_annotate = os.path.join(data_root, "val/labels.json")
-    val_coco_root = os.path.join(data_root, "val/data")
-    val_coco = CocoDetectionBoundingBox(
-        val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size,
-        classes=DATA["CLASSES"],
-    )
-
-    val_loader = torch.utils.data.DataLoader(
-        val_coco,
-        batch_size=batch_size,
-        shuffle=False,
-        pin_memory=True,
-        num_workers=num_workers,
-        collate_fn=val_coco.collate_img_label_fn,
-        sampler=DS(val_coco) if distributed else None,
-    )
-
-    test_annotate = os.path.join(data_root, "test/labels.json")
-    test_coco_root = os.path.join(data_root, "test/data")
-    test_coco = CocoDetectionBoundingBox(
-        test_coco_root, test_annotate, num_classes=num_classes, img_size=img_size,
-        classes=DATA["CLASSES"],
-    )
-
-    test_loader = torch.utils.data.DataLoader(
-        test_coco,
-        batch_size=batch_size,
-        shuffle=False,
-        pin_memory=True,
-        num_workers=num_workers,
-        collate_fn=test_coco.collate_img_label_fn,
-        sampler=DS(test_coco) if distributed else None,
-    )
-    return {"train": train_loader, "val": val_loader, "test": test_loader}
 
 
 def get_image_to_folder_for_yolo(data_root, batch_size=128, num_workers=4, **kwargs):
@@ -231,34 +166,3 @@ def get_voc_for_yolo(
         sampler=DS(test_dataset) if distributed else None,
     )
     return {"train": train_loader, "val": test_loader, "test": test_loader}
-
-
-def get_nssol_datasets(data_root, img_size):
-    train_dataset = NSSOLDataset(data_root, _set="train", img_size=img_size)
-    test_dataset = NSSOLDataset(data_root, _set="test", img_size=img_size)
-    return train_dataset, test_dataset
-
-
-def get_nssol_for_yolo(data_root, img_size=448, batch_size=32, num_workers=4, **kwargs):
-    train_dataset, test_dataset = get_nssol_datasets(data_root, img_size=img_size)
-
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=True,
-        pin_memory=True,
-        num_workers=num_workers,
-        collate_fn=train_dataset.collate_img_label_fn,
-        drop_last=True
-    )
-
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=1,
-        shuffle=False,
-        pin_memory=True,
-        num_workers=num_workers,
-        collate_fn=test_dataset.collate_img_label_fn
-    )
-
-    return {'train': train_loader, "val": test_dataset, 'test': test_loader}
