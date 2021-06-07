@@ -15,6 +15,8 @@ def get_cifar100(
     data_root="", batch_size=128, num_workers=1, download=True, device="cuda", distributed=False, **kwargs
 ):
     def assign_device(x):
+        if x[0].is_cuda ^ (device == "cuda"):
+            return x
         return [v.to(device) for v in x]
 
     if data_root == "":
