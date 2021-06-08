@@ -9,7 +9,6 @@ from tqdm import tqdm
 from pycocotools.coco import COCO
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scratch
-import deeplite_torch_zoo.src.objectdetection.configs.hyp_finetune as hyp_cfg_finetune
 
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
@@ -31,11 +30,8 @@ class Trainer(object):
         assert opt.n_cpu == 0, "multi-sclae need to be fixed if you must use multi cpus"
 
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11"]
-        assert opt.net in ["yolo3", "yolo5s", "yolo5m", "yolo5l", "yolo5x", "yolo4s", "yolo4m", "yolo4l", "yolo4x"]
-        if "yolo4" in opt.net or "yolo5" in opt.net:
-            assert opt.net == opt.arch_cfg
+        assert opt.net in ["yolov3", "yolov5s", "yolov5m", "yolov5l", "yolov5x", "yolov4s", "yolov4m", "yolov4l", "yolov4x"]
 
-        # self.hyp_config = hyp_cfg_finetune if opt.pretrained else hyp_cfg_scratch
         self.hyp_config = hyp_cfg_scratch
 
         self.device = gpu.select_device(gpu_id, force_cpu=False)
@@ -83,37 +79,37 @@ class Trainer(object):
         )
 
     def _get_model(self):
-        if "yolo3" in opt.net:
+        if "yolov3" in opt.net:
             return yolo3(
                 pretrained=opt.pretrained,
                 progress=True,
                 num_classes=self.num_classes,
                 device=self.device,
             )
-        elif "yolo5" in opt.net:
+        elif "yolov5" in opt.net:
             return yolo5(
                 pretrained=opt.pretrained,
                 num_classes=self.num_classes,
-                net=opt.arch_cfg,
+                net=opt.net,
                 device=self.device,
             )
-        elif "yolo4" in opt.net:
+        elif "yolov4" in opt.net:
             if "lisa" in opt.dataset_type:
                 return yolo4_lisa(
                     pretrained=opt.pretrained,
                     num_classes=self.num_classes,
-                    net=opt.arch_cfg,
+                    net=opt.net,
                     device=self.device,
                 )
             return yolo4(
                 pretrained=opt.pretrained,
                 num_classes=self.num_classes,
-                net=opt.arch_cfg,
+                net=opt.net,
                 device=self.device,
             )
 
     def _get_loss(self):
-        if "yolo3" in opt.net:
+        if "yolov3" in opt.net:
             return YoloV3Loss(num_classes=self.num_classes, device=self.device)
         else:
             return YoloV5Loss(
@@ -218,13 +214,6 @@ if __name__ == "__main__":
         help="The path to the folder containing images to be detected or trained.",
     )
     parser.add_argument(
-        "--arch-cfg",
-        dest="arch_cfg",
-        type=str,
-        default="yolov4m",
-        help="The path to yolo architecture file (only for yolo 4 and 5).",
-    )
-    parser.add_argument(
         "--batch-size",
         dest="batch_size",
         type=int,
@@ -269,7 +258,7 @@ if __name__ == "__main__":
         "--net",
         dest="net",
         type=str,
-        default="yolo4m",
+        default="yolov4m",
         help="The type of the network used. Currently support 'yolo3', 'yolo4' and 'yolo5'",
     )
     opt = parser.parse_args()
