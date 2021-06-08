@@ -24,7 +24,7 @@ class COCOEvaluator(Evaluator):
         )
         self.dataset = dataset
 
-        self.classes = self.dataset.classes[1:]
+        self.classes = self.dataset.classes
         self.__visiual = visualize
         self.__visual_imgs = 0
 
