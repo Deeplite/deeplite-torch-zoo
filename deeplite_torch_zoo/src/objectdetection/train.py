@@ -90,7 +90,7 @@ class Trainer(object):
             return yolo5(
                 pretrained=opt.pretrained,
                 num_classes=self.num_classes,
-                net=opt.net,
+                net="yolov5",
                 device=self.device,
             )
         elif "yolov4" in opt.net:
@@ -98,13 +98,13 @@ class Trainer(object):
                 return yolo4_lisa(
                     pretrained=opt.pretrained,
                     num_classes=self.num_classes,
-                    net=opt.net,
+                    net="yolov4",
                     device=self.device,
                 )
             return yolo4(
                 pretrained=opt.pretrained,
                 num_classes=self.num_classes,
-                net=opt.net,
+                net="yolov4",
                 device=self.device,
             )
 
