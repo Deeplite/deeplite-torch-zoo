@@ -99,8 +99,8 @@ class Trainer(object):
         self.scheduler = CosineDecayLR(
             self.optimizer,
             T_max=self.epochs * len(self.train_dataloader),
-            lr_init=self.hyp_config.TRAIN["LR_INIT"],
-            lr_min=self.hyp_config.TRAIN["LR_END"],
+            lr_init=self.hyp_config.TRAIN["LR_INIT"] * opt.world_size,
+            lr_min=self.hyp_config.TRAIN["LR_END"] * opt.world_size,
             warmup=self.hyp_config.TRAIN["WARMUP_EPOCHS"] * len(self.train_dataloader),
         )
 

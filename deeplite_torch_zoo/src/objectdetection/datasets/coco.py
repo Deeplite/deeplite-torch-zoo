@@ -35,6 +35,7 @@ from PIL import ImageFile
 from PIL import Image
 from torchvision.datasets import CocoDetection
 
+from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
 
 class CocoDetectionBoundingBox(CocoDetection):
     def __init__(
