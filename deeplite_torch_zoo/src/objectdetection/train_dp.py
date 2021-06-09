@@ -215,8 +215,8 @@ class Trainer(object):
                 mloss = (mloss * i + loss_items) / (i + 1)
                 print(f"\repoch {epoch}/{self.epochs} - Iteration: {i*world_size+rank+1}/{len(self.train_dataloader)*world_size}, loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    loss {mloss[3]:0.4f}", end="")
 
-                # multi-sclae training (320-608 pixels) every 10 batches
-                if self.multi_scale_train and (i + 1) % 10 == 0:
+                # multi-sclae training (320-608 pixels)
+                if self.multi_scale_train:
                     self.train_dataset._img_size = random.choice(range(10, 20)) * 32
 
             mAP = 0
