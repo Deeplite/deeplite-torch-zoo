@@ -12,8 +12,17 @@ __all__ = ["get_cifar100"]
 
 
 def get_cifar100(
-    data_root="", batch_size=128, num_workers=1, download=True, device="cuda", distributed=False, **kwargs
+    data_root="", batch_size=128, num_workers=4, fp16=False, download=True, device="cuda", distributed=False, **kwargs
 ):
+    if len(kwargs):
+        import sys
+        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+
+    def half_precision(x):
+        if fp16:
+            x = [_x.half() if isinstance(_x, torch.FloatTensor) else _x for _x in x]
+        return x
+
     def assign_device(x):
         if x[0].is_cuda ^ (device == "cuda"):
             return x
@@ -53,7 +62,7 @@ def get_cifar100(
         batch_size=batch_size,
         shuffle=not distributed,
         num_workers=num_workers,
-        collate_fn=lambda x: assign_device(default_collate(x)),
+        collate_fn=lambda x: half_precision(assign_device(default_collate(x))),
         sampler=DS(train_dataset) if distributed else None,
     )
 
@@ -62,7 +71,7 @@ def get_cifar100(
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
-        collate_fn=lambda x: assign_device(default_collate(x)),
+        collate_fn=lambda x: half_precision(assign_device(default_collate(x))),
         sampler=DS(test_dataset) if distributed else None,
     )
 

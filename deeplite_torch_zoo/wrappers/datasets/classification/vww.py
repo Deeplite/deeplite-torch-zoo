@@ -10,7 +10,16 @@ from torch.utils.data.distributed import DistributedSampler as DS
 __all__ = ["get_vww"]
 
 
-def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", distributed=False, **kwargs):
+def get_vww(data_root="", batch_size=128, num_workers=4, fp16=False, device="cuda", distributed=False, **kwargs):
+
+    if len(kwargs):
+        import sys
+        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+
+    def half_precision(x):
+        if fp16:
+            x = [_x.half() if isinstance(_x, torch.FloatTensor) else _x for _x in x]
+        return x
 
     def assign_device(x, device="cuda"):
         if x[0].is_cuda ^ (device == "cuda"):
@@ -48,7 +57,7 @@ def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", distribu
         batch_size=batch_size,
         shuffle=not distributed,
         num_workers=num_workers,
-        collate_fn=lambda x: assign_device(default_collate(x), device=device),
+        collate_fn=lambda x: half_precision(assign_device(default_collate(x), device=device)),
         sampler=DS(train_dataset) if distributed else None,
     )
 
@@ -57,7 +66,7 @@ def get_vww(data_root="", batch_size=128, num_workers=0, device="cuda", distribu
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
-        collate_fn=lambda x: assign_device(default_collate(x)),
+        collate_fn=lambda x: half_precision(assign_device(default_collate(x))),
         sampler=DS(test_dataset) if distributed else None,
     )
 

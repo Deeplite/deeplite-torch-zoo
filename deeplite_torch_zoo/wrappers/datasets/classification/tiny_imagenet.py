@@ -10,7 +10,17 @@ from torch.utils.data.distributed import DistributedSampler as DS
 __all__ = ["get_tinyimagenet"]
 
 
-def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda", distributed=False, **kwargs):
+def get_tinyimagenet(data_root, batch_size=128, num_workers=4, fp16=False, device="cuda", distributed=False, **kwargs):
+
+    if len(kwargs):
+        import sys
+        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+
+    def half_precision(x):
+        if fp16:
+            x = [_x.half() if isinstance(_x, torch.FloatTensor) else _x for _x in x]
+        return x
+
     def assign_device(x):
         if x[0].is_cuda ^ (device == "cuda"):
             return x
@@ -36,8 +46,7 @@ def get_tinyimagenet(data_root, batch_size=128, num_workers=4, device="cuda", di
                 batch_size=batch_size,
                 shuffle=False if distributed else (x=="train"),
                 num_workers=0,
-                #pin_memory=True,
-                collate_fn=lambda x: assign_device(default_collate(x)),
+                collate_fn=lambda x: half_precision(assign_device(default_collate(x))),
                 sampler=DS(image_datasets[x]) if distributed else None
             ) for x in ['train', 'val']
         }
