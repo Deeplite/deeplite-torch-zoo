@@ -51,7 +51,6 @@ def cleanup():
 class Trainer(object):
     def __init__(self, weight_path, resume, gpu_id):
         init_seeds(0)
-        assert opt.n_cpu == 0, "multi-sclae need to be fixed if you must use multi cpus"
 
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11"]
         assert opt.net in ["yolov3", "yolov5s", "yolov5m", "yolov5l", "yolov5x", "yolov4s", "yolov4m", "yolov4l", "yolov4x"]
@@ -203,7 +202,7 @@ class Trainer(object):
                 with torch.set_grad_enabled(True):
                     p, p_d = self.model(imgs.cuda(non_blocking=True))
                     loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                        p, p_d, targets, labels_length, self.train_dataset._img_size, rank
+                        p, p_d, targets, labels_length, imgs.shape[-1], rank
                     )
                     loss.backward()
                     self.optimizer.step()
@@ -275,7 +274,7 @@ if __name__ == "__main__":
         "--n-cpu",
         dest="n_cpu",
         type=int,
-        default=0,
+        default=4,
         help="The number of cpu thread to use during batch generation.",
     )
     parser.add_argument(
