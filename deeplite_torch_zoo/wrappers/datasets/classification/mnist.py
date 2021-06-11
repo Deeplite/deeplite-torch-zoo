@@ -1,11 +1,10 @@
 import os
-from os.path import expanduser
-
-import torch
 import torchvision
+
+from ..utils import get_dataloader
+from os.path import expanduser
 from torchvision import transforms
-from torch.utils.data.dataloader import default_collate
-from torch.utils.data.distributed import DistributedSampler as DS
+
 
 __all__ = ["get_mnist"]
 
@@ -15,16 +14,6 @@ def get_mnist(data_root="", batch_size=128, num_workers=4, fp16=False, download=
     if len(kwargs):
         import sys
         print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
-
-    def half_precision(x):
-        if fp16:
-            x = [_x.half() if isinstance(_x, torch.FloatTensor) else _x for _x in x]
-        return x
-
-    def assign_device(x):
-        if x[0].is_cuda ^ (device == "cuda"):
-            return x
-        return [v.to(device) for v in x]
 
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
@@ -47,24 +36,10 @@ def get_mnist(data_root="", batch_size=128, num_workers=4, fp16=False, download=
         ),
     )
 
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=not distributed,
-        pin_memory=True,
-        num_workers=num_workers,
-        collate_fn=lambda x: half_precision(assign_device(default_collate(x))),
-        sampler=DS(train_dataset) if distributed else None,
-    )
+    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
 
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=batch_size,
-        shuffle=False,
-        pin_memory=True,
-        num_workers=num_workers,
-        collate_fn=lambda x: half_precision(assign_device(default_collate(x))),
-        sampler=DS(test_dataset) if distributed else None,
-    )
+    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=False, device=device)
 
     return {"train": train_loader, "test": test_loader}
