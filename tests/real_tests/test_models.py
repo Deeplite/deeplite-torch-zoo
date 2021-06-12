@@ -755,6 +755,7 @@ class TestModels(unittest.TestCase):
             dataset_name="voc",
             model_name="fcn32",
             num_workers=1,
+            batch_size=1,
             backbone="vgg",
         )["test"]
         acc = seg_eval_func(model, test_loader, net="fcn32")

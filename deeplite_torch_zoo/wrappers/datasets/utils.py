@@ -17,7 +17,7 @@ def get_dataloader(
         return x
 
     def assign_device(x):
-        if x[0].is_cuda ^ (device == "cuda"):
+        if x[0].is_cuda and (device == "cuda"):
             return x
         return [v.to(device) for v in x]
 
