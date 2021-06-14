@@ -38,7 +38,7 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
 
 
 def get_model_by_name(
-    model_name="", dataset_name="", pretrained=False, progress=False, device="cuda"
+    model_name="", dataset_name="", pretrained=False, progress=False, fp16=False, device="cuda"
 ):
     """
     The models function calls in the format of (`model_name`_`dataset_name`) all lower case.
@@ -51,7 +51,10 @@ def get_model_by_name(
     model_name = model_name.lower()
     func = f"{model_name}_{dataset_name}"
     assert func in globals(), f"function {func} doesn't exist"
-    return globals()[func](pretrained=pretrained, progress=progress, device=device)
+    model = globals()[func](pretrained=pretrained, progress=progress, device=device)
+    if fp16:
+        model = model.half()
+    return model
 
 
 def list_models(key_word="*"):
