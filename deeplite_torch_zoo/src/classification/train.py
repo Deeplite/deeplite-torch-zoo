@@ -28,6 +28,8 @@ def train_model(output_path, model, dataloaders, criterion, optimizer, num_epoch
 
             # Iterate over data.
             for i, (inputs, labels) in enumerate(dataloaders[phase]):
+                labels = labels.cuda()
+                inputs = inputs.cuda()
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -71,7 +73,7 @@ def train_model(output_path, model, dataloaders, criterion, optimizer, num_epoch
         time_elapsed // 60, time_elapsed % 60))
 
 
-def get_model(arch="resnet18", num_classes=100, pretrained=True, device="cuda"):
+def get_model(arch="resnet18", num_classes=100, pretrained=True, fp16=False, device="cuda"):
     if not pretrained:
         return eval(f"models.{arch}")(num_classes=num_classes).to(device) 
 
@@ -79,6 +81,8 @@ def get_model(arch="resnet18", num_classes=100, pretrained=True, device="cuda"):
     weights = {k: v for k, v in weights.items() if 'fc' not in k and 'classifier' not in k}
     model = eval(f"models.{arch}")(num_classes=num_classes)
     model.load_state_dict(weights, strict=False)
+    if fp16:
+        model = model.half()
     return model.to(device)
 
 
@@ -91,6 +95,8 @@ if __name__ == "__main__":
     parser.add_argument("--num-classes", type=int, default=100)
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--pretrained", type=bool, default=True)
+    parser.add_argument("--fp16", type=bool, default=False)
+
     opt = parser.parse_args()
 
     dataloaders = get_data_splits_by_name(
@@ -98,9 +104,9 @@ if __name__ == "__main__":
         data_root=opt.data_root,
         num_workers=0,
         batch_size=128,
-        device="cuda",
+        fp16=opt.fp16
     )
-    model = get_model(arch=opt.arch, num_classes=opt.num_classes, pretrained=opt.pretrained, device="cuda")
+    model = get_model(arch=opt.arch, num_classes=opt.num_classes, pretrained=opt.pretrained, fp16=opt.fp16, device="cuda")
 
     #Loss Function
     criterion = nn.CrossEntropyLoss()
