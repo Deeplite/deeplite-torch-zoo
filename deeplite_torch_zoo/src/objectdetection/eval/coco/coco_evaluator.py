@@ -2,7 +2,6 @@ import os
 import numpy as np
 import torch
 from pycocotools.cocoeval import COCOeval
-from tqdm import tqdm
 
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
@@ -32,7 +31,7 @@ class COCOEvaluator(Evaluator):
 
     def evaluate(self, multi_test=False, flip_test=False):
         results = []
-        for img, _, _, img_ind in tqdm(self.dataset):
+        for img, _, _, img_ind in self.dataset:
             results += self.process_image(img, int(img_ind))
 
         results = np.array(results).astype(np.float32)
