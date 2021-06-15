@@ -34,9 +34,15 @@ class YoloV3Loss(nn.Module):
         self.__iou_threshold_loss = hyp_cfg.TRAIN["IOU_THRESHOLD_LOSS"]
         self._strides = np.array(hyp_cfg.MODEL["STRIDES"])
         self.__num_classes = num_classes
-        self.__device = device
+        self._device = device
         self._anchors = np.array(hyp_cfg.MODEL["ANCHORS"], dtype=float)
         self._anchors_per_scale = hyp_cfg.MODEL["ANCHORS_PER_SCLAE"]
+
+    def _assign_device(self, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes, rank):
+        device = rank
+        if self._device == torch.device("cpu"):
+            device = self._device
+        return label_sbbox.to(device), label_mbbox.to(device), label_lbbox.to(device), sbboxes.to(device), mbboxes.to(device), lbboxes.to(device)
 
     def forward(self, p, p_d, targets, labels_length, img_size, rank=0):
         (
@@ -47,12 +53,10 @@ class YoloV3Loss(nn.Module):
             mbboxes,
             lbboxes,
         ) = self.make_targets_batch(targets.cpu(), labels_length.cpu(), img_size)
-        label_sbbox = label_sbbox.to(rank)
-        label_mbbox = label_mbbox.to(rank)
-        label_lbbox = label_lbbox.to(rank)
-        sbboxes = sbboxes.to(rank)
-        mbboxes = mbboxes.to(rank)
-        lbboxes = lbboxes.to(rank)
+
+        label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes = self._assign_device(
+            label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes, rank
+        )
 
         return self._forward(
             p, p_d, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes
