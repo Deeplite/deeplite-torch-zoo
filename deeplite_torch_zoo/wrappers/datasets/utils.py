@@ -21,7 +21,8 @@ def get_dataloader(
         batch_size=batch_size,
         shuffle=shuffle,
         num_workers=num_workers,
-        collate_fn=lambda x: half_precision(collate_fn(x)),
+        #collate_fn=lambda x: half_precision(collate_fn(x)),
+        collate_fn=collate_fn,
         sampler=DS(dataset) if distributed else None,
     )
     return dataloader

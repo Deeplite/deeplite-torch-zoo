@@ -37,9 +37,10 @@ class YoloV3Loss(nn.Module):
         self._device = device
         self._anchors = np.array(hyp_cfg.MODEL["ANCHORS"], dtype=float)
         self._anchors_per_scale = hyp_cfg.MODEL["ANCHORS_PER_SCLAE"]
+        self.rank = 0
 
     def _assign_device(self, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes, rank):
-        device = rank
+        device = self.rank
         if self._device == torch.device("cpu"):
             device = self._device
         return label_sbbox.to(device), label_mbbox.to(device), label_lbbox.to(device), sbboxes.to(device), mbboxes.to(device), lbboxes.to(device)
