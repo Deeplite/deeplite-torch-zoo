@@ -39,13 +39,16 @@ class YoloV3Loss(nn.Module):
         self._anchors_per_scale = hyp_cfg.MODEL["ANCHORS_PER_SCLAE"]
         self.rank = 0
 
-    def _assign_device(self, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes, rank):
+    def _assign_device(self, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes):
         device = self.rank
         if self._device == torch.device("cpu"):
             device = self._device
         return label_sbbox.to(device), label_mbbox.to(device), label_lbbox.to(device), sbboxes.to(device), mbboxes.to(device), lbboxes.to(device)
 
-    def forward(self, p, p_d, targets, labels_length, img_size, rank=0):
+    def _mutate_rank(self, rank):
+        self.rank = rank
+
+    def forward(self, p, p_d, targets, labels_length, img_size):
         (
             label_sbbox,
             label_mbbox,
@@ -56,7 +59,7 @@ class YoloV3Loss(nn.Module):
         ) = self.make_targets_batch(targets.cpu(), labels_length.cpu(), img_size)
 
         label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes = self._assign_device(
-            label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes, rank
+            label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes
         )
 
         return self._forward(
