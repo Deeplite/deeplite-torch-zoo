@@ -1,5 +1,5 @@
 language: python
-cache: pip
+#cache: pip
 python:
   - "3.6"      # current default Python on Travis CI
   - "3.7"
@@ -18,7 +18,7 @@ install:
 
 # command to run tests
 script:
-  - pylint deeplite_torch_zoo/wrappers/ --ignore-docstrings yes --ignore-comments yes --disable=W0614,W0401,W0613,C0301,E0401,C0415
+  #- pylint deeplite_torch_zoo/wrappers/ --ignore-docstrings yes --ignore-comments yes --disable=W0614,W0401,W0613,C0301,E0401,C0415
   - pytest
   - codecov
 
