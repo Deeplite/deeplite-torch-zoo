@@ -184,6 +184,7 @@ class Trainer(object):
             print("Train datasets number is : {}".format(len(self.train_dataset)))
         self.criterion.cuda(rank)
         self.model = DDP(self.model.to(rank), device_ids=[rank], output_device=rank)
+        self.criterion._mutate_rank(rank)
 
 
         for epoch in range(self.start_epoch, self.epochs):
@@ -202,7 +203,7 @@ class Trainer(object):
                 with torch.set_grad_enabled(True):
                     p, p_d = self.model(imgs.cuda(non_blocking=True))
                     loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                        p, p_d, targets, labels_length, imgs.shape[-1], rank
+                        p, p_d, targets, labels_length, imgs.shape[-1]
                     )
                     loss.backward()
                     self.optimizer.step()
@@ -267,7 +268,7 @@ if __name__ == "__main__":
         "--resume", action="store_false", default=False, help="resume training flag"
     )
     parser.add_argument(
-        "--pretrained", default=True, help="Train Model from scratch if False"
+        "--pretrained", default=False, help="Train Model from scratch if False"
     )
     parser.add_argument("--gpu_id", type=int, default=0, help="gpu id")
     parser.add_argument(
