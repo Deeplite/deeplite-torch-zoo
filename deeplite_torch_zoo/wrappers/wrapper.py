@@ -49,7 +49,10 @@ def get_model_by_name(
     """
     dataset_name = dataset_name.lower()
     model_name = model_name.lower()
-    func = f"{model_name}_{dataset_name}"
+    if dataset_name is not "":
+        func = f"{model_name}_{dataset_name}"
+    else:
+        func = f"{model_name}"
     assert func in globals(), f"function {func} doesn't exist"
     model = globals()[func](pretrained=pretrained, progress=progress, device=device)
     if fp16:
