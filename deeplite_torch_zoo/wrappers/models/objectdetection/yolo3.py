@@ -31,15 +31,14 @@ def yolo3(pretrained=False, progress=True, num_classes=20, device="cuda"):
             check_hash=True,
             map_location=device,
         )
-        if num_classes != 20:
-            state_dict = {k: v for k, v in state_dict.items() if "fpn" not in k}
+        state_dict = {k: v for k, v in state_dict.items() if "fpn" not in k}
         model.load_state_dict(state_dict, strict=False)
 
     return model.to(device)
 
 
 def yolo3_voc(
-    _set_classes="voc20", num_classes=20, pretrained=False, progress=True, device="cuda"
+    _set_classes="voc_20", num_classes=20, pretrained=False, progress=True, device="cuda"
 ):
     model = Yolov3(num_classes=num_classes)
     if pretrained:
