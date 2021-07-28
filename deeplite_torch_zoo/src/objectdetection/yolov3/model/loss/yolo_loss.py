@@ -37,15 +37,9 @@ class YoloV3Loss(nn.Module):
         self._device = device
         self._anchors = np.array(hyp_cfg.MODEL["ANCHORS"], dtype=float)
         self._anchors_per_scale = hyp_cfg.MODEL["ANCHORS_PER_SCLAE"]
-        self.rank = -1
-
-    def _assign_device(self, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes):
-        device = self._device
-        if self.rank != -1:
-            device = self.rank
-        if self._device == torch.device("cpu"):
-            device = self._device
-        return label_sbbox.to(device), label_mbbox.to(device), label_lbbox.to(device), sbboxes.to(device), mbboxes.to(device), lbboxes.to(device)
+        self.rank = 0
+        if device == "cpu":
+            self.rank = "cpu"
 
     def _mutate_rank(self, rank):
         self.rank = rank
@@ -59,10 +53,6 @@ class YoloV3Loss(nn.Module):
             mbboxes,
             lbboxes,
         ) = self.make_targets_batch(targets.cpu(), labels_length.cpu(), img_size)
-
-        label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes = self._assign_device(
-            label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes
-        )
 
         return self._forward(
             p, p_d, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes
@@ -122,12 +112,12 @@ class YoloV3Loss(nn.Module):
                 lbboxes,
             ) = self.make_targets_sample(sample[:label_length], img_size)
 
-            b_label_sbbox.append(torch.from_numpy(label_sbbox).float())
-            b_label_mbbox.append(torch.from_numpy(label_mbbox).float())
-            b_label_lbbox.append(torch.from_numpy(label_lbbox).float())
-            b_sbboxes.append(torch.from_numpy(sbboxes).float())
-            b_mbboxes.append(torch.from_numpy(mbboxes).float())
-            b_lbboxes.append(torch.from_numpy(lbboxes).float())
+            b_label_sbbox.append(torch.from_numpy(label_sbbox).to(self.rank).float())
+            b_label_mbbox.append(torch.from_numpy(label_mbbox).to(self.rank).float())
+            b_label_lbbox.append(torch.from_numpy(label_lbbox).to(self.rank).float())
+            b_sbboxes.append(torch.from_numpy(sbboxes).to(self.rank).float())
+            b_mbboxes.append(torch.from_numpy(mbboxes).to(self.rank).float())
+            b_lbboxes.append(torch.from_numpy(lbboxes).to(self.rank).float())
 
         b_label_sbbox = torch.stack(b_label_sbbox)
         b_label_mbbox = torch.stack(b_label_mbbox)
