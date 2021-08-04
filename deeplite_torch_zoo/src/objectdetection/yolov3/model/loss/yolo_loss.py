@@ -34,12 +34,9 @@ class YoloV3Loss(nn.Module):
         self.__iou_threshold_loss = hyp_cfg.TRAIN["IOU_THRESHOLD_LOSS"]
         self._strides = np.array(hyp_cfg.MODEL["STRIDES"])
         self.__num_classes = num_classes
-        self._device = device
         self._anchors = np.array(hyp_cfg.MODEL["ANCHORS"], dtype=float)
         self._anchors_per_scale = hyp_cfg.MODEL["ANCHORS_PER_SCLAE"]
-        self.rank = 0
-        if device == "cpu":
-            self.rank = "cpu"
+        self.rank = device
 
     def _mutate_rank(self, rank):
         self.rank = rank
