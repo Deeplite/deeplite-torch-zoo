@@ -1,5 +1,4 @@
-import torchvision.models as models
-
+from torchvision import models
 
 def resnet18_imagenet(pretrained=False, progress=True, device="cuda"):
     model = models.resnet18(pretrained=pretrained)

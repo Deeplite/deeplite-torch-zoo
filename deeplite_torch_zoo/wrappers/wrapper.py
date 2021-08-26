@@ -49,7 +49,7 @@ def get_model_by_name(
     """
     dataset_name = dataset_name.lower()
     model_name = model_name.lower()
-    if dataset_name is not "":
+    if dataset_name != "":
         func = f"{model_name}_{dataset_name}"
     else:
         func = f"{model_name}"

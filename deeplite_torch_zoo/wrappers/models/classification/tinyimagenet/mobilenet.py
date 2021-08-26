@@ -1,5 +1,5 @@
 
-import torchvision.models as models
+from torchvision import models
 from torch.hub import load_state_dict_from_url
 
 
