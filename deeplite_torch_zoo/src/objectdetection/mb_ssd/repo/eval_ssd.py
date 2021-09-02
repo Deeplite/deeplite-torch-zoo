@@ -33,7 +33,7 @@ parser.add_argument("--eval_dir", default="eval_results", type=str, help="The di
 parser.add_argument('--mb2_width_mult', default=1.0, type=float,
                     help='Width Multiplifier for MobilenetV2')
 args = parser.parse_args()
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() and args.use_cuda else "cpu")
 
 
 def group_annotation_by_class(dataset):

@@ -55,7 +55,7 @@ parser.add_argument('--use_cuda', default=True, type=str2bool,
 
 
 args = parser.parse_args()
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() and args.use_cuda else "cpu")
 cpu_device = torch.device("cpu")
 
 
