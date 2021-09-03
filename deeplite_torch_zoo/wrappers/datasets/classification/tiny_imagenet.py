@@ -1,6 +1,6 @@
 import os
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
+from torchvision import datasets
+from torchvision import transforms
 
 from ..utils import get_dataloader
 

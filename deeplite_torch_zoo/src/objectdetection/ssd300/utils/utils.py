@@ -89,7 +89,7 @@ class Encoder(object):
         max_output : maximum number of output bboxes
     """
 
-    def __init__(self, dboxes, device="cuda:0"):
+    def __init__(self, dboxes, device="cuda"):
         self.device = device
         self.dboxes = dboxes(order="ltrb").to(device)
         self.dboxes_xywh = dboxes(order="xywh").unsqueeze(dim=0).to(device)

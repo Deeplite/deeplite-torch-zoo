@@ -66,7 +66,7 @@ vis_flag = args.vis
 
 config = yaml.load(open(config_path))
 net_config = config["Net"]
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 modelname = config_path.stem
 model_path = Path("../model") / modelname / "model.pth"

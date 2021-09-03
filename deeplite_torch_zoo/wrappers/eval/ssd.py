@@ -22,7 +22,7 @@ __all__ = [
 
 
 def vgg16_ssd_eval_func(
-    model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda:0"
+    model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
     eval_path = os.path.join(expanduser("~"), ".deeplite-torch-zoo/voc/eval_results")
     Path(eval_path).mkdir(parents=True, exist_ok=True)
@@ -44,7 +44,7 @@ def vgg16_ssd_eval_func(
 
 
 def mb1_ssd_eval_func(
-    model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda:0"
+    model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
     eval_path = os.path.join(expanduser("~"), ".deeplite-torch-zoo/voc/eval_results")
     Path(eval_path).mkdir(parents=True, exist_ok=True)
@@ -69,7 +69,7 @@ def mb1_ssd_eval_func(
 
 
 def mb2_ssd_eval_func(
-    model, data_loader, gt=None, iou_threshold=0.5, use_2007_metric=True, _set="voc", device="cuda:0"
+    model, data_loader, gt=None, iou_threshold=0.5, use_2007_metric=True, _set="voc", device="cuda"
 ):
     eval_path = os.path.join(expanduser("~"), f".deeplite-torch-zoo/{_set}/eval_results")
     Path(eval_path).mkdir(parents=True, exist_ok=True)
@@ -90,7 +90,7 @@ def mb2_ssd_eval_func(
 
 
 def mb2_ssd_lite_eval_func(
-    model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda:0"
+    model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
     eval_path = os.path.join(expanduser("~"), ".deeplite-torch-zoo/voc/eval_results")
     Path(eval_path).mkdir(parents=True, exist_ok=True)
