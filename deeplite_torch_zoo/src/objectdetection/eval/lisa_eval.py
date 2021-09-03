@@ -137,7 +137,7 @@ class LISAEval(Evaluator):
         return ap  # Average Precision  (AP) @[ IoU=050 ]
 
 
-def yolo_eval_lisa(model, data_root, device="cuda:0", net="yolov3", img_size=448, **kwargs):
+def yolo_eval_lisa(model, data_root, device="cuda", net="yolov3", img_size=448, **kwargs):
 
     mAP = 0
     result = {}
