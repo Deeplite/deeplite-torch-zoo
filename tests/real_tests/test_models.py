@@ -460,7 +460,7 @@ class TestModels(unittest.TestCase):
         )
         APs = yolo_eval_voc(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc")
         print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.900) < 0.001, True)
+        self.assertEqual(abs(APs["mAP"] - 0.899) < 0.001, True)
 
     @pytest.mark.skip(reason="not compatible with pytorch 1.4")
     def test_yolov5x_voc(self):
