@@ -150,6 +150,24 @@ class TestModels(unittest.TestCase):
         APs = vgg16_ssd_eval_func(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.7731) < 0.001, True)
 
+    @pytest.mark.test_vgg16_ssd_wider_face
+    def test_vgg16_ssd_wider_face(self):
+        model = get_model_by_name(
+            model_name="vgg16_ssd",
+            dataset_name="wider_face",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/wider_face",
+            dataset_name="wider_face",
+            model_name="vgg16_ssd",
+            batch_size=8,
+        )["test"]
+        APs = vgg16_ssd_eval_func(model, test_loader)
+        print(APs)
+        self.assertEqual(abs(APs["mAP"] - 0.7071) < 0.001, True)
+
     @pytest.mark.test_mb1_ssd_voc
     def test_mb1_ssd_voc(self):
         model = get_model_by_name(
