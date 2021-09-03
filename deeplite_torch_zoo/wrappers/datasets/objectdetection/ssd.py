@@ -5,11 +5,12 @@ from torch.utils.data import ConcatDataset
 from ..utils import get_dataloader
 from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.voc_dataset import VOCDataset
 from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.coco import CocoDetectionBoundingBox
+from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.ssd.data_preprocessing import TrainAugmentation
 from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.ssd.ssd import MatchPrior
 
 
-__all__ = ["get_voc_for_ssd", "get_coco_for_ssd"]
+__all__ = ["get_voc_for_ssd", "get_coco_for_ssd", "get_wider_face_for_ssd"]
 
 
 def _get_voc_for_ssd(data_root, config=None, num_classes=21):
@@ -82,3 +83,32 @@ def get_coco_for_ssd(data_root, config, batch_size=32, num_workers=4, train_ann_
         fp16=fp16, distributed=distributed, shuffle=False, device=device)
 
     return {"train": train_loader, "val": test_loader, "test": test_loader}
+
+
+def _get_wider_face_for_ssd(data_root, config=None):
+    train_transform = TrainAugmentation(config.image_size, config.image_mean, config.image_std)
+    target_transform = MatchPrior(config.priors, config.center_variance, config.size_variance, 0.5)
+
+    train_dataset = WiderFace(root=data_root, split="train",
+        transform=train_transform, target_transform=target_transform)
+    test_dataset = WiderFace(root=data_root, split="val")
+
+    return train_dataset, test_dataset
+
+
+def get_wider_face_for_ssd(data_root, config, batch_size=32, num_workers=4,
+    fp16=False, distributed=False, device="cuda", **kwargs):
+    if len(kwargs):
+        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+
+    train_dataset, test_dataset = _get_wider_face_for_ssd(
+        data_root=os.path.join(data_root), config=config
+    )
+    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
+
+    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=False, device=device)
+
+    return {"train": train_loader, "val": test_loader, "test": test_loader}
+
