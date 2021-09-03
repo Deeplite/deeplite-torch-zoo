@@ -111,4 +111,3 @@ def get_wider_face_for_ssd(data_root, config, batch_size=32, num_workers=4,
         fp16=fp16, distributed=distributed, shuffle=False, device=device)
 
     return {"train": train_loader, "val": test_loader, "test": test_loader}
-
