@@ -133,6 +133,23 @@ class TestModels(unittest.TestCase):
         ACC = classification_eval(model, test_loader)
         self.assertEqual(abs(ACC["acc"] - 0.892) < 0.001, True)
 
+    @pytest.mark.test_resnet18_ssd_voc
+    def test_resnet18_ssd_voc(self):
+        model = get_model_by_name(
+            model_name="resnet18_ssd",
+            dataset_name="voc_20",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/VOCdevkit",
+            dataset_name="voc",
+            model_name="resnet18_ssd",
+            batch_size=32
+        )["test"]
+        APs = vgg16_ssd_eval_func(model, test_loader)
+        self.assertEqual(abs(APs["mAP"] - 0.728) < 0.001, True)
+
     @pytest.mark.test_vgg16_ssd_voc
     def test_vgg16_ssd_voc(self):
         model = get_model_by_name(
