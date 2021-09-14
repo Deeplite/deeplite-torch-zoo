@@ -29,7 +29,6 @@ class ResNet(nn.Module):
             self.out_channels = [1024, 512, 512, 256, 256, 256]
 
         self.feature_extractor = nn.Sequential(*list(backbone.children())[:7])
-        #import pdb; pdb.set_trace()
 
         conv4_block1 = self.feature_extractor[-1][0]
         conv4_block1.conv1.stride = (1, 1)
@@ -43,7 +42,6 @@ def create_resnet_ssd(num_classes, is_test=False, backbone="resnet18"):
     _io = net.out_channels
     _c = [256, 256, 128, 128, 128]
     source_layer_indexes = [
-        #(23, BatchNorm2d(512)),
         len(base_net),
     ]
     extras = ModuleList([
@@ -95,7 +93,7 @@ def create_resnet_ssd(num_classes, is_test=False, backbone="resnet18"):
         Conv2d(in_channels=_io[2], out_channels=6 * 4, kernel_size=3, padding=1),
         Conv2d(in_channels=_io[3], out_channels=6 * 4, kernel_size=3, padding=1),
         Conv2d(in_channels=_io[4], out_channels=4 * 4, kernel_size=3, padding=1),
-        Conv2d(in_channels=_io[5], out_channels=4 * 4, kernel_size=3, padding=1), # TODO: change to kernel_size=1, padding=0?
+        Conv2d(in_channels=_io[5], out_channels=4 * 4, kernel_size=3, padding=1),
     ])
 
     classification_headers = ModuleList([
@@ -104,7 +102,7 @@ def create_resnet_ssd(num_classes, is_test=False, backbone="resnet18"):
         Conv2d(in_channels=_io[2], out_channels=6 * num_classes, kernel_size=3, padding=1),
         Conv2d(in_channels=_io[3], out_channels=6 * num_classes, kernel_size=3, padding=1),
         Conv2d(in_channels=_io[4], out_channels=4 * num_classes, kernel_size=3, padding=1),
-        Conv2d(in_channels=_io[5], out_channels=4 * num_classes, kernel_size=3, padding=1), # TODO: change to kernel_size=1, padding=0?
+        Conv2d(in_channels=_io[5], out_channels=4 * num_classes, kernel_size=3, padding=1),
     ])
 
     return SSD(num_classes, base_net, source_layer_indexes,
