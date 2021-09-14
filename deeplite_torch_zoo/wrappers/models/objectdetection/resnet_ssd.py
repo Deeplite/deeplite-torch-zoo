@@ -2,8 +2,8 @@ from torch.hub import load_state_dict_from_url
 
 __all__ = ["resnet18_ssd_voc_20", "resnet34_ssd_voc_20", "resnet50_ssd_voc_20"]
 
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.models.resnet_ssd import create_resnet_ssd
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.config.vgg_ssd_config import VGG_CONFIG as CONFIG
+from deeplite_torch_zoo.src.objectdetection.ssd.models.resnet_ssd import create_resnet_ssd
+from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG_CONFIG as CONFIG
 
 
 model_urls = {

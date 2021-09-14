@@ -1,7 +1,6 @@
 from .mb1_ssd import *
 from .mb2_ssd_lite import *
 from .vgg16_ssd import *
-from .ssd300 import *
 from .yolo3 import *
 from .yolo4 import *
 from .yolo5 import *

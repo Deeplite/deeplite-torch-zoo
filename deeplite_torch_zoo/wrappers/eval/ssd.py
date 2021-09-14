@@ -4,13 +4,13 @@ import os
 from os.path import expanduser
 from pathlib import Path
 
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.eval import ssd_eval
+from deeplite_torch_zoo.src.objectdetection.ssd.eval import ssd_eval
 from deeplite_torch_zoo.src.objectdetection.eval.coco.coco_evaluator import ssd_eval_coco
 
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.ssd.vgg_ssd import create_vgg_ssd_predictor
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd_predictor
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.models.mobilenetv2_ssd import create_mobilenetv2_ssd_predictor
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite_predictor
+from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.vgg_ssd import create_vgg_ssd_predictor
+from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd_predictor
+from deeplite_torch_zoo.src.objectdetection.ssd.models.mobilenetv2_ssd import create_mobilenetv2_ssd_predictor
+from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite_predictor
 
 
 __all__ = [

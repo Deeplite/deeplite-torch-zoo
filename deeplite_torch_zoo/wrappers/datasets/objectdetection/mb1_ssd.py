@@ -1,4 +1,4 @@
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.config.mobilenetv1_ssd_config import (
+from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import (
     MOBILENET_CONFIG,
 )
 from deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd import get_voc_for_ssd
