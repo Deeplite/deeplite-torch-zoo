@@ -8,7 +8,6 @@ import numpy as np
 import torch
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg
-from deeplite_torch_zoo.src.objectdetection.ssd300.utils.utils import (Encoder, dboxes300_coco)
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (cxcywh2xyxy, nms, post_process)
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
@@ -54,51 +53,8 @@ class Evaluator(object):
         pred_bbox = post_process(pred_bbox)
         return pred_bbox.squeeze()
 
-    def _apply_model_for_ssd(self, images):
-        pred_bboxes = []
-        dboxes = dboxes300_coco()
-        encoder = Encoder(dboxes, device=self.device)
-        with torch.no_grad():
-            ploc, plabel = self.model(images)
-        ploc, plabel = ploc.float(), plabel.float()
-
-        # Handle the batch of predictions produced
-        # This is slow, but consistent with old implementation.
-        for idx in range(ploc.shape[0]):
-            # ease-of-use for specific predictions
-            ploc_i = ploc[idx, :, :].unsqueeze(0)
-            plabel_i = plabel[idx, :, :].unsqueeze(0)
-
-            try:
-                result = encoder.decode_batch(ploc_i, plabel_i, 0.50, 200)[0]
-            except:
-                # raise
-                print("")
-                print("No object detected in idx: {}".format(idx))
-                continue
-
-            htot = images[idx].shape[1]
-            wtot = images[idx].shape[2]
-            loc, label, prob = [r.cpu().numpy() for r in result]
-            for loc_, label_, prob_ in zip(loc, label, prob):
-                pred_bboxes.append(
-                    [
-                        loc_[0] * wtot,
-                        loc_[1] * htot,
-                        loc_[2] * wtot,
-                        loc_[3] * htot,
-                        prob_,
-                        label_ - 1,
-                    ]
-                )
-                # label_ - 1 to map back classes between 0 and num_classes - 1.
-                # for ssd models we need to account for background as a class at index 0.
-        return np.array(pred_bboxes)
-
     def apply_model(self, imgs):
-        if "ssd" in self._net:
-            return self._apply_model_for_ssd(imgs)
-        elif "yolo" in self._net:
+        if "yolo" in self._net:
             return self._apply_model_for_yolo(imgs)
         else:
             raise ValueError
