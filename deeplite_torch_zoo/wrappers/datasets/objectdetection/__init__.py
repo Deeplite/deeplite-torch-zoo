@@ -5,3 +5,4 @@ from .vgg16_ssd import *
 from .yolo import *
 from .mb2_ssd import *
 from .mask_rcnn import *
+from .resnet_ssd import *
