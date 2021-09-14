@@ -21,6 +21,7 @@ __all__ = [
     "yolo4x_voc_20",
     "yolo4_lisa",
     "yolo4m_lisa_11",
+    "yolo4l_leaky_voc_20"
 ]
 
 model_urls = {
@@ -29,6 +30,7 @@ model_urls = {
     "yolov4l_voc_20": "http://download.deeplite.ai/zoo/models/yolo4l-voc-20classes_872-9f54132ce2934fbf.pth",
     "yolov4x_voc_20": "http://download.deeplite.ai/zoo/models/yolo4x-voc-20classes_882-187f352b9d0d29c6.pth",
     "yolov4m_lisa_11": "http://download.deeplite.ai/zoo/models/yolov4m-lisa_11_880-6615c5e27557fab0.pth",
+    "yolov4l_leaky_voc_20": "http://download.deeplite.ai/zoo/models/yolo4l-leaky-voc-20classes_891-2c0f78ee3938ade3.pt"
 }
 
 yolov4_cfg = {
@@ -36,6 +38,7 @@ yolov4_cfg = {
     "yolov4m": "deeplite_torch_zoo/src/objectdetection/configs/yolov4m-mish.yaml",
     "yolov4l": "deeplite_torch_zoo/src/objectdetection/configs/yolov4l-mish.yaml",
     "yolov4x": "deeplite_torch_zoo/src/objectdetection/configs/yolov4x-mish.yaml",
+    "yolov4l_leaky": "deeplite_torch_zoo/src/objectdetection/configs/yolov4l-leaky.yaml",
     "yolov5s": "deeplite_torch_zoo/src/objectdetection/configs/yolov5s.yaml",
     "yolov5m": "deeplite_torch_zoo/src/objectdetection/configs/yolov5m.yaml",
     "yolov5l": "deeplite_torch_zoo/src/objectdetection/configs/yolov5l.yaml",
@@ -132,6 +135,16 @@ def yolo4l_voc_20(pretrained=False, progress=True, device="cuda"):
 def yolo4x_voc_20(pretrained=False, progress=True, device="cuda"):
     return _yolo4(
         net="yolov4x",
+        _set_classes="voc_20",
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
+    )
+
+
+def yolo4l_leaky_voc_20(pretrained=False, progress=True, device="cuda"):
+    return _yolo4(
+        net="yolov4l_leaky",
         _set_classes="voc_20",
         pretrained=pretrained,
         progress=progress,

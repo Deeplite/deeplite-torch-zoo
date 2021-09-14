@@ -11,7 +11,7 @@ import torch.nn as nn
 import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import post_process
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import (
-    SPP, SPPCSP, Bottleneck, BottleneckCSP, BottleneckCSP2, Concat, Conv,
+    SPP, SPPCSP, SPPCSPLeaky, Bottleneck, BottleneckCSP, BottleneckCSP2, BottleneckCSP2Leaky, Concat, Conv,
     DWConv, Focus, VoVCSP)
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import (
     C3, CrossConv, MixConv2d)
@@ -299,7 +299,9 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             CrossConv,
             BottleneckCSP,
             BottleneckCSP2,
+            BottleneckCSP2Leaky,
             SPPCSP,
+            SPPCSPLeaky,
             VoVCSP,
             C3,
         ]:
@@ -324,7 +326,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             #     c2 = make_divisible(c2, 8) if c2 != no else c2
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, BottleneckCSP2, SPPCSP, VoVCSP, C3]:
+            if m in [BottleneckCSP, BottleneckCSP2, BottleneckCSP2Leaky, SPPCSP, SPPCSPLeaky, VoVCSP, C3]:
                 args.insert(2, n)
                 n = 1
         elif m is nn.BatchNorm2d:
