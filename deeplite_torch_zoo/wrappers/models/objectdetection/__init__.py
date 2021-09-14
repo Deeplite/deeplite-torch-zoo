@@ -7,3 +7,4 @@ from .yolo4 import *
 from .yolo5 import *
 from .mb2_ssd import *
 from .mask_rcnn import *
+from .resnet_ssd import *

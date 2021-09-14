@@ -90,21 +90,21 @@ def create_resnet_ssd(num_classes, is_test=False, backbone="resnet18"):
     ])
 
     regression_headers = ModuleList([
-        Conv2d(in_channels=256, out_channels=4 * 4, kernel_size=3, padding=1),
-        Conv2d(in_channels=512, out_channels=6 * 4, kernel_size=3, padding=1),
-        Conv2d(in_channels=512, out_channels=6 * 4, kernel_size=3, padding=1),
-        Conv2d(in_channels=256, out_channels=6 * 4, kernel_size=3, padding=1),
-        Conv2d(in_channels=256, out_channels=4 * 4, kernel_size=3, padding=1),
-        Conv2d(in_channels=128, out_channels=4 * 4, kernel_size=3, padding=1), # TODO: change to kernel_size=1, padding=0?
+        Conv2d(in_channels=_io[0], out_channels=4 * 4, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[1], out_channels=6 * 4, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[2], out_channels=6 * 4, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[3], out_channels=6 * 4, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[4], out_channels=4 * 4, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[5], out_channels=4 * 4, kernel_size=3, padding=1), # TODO: change to kernel_size=1, padding=0?
     ])
 
     classification_headers = ModuleList([
-        Conv2d(in_channels=256, out_channels=4 * num_classes, kernel_size=3, padding=1),
-        Conv2d(in_channels=512, out_channels=6 * num_classes, kernel_size=3, padding=1),
-        Conv2d(in_channels=512, out_channels=6 * num_classes, kernel_size=3, padding=1),
-        Conv2d(in_channels=256, out_channels=6 * num_classes, kernel_size=3, padding=1),
-        Conv2d(in_channels=256, out_channels=4 * num_classes, kernel_size=3, padding=1),
-        Conv2d(in_channels=128, out_channels=4 * num_classes, kernel_size=3, padding=1), # TODO: change to kernel_size=1, padding=0?
+        Conv2d(in_channels=_io[0], out_channels=4 * num_classes, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[1], out_channels=6 * num_classes, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[2], out_channels=6 * num_classes, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[3], out_channels=6 * num_classes, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[4], out_channels=4 * num_classes, kernel_size=3, padding=1),
+        Conv2d(in_channels=_io[5], out_channels=4 * num_classes, kernel_size=3, padding=1), # TODO: change to kernel_size=1, padding=0?
     ])
 
     return SSD(num_classes, base_net, source_layer_indexes,
