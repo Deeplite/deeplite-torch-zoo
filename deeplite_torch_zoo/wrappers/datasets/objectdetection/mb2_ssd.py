@@ -2,7 +2,7 @@ import sys
 
 from .ssd import get_coco_for_ssd
 from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
+from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
 
 __all__ = ["get_coco_for_mb2_ssd", "get_coco_gm_for_mb2_ssd"]
 

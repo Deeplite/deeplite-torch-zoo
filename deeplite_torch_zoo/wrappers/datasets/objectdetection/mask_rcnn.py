@@ -1,7 +1,7 @@
 import os
 
 from ..utils import get_dataloader
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.coco import CocoDetectionBoundingBox
+from deeplite_torch_zoo.src.objectdetection.ssd.datasets.coco import CocoDetectionBoundingBox
 
 
 __all__ = ["get_coco_for_fasterrcnn_resnet50_fpn"]

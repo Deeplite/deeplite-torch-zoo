@@ -3,11 +3,11 @@ import sys
 from torch.utils.data import ConcatDataset
 
 from ..utils import get_dataloader
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.voc_dataset import VOCDataset
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.coco import CocoDetectionBoundingBox
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.wider_face import WiderFace
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.ssd.data_preprocessing import TrainAugmentation
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.ssd.ssd import MatchPrior
+from deeplite_torch_zoo.src.objectdetection.ssd.datasets.voc_dataset import VOCDataset
+from deeplite_torch_zoo.src.objectdetection.ssd.datasets.coco import CocoDetectionBoundingBox
+from deeplite_torch_zoo.src.objectdetection.ssd.datasets.wider_face import WiderFace
+from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.data_preprocessing import TrainAugmentation
+from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.ssd import MatchPrior
 
 
 __all__ = ["get_voc_for_ssd", "get_coco_for_ssd", "get_wider_face_for_ssd"]

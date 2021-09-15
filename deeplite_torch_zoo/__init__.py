@@ -12,8 +12,8 @@ path = sys.path
 MISSING = False
 if "PYTHONPATH" not in os.environ:
 	os.environ["PYTHONPATH"] = ""
-if 'src/objectdetection/mb_ssd/repo/' not in os.environ["PYTHONPATH"]:
-    path.insert(1, str(get_project_root() / 'deeplite_torch_zoo/src/objectdetection/mb_ssd/repo/'))
+if 'src/objectdetection/ssd/repo/' not in os.environ["PYTHONPATH"]:
+    path.insert(1, str(get_project_root() / 'deeplite_torch_zoo/src/objectdetection/ssd/repo/'))
     MISSING = True
 if 'src/segmentation/deeplab/repo/' not in os.environ["PYTHONPATH"]:
     path.insert(1, str(get_project_root() / 'deeplite_torch_zoo/src/segmentation/deeplab/repo/'))
