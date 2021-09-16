@@ -133,6 +133,57 @@ class TestModels(unittest.TestCase):
         ACC = classification_eval(model, test_loader)
         self.assertEqual(abs(ACC["acc"] - 0.892) < 0.001, True)
 
+    @pytest.mark.test_resnet18_ssd_voc
+    def test_resnet18_ssd_voc(self):
+        model = get_model_by_name(
+            model_name="resnet18_ssd",
+            dataset_name="voc_20",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/VOCdevkit",
+            dataset_name="voc",
+            model_name="resnet18_ssd",
+            batch_size=32
+        )["test"]
+        APs = vgg16_ssd_eval_func(model, test_loader)
+        self.assertEqual(abs(APs["mAP"] - 0.728) < 0.001, True)
+
+    @pytest.mark.test_resnet34_ssd_voc
+    def test_resnet34_ssd_voc(self):
+        model = get_model_by_name(
+            model_name="resnet34_ssd",
+            dataset_name="voc_20",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/VOCdevkit",
+            dataset_name="voc",
+            model_name="resnet34_ssd",
+            batch_size=32
+        )["test"]
+        APs = vgg16_ssd_eval_func(model, test_loader)
+        self.assertEqual(abs(APs["mAP"] - 0.760) < 0.001, True)
+
+    @pytest.mark.test_resnet50_ssd_voc
+    def test_resnet50_ssd_voc(self):
+        model = get_model_by_name(
+            model_name="resnet50_ssd",
+            dataset_name="voc_20",
+            pretrained=True,
+            progress=False,
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="/neutrino/datasets/VOCdevkit",
+            dataset_name="voc",
+            model_name="resnet50_ssd",
+            batch_size=32
+        )["test"]
+        APs = vgg16_ssd_eval_func(model, test_loader)
+        self.assertEqual(abs(APs["mAP"] - 0.766) < 0.001, True)
+
     @pytest.mark.test_vgg16_ssd_voc
     def test_vgg16_ssd_voc(self):
         model = get_model_by_name(
@@ -454,7 +505,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.893) < 0.001, True)
 
-    @pytest.mark.skip(reason="not compatible with pytorch 1.4, also need retraining (anchor_grid size mismatch)")
+    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5s_voc(self):
         model = get_model_by_name(
             model_name="yolo5s",
@@ -468,7 +519,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.817) < 0.001, True)
 
-    @pytest.mark.skip(reason="not compatible with pytorch 1.4")
+    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5m_voc(self):
         model = get_model_by_name(
             model_name="yolo5m",
@@ -482,7 +533,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.882) < 0.001, True)
 
-    @pytest.mark.skip(reason="not compatible with pytorch 1.4")
+    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5l_voc(self):
         model = get_model_by_name(
             model_name="yolo5l",
@@ -494,7 +545,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.899) < 0.001, True)
 
-    @pytest.mark.skip(reason="not compatible with pytorch 1.4")
+    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5x_voc(self):
         model = get_model_by_name(
             model_name="yolo5x",
@@ -508,7 +559,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
-    @pytest.mark.skip(reason="not compatible with pytorch 1.4")
+    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5s_coco(self):
         model = get_model_by_name(
             model_name="yolo5s",
@@ -521,7 +572,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
-    @pytest.mark.skip(reason="not compatible with pytorch 1.4")
+    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5m_coco(self):
         model = get_model_by_name(
             model_name="yolo5m",
@@ -534,7 +585,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
-    @pytest.mark.skip(reason="not compatible with pytorch 1.4")
+    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5l_coco(self):
         model = get_model_by_name(
             model_name="yolo5l",
@@ -547,7 +598,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
-    @pytest.mark.skip(reason="not compatible with pytorch 1.4")
+    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5x_coco(self):
         model = get_model_by_name(
             model_name="yolo5x",
@@ -559,78 +610,6 @@ class TestModels(unittest.TestCase):
         APs = yolo_eval_coco(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
-
-    @pytest.mark.test_ssd300_resnet18_voc
-    def test_ssd300_resnet18_voc(self):
-        model = get_model_by_name(
-            model_name="ssd300_resnet18",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-        )
-        APs = yolo_eval_voc(
-            model,
-            "/neutrino/datasets/VOCdevkit/VOC2007",
-            _set="voc",
-            img_size=300,
-            net="ssd300_resnet18",
-        )
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.58) < 0.001, True)
-
-    @pytest.mark.test_ssd300_resnet34_voc
-    def test_ssd300_resnet34_voc(self):
-        model = get_model_by_name(
-            model_name="ssd300_resnet34",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-        )
-        APs = yolo_eval_voc(
-            model,
-            "/neutrino/datasets/VOCdevkit/VOC2007",
-            _set="voc",
-            img_size=300,
-            net="ssd300_resnet34",
-        )
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.654) < 0.001, True)
-
-    @pytest.mark.test_ssd300_resnet50_voc
-    def test_ssd300_resnet50_voc(self):
-        model = get_model_by_name(
-            model_name="ssd300_resnet50",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-        )
-        APs = yolo_eval_voc(
-            model,
-            "/neutrino/datasets/VOCdevkit/VOC2007",
-            _set="voc",
-            img_size=300,
-            net="ssd300_resnet50",
-        )
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.659) < 0.001, True)
-
-    @pytest.mark.test_ssd300_vgg16_voc
-    def test_ssd300_vgg16_voc(self):
-        model = get_model_by_name(
-            model_name="ssd300_vgg16",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-        )
-        APs = yolo_eval_voc(
-            model,
-            "/neutrino/datasets/VOCdevkit/VOC2007",
-            _set="voc",
-            img_size=300,
-            net="ssd300_vgg16",
-        )
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.641) < 0.001, True)
 
     @pytest.mark.test_yolov4m_lisa
     def test_yolov4m_lisa(self):

@@ -38,7 +38,7 @@ INSTALL_REQUIRES = [
 
 def create_init_files_in_submodules():
     submodules_init = [
-        "deeplite_torch_zoo/src/objectdetection/mb_ssd/repo/__init__.py",
+        "deeplite_torch_zoo/src/objectdetection/ssd/repo/__init__.py",
         "deeplite_torch_zoo/src/segmentation/deeplab/repo/__init__.py",
         "deeplite_torch_zoo/src/segmentation/unet_scse/repo/__init__.py",
         "deeplite_torch_zoo/src/segmentation/unet_scse/repo/src/losses/__init__.py"

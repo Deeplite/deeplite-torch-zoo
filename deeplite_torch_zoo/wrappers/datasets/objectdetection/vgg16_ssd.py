@@ -1,6 +1,6 @@
 import sys
 
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.config.vgg_ssd_config import VGG_CONFIG
+from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG_CONFIG
 from deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd import get_voc_for_ssd, get_wider_face_for_ssd
 
 

@@ -1,8 +1,8 @@
 
 from torch.hub import load_state_dict_from_url
 
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.models.mobilenetv2_ssd import create_mobilenetv2_ssd
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
+from deeplite_torch_zoo.src.objectdetection.ssd.models.mobilenetv2_ssd import create_mobilenetv2_ssd
+from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
 
 __all__ = [
     "mb2_ssd",

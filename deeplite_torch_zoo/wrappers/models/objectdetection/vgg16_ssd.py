@@ -2,8 +2,8 @@ from torch.hub import load_state_dict_from_url
 
 __all__ = ["vgg16_ssd_voc_20", "vgg16_ssd_wider_face"]
 
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.repo.vision.ssd.vgg_ssd import create_vgg_ssd
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.config.vgg_ssd_config import VGG_CONFIG
+from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.vgg_ssd import create_vgg_ssd
+from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG_CONFIG
 
 
 model_urls = {

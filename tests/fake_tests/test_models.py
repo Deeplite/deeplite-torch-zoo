@@ -666,10 +666,10 @@ class TestModelsFake(unittest.TestCase):
         self.assertEqual(list(y[1][1].shape), [1, 26, 26, 3, 25])
         self.assertEqual(list(y[1][2].shape), [1, 13, 13, 3, 25])
 
-    @pytest.mark.test_ssd300_resnet18_voc_20_fake
-    def test_ssd300_resnet18_voc_20_fake(self):
+    @pytest.mark.test_resnet18_ssd_voc_20_fake
+    def test_resnet18_ssd_voc_20_fake(self):
         model = get_model_by_name(
-            model_name="ssd300_resnet18",
+            model_name="resnet18_ssd",
             dataset_name="voc_20",
             pretrained=True,
             progress=False,
@@ -678,24 +678,23 @@ class TestModelsFake(unittest.TestCase):
         test_loader = get_data_splits_by_name(
             data_root="fixture/datasets/VOCdevkit",
             dataset_name="voc",
-            model_name="ssd300",
+            model_name="resnet18_ssd",
             batch_size=1,
             num_workers=0,
             num_classes=21,
             device="cpu",
-        )["test"]
-
+        )["train"]
         dataset = test_loader.dataset
-        img, _, _, _ = dataset[0]
+        img, _, _ = next(iter(test_loader))
         model.eval()
-        y1, y2 = model(torch.unsqueeze(img, dim=0))
-        self.assertEqual(list(y1.shape), [1, 4, 8732])
-        self.assertEqual(list(y2.shape), [1, 21, 8732])
+        y1, y2 = model(img)
+        self.assertEqual(list(y1.shape), [1, 8732, 21])
+        self.assertEqual(list(y2.shape), [1, 8732, 4])
 
-    @pytest.mark.test_ssd300_resnet34_voc_20_fake
-    def test_ssd300_resnet34_voc_20_fake(self):
+    @pytest.mark.test_resnet34_ssd_voc_20_fake
+    def test_resnet34_ssd_voc_20_fake(self):
         model = get_model_by_name(
-            model_name="ssd300_resnet34",
+            model_name="resnet34_ssd",
             dataset_name="voc_20",
             pretrained=True,
             progress=False,
@@ -704,24 +703,23 @@ class TestModelsFake(unittest.TestCase):
         test_loader = get_data_splits_by_name(
             data_root="fixture/datasets/VOCdevkit",
             dataset_name="voc",
-            model_name="ssd300",
+            model_name="resnet34_ssd",
             batch_size=1,
             num_workers=0,
             num_classes=21,
             device="cpu",
-        )["test"]
-
+        )["train"]
         dataset = test_loader.dataset
-        img, _, _, _ = dataset[0]
+        img, _, _ = next(iter(test_loader))
         model.eval()
-        y1, y2 = model(torch.unsqueeze(img, dim=0))
-        self.assertEqual(list(y1.shape), [1, 4, 8732])
-        self.assertEqual(list(y2.shape), [1, 21, 8732])
+        y1, y2 = model(img)
+        self.assertEqual(list(y1.shape), [1, 8732, 21])
+        self.assertEqual(list(y2.shape), [1, 8732, 4])
 
-    @pytest.mark.test_ssd300_resnet50_voc_20_fake
-    def test_ssd300_resnet50_voc_20_fake(self):
+    @pytest.mark.test_resnet50_ssd_voc_20_fake
+    def test_resnet50_ssd_voc_20_fake(self):
         model = get_model_by_name(
-            model_name="ssd300_resnet50",
+            model_name="resnet50_ssd",
             dataset_name="voc_20",
             pretrained=True,
             progress=False,
@@ -730,45 +728,18 @@ class TestModelsFake(unittest.TestCase):
         test_loader = get_data_splits_by_name(
             data_root="fixture/datasets/VOCdevkit",
             dataset_name="voc",
-            model_name="ssd300",
+            model_name="resnet50_ssd",
             batch_size=1,
             num_workers=0,
             num_classes=21,
             device="cpu",
-        )["test"]
-
+        )["train"]
         dataset = test_loader.dataset
-        img, _, _, _ = dataset[0]
+        img, _, _ = next(iter(test_loader))
         model.eval()
-        y1, y2 = model(torch.unsqueeze(img, dim=0))
-        self.assertEqual(list(y1.shape), [1, 4, 8732])
-        self.assertEqual(list(y2.shape), [1, 21, 8732])
-
-    @pytest.mark.test_ssd300_vgg16_voc_20_fake
-    def test_ssd300_vgg16_voc_20_fake(self):
-        model = get_model_by_name(
-            model_name="ssd300_vgg16",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-            device="cpu",
-        )
-        test_loader = get_data_splits_by_name(
-            data_root="fixture/datasets/VOCdevkit",
-            dataset_name="voc",
-            model_name="ssd300",
-            batch_size=1,
-            num_workers=0,
-            num_classes=21,
-            device="cpu",
-        )["test"]
-
-        dataset = test_loader.dataset
-        img, _, _, _ = dataset[0]
-        model.eval()
-        y1, y2 = model(torch.unsqueeze(img, dim=0))
-        self.assertEqual(list(y1.shape), [1, 4, 8732])
-        self.assertEqual(list(y2.shape), [1, 21, 8732])
+        y1, y2 = model(img)
+        self.assertEqual(list(y1.shape), [1, 8732, 21])
+        self.assertEqual(list(y2.shape), [1, 8732, 4])
 
     @pytest.mark.test_unet_carvana_fake
     def test_unet_carvana_fake(self):
