@@ -604,6 +604,37 @@ class TestModelsFake(unittest.TestCase):
         self.assertEqual(list(y[1][1].shape), [1, 26, 26, 3, 25])
         self.assertEqual(list(y[1][2].shape), [1, 13, 13, 3, 25])
 
+    @pytest.mark.test_yolo4l_leaky_voc_20_fake
+    def test_yolo4l_leaky_voc_20_fake(self):
+        model = get_model_by_name(
+            model_name="yolo4l_leaky",
+            dataset_name="voc_20",
+            pretrained=True,
+            progress=False,
+            device="cpu",
+        )
+        test_loader = get_data_splits_by_name(
+            data_root="fixture/datasets/VOCdevkit",
+            dataset_name="voc",
+            model_name="yolo",
+            batch_size=1,
+            num_workers=0,
+            num_classes=21,
+            img_size=416,
+            device="cpu",
+        )["test"]
+
+        dataset = test_loader.dataset
+        img, _, _, _ = dataset[0]
+        y = model(torch.unsqueeze(img, dim=0))
+        self.assertEqual(list(y[0][0].shape), [1, 52, 52, 3, 25])
+        self.assertEqual(list(y[0][1].shape), [1, 26, 26, 3, 25])
+        self.assertEqual(list(y[0][2].shape), [1, 13, 13, 3, 25])
+
+        self.assertEqual(list(y[1][0].shape), [1, 52, 52, 3, 25])
+        self.assertEqual(list(y[1][1].shape), [1, 26, 26, 3, 25])
+        self.assertEqual(list(y[1][2].shape), [1, 13, 13, 3, 25])
+
     @pytest.mark.test_yolo4x_voc_20_fake
     def test_yolo4x_voc_20_fake(self):
         model = get_model_by_name(
