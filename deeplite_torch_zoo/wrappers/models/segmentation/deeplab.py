@@ -22,7 +22,7 @@ def deeplab(
     model = DeepLab(backbone=backbone, num_classes=num_classes)
     if pretrained:
         state_dict = load_state_dict_from_url(
-            model_urls["{}_{}".format(backbone, dataset)],
+            model_urls[f"{backbone}_{dataset}"],
             progress=progress,
             check_hash=True,
             map_location=device

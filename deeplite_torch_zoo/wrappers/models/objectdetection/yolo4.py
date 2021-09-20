@@ -55,7 +55,7 @@ def _yolo4(
     if pretrained:
         pretrained_model = load_state_dict_from_url(
             model_urls[
-                "{net}_{_set_classes}".format(net=net, _set_classes=_set_classes)
+                f"{net}_{_set_classes}"
             ],
             progress=progress,
             check_hash=True,

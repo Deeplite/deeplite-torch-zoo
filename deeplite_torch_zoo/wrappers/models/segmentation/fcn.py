@@ -22,7 +22,7 @@ def fcn32(
     model = FCN(n_class=num_classes)
     if pretrained:
         state_dict = load_state_dict_from_url(
-            model_urls["{}_{}".format(net, dataset)], progress=progress, check_hash=True, map_location=device
+            model_urls[f"{net}_{dataset}"], progress=progress, check_hash=True, map_location=device
         )
         model.load_state_dict(state_dict)
     return model.to(device)
