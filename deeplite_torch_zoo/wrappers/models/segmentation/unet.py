@@ -50,7 +50,7 @@ def unet_enc_dec(
     )
     if pretrained:
         state_dict = load_state_dict_from_url(
-            model_urls["{}_{}_{}".format(dec_type, enc_type, dataset_type)],
+            model_urls[f"{dec_type}_{enc_type}_{dataset_type}"],
             progress=progress,
             check_hash=True,
             map_location=device,

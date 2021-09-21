@@ -34,7 +34,7 @@ def mb2_ssd_lite(
     model.priors = config.priors.to(device)
     if pretrained:
         state_dict = load_state_dict_from_url(
-            model_urls["{}_{}".format(net, _dataset)],
+            model_urls[f"{net}_{_dataset}"],
             progress=progress,
             check_hash=True,
             map_location=device,

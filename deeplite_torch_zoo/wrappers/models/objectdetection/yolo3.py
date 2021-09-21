@@ -43,7 +43,7 @@ def yolo3_voc(
     model = Yolov3(num_classes=num_classes)
     if pretrained:
         state_dict = load_state_dict_from_url(
-            model_urls["yolov3_{}".format(_set_classes)],
+            model_urls[f"yolov3_{_set_classes}"],
             progress=progress,
             check_hash=True,
             map_location=device,

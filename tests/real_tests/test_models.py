@@ -477,6 +477,20 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.882) < 0.001, True)
 
+    @pytest.mark.test_yolov4l_leaky_voc
+    def test_yolov4l_leaky_voc(self):
+        model = get_model_by_name(
+            model_name="yolo4l_leaky",
+            dataset_name="voc_20",
+            pretrained=True,
+            progress=False,
+        )
+        APs = yolo_eval_voc(
+            model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4l_leaky"
+        )
+        print(APs)
+        self.assertEqual(abs(APs["mAP"] - 0.890) < 0.001, True)
+
     @pytest.mark.test_yolov4x_voc
     def test_yolov4x_voc(self):
         model = get_model_by_name(
