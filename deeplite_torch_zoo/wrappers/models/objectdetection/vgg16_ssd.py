@@ -1,6 +1,6 @@
 from torch.hub import load_state_dict_from_url
 
-__all__ = ["vgg16_ssd_voc_20", "vgg16_ssd_wider_face"]
+__all__ = ["vgg16_ssd_voc_20", "vgg16_ssd_wider_face", "vgg16_ssd_voc_24"]
 
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.vgg_ssd import create_vgg_ssd
 from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG_CONFIG
@@ -9,7 +9,9 @@ from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG
 model_urls = {
     "voc_20": "http://download.deeplite.ai/zoo/models/vgg16-ssd-voc-mp-0_7726-b1264e8beec69cbc.pth",
     "wider_face": "http://download.deeplite.ai/zoo/models/vgg16-ssd-wider_face-0_707-8c76d36acb083648.pth",
+    "voc_24" : "http://download.deeplite.ai/zoo/models/vgg16-ssd-voc-new-1938220361cdf530.pth"
 }
+
 
 def vgg_ssd(dataset="voc_20", num_classes=20, pretrained=False, progress=True, device='cuda'):
     model = create_vgg_ssd(num_classes + 1)
@@ -30,3 +32,6 @@ def vgg16_ssd_voc_20(pretrained=False, progress=True, device='cuda'):
 
 def vgg16_ssd_wider_face(pretrained=False, progress=True, device='cuda'):
     return vgg_ssd(dataset="wider_face", num_classes=1, pretrained=pretrained, progress=progress, device=device)
+
+def vgg16_ssd_voc_24(pretrained=False, progress=True, device='cuda'):
+    return vgg_ssd(dataset="voc_24", num_classes=23, pretrained=pretrained, progress=progress, device=device)
