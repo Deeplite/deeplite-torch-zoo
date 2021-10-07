@@ -18,6 +18,8 @@ __all__ = [
     "yolo5m_coco_80",
     "yolo5l_coco_80",
     "yolo5x_coco_80",
+    "yolo5m_wider_face_8",
+    "yolo5l_wider_face_8"
 ]
 
 model_urls = {
@@ -164,7 +166,7 @@ def yolo5x_coco_80(pretrained=False, progress=True, device="cuda"):
 def yolo5l_wider_face_8(pretrained=False, progress=True, device="cuda"):
     return yolo5(
         net="yolov5l",
-        _set_classes="wider_face",
+        _set_classes="wider_face_8",
         num_classes=8,
         pretrained=pretrained,
         progress=progress,
@@ -175,7 +177,7 @@ def yolo5l_wider_face_8(pretrained=False, progress=True, device="cuda"):
 def yolo5m_wider_face_8(pretrained=False, progress=True, device="cuda"):
     return yolo5(
         net="yolov5m",
-        _set_classes="wider_face",
+        _set_classes="wider_face_8",
         num_classes=8,
         pretrained=pretrained,
         progress=progress,
