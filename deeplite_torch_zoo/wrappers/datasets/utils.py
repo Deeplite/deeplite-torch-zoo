@@ -15,12 +15,17 @@ def get_dataloader(
         x = [_x.half() if isinstance(_x, torch.FloatTensor) else _x for _x in x]
         return x
 
+    f = half_precision if fp16 else collate_fn
+    def _assign_device(x):
+        x = f(x)
+        x = [_x.to(device) if torch.is_tensor(_x) else _x for _x in x]
+
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,
         shuffle=shuffle,
         num_workers=num_workers,
-        collate_fn= half_precision if fp16 else collate_fn,
+        collate_fn=_assign_device,
         sampler=DS(dataset) if distributed else None,
     )
     return dataloader
