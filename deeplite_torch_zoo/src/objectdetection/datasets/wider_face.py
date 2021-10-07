@@ -1,5 +1,7 @@
 import os
-import pathlib
+from pathlib import Path
+import random
+
 import cv2
 import numpy as np
 import torch
@@ -32,7 +34,7 @@ class WiderFace:
                 Defaults to ``train``.
 
         """
-        self.root = pathlib.Path(root)
+        self.root = Path(root)
         self.split = split
         self.img_info: List[Dict[str, Union[str, Dict[str, torch.Tensor]]]] = []
 
@@ -47,17 +49,18 @@ class WiderFace:
         if num_classes is not None:
             self.num_classes = num_classes
         self._img_size = img_size
+        self.inv_map = {k: v for k, v in enumerate(sorted(list(self.classes)))}
 
     def __getitem__(self, item):
         """
         return:
             bboxes of shape nx6, where n is number of labels in the image and x1,y1,x2,y2, class_id and confidence.
         """
-        img_org, bboxes_org, img_id = self.__parse_annotation(self.__annotations[item])
+        img_org, bboxes_org, img_id = self.__parse_annotation(self.img_info[item])
         img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
 
-        item_mix = random.randint(0, len(self.__annotations) - 1)
-        img_mix, bboxes_mix, _ = self.__parse_annotation(self.__annotations[item_mix])
+        item_mix = random.randint(0, len(self.img_info) - 1)
+        img_mix, bboxes_mix, _ = self.__parse_annotation(self.img_info[item_mix])
         img_mix = img_mix.transpose(2, 0, 1)
 
         img, bboxes = Mixup()(img_org, bboxes_org, img_mix, bboxes_mix)
@@ -69,7 +72,7 @@ class WiderFace:
 
         return img, bboxes, bboxes.shape[0], img_id
 
-    def __parse_annotation(self, annotation):
+    def __parse_annotation(self, _info):
         """
         Data augument.
         :param annotation: Image' path and bboxes' coordinates, categories.
@@ -77,14 +80,12 @@ class WiderFace:
         :return: Return the enhanced image and bboxes. bbox'shape is [xmin, ymin, xmax, ymax, class_ind]
         """
 
-        _info = self.img_info[index]
-
         img_path = _info["img_path"]
         img = cv2.imread(img_path)  # H*W*C and C=BGR
         assert img is not None, "File Not Found " + img_path
 
         bboxes = _info["annotations"]["bbox"]
-        labels = np.ones(len(bboxes))
+        labels = np.ones((len(bboxes), 1))
         bboxes = np.concatenate((bboxes, labels), axis=1)
 
         if len(bboxes) == 0:

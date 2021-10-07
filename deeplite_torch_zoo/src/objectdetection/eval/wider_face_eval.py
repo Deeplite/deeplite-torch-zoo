@@ -36,7 +36,7 @@ class WiderFaceEval(Evaluator):
             model=model, data_path=data_path, img_size=img_size, net=net
         )
 
-        self.dataset = WiderFace(data_root, _set="valid")
+        self.dataset = WiderFace(data_root, split="val")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def evaluate(self):
@@ -48,7 +48,7 @@ class WiderFaceEval(Evaluator):
         for img_idx, _ in enumerate(self.dataset.img_info):
             _info = self.dataset.img_info[img_idx]
             img_path = _info["img_path"]
-            image = cv2.imread("{}/{}".format(img_path))
+            image = cv2.imread(img_path)
             
             print("Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r")
             bboxes_prd = self.get_bbox(image)
@@ -70,18 +70,11 @@ class WiderFaceEval(Evaluator):
         mAP = MAP(results, self.dataset.num_classes)
         mAP.evaluate()
         ap = mAP.accumlate()
-        mAP_all_classes = np.mean(ap)
-
-        for i in range(0, ap.shape[0]):
-            print("{:_>25}: {:.3f}".format(self.dataset.inv_map[i], ap[i]))
-
-        print("(All Classes) AP = {:.3f}".format(np.mean(ap)))
-
         ap = ap[ap > 1e-6]
-        ap = np.mean(ap)
-        print("(Selected) AP = {:.3f}".format(ap))
+        _ap = np.mean(ap)
+        print("mAP = {:.3f}".format(_ap))
 
-        return ap  # Average Precision  (AP) @[ IoU=050 ]
+        return _ap  # Average Precision  (AP) @[ IoU=050 ]
 
 
 def yolo_eval_wider_face(model, data_root, device="cuda", net="yolov3", img_size=448, **kwargs):

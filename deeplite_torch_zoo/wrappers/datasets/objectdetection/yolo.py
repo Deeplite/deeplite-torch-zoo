@@ -122,13 +122,13 @@ def _get_widerface_for_yolo(root, num_classes=None, img_size=448):
     train_dataset = WiderFace(
         root=root,
         num_classes=num_classes,
-        anno_file_type="train",
+        split="train",
         img_size=img_size,
     )
     test_dataset = WiderFace(
         root=root,
         num_classes=num_classes,
-        anno_file_type="test",
+        split="test",
         img_size=img_size,
     )
     return train_dataset, test_dataset

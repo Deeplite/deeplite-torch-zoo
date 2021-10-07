@@ -9,7 +9,7 @@ def get_project_root() -> Path:
 
 
 __all__ = [
-    "yolo5",
+    "yolo5_local",
     "yolo5s_voc_20",
     "yolo5m_voc_20",
     "yolo5l_voc_20",
@@ -29,6 +29,10 @@ model_urls = {
     "yolov5m_coco_80": "deeplite_torch_zoo/weight/yolo5m-coco-80classes.pt",
     "yolov5l_coco_80": "deeplite_torch_zoo/weight/yolo5l-coco-80classes.pt",
     "yolov5x_coco_80": "deeplite_torch_zoo/weight/yolo5x-coco-80classes.pt",
+    "yolov5l_wider_face_8": "http://download.deeplite.ai/zoo/models/yolo5l-widerface-8cls-898_cdedd11381dbf565.pt",
+    "yolov5m_wider_face_8": "http://download.deeplite.ai/zoo/models/yolo5m-widerface-8cls-878_8a99aaf8b8b9157b.pt",
+
+
 }
 
 yolov5_cfg = {
@@ -45,35 +49,17 @@ def yolo5_local(
     config_path = get_project_root() / yolov5_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
     if pretrained:
-        pretrained_model = torch.load(model_urls[net], map_location=device)
-        pretrained_model.model[-1] = None
-        pretrained_dict = pretrained_model.state_dict()
-        model.load_state_dict(pretrained_dict, strict=False)
+        state_dict = load_state_dict_from_url(model_urls[f"{net}_voc_20"], map_location=device)
+        state_dict = {k: v for k, v in state_dict.items() if "model.24" not in k}
+        model.load_state_dict(state_dict, strict=False)
     return model.to(device)
 
 
 def yolo5(
-    net="yolov5s",
-    pretrained=False,
-    progress=True,
-    num_classes=80,
-    device="cuda",
-    exclude=[],
+    net="yolov5s", _set_classes="voc_20", num_classes=20, pretrained=False, progress=True, device="cuda"
 ):
     config_path = get_project_root() / yolov5_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
-    if pretrained:
-        pretrained_model = torch.hub.load("ultralytics/yolov5", net, pretrained=True)
-        pretrained_model.model[-1] = None
-        pretrained_dict = pretrained_model.state_dict()
-        model.load_state_dict(pretrained_dict, strict=False)
-    return model.to(device)
-
-def yolo5_voc(
-    net="yolov5s", _set_classes="voc_20", pretrained=False, progress=True, device="cuda"
-):
-    config_path = get_project_root() / yolov5_cfg[net]
-    model = YoloV5(config_path, ch=3, nc=20)
     if pretrained:
         pretrained_model = load_state_dict_from_url(
             model_urls[
@@ -88,9 +74,10 @@ def yolo5_voc(
 
 
 def yolo5s_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5_voc(
+    return yolo5(
         net="yolov5s",
         _set_classes="voc_20",
+        num_classes=20,
         pretrained=pretrained,
         progress=progress,
         device=device,
@@ -98,9 +85,10 @@ def yolo5s_voc_20(pretrained=False, progress=True, device="cuda"):
 
 
 def yolo5m_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5_voc(
+    return yolo5(
         net="yolov5m",
         _set_classes="voc_20",
+        num_classes=20,
         pretrained=pretrained,
         progress=progress,
         device=device,
@@ -108,9 +96,10 @@ def yolo5m_voc_20(pretrained=False, progress=True, device="cuda"):
 
 
 def yolo5l_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5_voc(
+    return yolo5(
         net="yolov5l",
         _set_classes="voc_20",
+        num_classes=20,
         pretrained=pretrained,
         progress=progress,
         device=device,
@@ -118,39 +107,21 @@ def yolo5l_voc_20(pretrained=False, progress=True, device="cuda"):
 
 
 def yolo5x_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5_voc(
+    return yolo5(
         net="yolov5x",
         _set_classes="voc_20",
+        num_classes=20,
         pretrained=pretrained,
         progress=progress,
         device=device,
     )
 
 
-def yolo5_coco(
-    net="yolov5s",
-    _set_classes="coco_80",
-    pretrained=False,
-    progress=True,
-    device="cuda",
-):
-    config_path = get_project_root() / yolov5_cfg[net]
-
-    model = YoloV5(config_path, ch=3, nc=80)
-    if pretrained:
-        model = torch.load(
-            model_urls[
-                f"{net}_{_set_classes}"
-            ],
-            map_location=device,
-        )
-    return model.to(device)
-
-
 def yolo5s_coco_80(pretrained=False, progress=True, device="cuda"):
-    return yolo5_coco(
+    return yolo5(
         net="yolov5s",
         _set_classes="coco_80",
+        num_classes=80,
         pretrained=pretrained,
         progress=progress,
         device=device,
@@ -158,9 +129,10 @@ def yolo5s_coco_80(pretrained=False, progress=True, device="cuda"):
 
 
 def yolo5m_coco_80(pretrained=False, progress=True, device="cuda"):
-    return yolo5_coco(
+    return yolo5(
         net="yolov5m",
         _set_classes="coco_80",
+        num_classes=80,
         pretrained=pretrained,
         progress=progress,
         device=device,
@@ -168,9 +140,10 @@ def yolo5m_coco_80(pretrained=False, progress=True, device="cuda"):
 
 
 def yolo5l_coco_80(pretrained=False, progress=True, device="cuda"):
-    return yolo5_coco(
+    return yolo5(
         net="yolov5l",
         _set_classes="coco_80",
+        num_classes=80,
         pretrained=pretrained,
         progress=progress,
         device=device,
@@ -178,9 +151,32 @@ def yolo5l_coco_80(pretrained=False, progress=True, device="cuda"):
 
 
 def yolo5x_coco_80(pretrained=False, progress=True, device="cuda"):
-    return yolo5_coco(
+    return yolo5(
         net="yolov5x",
         _set_classes="coco_80",
+        num_classes=80,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
+    )
+
+
+def yolo5l_wider_face_8(pretrained=False, progress=True, device="cuda"):
+    return yolo5(
+        net="yolov5l",
+        _set_classes="wider_face",
+        num_classes=8,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
+    )
+
+
+def yolo5m_wider_face_8(pretrained=False, progress=True, device="cuda"):
+    return yolo5(
+        net="yolov5m",
+        _set_classes="wider_face",
+        num_classes=8,
         pretrained=pretrained,
         progress=progress,
         device=device,
