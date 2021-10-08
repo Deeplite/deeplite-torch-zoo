@@ -28,6 +28,7 @@ INSTALL_REQUIRES = [
     "pretrainedmodels==0.7.4",
     "torchfcn",
     "tensorboardX",
+    "pytz",
     "mmcv==1.2.0",
     "json-tricks>=3.15.4",
     "pyvww==0.1.1",
