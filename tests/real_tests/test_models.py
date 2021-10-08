@@ -533,7 +533,7 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.882) < 0.001, True)
 
-    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
+    @pytest.mark.test_yolov5l_voc
     def test_yolov5l_voc(self):
         model = get_model_by_name(
             model_name="yolo5l",
