@@ -26,7 +26,7 @@ __all__ = [
 
 model_urls = {
     "yolov5s_voc_20": "http://download.deeplite.ai/zoo/models/yolo5s-voc-20classes_817-0325eb3aa0a02a50.pt",
-    "yolov5m_voc_20": "http://download.deeplite.ai/zoo/models/yolo5m-voc-20classes_882-c2ad7d49ecfb27b3.pt",
+    "yolov5m_voc_20": "http://download.deeplite.ai/zoo/models/yolo5m-voc-20classes_882-1d8265513714a3f6.pt",
     "yolov5l_voc_20": "http://download.deeplite.ai/zoo/models/yolo5l-voc-20classes_899-411aefb761eafaa3.pt",
     "yolov5x_voc_20": "http://download.deeplite.ai/zoo/models/yolo5x-voc-20classes_905-e8ddd018ae29751f.pt",
     "yolov5s_coco_80": "deeplite_torch_zoo/weight/yolo5s-coco-80classes.pt",
