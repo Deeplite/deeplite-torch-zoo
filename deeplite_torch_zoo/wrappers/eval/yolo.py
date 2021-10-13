@@ -16,6 +16,6 @@ def get_eval_func(_set):
     if "lisa" in _set:
         return yolo_eval_lisa
     if 'wider_face' in _set:
-    	return yolo_eval_wider_face
+        return yolo_eval_wider_face
 
     raise ValueError

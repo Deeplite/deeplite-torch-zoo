@@ -1,4 +1,3 @@
-import torch
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
 
