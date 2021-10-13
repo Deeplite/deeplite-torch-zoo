@@ -28,7 +28,7 @@ class Trainer(object):
     def __init__(self, weight_path, resume, gpu_id):
         init_seeds(0)
 
-        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11"]
+        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "wider_face"]
         assert opt.net in ["yolov3", "yolov5s", "yolov5m", "yolov5l", "yolov5x", "yolov4s", "yolov4m", "yolov4l", "yolov4x"]
 
         self.hyp_config = hyp_cfg_scratch
@@ -108,12 +108,7 @@ class Trainer(object):
             )
 
     def _get_loss(self):
-        if "yolov3" in opt.net:
-            return YoloV3Loss(num_classes=self.num_classes, device=self.device)
-        else:
-            return YoloV5Loss(
-                model=self.model, num_classes=self.num_classes, device=self.device
-            )
+        return YoloV3Loss(num_classes=self.num_classes, device=self.device)
 
     def __load_model_weights(self, weight_path, resume):
         if resume:
