@@ -12,7 +12,7 @@ import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scra
 
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
-from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5
+from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5_local
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
     YoloV3Loss
@@ -86,7 +86,7 @@ class Trainer(object):
                 device=self.device,
             )
         elif "yolov5" in opt.net:
-            return yolo5(
+            return yolo5_local(
                 pretrained=opt.pretrained,
                 num_classes=self.num_classes,
                 net="yolov5",
