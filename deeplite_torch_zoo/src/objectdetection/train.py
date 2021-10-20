@@ -219,7 +219,7 @@ if __name__ == "__main__":
         dest="eval_freq",
         type=int,
         default=10,
-        help="The number of sample in one batch during training or inference.",
+        help="Evaluation run frequency (in training epochs).",
     )
     parser.add_argument(
         "--weight_path",
@@ -228,7 +228,7 @@ if __name__ == "__main__":
         help="where weights should be stored",
     )
     parser.add_argument(
-        "--resume", action="store_false", default=False, help="resume training flag"
+        "--resume", action="store_true", default=False, help="resume training flag"
     )
     parser.add_argument(
         "--pretrained", default=True, help="Train Model from scratch if False"
