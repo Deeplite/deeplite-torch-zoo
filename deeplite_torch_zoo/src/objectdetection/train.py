@@ -89,7 +89,7 @@ class Trainer(object):
             return yolo5_local(
                 pretrained=opt.pretrained,
                 num_classes=self.num_classes,
-                net="yolov5",
+                net=opt.net,
                 device=self.device,
             )
         elif "yolov4" in opt.net:
