@@ -75,34 +75,20 @@ class Trainer(object):
         )
 
     def _get_model(self):
-        if "yolov3" in opt.net:
-            return yolo3(
-                pretrained=opt.pretrained,
-                progress=True,
-                num_classes=self.num_classes,
-                device=self.device,
-            )
-        elif "yolov5" in opt.net:
-            return yolo5_local(
-                pretrained=opt.pretrained,
-                num_classes=self.num_classes,
-                net="yolov5",
-                device=self.device,
-            )
-        elif "yolov4" in opt.net:
-            if "lisa" in opt.dataset_type:
-                return yolo4_lisa(
-                    pretrained=opt.pretrained,
-                    num_classes=self.num_classes,
-                    net="yolov4",
-                    device=self.device,
-                )
-            return yolo4(
-                pretrained=opt.pretrained,
-                num_classes=self.num_classes,
-                net="yolov4",
-                device=self.device,
-            )
+        net_name_to_model_fn_map = {
+            "yolov3": yolo3,
+            "yolov5": yolo5_local,
+            "yolov4": yolo4 if "lisa" not in opt.dataset_type else yolo4_lisa,
+        }
+        default_model_fn_args = {
+            "pretrained": opt.pretrained,
+            "num_classes": self.num_classes,
+            "device": self.device,
+            "progress": True,
+        }
+        for net_name, model_fn in net_name_to_model_fn_map.items():
+            if net_name in opt.net:
+                return model_fn(net=opt.net, **default_model_fn_args)
 
     def _get_loss(self):
         return YoloV3Loss(num_classes=self.num_classes, device=self.device)

@@ -22,7 +22,7 @@ model_urls = {
 }
 
 
-def yolo3(pretrained=False, progress=True, num_classes=20, device="cuda"):
+def yolo3(pretrained=False, progress=True, num_classes=20, device="cuda", **kwargs):
     model = Yolov3(num_classes=num_classes)
     if pretrained:
         state_dict = load_state_dict_from_url(
