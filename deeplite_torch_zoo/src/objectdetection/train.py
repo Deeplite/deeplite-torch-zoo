@@ -18,10 +18,7 @@ from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
     YoloV3Loss
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.cosine_lr_scheduler import \
     CosineDecayLR
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (
-    init_seeds, weights_init_normal)
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
-    YoloV5Loss
+from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import init_seeds
 
 
 class Trainer(object):
@@ -112,7 +109,6 @@ class Trainer(object):
 
     def __load_model_weights(self, weight_path, resume):
         if resume:
-            # last_weight = os.path.join(os.path.split(weight_path)[0], "last.pt")
             last_weight = self.weight_path / "last.pt"
             chkpt = torch.load(last_weight, map_location=self.device)
             self.model.load_state_dict(chkpt["model"])
@@ -128,8 +124,6 @@ class Trainer(object):
     def __save_model_weights(self, epoch, mAP):
         if mAP > self.best_mAP:
             self.best_mAP = mAP
-        # best_weight = os.path.join(os.path.split(self.weight_path)[0], "best.pt")
-        # last_weight = os.path.join(os.path.split(self.weight_path)[0], "last.pt")
         best_weight = self.weight_path / "best.pt"
         last_weight = self.weight_path / "last.pt"
         chkpt = {
@@ -143,7 +137,7 @@ class Trainer(object):
         if self.best_mAP == mAP:
             torch.save(chkpt["model"], best_weight)
 
-        if epoch > 0 and epoch % 10 == 0:
+        if epoch > 0 and epoch % opt.checkpoint_save_freq == 0:
             torch.save(
                 chkpt,
                 os.path.join(
@@ -154,7 +148,7 @@ class Trainer(object):
 
     def train(self):
         print(self.model)
-        print("Train datasets number is : {}".format(len(self.train_dataset)))
+        print("The number of samples in the train dataset split: {}".format(len(self.train_dataset)))
         for epoch in range(self.start_epoch, self.epochs):
             self.model.train()
 
@@ -163,7 +157,6 @@ class Trainer(object):
                 self.scheduler.step()
                 imgs = imgs.to(self.device)
 
-                # p, p_d = self.model(imgs)
                 p, p_d = self.model(imgs)
                 loss, loss_giou, loss_conf, loss_cls = self.criterion(
                     p, p_d, targets, labels_length, imgs.shape[-1]
@@ -178,7 +171,7 @@ class Trainer(object):
 
                 print(f"\repoch {epoch}/{self.epochs} - Iteration: {i}/{len(self.train_dataloader)}, loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    loss {mloss[3]:0.4f}", end="")
 
-                # multi-sclae training (320-608 pixels)
+                # multi-scale training (320-608 pixel resolution)
                 if self.multi_scale_train:
                     self.train_dataset._img_size = random.choice(range(10, 20)) * 32
 
@@ -212,7 +205,7 @@ if __name__ == "__main__":
         dest="batch_size",
         type=int,
         default=10,
-        help="The number of sample in one batch during training or inference.",
+        help="The number of samples in one batch during training or inference.",
     )
     parser.add_argument(
         "--eval-freq",
@@ -228,10 +221,16 @@ if __name__ == "__main__":
         help="where weights should be stored",
     )
     parser.add_argument(
-        "--resume", action="store_true", default=False, help="resume training flag"
+        "--checkpoint_save_freq",
+        type=int,
+        default=10,
+        help="Checkpoint dump frequency in training epochs",
     )
     parser.add_argument(
-        "--pretrained", default=True, help="Train Model from scratch if False"
+        "--resume", action="store_true", default=False, help="Resume training flag"
+    )
+    parser.add_argument(
+        "--pretrained", default=True, help="Train the model from scratch if False"
     )
     parser.add_argument("--gpu_id", type=int, default=0, help="gpu id")
     parser.add_argument(
@@ -239,14 +238,14 @@ if __name__ == "__main__":
         dest="n_cpu",
         type=int,
         default=4,
-        help="The number of cpu thread to use during batch generation.",
+        help="The number of cpu threads to use during batch generation.",
     )
     parser.add_argument(
         "--dataset",
         dest="dataset_type",
         type=str,
         default="voc",
-        help="The type of the dataset used. Currently support 'coco', 'voc', and 'lisa'",
+        help="The type of the dataset used. Currently support 'coco', 'voc', 'lisa' and 'wider_face",
     )
     parser.add_argument(
         "--net",
