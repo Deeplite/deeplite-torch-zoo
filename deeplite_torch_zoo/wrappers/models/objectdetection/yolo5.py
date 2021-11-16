@@ -1,5 +1,6 @@
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
 
 from pathlib import Path
 
@@ -9,6 +10,7 @@ def get_project_root() -> Path:
 
 __all__ = [
     "yolo5_local",
+    "yolo5_6",
     "yolo5s_voc_20",
     "yolo5m_voc_20",
     "yolo5l_voc_20",
@@ -45,11 +47,16 @@ yolov5_cfg = {
     "yolov5m": "deeplite_torch_zoo/src/objectdetection/configs/yolov5m.yaml",
     "yolov5l": "deeplite_torch_zoo/src/objectdetection/configs/yolov5l.yaml",
     "yolov5x": "deeplite_torch_zoo/src/objectdetection/configs/yolov5x.yaml",
+    "yolov5_6s": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6s.yaml",
+    "yolov5_6m": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6m.yaml",
+    "yolov5_6l": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6l.yaml",
+    "yolov5_6x": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6x.yaml",
+    "yolov5_6n": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6n.yaml",
 }
 
 
 def yolo5_local(
-    net, pretrained=False, progress=True, num_classes=80, device="cuda", exclude=[], **kwargs
+    net, pretrained=False, num_classes=80, device="cuda", exclude=[], **kwargs
 ):
     config_path = get_project_root() / yolov5_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
@@ -57,6 +64,14 @@ def yolo5_local(
         state_dict = load_state_dict_from_url(model_urls[f"{net}_voc_20"], map_location=device)
         state_dict = {k: v for k, v in state_dict.items() if "model.24" not in k}
         model.load_state_dict(state_dict, strict=False)
+    return model.to(device)
+
+
+def yolo5_6(
+    net, num_classes=80, device="cuda", exclude=[], **kwargs
+):
+    config_path = get_project_root() / yolov5_cfg[net]
+    model = YoloV5_6(config_path, ch=3, nc=num_classes)
     return model.to(device)
 
 

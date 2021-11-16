@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class YoloV5_6(nn.Module):
-    def __init__(self, cfg='yolov5s.yaml', ch=3, nc=None, anchors=None):  # model, input channels, number of classes
+    def __init__(self, cfg='deeplite_torch_zoo/yolov5/models/configs/yolov5_6s.yaml', ch=3, nc=None, anchors=None):  # model, input channels, number of classes
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict

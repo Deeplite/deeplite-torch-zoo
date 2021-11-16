@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import random
 from pathlib import Path
 
@@ -12,7 +13,7 @@ import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scra
 
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
-from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5_local
+from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5_local, yolo5_6
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
     YoloV3Loss
@@ -26,7 +27,9 @@ class Trainer(object):
         init_seeds(0)
 
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "wider_face"]
-        assert opt.net in ["yolov3", "yolov5s", "yolov5m", "yolov5l", "yolov5x", "yolov4s", "yolov4m", "yolov4l", "yolov4x"]
+        assert opt.net in ["yolov3", "yolov5s", "yolov5m", "yolov5l", "yolov5x", 
+            "yolov4s", "yolov4m", "yolov4l", "yolov4x",
+            "yolov5_6s", "yolov5_6n", "yolov5_6l", "yolov5_6x", "yolov5_6m"]
 
         self.hyp_config = hyp_cfg_scratch
 
@@ -76,9 +79,10 @@ class Trainer(object):
 
     def _get_model(self):
         net_name_to_model_fn_map = {
-            "yolov3": yolo3,
-            "yolov5": yolo5_local,
-            "yolov4": yolo4 if "lisa" not in opt.dataset_type else yolo4_lisa,
+            "^yolov3$": yolo3,
+            "^yolov5[smlx]$": yolo5_local,
+            "^yolov5_6[nsmlx]$": yolo5_6,
+            "^yolov4[smlx]$": yolo4 if "lisa" not in opt.dataset_type else yolo4_lisa,
         }
         default_model_fn_args = {
             "pretrained": opt.pretrained,
@@ -87,7 +91,7 @@ class Trainer(object):
             "progress": True,
         }
         for net_name, model_fn in net_name_to_model_fn_map.items():
-            if net_name in opt.net:
+            if re.match(net_name, opt.net):
                 return model_fn(net=opt.net, **default_model_fn_args)
 
     def _get_loss(self):
