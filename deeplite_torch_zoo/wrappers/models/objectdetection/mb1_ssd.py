@@ -22,4 +22,4 @@ def mb1_ssd_voc_20(num_classes=20, pretrained=False, progress=True, device='cuda
         )
         model.load_state_dict(state_dict)
 
-    return model
+    return model.to(device)
