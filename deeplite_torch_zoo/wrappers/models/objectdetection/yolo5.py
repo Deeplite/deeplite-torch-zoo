@@ -49,7 +49,7 @@ yolov5_cfg = {
 
 
 def yolo5_local(
-    net, pretrained=False, progress=True, num_classes=80, device="cuda", exclude=[]
+    net, pretrained=False, progress=True, num_classes=80, device="cuda", exclude=[], **kwargs
 ):
     config_path = get_project_root() / yolov5_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
