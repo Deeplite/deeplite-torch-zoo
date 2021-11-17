@@ -22,7 +22,8 @@ __all__ = [
     "yolo5m_wider_face_8",
     "yolo5l_wider_face_8",
     "yolo5m_voc_24",
-    "yolo5l_voc_24"
+    "yolo5l_voc_24",
+    "YOLOV5_MODELS",
 ]
 
 model_urls = {
@@ -38,8 +39,6 @@ model_urls = {
     "yolov5m_wider_face_8": "http://download.deeplite.ai/zoo/models/yolo5m-widerface-8cls-878_8a99aaf8b8b9157b.pt",
     "yolov5l_voc_24": "http://download.deeplite.ai/zoo/models/yolo5l_voc-24_885_391dfc95d193faf5.pt",
     "yolov5m_voc_24": "http://download.deeplite.ai/zoo/models/yolo5m_voc_24_871_54be57d3f5a35a7b.pt",
-
-
 }
 
 yolov5_cfg = {
@@ -53,6 +52,8 @@ yolov5_cfg = {
     "yolov5_6x": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6x.yaml",
     "yolov5_6n": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6n.yaml",
 }
+
+YOLOV5_MODELS = list(yolov5_cfg.keys())
 
 
 def yolo5_local(

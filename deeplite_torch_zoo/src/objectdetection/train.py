@@ -21,15 +21,18 @@ from deeplite_torch_zoo.src.objectdetection.yolov3.utils.cosine_lr_scheduler imp
     CosineDecayLR
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import init_seeds
 
+from deeplite_torch_zoo.wrappers.models import YOLOV3_MODELS, YOLOV4_MODELS, YOLOV5_MODELS
+
+
+YOLO_MODEL_NAMES = YOLOV3_MODELS + YOLOV4_MODELS + YOLOV5_MODELS
+
 
 class Trainer(object):
     def __init__(self, weight_path, resume, gpu_id):
         init_seeds(0)
 
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "wider_face"]
-        assert opt.net in ["yolov3", "yolov5s", "yolov5m", "yolov5l", "yolov5x", 
-            "yolov4s", "yolov4m", "yolov4l", "yolov4x",
-            "yolov5_6s", "yolov5_6n", "yolov5_6l", "yolov5_6x", "yolov5_6m"]
+        assert opt.net in YOLO_MODEL_NAMES
 
         self.hyp_config = hyp_cfg_scratch
 
