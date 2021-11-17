@@ -16,7 +16,9 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import Detect
 logger = logging.getLogger(__name__)
 
 
+
 class YoloV5_6(nn.Module):
+    # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
     def __init__(self, cfg='deeplite_torch_zoo/yolov5/models/configs/yolov5_6s.yaml', ch=3, nc=None, anchors=None):  # model, input channels, number of classes
         super().__init__()
         if isinstance(cfg, dict):
@@ -198,10 +200,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             c2 = ch[f]
 
         kwargs = dict()
-        if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, 
-                 BottleneckCSP2Leaky, VoVCSP, SPP, SPPF, SPPCSP, SPPCSPLeaky, Focus, 
-                 DWConv, MixConv2d, Focus, CrossConv, TransformerBlock,
-                 BottleneckCSP, BottleneckCSP2, C3, C3TR, C3SPP, C3Ghost]:
+        if m in YOLOV5_6_SPECIFIC_MODULES.registry_dict.values():
             kwargs.update({'yolov5_version_6': True})
         
         m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module

@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import \
-    Conv, DWConv, Bottleneck, SPP
+    Conv, DWConv, Bottleneck, SPP, YOLOV5_6_SPECIFIC_MODULES
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.google_utils import \
     attempt_download
 
@@ -33,6 +33,7 @@ class CrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('C3')
 class C3(nn.Module):
     # CSP Bottleneck with 3 convolutions
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):  # ch_in, ch_out, number, shortcut, groups, expansion
@@ -91,6 +92,7 @@ class Sum(nn.Module):
         return y
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('C3TR')
 class C3TR(C3):
     # C3 module with TransformerBlock()
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
@@ -100,6 +102,7 @@ class C3TR(C3):
         self.m = TransformerBlock_(c_, c_, 4, n)
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('C3SPP')
 class C3SPP(C3):
     # C3 module with SPP()
     def __init__(self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
@@ -109,6 +112,7 @@ class C3SPP(C3):
         self.m = SPP_(c_, c_, k)
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('C3Ghost')
 class C3Ghost(C3):
     # C3 module with GhostBottleneck()
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
@@ -118,6 +122,7 @@ class C3Ghost(C3):
         self.m = nn.Sequential(*(GhostBottleneck_(c_, c_) for _ in range(n)))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('GhostBottleneck')
 class GhostBottleneck(nn.Module):
     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
     def __init__(self, c1, c2, k=3, s=1, yolov5_version_6=False):  # ch_in, ch_out, kernel, stride
@@ -136,6 +141,7 @@ class GhostBottleneck(nn.Module):
         return self.conv(x) + self.shortcut(x)
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('GhostConv')
 class GhostConv(nn.Module):
     # Ghost Convolution https://github.com/huawei-noah/ghostnet
     def __init__(self, c1, c2, k=1, s=1, g=1, act=True, yolov5_version_6=False):  # ch_in, ch_out, kernel, stride, groups
@@ -167,6 +173,7 @@ class TransformerLayer(nn.Module):
         return x
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('TransformerBlock')
 class TransformerBlock(nn.Module):
     # Vision Transformer https://arxiv.org/abs/2010.11929
     def __init__(self, c1, c2, num_heads, num_layers, yolov5_version_6=False):

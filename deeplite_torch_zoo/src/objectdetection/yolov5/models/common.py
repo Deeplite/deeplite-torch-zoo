@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from torch.nn.modules.activation import LeakyReLU
 
+from deeplite_torch_zoo.src.objectdetection.utils.registry import Registry
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.activations import \
     Hardswish
 
@@ -17,6 +18,10 @@ except:
     class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
         def forward(self, x):
             return x * torch.nn.functional.softplus(x).tanh()
+
+
+# Registry for the modules that are different in YOLOv5 v.6 compared to v.2
+YOLOV5_6_SPECIFIC_MODULES = Registry('yolov5_6_specific_modules')
 
 
 def partialclass(cls, *args, **kwds):
@@ -39,6 +44,7 @@ def DWConv(c1, c2, k=1, s=1, act=True, yolov5_version_6=False):
     return Conv_(c1, c2, k, s, g=math.gcd(c1, c2), act=act)
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('Conv')
 class Conv(nn.Module):
     # Standard convolution
     def __init__(
@@ -56,7 +62,7 @@ class Conv(nn.Module):
     def fuseforward(self, x):
         return self.act(self.conv(x))
 
-
+@YOLOV5_6_SPECIFIC_MODULES.register('Bottleneck')
 class Bottleneck(nn.Module):
     # Standard bottleneck
     def __init__(
@@ -73,6 +79,7 @@ class Bottleneck(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP')
 class BottleneckCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -98,6 +105,7 @@ class BottleneckCSP(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP2')
 class BottleneckCSP2(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -123,6 +131,7 @@ class BottleneckCSP2(nn.Module):
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP2Leaky')
 class BottleneckCSP2Leaky(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -148,6 +157,7 @@ class BottleneckCSP2Leaky(nn.Module):
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('VoVCSP')
 class VoVCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -167,6 +177,7 @@ class VoVCSP(nn.Module):
         return self.cv3(torch.cat((x1, x2), dim=1))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('SPP')
 class SPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
     def __init__(self, c1, c2, k=(5, 9, 13), yolov5_version_6=False):
@@ -184,6 +195,7 @@ class SPP(nn.Module):
         return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('SPPCSP')
 class SPPCSP(nn.Module):
     # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), yolov5_version_6=False):
@@ -210,6 +222,7 @@ class SPPCSP(nn.Module):
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('SPPCSPLeaky')
 class SPPCSPLeaky(nn.Module):
     def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), yolov5_version_6=False):
         super(SPPCSPLeaky, self).__init__()
@@ -235,23 +248,7 @@ class SPPCSPLeaky(nn.Module):
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-class SPP(nn.Module):
-    # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13), yolov5_version_6=False):
-        super(SPP, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
-        c_ = c1 // 2  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = Conv_(c_ * (len(k) + 1), c2, 1, 1)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-
-    def forward(self, x):
-        x = self.cv1(x)
-        return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
-
-
+@YOLOV5_6_SPECIFIC_MODULES.register('Focus')
 class Focus(nn.Module):
     # Focus wh information into c-space
     def __init__(
@@ -310,6 +307,8 @@ class Classify(nn.Module):
         )  # cat if list
         return self.flat(self.conv(z))  # flatten to x(b,c2)
 
+
+@YOLOV5_6_SPECIFIC_MODULES.register('SPPF')
 class SPPF(nn.Module):
     # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
     def __init__(self, c1, c2, k=5, yolov5_version_6=False):  # equivalent to SPP(k=(5, 9, 13))
