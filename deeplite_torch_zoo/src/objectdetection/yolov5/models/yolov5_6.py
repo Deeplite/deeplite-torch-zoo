@@ -197,7 +197,14 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         else:
             c2 = ch[f]
 
-        m_ = nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
+        kwargs = dict()
+        if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, 
+                 BottleneckCSP2Leaky, VoVCSP, SPP, SPPF, SPPCSP, SPPCSPLeaky, Focus, 
+                 DWConv, MixConv2d, Focus, CrossConv, TransformerBlock,
+                 BottleneckCSP, BottleneckCSP2, C3, C3TR, C3SPP, C3Ghost]:
+            kwargs.update({'yolov5_version_6': True})
+        
+        m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
         np = sum(x.numel() for x in m_.parameters())  # number params
         m_.i, m_.f, m_.type, m_.np = i, f, t, np  # attach index, 'from' index, type, number params
