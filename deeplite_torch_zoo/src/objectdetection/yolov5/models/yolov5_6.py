@@ -5,10 +5,9 @@ from pathlib import Path
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import make_divisible
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import make_divisible, check_anchor_order
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import fuse_conv_and_bn, initialize_weights, \
     model_info, scale_img
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.autoanchor import check_anchor_order
 
 
 logger = logging.getLogger(__name__)
