@@ -1,11 +1,6 @@
-# coding=utf-8
 import os
-import sys
-from pathlib import Path
-
-sys.path.append("..")
-sys.path.append("../utils")
 import random
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -13,16 +8,13 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 import deeplite_torch_zoo.src.objectdetection.configs.voc_config as cfg
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import (
+from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import (
     Mixup, RandomAffine, RandomCrop, RandomHorizontalFilp, Resize)
-
-# from . import data_augment as dataAug
-# from . import tools
 
 
 class VocDataset(Dataset):
     def __init__(self, annotation_path, anno_file_type, num_classes=None, img_size=416):
-        self._img_size = img_size  # For Multi-training
+        self._img_size = img_size  # for multi-scale training
         self.classes = cfg.DATA["CLASSES"]
         if num_classes == 1:
             self.classes = cfg.DATA["CLASSES_1"]
@@ -162,24 +154,3 @@ if __name__ == "__main__":
 
     voc_dataset = VocDataset(anno_file_type="train", img_size=448)
     dataloader = DataLoader(voc_dataset, shuffle=True, batch_size=1, num_workers=0)
-
-#    for i, (img, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes) in enumerate(dataloader):
-#        if i == 0:
-#            print(img.shape)
-#            print(label_sbbox.shape)
-#            print(label_mbbox.shape)
-#            print(label_lbbox.shape)
-#            print(sbboxes.shape)
-#            print(mbboxes.shape)
-#            print(lbboxes.shape)
-#
-#            if img.shape[0] == 1:
-#                labels = np.concatenate([label_sbbox.reshape(-1, 26), label_mbbox.reshape(-1, 26),
-#                                         label_lbbox.reshape(-1, 26)], axis=0)
-#                labels_mask = labels[..., 4] > 0
-#                labels = np.concatenate([labels[labels_mask][..., :4], np.argmax(labels[labels_mask][..., 6:],
-#                                                                                 axis=-1).reshape(-1, 1)], axis=-1)
-#
-#                print(labels.shape)
-#                plot_box(labels, img, id=1)
-#

@@ -10,7 +10,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 import deeplite_torch_zoo.src.objectdetection.configs.lisa_config as lisa_cfg
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import (
+from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import (
     Mixup, RandomAffine, RandomCrop, RandomHorizontalFilp, Resize)
 
 
