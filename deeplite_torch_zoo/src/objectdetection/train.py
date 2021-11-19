@@ -17,6 +17,8 @@ from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5_l
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
     YoloV3Loss
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
+    YoloV5Loss
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.cosine_lr_scheduler import \
     CosineDecayLR
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import init_seeds
@@ -31,8 +33,9 @@ class Trainer(object):
     def __init__(self, weight_path, resume, gpu_id):
         init_seeds(0)
 
+        self.model_name = opt.net
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "wider_face"]
-        assert opt.net in YOLO_MODEL_NAMES
+        assert self.model_name in YOLO_MODEL_NAMES
 
         self.hyp_config = hyp_cfg_scratch
 
@@ -46,7 +49,7 @@ class Trainer(object):
         dataset_splits = get_data_splits_by_name(
             data_root=opt.img_dir,
             dataset_name=opt.dataset_type,
-            model_name=opt.net,
+            model_name=self.model_name,
             batch_size=opt.batch_size,
             num_workers=opt.n_cpu,
             img_size=self.hyp_config.TRAIN["TRAIN_IMG_SIZE"]
@@ -56,7 +59,7 @@ class Trainer(object):
         self.train_dataset = self.train_dataloader.dataset
         self.val_dataloader = dataset_splits["val"]
         self.num_classes = self.train_dataset.num_classes
-        self.weight_path = weight_path / opt.net / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
+        self.weight_path = weight_path / self.model_name / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
 
         self.model = self._get_model()
@@ -94,11 +97,14 @@ class Trainer(object):
             "progress": True,
         }
         for net_name, model_fn in net_name_to_model_fn_map.items():
-            if re.match(net_name, opt.net):
-                return model_fn(net=opt.net, **default_model_fn_args)
+            if re.match(net_name, self.model_name):
+                return model_fn(self.model_name, **default_model_fn_args)
 
     def _get_loss(self):
-        return YoloV3Loss(num_classes=self.num_classes, device=self.device)
+        if "yolo5_6" not in self.model_name:
+            return YoloV3Loss(num_classes=self.num_classes, device=self.device)
+        else:
+            return YoloV5Loss(model=self.model, num_classes=self.num_classes, device=self.device)
 
     def __load_model_weights(self, weight_path, resume):
         if resume:
@@ -142,6 +148,7 @@ class Trainer(object):
     def train(self):
         print(self.model)
         print("The number of samples in the train dataset split: {}".format(len(self.train_dataset)))
+
         for epoch in range(self.start_epoch, self.epochs):
             self.model.train()
 
@@ -151,8 +158,9 @@ class Trainer(object):
                 imgs = imgs.to(self.device)
 
                 p, p_d = self.model(imgs)
+                
                 loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                    p, p_d, targets, labels_length, imgs.shape[-1]
+                    p, targets, p_d, labels_length, imgs.shape[-1]
                 )
                 self.optimizer.zero_grad()
                 loss.backward()
