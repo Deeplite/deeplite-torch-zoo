@@ -160,7 +160,7 @@ class Trainer(object):
                 p, p_d = self.model(imgs)
                 
                 loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                    p, targets, p_d, labels_length, imgs.shape[-1]
+                    p, p_d, targets, labels_length, imgs.shape[-1]
                 )
                 self.optimizer.zero_grad()
                 loss.backward()

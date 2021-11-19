@@ -1,7 +1,6 @@
 import argparse
 import sys
 
-sys.path.append("..")
 import os
 import xml.etree.ElementTree as ET
 

@@ -3,8 +3,9 @@ import sys
 from pathlib import Path
 
 from ..utils import get_dataloader
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils import VocDataset
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.voc import prepare_data
+
+from deeplite_torch_zoo.src.objectdetection.datasets.voc import VocDataset
+from deeplite_torch_zoo.src.objectdetection.datasets.voc_utils import prepare_data
 from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
 from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.src.objectdetection.datasets.transforms import random_transform_fn
