@@ -10,7 +10,7 @@ import torch
 import deeplite_torch_zoo.src.objectdetection.configs.voc_config as cfg
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.voc import voc_eval
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import Resize
+from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (cxcywh2xyxy, nms)
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
 
