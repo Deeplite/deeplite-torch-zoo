@@ -50,8 +50,8 @@ class Detect(nn.Module):
                     y = torch.cat((xy, wh, y[..., 4:]), -1)
                 z.append(y.view(bs, -1, self.no))
 
-        return x, None if self.training else (x, torch.cat(z, 1))
-
+        return x if self.training else (x, torch.cat(z, 1))
+    
     def _make_grid(self, nx=20, ny=20, i=0):
         d = self.anchors[i].device
         yv, xv = torch.meshgrid([torch.arange(ny).to(d), torch.arange(nx).to(d)])
@@ -89,10 +89,10 @@ class YoloV5_6(nn.Module):
         if isinstance(m, Detect):
             s = 256  # 2x min stride
             m.inplace = self.inplace
+
             m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])
             m.anchors /= m.stride.view(-1, 1, 1)
-
-            check_anchor_order(m)
+            
             self.stride = m.stride
             self._initialize_biases()  # only run once
 

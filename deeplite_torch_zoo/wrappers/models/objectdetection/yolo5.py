@@ -15,6 +15,7 @@ __all__ = [
     "yolo5m_voc_20",
     "yolo5l_voc_20",
     "yolo5x_voc_20",
+    "yolo5_6s_voc_20",
     "yolo5s_coco_80",
     "yolo5m_coco_80",
     "yolo5l_coco_80",
@@ -39,7 +40,7 @@ model_urls = {
     "yolov5m_wider_face_8": "http://download.deeplite.ai/zoo/models/yolo5m-widerface-8cls-878_8a99aaf8b8b9157b.pt",
     "yolov5l_voc_24": "http://download.deeplite.ai/zoo/models/yolo5l_voc-24_885_391dfc95d193faf5.pt",
     "yolov5m_voc_24": "http://download.deeplite.ai/zoo/models/yolo5m_voc_24_871_54be57d3f5a35a7b.pt",
-    "yolov5_6s_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6s-voc-20classes_816-ed19edb3cad4f054.pt",
+    "yolov5_6s_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6s-voc-20classes_821-6654b7ae075935fd.pt",
 }
 
 yolov5_cfg = {
@@ -76,7 +77,7 @@ def yolo5_6(
     model = YoloV5_6(config_path, ch=3, nc=num_classes)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls[f"{net}_voc_20"], map_location=device)
-        model.load_state_dict(state_dict, strict=True)
+        model.load_state_dict(state_dict, strict=False)
     return model.to(device)
 
 
@@ -156,6 +157,17 @@ def yolo5l_voc_24(pretrained=False, progress=True, device="cuda"):
 def yolo5x_voc_20(pretrained=False, progress=True, device="cuda"):
     return yolo5(
         net="yolov5x",
+        _set_classes="voc_20",
+        num_classes=20,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
+    )
+
+
+def yolo5_6s_voc_20(pretrained=False, progress=True, device="cuda"):
+    return yolo5_6(
+        net="yolov5_6s",
         _set_classes="voc_20",
         num_classes=20,
         pretrained=pretrained,

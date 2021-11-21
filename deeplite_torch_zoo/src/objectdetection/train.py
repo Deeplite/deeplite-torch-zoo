@@ -101,7 +101,7 @@ class Trainer(object):
                 return model_fn(self.model_name, **default_model_fn_args)
 
     def _get_loss(self):
-        if "yolo5_6" not in self.model_name:
+        if "yolov5_6" not in self.model_name:
             return YoloV3Loss(num_classes=self.num_classes, device=self.device)
         else:
             return YoloV5Loss(model=self.model, num_classes=self.num_classes, device=self.device)
@@ -157,10 +157,10 @@ class Trainer(object):
                 self.scheduler.step()
                 imgs = imgs.to(self.device)
 
-                p, p_d = self.model(imgs)
+                out = self.model(imgs)
                 
                 loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                    p, p_d, targets, labels_length, imgs.shape[-1]
+                    out, targets, labels_length, imgs.shape[-1]
                 )
                 self.optimizer.zero_grad()
                 loss.backward()
