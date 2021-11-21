@@ -1,5 +1,7 @@
 from setuptools import find_packages, setup
-import os, pathlib
+import os
+import sys
+import pathlib
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.sdist import sdist
@@ -16,7 +18,6 @@ with open('README.md') as f:
 HERE = pathlib.Path(__file__).parent
 
 INSTALL_REQUIRES = [
-    "numpy==1.18.5",
     "torch>=1.4, <=1.8.1",
     "opencv-python",
     "scipy>=1.4.1",
@@ -35,6 +36,11 @@ INSTALL_REQUIRES = [
     "black",
     "isort",
 ]
+
+if sys.version_info >= (3 , 7):
+    INSTALL_REQUIRES.append("numpy==1.21.4")
+else:
+    INSTALL_REQUIRES.append("numpy==1.18.5")
 
 
 def create_init_files_in_submodules():
