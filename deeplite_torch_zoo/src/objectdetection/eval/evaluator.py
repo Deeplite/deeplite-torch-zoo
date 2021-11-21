@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.data_augment import Resize
+from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (cxcywh2xyxy, nms, post_process)
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
 
