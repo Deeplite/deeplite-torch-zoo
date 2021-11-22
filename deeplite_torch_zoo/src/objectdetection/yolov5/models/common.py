@@ -1,10 +1,13 @@
 # This file contains modules common to various models
 import math
+import warnings
+import functools
 
 import torch
 import torch.nn as nn
 from torch.nn.modules.activation import LeakyReLU
 
+from deeplite_torch_zoo.src.objectdetection.utils.registry import Registry
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.activations import \
     Hardswish
 
@@ -17,6 +20,17 @@ except:
             return x * torch.nn.functional.softplus(x).tanh()
 
 
+# Registry for the modules that are different in YOLOv5 v.6 compared to v.2
+YOLOV5_6_SPECIFIC_MODULES = Registry('yolov5_6_specific_modules')
+
+
+def partialclass(cls, *args, **kwds):
+
+    class Module_(cls):
+        __init__ = functools.partialmethod(cls.__init__, *args, **kwds)
+
+    return Module_
+
 def autopad(k, p=None):  # kernel, padding
     # Pad to 'same'
     if p is None:
@@ -24,20 +38,23 @@ def autopad(k, p=None):  # kernel, padding
     return p
 
 
-def DWConv(c1, c2, k=1, s=1, act=True):
+def DWConv(c1, c2, k=1, s=1, act=True, yolov5_version_6=False):
     # Depthwise convolution
-    return Conv(c1, c2, k, s, g=math.gcd(c1, c2), act=act)
+    Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+    return Conv_(c1, c2, k, s, g=math.gcd(c1, c2), act=act)
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('Conv')
 class Conv(nn.Module):
     # Standard convolution
     def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act=True
+        self, c1, c2, k=1, s=1, p=None, g=1, act=True, yolov5_version_6=False
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super(Conv, self).__init__()
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
-        self.act = Hardswish() if act else nn.Identity()
+        activation_function = Hardswish if not yolov5_version_6 else nn.SiLU
+        self.act = activation_function() if act else nn.Identity()
 
     def forward(self, x):
         return self.act(self.bn(self.conv(x)))
@@ -45,37 +62,41 @@ class Conv(nn.Module):
     def fuseforward(self, x):
         return self.act(self.conv(x))
 
-
+@YOLOV5_6_SPECIFIC_MODULES.register('Bottleneck')
 class Bottleneck(nn.Module):
     # Standard bottleneck
     def __init__(
-        self, c1, c2, shortcut=True, g=1, e=0.5
+        self, c1, c2, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, shortcut, groups, expansion
         super(Bottleneck, self).__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
         c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
-        self.cv2 = Conv(c_, c2, 3, 1, g=g)
+        self.cv1 = Conv_(c1, c_, 1, 1)
+        self.cv2 = Conv_(c_, c2, 3, 1, g=g)
         self.add = shortcut and c1 == c2
 
     def forward(self, x):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP')
 class BottleneckCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP, self).__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Bottleneck_ = partialclass(Bottleneck, yolov5_version_6=yolov5_version_6)
         c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
+        self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
         self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv4 = Conv(2 * c_, c2, 1, 1)
+        self.cv4 = Conv_(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
         self.act = nn.LeakyReLU(0.1, inplace=True)
         self.m = nn.Sequential(
-            *[Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
+            *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
         )
 
     def forward(self, x):
@@ -84,20 +105,23 @@ class BottleneckCSP(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP2')
 class BottleneckCSP2(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP2, self).__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Bottleneck_ = partialclass(Bottleneck, yolov5_version_6=yolov5_version_6)
         c_ = int(c2)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
+        self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv3 = Conv(2 * c_, c2, 1, 1)
+        self.cv3 = Conv_(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_)
         self.act = Mish()
         self.m = nn.Sequential(
-            *[Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
+            *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
         )
 
     def forward(self, x):
@@ -107,20 +131,23 @@ class BottleneckCSP2(nn.Module):
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP2Leaky')
 class BottleneckCSP2Leaky(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP2Leaky, self).__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Bottleneck_ = partialclass(Bottleneck, yolov5_version_6=yolov5_version_6)
         c_ = int(c2)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
+        self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv3 = Conv(2 * c_, c2, 1, 1)
+        self.cv3 = Conv_(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_)
         self.act = LeakyReLU(negative_slope=0.1)
         self.m = nn.Sequential(
-            *[Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
+            *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
         )
 
     def forward(self, x):
@@ -130,16 +157,18 @@ class BottleneckCSP2Leaky(nn.Module):
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('VoVCSP')
 class VoVCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(VoVCSP, self).__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
         c_ = int(c2)  # hidden channels
-        self.cv1 = Conv(c1 // 2, c_ // 2, 3, 1)
-        self.cv2 = Conv(c_ // 2, c_ // 2, 3, 1)
-        self.cv3 = Conv(c_, c2, 1, 1)
+        self.cv1 = Conv_(c1 // 2, c_ // 2, 3, 1)
+        self.cv2 = Conv_(c_ // 2, c_ // 2, 3, 1)
+        self.cv3 = Conv_(c_, c2, 1, 1)
 
     def forward(self, x):
         _, x1 = x.chunk(2, dim=1)
@@ -148,13 +177,15 @@ class VoVCSP(nn.Module):
         return self.cv3(torch.cat((x1, x2), dim=1))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('SPP')
 class SPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13)):
+    def __init__(self, c1, c2, k=(5, 9, 13), yolov5_version_6=False):
         super(SPP, self).__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
         c_ = c1 // 2  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
-        self.cv2 = Conv(c_ * (len(k) + 1), c2, 1, 1)
+        self.cv1 = Conv_(c1, c_, 1, 1)
+        self.cv2 = Conv_(c_ * (len(k) + 1), c2, 1, 1)
         self.m = nn.ModuleList(
             [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
         )
@@ -164,23 +195,25 @@ class SPP(nn.Module):
         return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('SPPCSP')
 class SPPCSP(nn.Module):
     # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13)):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), yolov5_version_6=False):
         super(SPPCSP, self).__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
         c_ = int(2 * c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
+        self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = Conv(c_, c_, 3, 1)
-        self.cv4 = Conv(c_, c_, 1, 1)
+        self.cv3 = Conv_(c_, c_, 3, 1)
+        self.cv4 = Conv_(c_, c_, 1, 1)
         self.m = nn.ModuleList(
             [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
         )
-        self.cv5 = Conv(4 * c_, c_, 1, 1)
-        self.cv6 = Conv(c_, c_, 3, 1)
+        self.cv5 = Conv_(4 * c_, c_, 1, 1)
+        self.cv6 = Conv_(c_, c_, 3, 1)
         self.bn = nn.BatchNorm2d(2 * c_)
         self.act = Mish()
-        self.cv7 = Conv(2 * c_, c2, 1, 1)
+        self.cv7 = Conv_(2 * c_, c2, 1, 1)
 
     def forward(self, x):
         x1 = self.cv4(self.cv3(self.cv1(x)))
@@ -189,22 +222,24 @@ class SPPCSP(nn.Module):
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('SPPCSPLeaky')
 class SPPCSPLeaky(nn.Module):
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13)):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), yolov5_version_6=False):
         super(SPPCSPLeaky, self).__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
         c_ = int(2 * c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
+        self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = Conv(c_, c_, 3, 1)
-        self.cv4 = Conv(c_, c_, 1, 1)
+        self.cv3 = Conv_(c_, c_, 3, 1)
+        self.cv4 = Conv_(c_, c_, 1, 1)
         self.m = nn.ModuleList(
             [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
         )
-        self.cv5 = Conv(4 * c_, c_, 1, 1)
-        self.cv6 = Conv(c_, c_, 3, 1)
+        self.cv5 = Conv_(4 * c_, c_, 1, 1)
+        self.cv6 = Conv_(c_, c_, 3, 1)
         self.bn = nn.BatchNorm2d(2 * c_)
         self.act = LeakyReLU(negative_slope=0.1)
-        self.cv7 = Conv(2 * c_, c2, 1, 1)
+        self.cv7 = Conv_(2 * c_, c2, 1, 1)
 
     def forward(self, x):
         x1 = self.cv4(self.cv3(self.cv1(x)))
@@ -213,29 +248,15 @@ class SPPCSPLeaky(nn.Module):
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-class SPP(nn.Module):
-    # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13)):
-        super(SPP, self).__init__()
-        c_ = c1 // 2  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
-        self.cv2 = Conv(c_ * (len(k) + 1), c2, 1, 1)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-
-    def forward(self, x):
-        x = self.cv1(x)
-        return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
-
-
+@YOLOV5_6_SPECIFIC_MODULES.register('Focus')
 class Focus(nn.Module):
     # Focus wh information into c-space
     def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act=True
+        self, c1, c2, k=1, s=1, p=None, g=1, act=True, yolov5_version_6=False,
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super(Focus, self).__init__()
-        self.conv = Conv(c1 * 4, c2, k, s, p, g, act)
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        self.conv = Conv_(c1 * 4, c2, k, s, p, g, act)
 
     def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
         return self.conv(
@@ -285,3 +306,50 @@ class Classify(nn.Module):
             [self.aap(y) for y in (x if isinstance(x, list) else [x])], 1
         )  # cat if list
         return self.flat(self.conv(z))  # flatten to x(b,c2)
+
+
+@YOLOV5_6_SPECIFIC_MODULES.register('SPPF')
+class SPPF(nn.Module):
+    # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
+    def __init__(self, c1, c2, k=5, yolov5_version_6=False):  # equivalent to SPP(k=(5, 9, 13))
+        super().__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        c_ = c1 // 2  # hidden channels
+        self.cv1 = Conv_(c1, c_, 1, 1)
+        self.cv2 = Conv_(c_ * 4, c2, 1, 1)
+        self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
+
+    def forward(self, x):
+        x = self.cv1(x)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')  # suppress torch 1.9.0 max_pool2d() warning
+            y1 = self.m(x)
+            y2 = self.m(y1)
+            return self.cv2(torch.cat([x, y1, y2, self.m(y2)], 1))
+
+class Contract(nn.Module):
+    # Contract width-height into channels, i.e. x(1,64,80,80) to x(1,256,40,40)
+    def __init__(self, gain=2):
+        super().__init__()
+        self.gain = gain
+
+    def forward(self, x):
+        b, c, h, w = x.size()  # assert (h / s == 0) and (W / s == 0), 'Indivisible gain'
+        s = self.gain
+        x = x.view(b, c, h // s, s, w // s, s)  # x(1,64,40,2,40,2)
+        x = x.permute(0, 3, 5, 1, 2, 4).contiguous()  # x(1,2,2,64,40,40)
+        return x.view(b, c * s * s, h // s, w // s)  # x(1,256,40,40)
+
+
+class Expand(nn.Module):
+    # Expand channels into width-height, i.e. x(1,64,80,80) to x(1,16,160,160)
+    def __init__(self, gain=2):
+        super().__init__()
+        self.gain = gain
+
+    def forward(self, x):
+        b, c, h, w = x.size()  # assert C / s ** 2 == 0, 'Indivisible gain'
+        s = self.gain
+        x = x.view(b, s, s, c // s ** 2, h, w)  # x(1,2,2,16,80,80)
+        x = x.permute(0, 3, 4, 1, 5, 2).contiguous()  # x(1,16,80,2,80,2)
+        return x.view(b, c // s ** 2, h * s, w * s)  # x(1,16,160,160)

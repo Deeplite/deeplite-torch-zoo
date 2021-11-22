@@ -10,6 +10,7 @@ __all__ = [
     "yolo3_voc_6",
     "yolo3_voc_20",
     "yolo3_lisa_11",
+    "YOLOV3_MODELS",
 ]
 
 
@@ -20,6 +21,8 @@ model_urls = {
     "yolov3_voc_06": "http://download.deeplite.ai/zoo/models/yolov3-voc-6classes-0_904-14204b730c45d701.pth",
     "yolov3_lisa_11": "http://download.deeplite.ai/zoo/models/yolov3-lisa_11_830-663a0ec046402856.pth",
 }
+
+YOLOV3_MODELS = ["yolov3"]
 
 
 def yolo3(pretrained=False, progress=True, num_classes=20, device="cuda", **kwargs):

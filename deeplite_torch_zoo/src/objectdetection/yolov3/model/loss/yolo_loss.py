@@ -41,7 +41,7 @@ class YoloV3Loss(nn.Module):
     def _mutate_rank(self, rank):
         self.rank = rank
 
-    def forward(self, p, p_d, targets, labels_length, img_size):
+    def forward(self, out, targets, labels_length, img_size):
         (
             label_sbbox,
             label_mbbox,
@@ -50,7 +50,7 @@ class YoloV3Loss(nn.Module):
             mbboxes,
             lbboxes,
         ) = self.make_targets_batch(targets.cpu(), labels_length.cpu(), img_size)
-
+        p, p_d = out
         return self._forward(
             p, p_d, label_sbbox, label_mbbox, label_lbbox, sbboxes, mbboxes, lbboxes
         )

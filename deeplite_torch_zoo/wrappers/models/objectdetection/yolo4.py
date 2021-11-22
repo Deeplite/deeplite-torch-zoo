@@ -21,7 +21,8 @@ __all__ = [
     "yolo4x_voc_20",
     "yolo4_lisa",
     "yolo4m_lisa_11",
-    "yolo4l_leaky_voc_20"
+    "yolo4l_leaky_voc_20",
+    "YOLOV4_MODELS",
 ]
 
 model_urls = {
@@ -45,6 +46,7 @@ yolov4_cfg = {
     "yolov5x": "deeplite_torch_zoo/src/objectdetection/configs/yolov5x.yaml",
 }
 
+YOLOV4_MODELS = list(yolov4_cfg.keys())
 
 
 def _yolo4(

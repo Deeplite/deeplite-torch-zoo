@@ -1,14 +1,23 @@
 # This file contains experimental modules
 
+import functools
+
 import numpy as np
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import (Conv,
-                                                                     DWConv)
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import \
+    Conv, DWConv, Bottleneck, SPP, YOLOV5_6_SPECIFIC_MODULES
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.google_utils import \
     attempt_download
 
+
+def partialclass(cls, *args, **kwds):
+
+    class Module_(cls):
+        __init__ = functools.partialmethod(cls.__init__, *args, **kwds)
+
+    return Module_
 
 class CrossConv(nn.Module):
     # Cross Convolution Downsample
@@ -24,27 +33,40 @@ class CrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('C3')
 class C3(nn.Module):
-    # Cross Convolution CSP
-    def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5
-    ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super(C3, self).__init__()
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1)
-        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv4 = Conv(2 * c_, c2, 1, 1)
-        self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
-        self.act = nn.LeakyReLU(0.1, inplace=True)
-        self.m = nn.Sequential(
-            *[CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)]
-        )
-
+    # CSP Bottleneck with 3 convolutions
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):  # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__()
+        self.yolov5_version_6 = yolov5_version_6
+        if not self.yolov5_version_6:
+            c_ = int(c2 * e)  # hidden channels
+            self.cv1 = Conv(c1, c_, 1, 1)
+            self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
+            self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
+            self.cv4 = Conv(2 * c_, c2, 1, 1)
+            self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
+            self.act = nn.LeakyReLU(0.1, inplace=True)
+            self.m = nn.Sequential(
+                *[CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)]
+            )
+        else:
+            Conv_ = partialclass(Conv, yolov5_version_6=self.yolov5_version_6)
+            Bottleneck_ = partialclass(Bottleneck, yolov5_version_6=self.yolov5_version_6)
+            Conv_ = partialclass(Conv, yolov5_version_6=self.yolov5_version_6)
+            c_ = int(c2 * e)  # hidden channels
+            self.cv1 = Conv_(c1, c_, 1, 1)
+            self.cv2 = Conv_(c1, c_, 1, 1)
+            self.cv3 = Conv_(2 * c_, c2, 1)  # act=FReLU(c2)
+            self.m = nn.Sequential(*(Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
+        
     def forward(self, x):
-        y1 = self.cv3(self.m(self.cv1(x)))
-        y2 = self.cv2(x)
-        return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+        if not self.yolov5_version_6:
+            y1 = self.cv3(self.m(self.cv1(x)))
+            y2 = self.cv2(x)
+            return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+        else:
+            return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
 
 
 class Sum(nn.Module):
@@ -70,41 +92,106 @@ class Sum(nn.Module):
         return y
 
 
+@YOLOV5_6_SPECIFIC_MODULES.register('C3TR')
+class C3TR(C3):
+    # C3 module with TransformerBlock()
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
+        super().__init__(c1, c2, n, shortcut, g, e, yolov5_version_6=yolov5_version_6)
+        TransformerBlock_ = partialclass(TransformerBlock, yolov5_version_6=yolov5_version_6)
+        c_ = int(c2 * e)
+        self.m = TransformerBlock_(c_, c_, 4, n)
+
+
+@YOLOV5_6_SPECIFIC_MODULES.register('C3SPP')
+class C3SPP(C3):
+    # C3 module with SPP()
+    def __init__(self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
+        super().__init__(c1, c2, n, shortcut, g, e, yolov5_version_6=yolov5_version_6)
+        SPP_ = partialclass(SPP, yolov5_version_6=yolov5_version_6)
+        c_ = int(c2 * e)
+        self.m = SPP_(c_, c_, k)
+
+
+@YOLOV5_6_SPECIFIC_MODULES.register('C3Ghost')
+class C3Ghost(C3):
+    # C3 module with GhostBottleneck()
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
+        super().__init__(c1, c2, n, shortcut, g, e, yolov5_version_6=yolov5_version_6)
+        GhostBottleneck_ = partialclass(GhostBottleneck, yolov5_version_6=yolov5_version_6)
+        c_ = int(c2 * e)  # hidden channels
+        self.m = nn.Sequential(*(GhostBottleneck_(c_, c_) for _ in range(n)))
+
+
+@YOLOV5_6_SPECIFIC_MODULES.register('GhostBottleneck')
+class GhostBottleneck(nn.Module):
+    # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
+    def __init__(self, c1, c2, k=3, s=1, yolov5_version_6=False):  # ch_in, ch_out, kernel, stride
+        super().__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        GhostConv_ = partialclass(GhostConv, yolov5_version_6=yolov5_version_6)
+        DWConv_ = partialclass(DWConv, yolov5_version_6=yolov5_version_6)
+        c_ = c2 // 2
+        self.conv = nn.Sequential(GhostConv_(c1, c_, 1, 1),  # pw
+                                  DWConv_(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
+                                  GhostConv_(c_, c2, 1, 1, act=False))  # pw-linear
+        self.shortcut = nn.Sequential(DWConv_(c1, c1, k, s, act=False),
+                                      Conv_(c1, c2, 1, 1, act=False)) if s == 2 else nn.Identity()
+
+    def forward(self, x):
+        return self.conv(x) + self.shortcut(x)
+
+
+@YOLOV5_6_SPECIFIC_MODULES.register('GhostConv')
 class GhostConv(nn.Module):
     # Ghost Convolution https://github.com/huawei-noah/ghostnet
-    def __init__(
-        self, c1, c2, k=1, s=1, g=1, act=True
-    ):  # ch_in, ch_out, kernel, stride, groups
-        super(GhostConv, self).__init__()
+    def __init__(self, c1, c2, k=1, s=1, g=1, act=True, yolov5_version_6=False):  # ch_in, ch_out, kernel, stride, groups
+        super().__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
         c_ = c2 // 2  # hidden channels
-        self.cv1 = Conv(c1, c_, k, s, g, act)
-        self.cv2 = Conv(c_, c_, 5, 1, c_, act)
+        self.cv1 = Conv_(c1, c_, k, s, None, g, act)
+        self.cv2 = Conv_(c_, c_, 5, 1, None, c_, act)
 
     def forward(self, x):
         y = self.cv1(x)
         return torch.cat([y, self.cv2(y)], 1)
 
 
-class GhostBottleneck(nn.Module):
-    # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k, s):
-        super(GhostBottleneck, self).__init__()
-        c_ = c2 // 2
-        self.conv = nn.Sequential(
-            GhostConv(c1, c_, 1, 1),  # pw
-            DWConv(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
-            GhostConv(c_, c2, 1, 1, act=False),
-        )  # pw-linear
-        self.shortcut = (
-            nn.Sequential(
-                DWConv(c1, c1, k, s, act=False), Conv(c1, c2, 1, 1, act=False)
-            )
-            if s == 2
-            else nn.Identity()
-        )
+class TransformerLayer(nn.Module):
+    # Transformer layer https://arxiv.org/abs/2010.11929 (LayerNorm layers removed for better performance)
+    def __init__(self, c, num_heads):
+        super().__init__()
+        self.q = nn.Linear(c, c, bias=False)
+        self.k = nn.Linear(c, c, bias=False)
+        self.v = nn.Linear(c, c, bias=False)
+        self.ma = nn.MultiheadAttention(embed_dim=c, num_heads=num_heads)
+        self.fc1 = nn.Linear(c, c, bias=False)
+        self.fc2 = nn.Linear(c, c, bias=False)
 
     def forward(self, x):
-        return self.conv(x) + self.shortcut(x)
+        x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x
+        x = self.fc2(self.fc1(x)) + x
+        return x
+
+
+@YOLOV5_6_SPECIFIC_MODULES.register('TransformerBlock')
+class TransformerBlock(nn.Module):
+    # Vision Transformer https://arxiv.org/abs/2010.11929
+    def __init__(self, c1, c2, num_heads, num_layers, yolov5_version_6=False):
+        super().__init__()
+        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        self.conv = None
+        if c1 != c2:
+            self.conv = Conv_(c1, c2)
+        self.linear = nn.Linear(c2, c2)  # learnable position embedding
+        self.tr = nn.Sequential(*(TransformerLayer(c2, num_heads) for _ in range(num_layers)))
+        self.c2 = c2
+
+    def forward(self, x):
+        if self.conv is not None:
+            x = self.conv(x)
+        b, _, w, h = x.shape
+        p = x.flatten(2).unsqueeze(0).transpose(0, 3).squeeze(3)
+        return self.tr(p + self.linear(p)).unsqueeze(3).transpose(0, 3).reshape(b, self.c2, w, h)
 
 
 class MixConv2d(nn.Module):

@@ -201,9 +201,9 @@ class Trainer(object):
                 self.optimizer.zero_grad()
 
                 with torch.set_grad_enabled(True):
-                    p, p_d = self.model(imgs.cuda(non_blocking=True))
+                    out = self.model(imgs.cuda(non_blocking=True))
                     loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                        p, p_d, targets, labels_length, imgs.shape[-1]
+                        out, targets, labels_length, imgs.shape[-1]
                     )
                     loss.backward()
                     self.optimizer.step()
