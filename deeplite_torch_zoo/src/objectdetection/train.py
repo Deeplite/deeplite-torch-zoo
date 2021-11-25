@@ -157,10 +157,10 @@ class Trainer(object):
                 self.scheduler.step()
                 imgs = imgs.to(self.device)
 
-                out = self.model(imgs)
+                p, p_d = self.model(imgs)
                 
                 loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                    out, targets, labels_length, imgs.shape[-1]
+                    p, p_d, targets, labels_length, imgs.shape[-1]
                 )
                 self.optimizer.zero_grad()
                 loss.backward()
