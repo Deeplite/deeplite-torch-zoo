@@ -90,7 +90,8 @@ class YoloV5_6(nn.Module):
             s = 256  # 2x min stride
             m.inplace = self.inplace
 
-            m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])
+            xs, _ = self.forward(torch.zeros(1, ch, s, s))
+            m.stride = torch.tensor([s / x.shape[-2] for x in xs])
             m.anchors /= m.stride.view(-1, 1, 1)
             
             self.stride = m.stride
@@ -129,7 +130,7 @@ class YoloV5_6(nn.Module):
                 self._profile_one_layer(m, x, dt)
             x = m(x)  # run
             y.append(x if m.i in self.save else None)  # save output
-        return x
+        return (x, None)
 
     def _descale_pred(self, p, flips, scale, img_size):
         # de-scale predictions following augmented inference (inverse operation)

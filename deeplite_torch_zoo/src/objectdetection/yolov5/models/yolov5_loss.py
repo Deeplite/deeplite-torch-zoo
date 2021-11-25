@@ -72,7 +72,7 @@ class YoloV5Loss(nn.Module):
         self.hyp_params = hyp_cfg.TRAIN  # hyperparameters
 
     def forward(
-        self, p, raw_targets, labels_length, img_size
+        self, p, p_d, raw_targets, labels_length, img_size
     ):  # predictions, targets
         targets = torch.zeros(
             (int(sum(labels_length)), 6), device=self.device, dtype=torch.float32
