@@ -16,6 +16,8 @@ __all__ = [
     "yolo5l_voc_20",
     "yolo5x_voc_20",
     "yolo5_6s_voc_20",
+    "yolo5_6m_voc_20",
+    "yolo5_6n_voc_20",
     "yolo5s_coco_80",
     "yolo5m_coco_80",
     "yolo5l_coco_80",
@@ -170,6 +172,28 @@ def yolo5x_voc_20(pretrained=False, progress=True, device="cuda"):
 def yolo5_6s_voc_20(pretrained=False, progress=True, device="cuda"):
     return yolo5_6(
         net="yolov5_6s",
+        _set_classes="voc_20",
+        num_classes=20,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
+    )
+
+
+def yolo5_6m_voc_20(pretrained=False, progress=True, device="cuda"):
+    return yolo5_6(
+        net="yolov5_6m",
+        _set_classes="voc_20",
+        num_classes=20,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
+    )
+
+
+def yolo5_6n_voc_20(pretrained=False, progress=True, device="cuda"):
+    return yolo5_6(
+        net="yolov5_6n",
         _set_classes="voc_20",
         num_classes=20,
         pretrained=pretrained,
