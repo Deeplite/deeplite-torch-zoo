@@ -16,6 +16,8 @@ __all__ = [
     "yolo5l_voc_20",
     "yolo5x_voc_20",
     "yolo5_6s_voc_20",
+    "yolo5_6m_voc_20",
+    "yolo5_6n_voc_20",
     "yolo5s_coco_80",
     "yolo5m_coco_80",
     "yolo5l_coco_80",
@@ -41,6 +43,8 @@ model_urls = {
     "yolov5l_voc_24": "http://download.deeplite.ai/zoo/models/yolo5l_voc-24_885_391dfc95d193faf5.pt",
     "yolov5m_voc_24": "http://download.deeplite.ai/zoo/models/yolo5m_voc_24_871_54be57d3f5a35a7b.pt",
     "yolov5_6s_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6s-voc-20classes_821-6654b7ae075935fd.pt",
+    "yolov5_6n_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
+    "yolov5_6m_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6s-voc-20classes_821-6654b7ae075935fd.pt",
 }
 
 yolov5_cfg = {
@@ -168,6 +172,28 @@ def yolo5x_voc_20(pretrained=False, progress=True, device="cuda"):
 def yolo5_6s_voc_20(pretrained=False, progress=True, device="cuda"):
     return yolo5_6(
         net="yolov5_6s",
+        _set_classes="voc_20",
+        num_classes=20,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
+    )
+
+
+def yolo5_6m_voc_20(pretrained=False, progress=True, device="cuda"):
+    return yolo5_6(
+        net="yolov5_6m",
+        _set_classes="voc_20",
+        num_classes=20,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
+    )
+
+
+def yolo5_6n_voc_20(pretrained=False, progress=True, device="cuda"):
+    return yolo5_6(
+        net="yolov5_6n",
         _set_classes="voc_20",
         num_classes=20,
         pretrained=pretrained,

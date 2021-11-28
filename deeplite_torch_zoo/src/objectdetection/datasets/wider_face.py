@@ -8,7 +8,7 @@ import torch
 from os.path import abspath, expanduser
 from typing import Any, Callable, List, Dict, Optional, Tuple, Union
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import (
-    Mixup, RandomAffine, RandomCrop, RandomHorizontalFilp, Resize)
+    Mixup, RandomAffine, RandomCrop, RandomHorizontalFlip, Resize)
 
 
 WF_CLASS_NAMES = {
