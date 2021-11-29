@@ -153,8 +153,8 @@ class VocDataset(Dataset):
         else:
             img, bboxes = RandomHorizontalFlip()(np.copy(img), np.copy(bboxes))
             if self.version_6_augs:
-                img, bboxes = Albumentations()(img, bboxes)
-                # img, bboxes = AugmentHSV()(img, bboxes)
+                img, bboxes = Albumentations()(np.copy(img), np.copy(bboxes))
+                img = AugmentHSV()(np.copy(img))
             img, bboxes = RandomCrop()(np.copy(img), np.copy(bboxes))
             img, bboxes = RandomAffine()(np.copy(img), np.copy(bboxes))
 
