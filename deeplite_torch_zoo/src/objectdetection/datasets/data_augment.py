@@ -36,7 +36,7 @@ class AugmentHSV(object):
         self.vgain = vgain
         self.normalization_constant = 255.0
 
-    def __call__(self, img, bboxes):
+    def __call__(self, img):
         # HSV color-space augmentation
         if self.hgain or self.sgain or self.vgain:
             r = np.random.uniform(-1, 1, 3) * [self.hgain, self.sgain, self.vgain] + 1  # random gains
@@ -49,9 +49,8 @@ class AugmentHSV(object):
             lut_val = np.clip(x * r[2], 0, 255).astype(dtype)
 
             im_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val)))
-            print(img.shape, im_hsv.shape)
             cv2.cvtColor(im_hsv, cv2.COLOR_HSV2BGR, dst=img)
-        return img, bboxes
+        return img
 
 
 class Albumentations:
