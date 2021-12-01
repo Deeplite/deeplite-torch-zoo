@@ -18,7 +18,6 @@ def get_project_root() -> Path:
 
 __all__ = [
     "yolo4",
-    "yolo4_lisa",
     "YOLOV4_MODELS",
 ]
 
@@ -46,13 +45,13 @@ yolov4_cfg = {
 YOLOV4_MODELS = list(yolov4_cfg.keys())
 
 
-def _yolo4(
+def yolo4(
     net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False, progress=True, device="cuda"
 ):
     config_path = get_project_root() / yolov4_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
     if pretrained:
-        pretrained_model = load_state_dict_from_url(
+        pretrained_dict = load_state_dict_from_url(
             model_urls[
                 f"{net}_{_set_classes}"
             ],
@@ -60,43 +59,17 @@ def _yolo4(
             check_hash=True,
             map_location=device,
         )
-        model.load_state_dict(pretrained_model)
-    return model.to(device)
-
-def yolo4(
-    net="yolov4s", pretrained=False, progress=True, num_classes=80, device="cuda", **kwargs
-):
-    config_path = get_project_root() / yolov4_cfg[net]
-    model = YoloV5(config_path, ch=3, nc=num_classes)
-    if pretrained:
-        pretrained_model = _yolo4(net=net, _set_classes="voc_20", pretrained=True)
-        pretrained_model.model[-1] = None
-        pretrained_dict = pretrained_model.state_dict()
-        model.load_state_dict(pretrained_dict, strict=False)
-    return model.to(device)
-
-def yolo4_lisa(
-    net="yolov4s", pretrained=False, progress=True, num_classes=80, device="cuda", **kwargs
-):
-    config_path = get_project_root() / yolov4_cfg[net]
-    model = YoloV5(config_path, ch=3, nc=num_classes)
-    if pretrained:
-        pretrained_model = _yolo4(
-            net="yolov4m",
-            _set_classes="voc_20",
-            pretrained=pretrained,
-            progress=progress,
-            device=device,
-        )
-        pretrained_model.model[-1] = None
-        pretrained_dict = pretrained_model.state_dict()
-        model.load_state_dict(pretrained_dict, strict=False)
+        model_dict = model.state_dict()
+        pretrained_dict = {k: v for k, v in pretrained_dict.items()
+            if k in model_dict and v.size() == model_dict[k].size()}
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
     return model.to(device)
 
 
 def make_wrapper_func(name, net, _set_classes, num_classes):
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
-        return _yolo4(         
+        return yolo4(
             net=net,
             _set_classes=_set_classes,
             num_classes=num_classes,

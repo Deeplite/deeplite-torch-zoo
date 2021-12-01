@@ -22,40 +22,30 @@ model_urls = {
 YOLOV3_MODELS = ["yolov3"]
 
 
-def yolo3(pretrained=False, progress=True, num_classes=20, device="cuda", **kwargs):
-    model = Yolov3(num_classes=num_classes)
-    if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls["yolov3_voc_20"],
-            progress=progress,
-            check_hash=True,
-            map_location=device,
-        )
-        state_dict = {k: v for k, v in state_dict.items() if "fpn" not in k}
-        model.load_state_dict(state_dict, strict=False)
-
-    return model.to(device)
-
-
-def yolo3_voc(
-    _set_classes="voc_20", num_classes=20, pretrained=False, progress=True, device="cuda"
+def yolo3(
+    _set_classes="voc_20", num_classes=20, pretrained=False,
+    progress=True, device="cuda", skip_loading_last_layer=False, **kwargs
 ):
     model = Yolov3(num_classes=num_classes)
     if pretrained:
-        state_dict = load_state_dict_from_url(
+        pretrained_dict = load_state_dict_from_url(
             model_urls[f"yolov3_{_set_classes}"],
             progress=progress,
             check_hash=True,
             map_location=device,
         )
-        model.load_state_dict(state_dict)
+        model_dict = model.state_dict()
+        pretrained_dict = {k: v for k, v in pretrained_dict.items()
+            if k in model_dict and v.size() == model_dict[k].size()}
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
 
     return model.to(device)
 
 
 def make_wrapper_func(name, net, _set_classes, num_classes):
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
-        return yolo3_voc(         
+        return yolo3(
             net=net,
             _set_classes=_set_classes,
             num_classes=num_classes,
@@ -65,6 +55,7 @@ def make_wrapper_func(name, net, _set_classes, num_classes):
         )
     wrapper_func.__name__ = name
     return wrapper_func
+
 
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
