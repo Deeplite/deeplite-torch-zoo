@@ -47,12 +47,13 @@ class CocoDetectionBoundingBox(CocoDetection):
         category="all",
         img_size=416,
         classes=[],
-        missing_ids=[]
+        missing_ids=[],
+        include_background_class=False,
     ):
         super(CocoDetectionBoundingBox, self).__init__(img_root, ann_file_name)
         self._tf = transform
         self._img_size = img_size
-        self.classes = ["BACKGROUND"] + classes
+        self.classes = ["BACKGROUND"] + classes if include_background_class else classes
         self.num_classes = len(self.classes)
         self.missing_ids = missing_ids
         if category == "all":

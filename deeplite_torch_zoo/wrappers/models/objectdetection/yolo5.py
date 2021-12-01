@@ -32,6 +32,9 @@ model_urls = {
     "yolov5m_coco_80": "deeplite_torch_zoo/weight/yolo5m-coco-80classes.pt",
     "yolov5l_coco_80": "deeplite_torch_zoo/weight/yolo5l-coco-80classes.pt",
     "yolov5x_coco_80": "deeplite_torch_zoo/weight/yolo5x-coco-80classes.pt",
+    "yolov5_6s_coco_80": "http://download.deeplite.ai/zoo/models/yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",
+    "yolov5_6m_coco_80": "http://download.deeplite.ai/zoo/models/yolov5_6m-coco-80classes_374-f93fa94b629c45ab.pt",
+    "yolov5_6n_coco_80": "http://download.deeplite.ai/zoo/models/yolov5_6n-coco-80classes_211-e9e44a7de1f08ea2.pt",
 }
 
 yolov5_cfg = {
