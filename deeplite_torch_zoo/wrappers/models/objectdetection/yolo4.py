@@ -1,8 +1,10 @@
+from pathlib import Path
+from collections import namedtuple
+
 from torch.hub import load_state_dict_from_url
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
 
-from pathlib import Path
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent.parent.parent.parent
@@ -13,15 +15,10 @@ def get_project_root() -> Path:
 # sys.path.append("deeplite_torch_zoo/objectdetection/yolov4")
 # from mish_cuda import *
 # from models import *
+
 __all__ = [
     "yolo4",
-    "yolo4s_voc_20",
-    "yolo4m_voc_20",
-    "yolo4l_voc_20",
-    "yolo4x_voc_20",
     "yolo4_lisa",
-    "yolo4m_lisa_11",
-    "yolo4l_leaky_voc_20",
     "YOLOV4_MODELS",
 ]
 
@@ -78,77 +75,47 @@ def yolo4(
         model.load_state_dict(pretrained_dict, strict=False)
     return model.to(device)
 
-
-
 def yolo4_lisa(
     net="yolov4s", pretrained=False, progress=True, num_classes=80, device="cuda", **kwargs
 ):
     config_path = get_project_root() / yolov4_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
     if pretrained:
-        pretrained_model = yolo4m_voc_20(pretrained=True)
+        pretrained_model = _yolo4(
+            net="yolov4m",
+            _set_classes="voc_20",
+            pretrained=pretrained,
+            progress=progress,
+            device=device,
+        )
         pretrained_model.model[-1] = None
         pretrained_dict = pretrained_model.state_dict()
         model.load_state_dict(pretrained_dict, strict=False)
     return model.to(device)
 
 
-def yolo4s_voc_20(pretrained=False, progress=True, device="cuda"):
-    return _yolo4(
-        net="yolov4s",
-        _set_classes="voc_20",
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
+def make_wrapper_func(name, net, _set_classes, num_classes):
+    def wrapper_func(pretrained=False, progress=True, device="cuda"):
+        return _yolo4(         
+            net=net,
+            _set_classes=_set_classes,
+            num_classes=num_classes,
+            pretrained=pretrained,
+            progress=progress,
+            device=device,
+        )
+    wrapper_func.__name__ = name
+    return wrapper_func
 
 
-def yolo4m_voc_20(pretrained=False, progress=True, device="cuda"):
-    return _yolo4(
-        net="yolov4m",
-        _set_classes="voc_20",
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
+ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
+wrapper_funcs = {
+    'voc_20': ModelSet(20, ['yolov4s', 'yolov4m', 'yolov4l', 'yolov4x', 'yolov4l_leaky']),
+    'lisa_11': ModelSet(11, ['yolov4m'])
+}
 
-
-def yolo4m_lisa_11(pretrained=False, progress=True, device="cuda"):
-    return _yolo4(
-        net="yolov4m",
-        _set_classes="lisa_11",
-        num_classes=11,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo4l_voc_20(pretrained=False, progress=True, device="cuda"):
-    return _yolo4(
-        net="yolov4l",
-        _set_classes="voc_20",
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo4x_voc_20(pretrained=False, progress=True, device="cuda"):
-    return _yolo4(
-        net="yolov4x",
-        _set_classes="voc_20",
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo4l_leaky_voc_20(pretrained=False, progress=True, device="cuda"):
-    return _yolo4(
-        net="yolov4l_leaky",
-        _set_classes="voc_20",
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
+for dataset in wrapper_funcs:
+    for net in wrapper_funcs[dataset].model_list:
+        name = '_'.join([net.replace('v', ''), dataset]) # workaround for 'yolo4' -> 'yolov4' names
+        globals()[name] = make_wrapper_func(name, net, dataset, wrapper_funcs[dataset].num_classes)
+        __all__.append(name)

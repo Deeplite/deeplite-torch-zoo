@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
@@ -11,21 +13,6 @@ def get_project_root() -> Path:
 __all__ = [
     "yolo5_local",
     "yolo5_6",
-    "yolo5s_voc_20",
-    "yolo5m_voc_20",
-    "yolo5l_voc_20",
-    "yolo5x_voc_20",
-    "yolo5_6s_voc_20",
-    "yolo5_6m_voc_20",
-    "yolo5_6n_voc_20",
-    "yolo5s_coco_80",
-    "yolo5m_coco_80",
-    "yolo5l_coco_80",
-    "yolo5x_coco_80",
-    "yolo5m_wider_face_8",
-    "yolo5l_wider_face_8",
-    "yolo5m_voc_24",
-    "yolo5l_voc_24",
     "YOLOV5_MODELS",
 ]
 
@@ -103,166 +90,31 @@ def yolo5(
     return model.to(device)
 
 
-def yolo5s_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5s",
-        _set_classes="voc_20",
-        num_classes=20,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
+def make_wrapper_func(name, net, _set_classes, num_classes):
+    def wrapper_func(pretrained=False, progress=True, device="cuda"):
+        return yolo5(         
+            net=net,
+            _set_classes=_set_classes,
+            num_classes=num_classes,
+            pretrained=pretrained,
+            progress=progress,
+            device=device,
+        )
+    wrapper_func.__name__ = name
+    return wrapper_func
 
 
-def yolo5m_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5m",
-        _set_classes="voc_20",
-        num_classes=20,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
+ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
+wrapper_funcs = {
+    'voc_20': ModelSet(20, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x', 
+        'yolov5_6n', 'yolov5_6s', 'yolov5_6m']),
+    'voc_24': ModelSet(24, ['yolov5m', 'yolov5l']),
+    'wider_face_8': ModelSet(8, ['yolov5m', 'yolov5l']),
+    'coco_80': ModelSet(80, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x']),
+}
 
-
-def yolo5m_voc_24(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5m",
-        _set_classes="voc_24",
-        num_classes=24,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5l_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5l",
-        _set_classes="voc_20",
-        num_classes=20,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5l_voc_24(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5l",
-        _set_classes="voc_24",
-        num_classes=24,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5x_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5x",
-        _set_classes="voc_20",
-        num_classes=20,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5_6s_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5_6(
-        net="yolov5_6s",
-        _set_classes="voc_20",
-        num_classes=20,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5_6m_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5_6(
-        net="yolov5_6m",
-        _set_classes="voc_20",
-        num_classes=20,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5_6n_voc_20(pretrained=False, progress=True, device="cuda"):
-    return yolo5_6(
-        net="yolov5_6n",
-        _set_classes="voc_20",
-        num_classes=20,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5s_coco_80(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5s",
-        _set_classes="coco_80",
-        num_classes=80,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5m_coco_80(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5m",
-        _set_classes="coco_80",
-        num_classes=80,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5l_coco_80(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5l",
-        _set_classes="coco_80",
-        num_classes=80,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5x_coco_80(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5x",
-        _set_classes="coco_80",
-        num_classes=80,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5l_wider_face_8(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5l",
-        _set_classes="wider_face_8",
-        num_classes=8,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
-
-
-def yolo5m_wider_face_8(pretrained=False, progress=True, device="cuda"):
-    return yolo5(
-        net="yolov5m",
-        _set_classes="wider_face_8",
-        num_classes=8,
-        pretrained=pretrained,
-        progress=progress,
-        device=device,
-    )
+for dataset in wrapper_funcs:
+    for net in wrapper_funcs[dataset].model_list:
+        name = '_'.join([net.replace('v', ''), dataset]) # workaround for 'yolo5' -> 'yolov5' names
+        globals()[name] = make_wrapper_func(name, net, dataset, wrapper_funcs[dataset].num_classes)
+        __all__.append(name)
