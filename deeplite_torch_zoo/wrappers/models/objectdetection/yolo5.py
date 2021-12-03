@@ -1,10 +1,10 @@
+from pathlib import Path
 from collections import namedtuple
 
-from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 
-from pathlib import Path
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent.parent.parent.parent
@@ -56,19 +56,8 @@ def yolo5(
     config_path = get_project_root() / yolov5_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
     if pretrained:
-        pretrained_dict = load_state_dict_from_url(
-            model_urls[
-                f"{net}_{_set_classes}"
-            ],
-            progress=progress,
-            check_hash=True,
-            map_location=device,
-        )
-        model_dict = model.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items()
-            if k in model_dict and v.size() == model_dict[k].size()} # pylint: disable=E1135, E1136`
-        model_dict.update(pretrained_dict)
-        model.load_state_dict(model_dict)
+        checkpoint_url = model_urls[f"{net}_{_set_classes}"]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
@@ -79,19 +68,8 @@ def yolo5_6(
     config_path = get_project_root() / yolov5_cfg[net]
     model = YoloV5_6(config_path, ch=3, nc=num_classes)
     if pretrained:
-        pretrained_dict = load_state_dict_from_url(
-            model_urls[
-                f"{net}_{_set_classes}"
-            ],
-            progress=progress,
-            check_hash=True,
-            map_location=device,
-        )
-        model_dict = model.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items()
-            if k in model_dict and v.size() == model_dict[k].size()} # pylint: disable=E1135, E1136
-        model_dict.update(pretrained_dict)
-        model.load_state_dict(model_dict)
+        checkpoint_url = model_urls[f"{net}_{_set_classes}"]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 

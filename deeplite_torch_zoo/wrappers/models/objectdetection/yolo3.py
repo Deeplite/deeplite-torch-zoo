@@ -1,10 +1,8 @@
 
 from collections import namedtuple
 
-from torch.hub import load_state_dict_from_url
-
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.yolov3 import Yolov3
-
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 
 __all__ = [
     "yolo3",
@@ -24,21 +22,12 @@ YOLOV3_MODELS = ["yolov3"]
 
 def yolo3(
     _set_classes="voc_20", num_classes=20, pretrained=False,
-    progress=True, device="cuda", skip_loading_last_layer=False, **kwargs
+    progress=True, device="cuda", **kwargs
 ):
     model = Yolov3(num_classes=num_classes)
     if pretrained:
-        pretrained_dict = load_state_dict_from_url(
-            model_urls[f"yolov3_{_set_classes}"],
-            progress=progress,
-            check_hash=True,
-            map_location=device,
-        )
-        model_dict = model.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items()
-            if k in model_dict and v.size() == model_dict[k].size()} # pylint: disable=E1135, E1136
-        model_dict.update(pretrained_dict)
-        model.load_state_dict(model_dict)
+        checkpoint_url = model_urls[f"yolov3_{_set_classes}"]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
 
     return model.to(device)
 
