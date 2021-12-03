@@ -13,7 +13,7 @@ import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scra
 
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
-from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5_local, yolo5_6
+from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
     YoloV3Loss
@@ -62,6 +62,7 @@ class Trainer(object):
         self.weight_path = weight_path / self.model_name / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
 
+        self.pretraining_source_dataset = "voc_20" # always load weights pretrained on VOC
         self.model = self._get_model()
 
         self.optimizer = optim.SGD(
@@ -86,15 +87,16 @@ class Trainer(object):
     def _get_model(self):
         net_name_to_model_fn_map = {
             "^yolov3$": yolo3,
-            "^yolov5[smlx]$": yolo5_local,
+            "^yolov5[smlx]$": yolo5,
             "^yolov5_6[nsmlx]$": yolo5_6,
-            "^yolov4[smlx]$": yolo4 if "lisa" not in opt.dataset_type else yolo4_lisa,
+            "^yolov4[smlx]$": yolo4,
         }
         default_model_fn_args = {
             "pretrained": opt.pretrained,
             "num_classes": self.num_classes,
             "device": self.device,
             "progress": True,
+            "_set_classes": self.pretraining_source_dataset,
         }
         for net_name, model_fn in net_name_to_model_fn_map.items():
             if re.match(net_name, self.model_name):
