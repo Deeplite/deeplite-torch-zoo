@@ -1,9 +1,8 @@
 from pathlib import Path
 from collections import namedtuple
 
-from torch.hub import load_state_dict_from_url
-
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 
 
 def get_project_root() -> Path:
@@ -46,28 +45,18 @@ YOLOV4_MODELS = list(yolov4_cfg.keys())
 
 
 def yolo4(
-    net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False, progress=True, device="cuda"
+    net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False,
+    progress=True, device="cuda",
 ):
     config_path = get_project_root() / yolov4_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
     if pretrained:
-        pretrained_dict = load_state_dict_from_url(
-            model_urls[
-                f"{net}_{_set_classes}"
-            ],
-            progress=progress,
-            check_hash=True,
-            map_location=device,
-        )
-        model_dict = model.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items()
-            if k in model_dict and v.size() == model_dict[k].size()}
-        model_dict.update(pretrained_dict)
-        model.load_state_dict(model_dict)
+        checkpoint_url = model_urls[f"{net}_{_set_classes}"]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
-def make_wrapper_func(name, net, _set_classes, num_classes):
+def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return yolo4(
             net=net,
@@ -77,7 +66,7 @@ def make_wrapper_func(name, net, _set_classes, num_classes):
             progress=progress,
             device=device,
         )
-    wrapper_func.__name__ = name
+    wrapper_func.__name__ = wrapper_name
     return wrapper_func
 
 
@@ -87,8 +76,8 @@ wrapper_funcs = {
     'lisa_11': ModelSet(11, ['yolov4m'])
 }
 
-for dataset in wrapper_funcs:
-    for net in wrapper_funcs[dataset].model_list:
-        name = '_'.join([net.replace('v', ''), dataset]) # workaround for 'yolo4' -> 'yolov4' names
-        globals()[name] = make_wrapper_func(name, net, dataset, wrapper_funcs[dataset].num_classes)
+for dataset, model_set in wrapper_funcs.items():
+    for model_tag in model_set.model_list:
+        name = '_'.join([model_tag.replace('v', ''), dataset]) # workaround for 'yolo4' -> 'yolov4' names
+        globals()[name] = make_wrapper_func(name, model_tag, dataset, model_set.num_classes)
         __all__.append(name)
