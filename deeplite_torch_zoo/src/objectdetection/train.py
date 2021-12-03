@@ -62,7 +62,7 @@ class Trainer(object):
         self.weight_path = weight_path / self.model_name / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
 
-        self.pretraining_source_dataset = "voc_20" # always load weights pretrained on VOC
+        self.pretraining_source_dataset = opt.pretraining_source_dataset
         self.model = self._get_model()
 
         self.optimizer = optim.SGD(
@@ -160,7 +160,7 @@ class Trainer(object):
                 imgs = imgs.to(self.device)
 
                 p, p_d = self.model(imgs)
-                
+
                 loss, loss_giou, loss_conf, loss_cls = self.criterion(
                     p, p_d, targets, labels_length, imgs.shape[-1]
                 )
@@ -234,6 +234,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--pretrained", default=True, help="Train the model from scratch if False"
+    )
+    parser.add_argument(
+        "--pretraining_source_dataset",
+        type=str,
+        default="voc_20",
+        help="Load pretrained weights fine-tuned on the specified dataset ('voc_20' or 'coco_80')"
     )
     parser.add_argument("--gpu_id", type=int, default=0, help="gpu id")
     parser.add_argument(
