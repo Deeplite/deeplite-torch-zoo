@@ -96,7 +96,8 @@ wrapper_funcs = {
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m']),
     'voc_24': ModelSet(24, ['yolov5m', 'yolov5l']),
     'wider_face_8': ModelSet(8, ['yolov5m', 'yolov5l']),
-    'coco_80': ModelSet(80, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x']),
+    'coco_80': ModelSet(80, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
+        'yolov5_6n', 'yolov5_6s', 'yolov5_6m']),
 }
 
 for dataset, model_set in wrapper_funcs.items():
