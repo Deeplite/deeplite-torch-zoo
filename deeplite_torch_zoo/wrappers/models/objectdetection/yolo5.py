@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from collections import namedtuple
 
@@ -76,9 +77,19 @@ def yolo5_6(
     return model.to(device)
 
 
+MODEL_TAG_TO_WRAPPER_FN_MAP = {
+    "^yolov5[smlx]$": yolo5,
+    "^yolov5_6[nsmlx]$": yolo5_6,
+}
+
 def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
+
+    for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
+        if re.match(net_name, net):
+            model_wrapper_fn = model_fn
+
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
-        return yolo5(
+        return model_wrapper_fn(
             net=net,
             _set_classes=_set_classes,
             num_classes=num_classes,
