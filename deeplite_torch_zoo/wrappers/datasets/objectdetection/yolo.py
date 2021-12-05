@@ -49,7 +49,7 @@ def get_coco_for_yolo(
     test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
         distributed=distributed, shuffle=False, collate_fn=test_dataset.collate_img_label_fn, device=device)
 
-    return {"train": train_loader, "val": test_loader}
+    return {"train": train_loader, "val": test_loader, "test": test_loader}
 
 
 def get_lisa_for_yolo(data_root, batch_size=32, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
