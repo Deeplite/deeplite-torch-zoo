@@ -99,6 +99,19 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(train_len, 130)
         self.assertEqual(test_len, 39)
 
+    def test_coco_yolo_dataset(self):
+        BATCH_SIZE = 10
+        datasplit = get_data_splits_by_name(
+            data_root="/neutrino/datasets/coco/",
+            dataset_name="coco",
+            model_name="yolo",
+            batch_size=BATCH_SIZE,
+        )
+        train_len = len(datasplit["train"])
+        test_len = len(datasplit["test"])
+        self.assertEqual(train_len, 11829)
+        self.assertEqual(test_len, 500)
+
 
 if __name__ == "__main__":
     unittest.main()
