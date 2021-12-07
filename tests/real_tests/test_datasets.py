@@ -1,7 +1,10 @@
 import unittest
 import pytest
+from pathlib import Path
 
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
+
+DATASETS_ROOT = Path('/neutrino/datasets')
 
 
 class TestDatasets(unittest.TestCase):
@@ -28,7 +31,7 @@ class TestDatasets(unittest.TestCase):
         BATCH_SIZE = 128
         datasplit = get_data_splits_by_name(
             dataset_name="vww",
-            data_root="/neutrino/datasets/vww",
+            data_root=str(DATASETS_ROOT / "vww"),
             batch_size=BATCH_SIZE,
         )
         train_len = len(datasplit["train"])
@@ -40,7 +43,7 @@ class TestDatasets(unittest.TestCase):
         BATCH_SIZE = 128
         datasplit = get_data_splits_by_name(
             dataset_name="imagenet",
-            data_root="/neutrino/datasets/imagenet16",
+            data_root=str(DATASETS_ROOT / "imagenet16"),
             batch_size=BATCH_SIZE,
         )
         train_len = len(datasplit["train"])
@@ -51,7 +54,7 @@ class TestDatasets(unittest.TestCase):
     def test_imagenet10_dataset(self):
         BATCH_SIZE = 128
         datasplit = get_data_splits_by_name(
-            data_root="/neutrino/datasets/imagenet10",
+            data_root=str(DATASETS_ROOT / "imagenet10"),
             dataset_name="imagenet",
             batch_size=BATCH_SIZE,
         )
@@ -64,7 +67,7 @@ class TestDatasets(unittest.TestCase):
     def test_imagenet1000_dataset(self):
         BATCH_SIZE = 128
         datasplit = get_data_splits_by_name(
-            data_root="/neutrino/datasets/imagenet",
+            data_root=str(DATASETS_ROOT / "imagenet"),
             dataset_name="imagenet",
             batch_size=BATCH_SIZE,
         )
@@ -76,7 +79,7 @@ class TestDatasets(unittest.TestCase):
     def test_voc0712_dataset(self):
         BATCH_SIZE = 128
         datasplit = get_data_splits_by_name(
-            data_root="/neutrino/datasets/VOCdevkit/",
+            data_root=str(DATASETS_ROOT / "VOCdevkit"),
             dataset_name="voc",
             model_name="vgg16_ssd",
             batch_size=BATCH_SIZE,
@@ -89,7 +92,7 @@ class TestDatasets(unittest.TestCase):
     def test_voc_yolo_dataset(self):
         BATCH_SIZE = 128
         datasplit = get_data_splits_by_name(
-            data_root="/neutrino/datasets/VOCdevkit/",
+            data_root=str(DATASETS_ROOT / "VOCdevkit"),
             dataset_name="voc",
             model_name="yolo",
             batch_size=BATCH_SIZE,
@@ -102,7 +105,7 @@ class TestDatasets(unittest.TestCase):
     def test_coco_yolo_dataset(self):
         BATCH_SIZE = 10
         datasplit = get_data_splits_by_name(
-            data_root="/neutrino/datasets/coco/",
+            data_root=str(DATASETS_ROOT / "coco"),
             dataset_name="coco",
             model_name="yolo",
             batch_size=BATCH_SIZE,
