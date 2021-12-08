@@ -29,7 +29,7 @@ class FocalLoss(nn.Module):
 
 
 class YoloV3Loss(nn.Module):
-    def __init__(self, num_classes=20, device="cuda"):
+    def __init__(self, num_classes=20, model=None, device="cuda"):
         super(YoloV3Loss, self).__init__()
         self.__iou_threshold_loss = hyp_cfg.TRAIN["IOU_THRESHOLD_LOSS"]
         self._strides = np.array(hyp_cfg.MODEL["STRIDES"])

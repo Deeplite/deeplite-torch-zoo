@@ -103,10 +103,18 @@ class Trainer(object):
                 return model_fn(self.model_name, **default_model_fn_args)
 
     def _get_loss(self):
-        if "yolov5_6" not in self.model_name:
-            return YoloV3Loss(num_classes=self.num_classes, device=self.device)
-        else:
-            return YoloV5Loss(model=self.model, num_classes=self.num_classes, device=self.device)
+        loss_cls_map = {
+            'yolo3': YoloV3Loss,
+            'yolo5': YoloV5Loss,
+        }
+        loss_kwargs = {
+            'model': self.model,
+            'num_classes': self.num_classes,
+            'device': self.device,
+        }
+        model_name_to_loss_cls = lambda name: 'yolo5' if 'yolov5_6' in name \
+            else 'yolo3'
+        return loss_cls_map[model_name_to_loss_cls(self.model_name)](**loss_kwargs)
 
     def __load_model_weights(self, weight_path, resume):
         if resume:
