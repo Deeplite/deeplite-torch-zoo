@@ -99,7 +99,7 @@ class LISA(Dataset):
         return [samples[idx] for idx in indices]
 
     def _augment(self, img, bboxes):
-        img, bboxes = RandomHorizontalFilp()(np.copy(img), np.copy(bboxes))
+        img, bboxes = RandomHorizontalFlip()(np.copy(img), np.copy(bboxes))
         img, bboxes = RandomCrop()(np.copy(img), np.copy(bboxes))
         img, bboxes = RandomAffine()(np.copy(img), np.copy(bboxes))
         img, bboxes = Resize((self._img_size, self._img_size), True)(
