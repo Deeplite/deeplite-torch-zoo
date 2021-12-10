@@ -178,7 +178,7 @@ class YoloV5Loss(nn.Module):
         """
         # targets = targets[]
         # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
-        det = self.model.model[-1]
+        det = self.model.model[-1].to(targets.device)
         na, nt = det.na, targets.shape[0]  # number of anchors, targets
         nl = det.nl
         tcls, tbox, indices, anch = [], [], [], []
