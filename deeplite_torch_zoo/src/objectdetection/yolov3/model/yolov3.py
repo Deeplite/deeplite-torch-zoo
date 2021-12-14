@@ -11,7 +11,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as hyp_cfg
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.backbones.darknet53 import Darknet53
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.head.yolo_head import Yolo_head
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.layers.conv_module import Convolutional

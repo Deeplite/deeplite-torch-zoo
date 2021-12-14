@@ -1,4 +1,3 @@
-# test
 TEST = {
     "TEST_IMG_SIZE": 300,
     "BATCH_SIZE": 1,

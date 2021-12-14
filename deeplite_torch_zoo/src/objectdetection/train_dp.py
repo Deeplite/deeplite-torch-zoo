@@ -12,7 +12,7 @@ from mmcv.runner import init_dist
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scratch
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
 from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo4_lisa, yolo5

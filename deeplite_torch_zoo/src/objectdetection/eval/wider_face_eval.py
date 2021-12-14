@@ -19,7 +19,7 @@ import cv2
 import numpy as np
 import torch
 
-import deeplite_torch_zoo.src.objectdetection.configs.lisa_config as lisa_cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as lisa_cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.metrics import MAP
@@ -49,7 +49,7 @@ class WiderFaceEval(Evaluator):
             _info = self.dataset.img_info[img_idx]
             img_path = _info["img_path"]
             image = cv2.imread(img_path)
-            
+
             print("Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r")
             bboxes_prd = self.get_bbox(image)
             if len(bboxes_prd) == 0:

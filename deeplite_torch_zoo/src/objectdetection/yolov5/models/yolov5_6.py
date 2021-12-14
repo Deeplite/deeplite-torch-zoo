@@ -51,7 +51,7 @@ class Detect(nn.Module):
                 z.append(y.view(bs, -1, self.no))
 
         return x if self.training else (x, torch.cat(z, 1))
-    
+
     def _make_grid(self, nx=20, ny=20, i=0):
         d = self.anchors[i].device
         yv, xv = torch.meshgrid([torch.arange(ny).to(d), torch.arange(nx).to(d)])
@@ -63,7 +63,7 @@ class Detect(nn.Module):
 
 class YoloV5_6(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
-    def __init__(self, cfg='deeplite_torch_zoo/yolov5/models/configs/yolov5_6s.yaml', ch=3, nc=None, anchors=None):  # model, input channels, number of classes
+    def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None):  # model, input channels, number of classes
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -93,7 +93,7 @@ class YoloV5_6(nn.Module):
             xs, _ = self.forward(torch.zeros(1, ch, s, s))
             m.stride = torch.tensor([s / x.shape[-2] for x in xs])
             m.anchors /= m.stride.view(-1, 1, 1)
-            
+
             self.stride = m.stride
             self._initialize_biases()  # only run once
 
@@ -246,7 +246,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         kwargs = dict()
         if m in YOLOV5_6_SPECIFIC_MODULES.registry_dict.values():
             kwargs.update({'yolov5_version_6': True})
-        
+
         m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
         np = sum(x.numel() for x in m_.parameters())  # number params

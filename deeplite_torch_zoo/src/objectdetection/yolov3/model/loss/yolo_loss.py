@@ -6,7 +6,7 @@ sys.path.append("../utils")
 import torch
 import torch.nn as nn
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils import tools
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import LabelSmooth
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import iou_xywh_numpy

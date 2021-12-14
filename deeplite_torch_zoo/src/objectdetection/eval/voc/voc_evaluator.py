@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import torch
 
-import deeplite_torch_zoo.src.objectdetection.configs.voc_config as cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.voc import voc_eval
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize

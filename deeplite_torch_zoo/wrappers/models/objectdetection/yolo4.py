@@ -30,15 +30,15 @@ model_urls = {
 }
 
 yolov4_cfg = {
-    "yolov4s": "deeplite_torch_zoo/src/objectdetection/configs/yolov4s-mish.yaml",
-    "yolov4m": "deeplite_torch_zoo/src/objectdetection/configs/yolov4m-mish.yaml",
-    "yolov4l": "deeplite_torch_zoo/src/objectdetection/configs/yolov4l-mish.yaml",
-    "yolov4x": "deeplite_torch_zoo/src/objectdetection/configs/yolov4x-mish.yaml",
-    "yolov4l_leaky": "deeplite_torch_zoo/src/objectdetection/configs/yolov4l-leaky.yaml",
-    "yolov5s": "deeplite_torch_zoo/src/objectdetection/configs/yolov5s.yaml",
-    "yolov5m": "deeplite_torch_zoo/src/objectdetection/configs/yolov5m.yaml",
-    "yolov5l": "deeplite_torch_zoo/src/objectdetection/configs/yolov5l.yaml",
-    "yolov5x": "deeplite_torch_zoo/src/objectdetection/configs/yolov5x.yaml",
+    "yolov4s": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov4s-mish.yaml",
+    "yolov4m": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov4m-mish.yaml",
+    "yolov4l": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov4l-mish.yaml",
+    "yolov4x": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov4x-mish.yaml",
+    "yolov4l_leaky": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov4l-leaky.yaml",
+    "yolov5s": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5s.yaml",
+    "yolov5m": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5m.yaml",
+    "yolov5l": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5l.yaml",
+    "yolov5x": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5x.yaml",
 }
 
 YOLOV4_MODELS = list(yolov4_cfg.keys())
