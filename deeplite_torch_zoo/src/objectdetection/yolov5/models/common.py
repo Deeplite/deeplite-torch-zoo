@@ -24,13 +24,6 @@ except:
 YOLOV5_6_SPECIFIC_MODULES = Registry('yolov5_6_specific_modules')
 
 
-def partialclass(cls, *args, **kwds):
-
-    class Module_(cls):
-        __init__ = functools.partialmethod(cls.__init__, *args, **kwds)
-
-    return Module_
-
 def autopad(k, p=None):  # kernel, padding
     # Pad to 'same'
     if p is None:
@@ -40,7 +33,7 @@ def autopad(k, p=None):  # kernel, padding
 
 def DWConv(c1, c2, k=1, s=1, act=True, yolov5_version_6=False):
     # Depthwise convolution
-    Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+    Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
     return Conv_(c1, c2, k, s, g=math.gcd(c1, c2), act=act)
 
 
@@ -69,7 +62,7 @@ class Bottleneck(nn.Module):
         self, c1, c2, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, shortcut, groups, expansion
         super(Bottleneck, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = Conv_(c_, c2, 3, 1, g=g)
@@ -86,8 +79,8 @@ class BottleneckCSP(nn.Module):
         self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
-        Bottleneck_ = partialclass(Bottleneck, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Bottleneck_ = functools.partial(Bottleneck, yolov5_version_6=yolov5_version_6)
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
@@ -112,8 +105,8 @@ class BottleneckCSP2(nn.Module):
         self, c1, c2, n=1, shortcut=False, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP2, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
-        Bottleneck_ = partialclass(Bottleneck, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Bottleneck_ = functools.partial(Bottleneck, yolov5_version_6=yolov5_version_6)
         c_ = int(c2)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
@@ -138,8 +131,8 @@ class BottleneckCSP2Leaky(nn.Module):
         self, c1, c2, n=1, shortcut=False, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP2Leaky, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
-        Bottleneck_ = partialclass(Bottleneck, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Bottleneck_ = functools.partial(Bottleneck, yolov5_version_6=yolov5_version_6)
         c_ = int(c2)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
@@ -164,7 +157,7 @@ class VoVCSP(nn.Module):
         self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(VoVCSP, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         c_ = int(c2)  # hidden channels
         self.cv1 = Conv_(c1 // 2, c_ // 2, 3, 1)
         self.cv2 = Conv_(c_ // 2, c_ // 2, 3, 1)
@@ -182,7 +175,7 @@ class SPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
     def __init__(self, c1, c2, k=(5, 9, 13), yolov5_version_6=False):
         super(SPP, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = Conv_(c_ * (len(k) + 1), c2, 1, 1)
@@ -200,7 +193,7 @@ class SPPCSP(nn.Module):
     # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), yolov5_version_6=False):
         super(SPPCSP, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         c_ = int(2 * c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
@@ -226,7 +219,7 @@ class SPPCSP(nn.Module):
 class SPPCSPLeaky(nn.Module):
     def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), yolov5_version_6=False):
         super(SPPCSPLeaky, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         c_ = int(2 * c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
@@ -255,7 +248,7 @@ class Focus(nn.Module):
         self, c1, c2, k=1, s=1, p=None, g=1, act=True, yolov5_version_6=False,
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super(Focus, self).__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         self.conv = Conv_(c1 * 4, c2, k, s, p, g, act)
 
     def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
@@ -313,7 +306,7 @@ class SPPF(nn.Module):
     # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
     def __init__(self, c1, c2, k=5, yolov5_version_6=False):  # equivalent to SPP(k=(5, 9, 13))
         super().__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = Conv_(c_ * 4, c2, 1, 1)
