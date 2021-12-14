@@ -92,7 +92,7 @@ MODEL = {
         [(3.625, 2.8125), (4.875, 6.1875), (11.65625, 10.1875)],
     ],  # Anchors for big obj
     "STRIDES": [8, 16, 32],
-    "ANCHORS_PER_SCLAE": 3,
+    "ANCHORS_PER_SCALE": 3,
 }
 
 # train

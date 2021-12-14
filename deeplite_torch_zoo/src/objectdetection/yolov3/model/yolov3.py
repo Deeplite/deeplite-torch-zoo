@@ -29,7 +29,7 @@ class Yolov3(nn.Module):
         self.__anchors = torch.FloatTensor(hyp_cfg.MODEL["ANCHORS"])
         self.__strides = torch.FloatTensor(hyp_cfg.MODEL["STRIDES"])
         self.__nC = num_classes
-        self.__out_channel = hyp_cfg.MODEL["ANCHORS_PER_SCLAE"] * (self.__nC + 5)
+        self.__out_channel = hyp_cfg.MODEL["ANCHORS_PER_SCALE"] * (self.__nC + 5)
         self.__backnone = Darknet53()
         self.__fpn = FPN_YOLOV3(
             fileters_in=[1024, 512, 256],

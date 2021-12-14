@@ -10,9 +10,6 @@ from tqdm import tqdm
 from utils.tools import *
 from utils.visualize import *
 
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"]='0'
-
 
 class Tester(object):
     def __init__(
