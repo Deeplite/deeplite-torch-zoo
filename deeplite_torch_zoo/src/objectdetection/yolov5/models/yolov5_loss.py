@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import xyxy2cxcywh
 
 
@@ -64,12 +64,32 @@ class BCEBlurWithLogitsLoss(nn.Module):
 
 
 class YoloV5Loss(nn.Module):
-    def __init__(self, model, num_classes=80, device="cuda"):
+    def __init__(self, model, num_classes=80, device="cuda", autobalance=False):
         super(YoloV5Loss, self).__init__()
         self.device = device
         self.num_classes = num_classes
         self.model = model
-        self.hyp_params = hyp_cfg.TRAIN  # hyperparameters
+        self.hyp = hyp_cfg.TRAIN  # hyperparameters
+        self.sort_obj_iou = False
+
+        # Define criteria
+        BCEcls = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([self.hyp['cls_pw']], device=device))
+        BCEobj = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([self.hyp['obj_pw']], device=device))
+
+        # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
+        self.cp, self.cn = smooth_BCE(eps=self.hyp.get('label_smoothing', 0.0))  # positive, negative BCE targets
+
+        # Focal loss
+        g = self.hyp['fl_gamma']  # focal loss gamma
+        if g > 0:
+            BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
+
+        det = model.model[-1]  # Detect() module
+        self.balance = {3: [4.0, 1.0, 0.4]}.get(det.nl, [4.0, 1.0, 0.25, 0.06, .02])  # P3-P7
+        self.ssi = list(det.stride).index(16) if autobalance else 0  # stride 16 index
+        self.BCEcls, self.BCEobj, self.gr, self.autobalance = BCEcls, BCEobj, 1.0, autobalance
+        for k in 'na', 'nc', 'nl', 'anchors':
+            setattr(self, k, getattr(det, k))
 
     def forward(
         self, p, p_d, raw_targets, labels_length, img_size
@@ -98,69 +118,49 @@ class YoloV5Loss(nn.Module):
         )
         tcls, tbox, indices, anchors = self.build_targets(p, targets)  # targets
 
-        # Define criteria
-        BCEcls = nn.BCEWithLogitsLoss(
-            pos_weight=torch.Tensor([self.hyp_params["cls_pw"]])
-        ).to(self.device)
-        BCEobj = nn.BCEWithLogitsLoss(
-            pos_weight=torch.Tensor([self.hyp_params["obj_pw"]])
-        ).to(self.device)
-
-        # Class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
-        cp, cn = smooth_BCE(eps=0.0)
-
-        # Focal loss
-        g = self.hyp_params["fl_gamma"]  # focal loss gamma
-        if g > 0:
-            BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
-
         # Losses
-        nt = 0  # number of targets
-        num_outputs = len(p)  # number of outputs
-        balance = (
-            [4.0, 1.0, 0.4] if num_outputs == 3 else [4.0, 1.0, 0.4, 0.1]
-        )  # P3-5 or P3-6
         for i, pi in enumerate(p):  # layer index, layer predictions
             b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
-
             tobj = torch.zeros_like(pi[..., 0], device=self.device)  # target obj
 
             n = b.shape[0]  # number of targets
             if n:
-                nt += n  # cumulative targets
                 ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets
 
                 # Regression
-                pxy = ps[:, :2].sigmoid() * 2.0 - 0.5
+                pxy = ps[:, :2].sigmoid() * 2. - 0.5
                 pwh = (ps[:, 2:4].sigmoid() * 2) ** 2 * anchors[i]
-                pbox = torch.cat((pxy, pwh), 1).to(self.device)  # predicted box
-                giou = bbox_iou(
-                    pbox.T, tbox[i], x1y1x2y2=False, CIoU=True
-                )  # giou(prediction, target)
-                lbox += (1.0 - giou).mean()  # giou loss
+                pbox = torch.cat((pxy, pwh), 1)  # predicted box
+                iou = bbox_iou(pbox.T, tbox[i], x1y1x2y2=False, CIoU=True)  # iou(prediction, target)
+                lbox += (1.0 - iou).mean()  # iou loss
 
                 # Objectness
-                tobj[b, a, gj, gi] = (
-                    1.0 - self.hyp_params["giou_loss_ratio"]
-                ) + self.hyp_params["giou_loss_ratio"] * giou.detach().clamp(0).type(
-                    tobj.dtype
-                )  # giou ratio
+                score_iou = iou.detach().clamp(0).type(tobj.dtype)
+                if self.sort_obj_iou:
+                    sort_id = torch.argsort(score_iou)
+                    b, a, gj, gi, score_iou = b[sort_id], a[sort_id], gj[sort_id], gi[sort_id], score_iou[sort_id]
+                tobj[b, a, gj, gi] = (1.0 - self.gr) + self.gr * score_iou  # iou ratio
+
                 # Classification
-                if self.num_classes > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(ps[:, 5:], cn, device=self.device)  # targets
-                    t[range(n), tcls[i]] = cp
-                    lcls += BCEcls(ps[:, 5:], t)  # BCE
+                if self.nc > 1:  # cls loss (only if multiple classes)
+                    t = torch.full_like(ps[:, 5:], self.cn, device=self.device)  # targets
+                    t[range(n), tcls[i]] = self.cp
+                    lcls += self.BCEcls(ps[:, 5:], t)  # BCE
 
                 # Append targets to text file
                 # with open('targets.txt', 'a') as file:
                 #     [file.write('%11.5g ' * 4 % tuple(x) + '\n') for x in torch.cat((txy[i], twh[i]), 1)]
 
-            lobj += BCEobj(pi[..., 4], tobj) * balance[i]  # obj loss
+            obji = self.BCEobj(pi[..., 4], tobj)
+            lobj += obji * self.balance[i]  # obj loss
+            if self.autobalance:
+                self.balance[i] = self.balance[i] * 0.9999 + 0.0001 / obji.detach().item()
 
-        s = 3 / num_outputs  # output count scaling
-        lbox *= self.hyp_params["giou"] * s
-        lobj *= self.hyp_params["obj"] * s * (1.4 if num_outputs == 4 else 1.0)
-        lcls *= self.hyp_params["cls"] * s
+        if self.autobalance:
+            self.balance = [x / self.balance[self.ssi] for x in self.balance]
+        lbox *= self.hyp['giou']
+        lobj *= self.hyp['obj']
+        lcls *= self.hyp['cls']
         bs = tobj.shape[0]  # batch size
 
         loss = lbox + lobj + lcls
@@ -169,7 +169,7 @@ class YoloV5Loss(nn.Module):
             lbox,
             lobj,
             lcls,
-        )  # torch.cat((lbox, lobj, lcls, loss)).detach()
+        )
 
     def build_targets(self, p, targets):
         """
@@ -216,7 +216,7 @@ class YoloV5Loss(nn.Module):
                 # Matches
                 r = t[:, :, 4:6] / anchors[:, None]  # wh ratio
                 j = (
-                    torch.max(r, 1.0 / r).max(2)[0] < self.hyp_params["anchor_t"]
+                    torch.max(r, 1.0 / r).max(2)[0] < self.hyp["anchor_t"]
                 )  # compare
                 # j = wh_iou(anchors, t[:, 4:6]) > model.hyp['iou_t']  # iou(3,n)=wh_iou(anchors(3,2), gwh(n,2))
                 t = t[j]  # filter
