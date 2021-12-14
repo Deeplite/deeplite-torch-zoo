@@ -12,13 +12,6 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.google_utils import \
     attempt_download
 
 
-def partialclass(cls, *args, **kwds):
-
-    class Module_(cls):
-        __init__ = functools.partialmethod(cls.__init__, *args, **kwds)
-
-    return Module_
-
 class CrossConv(nn.Module):
     # Cross Convolution Downsample
     def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, shortcut=False):
@@ -51,15 +44,14 @@ class C3(nn.Module):
                 *[CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)]
             )
         else:
-            Conv_ = partialclass(Conv, yolov5_version_6=self.yolov5_version_6)
-            Bottleneck_ = partialclass(Bottleneck, yolov5_version_6=self.yolov5_version_6)
-            Conv_ = partialclass(Conv, yolov5_version_6=self.yolov5_version_6)
+            Conv_ = functools.partial(Conv, yolov5_version_6=self.yolov5_version_6)
+            Bottleneck_ = functools.partial(Bottleneck, yolov5_version_6=self.yolov5_version_6)
             c_ = int(c2 * e)  # hidden channels
             self.cv1 = Conv_(c1, c_, 1, 1)
             self.cv2 = Conv_(c1, c_, 1, 1)
             self.cv3 = Conv_(2 * c_, c2, 1)  # act=FReLU(c2)
             self.m = nn.Sequential(*(Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
-        
+
     def forward(self, x):
         if not self.yolov5_version_6:
             y1 = self.cv3(self.m(self.cv1(x)))
@@ -97,7 +89,7 @@ class C3TR(C3):
     # C3 module with TransformerBlock()
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
         super().__init__(c1, c2, n, shortcut, g, e, yolov5_version_6=yolov5_version_6)
-        TransformerBlock_ = partialclass(TransformerBlock, yolov5_version_6=yolov5_version_6)
+        TransformerBlock_ = functools.partial(TransformerBlock, yolov5_version_6=yolov5_version_6)
         c_ = int(c2 * e)
         self.m = TransformerBlock_(c_, c_, 4, n)
 
@@ -107,7 +99,7 @@ class C3SPP(C3):
     # C3 module with SPP()
     def __init__(self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
         super().__init__(c1, c2, n, shortcut, g, e, yolov5_version_6=yolov5_version_6)
-        SPP_ = partialclass(SPP, yolov5_version_6=yolov5_version_6)
+        SPP_ = functools.partial(SPP, yolov5_version_6=yolov5_version_6)
         c_ = int(c2 * e)
         self.m = SPP_(c_, c_, k)
 
@@ -117,7 +109,7 @@ class C3Ghost(C3):
     # C3 module with GhostBottleneck()
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False):
         super().__init__(c1, c2, n, shortcut, g, e, yolov5_version_6=yolov5_version_6)
-        GhostBottleneck_ = partialclass(GhostBottleneck, yolov5_version_6=yolov5_version_6)
+        GhostBottleneck_ = functools.partial(GhostBottleneck, yolov5_version_6=yolov5_version_6)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(*(GhostBottleneck_(c_, c_) for _ in range(n)))
 
@@ -127,9 +119,9 @@ class GhostBottleneck(nn.Module):
     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
     def __init__(self, c1, c2, k=3, s=1, yolov5_version_6=False):  # ch_in, ch_out, kernel, stride
         super().__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
-        GhostConv_ = partialclass(GhostConv, yolov5_version_6=yolov5_version_6)
-        DWConv_ = partialclass(DWConv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        GhostConv_ = functools.partial(GhostConv, yolov5_version_6=yolov5_version_6)
+        DWConv_ = functools.partial(DWConv, yolov5_version_6=yolov5_version_6)
         c_ = c2 // 2
         self.conv = nn.Sequential(GhostConv_(c1, c_, 1, 1),  # pw
                                   DWConv_(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
@@ -146,7 +138,7 @@ class GhostConv(nn.Module):
     # Ghost Convolution https://github.com/huawei-noah/ghostnet
     def __init__(self, c1, c2, k=1, s=1, g=1, act=True, yolov5_version_6=False):  # ch_in, ch_out, kernel, stride, groups
         super().__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         c_ = c2 // 2  # hidden channels
         self.cv1 = Conv_(c1, c_, k, s, None, g, act)
         self.cv2 = Conv_(c_, c_, 5, 1, None, c_, act)
@@ -178,7 +170,7 @@ class TransformerBlock(nn.Module):
     # Vision Transformer https://arxiv.org/abs/2010.11929
     def __init__(self, c1, c2, num_heads, num_layers, yolov5_version_6=False):
         super().__init__()
-        Conv_ = partialclass(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
         self.conv = None
         if c1 != c2:
             self.conv = Conv_(c1, c2)
