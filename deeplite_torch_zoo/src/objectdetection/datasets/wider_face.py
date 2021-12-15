@@ -1,14 +1,15 @@
 import os
 from pathlib import Path
-import random
 
 import cv2
 import numpy as np
 import torch
 from os.path import abspath, expanduser
-from typing import Any, Callable, List, Dict, Optional, Tuple, Union
-from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import (
-    Mixup, RandomAffine, RandomCrop, RandomHorizontalFlip, Resize)
+from typing import List, Dict, Union
+
+from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
+from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as cfg
 
 
 WF_CLASS_NAMES = {
@@ -17,8 +18,9 @@ WF_CLASS_NAMES = {
 }
 
 
-class WiderFace:
+class WiderFace(DLZooDataset):
     def __init__(self, root, split="train", num_classes=None, img_size=416):
+        super().__init__(cfg, img_size)
         """`WIDERFace <http://shuoyang1213.me/WIDERFACE/>`_ Dataset.
         Args:
             root (string): Root directory where images and annotations are downloaded to.
@@ -26,9 +28,9 @@ class WiderFace:
                 .. code::
                     <root>
                         └── widerface
-                            ├── wider_face_split 
+                            ├── wider_face_split
                             ├── WIDER_train
-                            ├── WIDER_val 
+                            ├── WIDER_val
                             └── WIDER_test
             split (string): The dataset split to use. One of {``train``, ``val``, ``test``}.
                 Defaults to ``train``.
@@ -48,7 +50,6 @@ class WiderFace:
         self.num_classes = len(self.classes)
         if num_classes is not None:
             self.num_classes = num_classes
-        self._img_size = img_size
         self.inv_map = {k: v for k, v in enumerate(sorted(list(self.classes)))}
 
     def __getitem__(self, item):
@@ -56,18 +57,11 @@ class WiderFace:
         return:
             bboxes of shape nx6, where n is number of labels in the image and x1,y1,x2,y2, class_id and confidence.
         """
-        img_org, bboxes_org, img_id = self.__parse_annotation(self.img_info[item])
-        img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
 
-        item_mix = random.randint(0, len(self.img_info) - 1)
-        img_mix, bboxes_mix, _ = self.__parse_annotation(self.img_info[item_mix])
-        img_mix = img_mix.transpose(2, 0, 1)
-
-        img, bboxes = Mixup()(img_org, bboxes_org, img_mix, bboxes_mix)
-        del img_org, bboxes_org, img_mix, bboxes_mix
+        get_img_fn = lambda img_index: self.__parse_annotation(self.img_info[img_index])
+        img, bboxes, img_id = self._load_mixup(item, get_img_fn, len(self.img_info))
 
         img = torch.from_numpy(img).float()
-
         bboxes = torch.from_numpy(bboxes).float()
 
         return img, bboxes, bboxes.shape[0], img_id
@@ -91,9 +85,7 @@ class WiderFace:
         if len(bboxes) == 0:
             bboxes = np.array(np.zeros((0, 5)))
         else:
-            img, bboxes = RandomHorizontalFlip()(np.copy(img), np.copy(bboxes))
-            img, bboxes = RandomCrop()(np.copy(img), np.copy(bboxes))
-            img, bboxes = RandomAffine()(np.copy(img), np.copy(bboxes))
+            img, bboxes = self._augment(img, bboxes)
         img, bboxes = Resize((self._img_size, self._img_size), True)(
             np.copy(img), np.copy(bboxes)
         )
