@@ -2,13 +2,17 @@ import argparse
 import os
 import re
 import random
+import math
 from pathlib import Path
 
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from pycocotools.coco import COCO
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
@@ -18,8 +22,6 @@ from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
     YoloV3Loss
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.cosine_lr_scheduler import \
-    CosineDecayLR
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import init_seeds
 
 from deeplite_torch_zoo.wrappers.models import YOLOV3_MODELS, YOLOV4_MODELS, YOLOV5_MODELS
@@ -27,6 +29,16 @@ from deeplite_torch_zoo.wrappers.models import YOLOV3_MODELS, YOLOV4_MODELS, YOL
 
 YOLO_MODEL_NAMES = YOLOV3_MODELS + YOLOV4_MODELS + YOLOV5_MODELS
 
+DATASET_TO_HP_CONFIG_MAP = {
+    'voc': hyp_cfg_scratch,
+    'coco': hyp_cfg_scratch,
+    'wider_face': hyp_cfg_scratch,
+    'lisa': hyp_cfg_lisa,
+}
+HP_CONFIG_MAP = {
+    'scratch': hyp_cfg_scratch,
+    'finetune': hyp_cfg_finetune,
+}
 
 class Trainer(object):
     def __init__(self, weight_path, resume, gpu_id):
@@ -36,7 +48,12 @@ class Trainer(object):
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "wider_face"]
         assert self.model_name in YOLO_MODEL_NAMES
 
-        self.hyp_config = hyp_cfg_scratch
+        if opt.hp_config is None:
+            for dataset_name in DATASET_TO_HP_CONFIG_MAP:
+                if dataset_name in opt.dataset_type:
+                    self.hyp_config = DATASET_TO_HP_CONFIG_MAP[dataset_name]
+        else:
+            self.hyp_config = HP_CONFIG_MAP[opt.hp_config]
 
         self.device = gpu.select_device(gpu_id, force_cpu=False)
         self.start_epoch = 0
@@ -64,24 +81,12 @@ class Trainer(object):
         self.pretraining_source_dataset = opt.pretraining_source_dataset
         self.model = self._get_model()
 
-        self.optimizer = optim.SGD(
-            self.model.parameters(),
-            lr=self.hyp_config.TRAIN["LR_INIT"],
-            momentum=self.hyp_config.TRAIN["MOMENTUM"],
-            weight_decay=self.hyp_config.TRAIN["WEIGHT_DECAY"],
-        )
-
         self.criterion = self._get_loss()
         if resume:
             self.__load_model_weights(weight_path, resume)
 
-        self.scheduler = CosineDecayLR(
-            self.optimizer,
-            T_max=self.epochs * len(self.train_dataloader),
-            lr_init=self.hyp_config.TRAIN["LR_INIT"],
-            lr_min=self.hyp_config.TRAIN["LR_END"],
-            warmup=self.hyp_config.TRAIN["WARMUP_EPOCHS"] * len(self.train_dataloader),
-        )
+        self.optimizer, self.scheduler = make_od_optimizer(self.model,
+            self.epochs, self.train_dataloader, hyp_config=self.hyp_config)
 
     def _get_model(self):
         net_name_to_model_fn_map = {
@@ -201,6 +206,37 @@ class Trainer(object):
                 print("best mAP : %g" % (self.best_mAP))
 
 
+def make_od_optimizer(model, epochs, hyp_config=None, hyp_config_name=None, linear_lr=False):
+    if hyp_config is None:
+        hyp_config = HP_CONFIG_MAP.get(hyp_config_name, hyp_cfg_scratch)
+
+    g0, g1, g2 = [], [], []  # optimizer parameter groups
+    for v in model.modules():
+        if hasattr(v, 'bias') and isinstance(v.bias, nn.Parameter):  # bias
+            g2.append(v.bias)
+        if isinstance(v, nn.BatchNorm2d):  # weight (no decay)
+            g0.append(v.weight)
+        elif hasattr(v, 'weight') and isinstance(v.weight, nn.Parameter):  # weight (with decay)
+            g1.append(v.weight)
+    optimizer = optim.SGD(g0, lr=hyp_config['lr0'], momentum=hyp_config['momentum'], nesterov=True)
+    optimizer.add_param_group({'params': g1, 'weight_decay': hyp_config['weight_decay']})  # add g1 with weight_decay
+    optimizer.add_param_group({'params': g2})  # add g2 (biases)
+
+    # Scheduler
+    if linear_lr:
+        lf = lambda x: (1 - x / (epochs - 1)) * (1.0 - hyp_config['lrf']) + hyp_config['lrf']  # linear
+    else:
+        lf = one_cycle(1, hyp_config['lrf'], epochs)  # cosine 1->hyp['lrf']
+
+    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
+    return optimizer, scheduler
+
+
+def one_cycle(y1=0.0, y2=1.0, steps=100):
+    # lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf
+    return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -269,6 +305,13 @@ if __name__ == "__main__":
         type=str,
         default="yolov4m",
         help="The type of the network used. Currently support 'yolo3', 'yolo4' and 'yolo5'",
+    )
+    parser.add_argument(
+        "--hp_config",
+        dest="hp_config",
+        type=str,
+        default=None,
+        help="The hyperparameter configuration name to use. Available options: 'scratch', 'finetune'",
     )
     opt = parser.parse_args()
 

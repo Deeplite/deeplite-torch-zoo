@@ -47,13 +47,13 @@ TRAIN = {
     # optimization:
     "EPOCHS": 51,
     "BATCH_SIZE": 8,
-    "LR_INIT": 1e-4,  # 0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)
-    "LR_END": 1e-6,  # 0.2,  # final OneCycleLR learning rate (lr0 * lrf)
-    "MOMENTUM": 0.937,  # SGD momentum/Adam beta1
-    "WEIGHT_DECAY": 0.0005,  # optimizer weight decay 5e-4
-    "WARMUP_EPOCHS": 2,  # warmup epochs (fractions ok)
-    "WARMUP_MOMENTUM": 0.8,  # warmup initial momentum
-    "WARMUP_BIAS_LR": 0.1,  # warmup initial bias lr
+    "lr0": 1e-4,  # 0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)
+    "lrf": 1e-2,  # 0.2,  # final OneCycleLR learning rate (lr0 * lrf)
+    "momentum": 0.937,  # SGD momentum/Adam beta1
+    "weight_decay": 0.0005,  # optimizer weight decay 5e-4
+    "warmup_epochs": 2,  # warmup epochs (fractions ok)
+    "warmup_momentum": 0.8,  # warmup initial momentum
+    "warmup_bias_lr": 0.1,  # warmup initial bias lr
     # loss:
     "giou": 0.05,  # box loss gain
     "cls": 0.5,  # cls loss gain
