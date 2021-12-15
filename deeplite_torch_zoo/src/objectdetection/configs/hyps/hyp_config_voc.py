@@ -61,17 +61,15 @@ MODEL = {
     "ANCHORS_PER_SCALE": 3,
 }
 
-# Deprecated
-# TEST = {
-#     "TEST_IMG_SIZE": 544,
-#     "BATCH_SIZE": 1,
-#     "NUMBER_WORKERS": 0,
-#     "CONF_THRESH": 0.01,
-#     "NMS_THRESH": 0.5,
-#     "MULTI_SCALE_TEST": False,
-#     "FLIP_TEST": False,
-# }
-
+TEST = {
+    "TEST_IMG_SIZE": 544,
+    "BATCH_SIZE": 1,
+    "NUMBER_WORKERS": 0,
+    "CONF_THRESH": 0.01,
+    "NMS_THRESH": 0.5,
+    "MULTI_SCALE_TEST": False,
+    "FLIP_TEST": False,
+}
 
 TRAIN = {
     # general:

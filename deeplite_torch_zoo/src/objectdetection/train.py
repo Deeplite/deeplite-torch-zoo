@@ -86,7 +86,7 @@ class Trainer(object):
             self.__load_model_weights(weight_path, resume)
 
         self.optimizer, self.scheduler = make_od_optimizer(self.model,
-            self.epochs, self.train_dataloader, hyp_config=self.hyp_config)
+            self.epochs, hyp_config=self.hyp_config)
 
     def _get_model(self):
         net_name_to_model_fn_map = {
@@ -115,6 +115,7 @@ class Trainer(object):
             'model': self.model,
             'num_classes': self.num_classes,
             'device': self.device,
+            'hyp_cfg': self.hyp_config,
         }
         model_name_to_loss_cls = lambda name: 'yolo5' if 'yolov5_6' in name \
             else 'yolo3'
@@ -218,15 +219,15 @@ def make_od_optimizer(model, epochs, hyp_config=None, hyp_config_name=None, line
             g0.append(v.weight)
         elif hasattr(v, 'weight') and isinstance(v.weight, nn.Parameter):  # weight (with decay)
             g1.append(v.weight)
-    optimizer = optim.SGD(g0, lr=hyp_config['lr0'], momentum=hyp_config['momentum'], nesterov=True)
-    optimizer.add_param_group({'params': g1, 'weight_decay': hyp_config['weight_decay']})  # add g1 with weight_decay
+    optimizer = optim.SGD(g0, lr=hyp_config.TRAIN['lr0'], momentum=hyp_config.TRAIN['momentum'], nesterov=True)
+    optimizer.add_param_group({'params': g1, 'weight_decay': hyp_config.TRAIN['weight_decay']})  # add g1 with weight_decay
     optimizer.add_param_group({'params': g2})  # add g2 (biases)
 
     # Scheduler
     if linear_lr:
-        lf = lambda x: (1 - x / (epochs - 1)) * (1.0 - hyp_config['lrf']) + hyp_config['lrf']  # linear
+        lf = lambda x: (1 - x / (epochs - 1)) * (1.0 - hyp_config.TRAIN['lrf']) + hyp_config.TRAIN['lrf']  # linear
     else:
-        lf = one_cycle(1, hyp_config['lrf'], epochs)  # cosine 1->hyp['lrf']
+        lf = one_cycle(1, hyp_config.TRAIN['lrf'], epochs)  # cosine 1->hyp['lrf']
 
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
     return optimizer, scheduler
