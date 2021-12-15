@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_default
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import xyxy2cxcywh
 
 
@@ -64,11 +64,13 @@ class BCEBlurWithLogitsLoss(nn.Module):
 
 
 class YoloV5Loss(nn.Module):
-    def __init__(self, model, num_classes=80, device="cuda", autobalance=False):
+    def __init__(self, model, num_classes=80, device="cuda", autobalance=False, hyp_cfg=None):
         super(YoloV5Loss, self).__init__()
         self.device = device
         self.num_classes = num_classes
         self.model = model
+        if hyp_cfg is None:
+            hyp_cfg = hyp_cfg_default
         self.hyp = hyp_cfg.TRAIN  # hyperparameters
         self.sort_obj_iou = False
 

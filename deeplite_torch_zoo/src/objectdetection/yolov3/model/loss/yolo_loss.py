@@ -6,7 +6,7 @@ sys.path.append("../utils")
 import torch
 import torch.nn as nn
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_default
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils import tools
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import LabelSmooth
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import iou_xywh_numpy
@@ -29,8 +29,10 @@ class FocalLoss(nn.Module):
 
 
 class YoloV3Loss(nn.Module):
-    def __init__(self, num_classes=20, model=None, device="cuda"):
+    def __init__(self, num_classes=20, model=None, device="cuda", hyp_cfg=None):
         super(YoloV3Loss, self).__init__()
+        if hyp_cfg is None:
+            hyp_cfg = hyp_cfg_default
         self.__iou_threshold_loss = hyp_cfg.TRAIN["IOU_THRESHOLD_LOSS"]
         self._strides = np.array(hyp_cfg.MODEL["STRIDES"])
         self.__num_classes = num_classes
