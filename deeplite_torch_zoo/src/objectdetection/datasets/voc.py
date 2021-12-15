@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import random
 import cv2
 import numpy as np
 import torch
@@ -11,9 +12,8 @@ from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 
 
 class VocDataset(DLZooDataset):
-    def __init__(self, annotation_path, anno_file_type, num_classes=None,
-                    img_size=416, mosaic=False):
-        super().__init__(cfg, img_size)
+    def __init__(self, annotation_path, anno_file_type, num_classes=None, img_size=416):
+        super().__init__(cfg.TRAIN, img_size)
         self.classes = cfg.DATA["CLASSES"]
         if num_classes == 1:
             self.classes = cfg.DATA["CLASSES_1"]
@@ -23,7 +23,6 @@ class VocDataset(DLZooDataset):
         self.all_classes = cfg.DATA["ALLCLASSES"]
         self.annotation_path = annotation_path
         self.num_classes = len(self.classes)
-        self.mosaic = mosaic
 
         if num_classes is not None:
             self.num_classes = num_classes
@@ -58,12 +57,11 @@ class VocDataset(DLZooDataset):
         """
 
         get_img_fn = lambda img_index: self.__parse_annotation(self.__annotations[img_index])
-        if self.mosaic:
-            img, bboxes, img_id = self._load_mosaic(item,  get_img_fn,
+        if random.random() < cfg.TRAIN['mosaic']:
+            img, bboxes, img_id = self._load_mosaic(item, get_img_fn,
                 len(self.__annotations))
-        else:
-            img, bboxes, img_id = self._load_mixup(item, get_img_fn,
-                len(self.__annotations))
+        img, bboxes, img_id = self._load_mixup(item, get_img_fn,
+            len(self.__annotations), p=cfg.TRAIN['mixup'])
 
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()

@@ -20,7 +20,7 @@ WF_CLASS_NAMES = {
 
 class WiderFace(DLZooDataset):
     def __init__(self, root, split="train", num_classes=None, img_size=416):
-        super().__init__(cfg, img_size)
+        super().__init__(cfg.TRAIN, img_size)
         """`WIDERFace <http://shuoyang1213.me/WIDERFACE/>`_ Dataset.
         Args:
             root (string): Root directory where images and annotations are downloaded to.
@@ -59,7 +59,8 @@ class WiderFace(DLZooDataset):
         """
 
         get_img_fn = lambda img_index: self.__parse_annotation(self.img_info[img_index])
-        img, bboxes, img_id = self._load_mixup(item, get_img_fn, len(self.img_info))
+        img, bboxes, img_id = self._load_mixup(item, get_img_fn,
+            len(self.img_info), p=cfg.TRAIN['mixup'])
 
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()

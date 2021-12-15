@@ -19,7 +19,7 @@ class LISA(DLZooDataset):
     def __init__(
         self, data_folder="data/lisa", _set="train", split=0.7, seed=123, img_size=416
     ):
-        super().__init__(lisa_cfg, img_size)
+        super().__init__(lisa_cfg.TRAIN, img_size)
         """
         :param data_folder: folder where data files are stored
         :param split: split data randomly with split % for training and 1 - split % for validation
@@ -113,7 +113,8 @@ class LISA(DLZooDataset):
             img_org, bboxes_org = self._get_image(i)
             return img_org, bboxes_org, bboxes_org.shape[0], 0
 
-        img, bboxes = self._load_mixup(i, self._get_image, len(self.images))
+        img, bboxes = self._load_mixup(i, self._get_image,
+            len(self.images), p= lisa_cfg.TRAIN['mixup'])
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()
 

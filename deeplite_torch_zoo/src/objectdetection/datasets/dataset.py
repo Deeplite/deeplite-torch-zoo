@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import \
     Mixup, RandomAffine, RandomCrop, RandomHorizontalFlip, \
-    Resize, Albumentations, AugmentHSV
+    Resize, Albumentations, AugmentHSV, RandomVerticalFlip
 
 
 class DLZooDataset(Dataset):
@@ -14,14 +14,21 @@ class DLZooDataset(Dataset):
         self._img_size = img_size
 
     def _augment(self, img, bboxes):
-        img, bboxes = RandomHorizontalFlip()(img, bboxes)
-        img, bboxes = Albumentations()(img, bboxes)
-        img = AugmentHSV()(img)
-        img, bboxes = RandomCrop()(img, bboxes)
-        img, bboxes = RandomAffine()(img, bboxes)
+        transforms = [
+            RandomHorizontalFlip(p=self._hyp_cfg['fliplr']),
+            RandomVerticalFlip(p=self._hyp_cfg['flipud']),
+            Albumentations(),
+            AugmentHSV(hgain=self._hyp_cfg['hsv_h'],
+                       sgain=self._hyp_cfg['hsv_s'],
+                       vgain=self._hyp_cfg['hsv_v']),
+            RandomCrop(),
+            RandomAffine()
+        ]
+        for transform in transforms:
+            img, bboxes = transform(np.copy(img), np.copy(bboxes))
         return img, bboxes
 
-    def _load_mixup(self, item, get_img_fn, num_images):
+    def _load_mixup(self, item, get_img_fn, num_images, p=0.5):
         img_org, bboxes_org, img_id = get_img_fn(item)
         img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
 
@@ -29,7 +36,7 @@ class DLZooDataset(Dataset):
         img_mix, bboxes_mix, _ = get_img_fn(item_mix)
         img_mix = img_mix.transpose(2, 0, 1)
 
-        img, bboxes = Mixup()(img_org, bboxes_org, img_mix, bboxes_mix)
+        img, bboxes = Mixup(p=p)(img_org, bboxes_org, img_mix, bboxes_mix)
         return img, bboxes, img_id
 
     def _load_mosaic(self, item, get_img_fn, num_images, resize_to_original_size=True):
