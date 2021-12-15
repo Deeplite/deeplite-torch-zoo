@@ -6,15 +6,12 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
-from PIL import Image
-from torch.utils.data import Dataset
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as lisa_cfg
-from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import (
-    Mixup, RandomAffine, RandomCrop, RandomHorizontalFlip, Resize)
+from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
 
 
-class LISA(Dataset):
+class LISA(DLZooDataset):
     """
     A PyTorch Dataset class to be used in a PyTorch DataLoader to create batches.
     """
@@ -22,6 +19,7 @@ class LISA(Dataset):
     def __init__(
         self, data_folder="data/lisa", _set="train", split=0.7, seed=123, img_size=416
     ):
+        super().__init__(lisa_cfg.TRAIN, img_size)
         """
         :param data_folder: folder where data files are stored
         :param split: split data randomly with split % for training and 1 - split % for validation
@@ -33,7 +31,6 @@ class LISA(Dataset):
         self.objects = []
         self.data = {}
         self.classes = lisa_cfg.DATA["CLASSES"]
-        self._img_size = img_size
         self.label_map = {}
         self.inv_map = {}
         self._set = _set
@@ -98,15 +95,6 @@ class LISA(Dataset):
     def _subsample(self, samples, indices):
         return [samples[idx] for idx in indices]
 
-    def _augment(self, img, bboxes):
-        img, bboxes = RandomHorizontalFlip()(np.copy(img), np.copy(bboxes))
-        img, bboxes = RandomCrop()(np.copy(img), np.copy(bboxes))
-        img, bboxes = RandomAffine()(np.copy(img), np.copy(bboxes))
-        img, bboxes = Resize((self._img_size, self._img_size), True)(
-            np.copy(img), np.copy(bboxes)
-        )
-        return img, bboxes
-
     def _get_image(self, idx):
         file_path = str(self.data_folder / self.images[idx])
         img = cv2.imread(file_path)
@@ -121,20 +109,13 @@ class LISA(Dataset):
 
     def __getitem__(self, i):
         # Read image
-        img_org, bboxes_org = self._get_image(i)
         if self._set == "valid":
+            img_org, bboxes_org = self._get_image(i)
             return img_org, bboxes_org, bboxes_org.shape[0], 0
-        img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
 
-        item_mix = random.randint(0, len(self.images) - 1)
-
-        img_mix, bboxes_mix = self._get_image(item_mix)
-        img_mix = img_mix.transpose(2, 0, 1)  # HWC->CHW
-        img, bboxes = Mixup()(img_org, bboxes_org, img_mix, bboxes_mix)
-        del img_org, bboxes_org, img_mix, bboxes_mix
-
+        img, bboxes = self._load_mixup(i, self._get_image,
+            len(self.images), p= lisa_cfg.TRAIN['mixup'])
         img = torch.from_numpy(img).float()
-
         bboxes = torch.from_numpy(bboxes).float()
 
         return img, bboxes, bboxes.shape[0], 0

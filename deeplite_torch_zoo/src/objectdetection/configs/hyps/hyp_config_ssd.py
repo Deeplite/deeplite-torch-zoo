@@ -1,26 +1,33 @@
-TEST = {
-    "TEST_IMG_SIZE": 300,
-    "BATCH_SIZE": 1,
-    "NUMBER_WORKERS": 0,
-    "CONF_THRESH": 0.01,
-    "NMS_THRESH": 0.5,
-    "MULTI_SCALE_TEST": False,
-    "FLIP_TEST": False,
-}
+# Deprecated
+# TEST = {
+#     "TEST_IMG_SIZE": 300,
+#     "BATCH_SIZE": 1,
+#     "NUMBER_WORKERS": 0,
+#     "CONF_THRESH": 0.01,
+#     "NMS_THRESH": 0.5,
+#     "MULTI_SCALE_TEST": False,
+#     "FLIP_TEST": False,
+# }
 
 
 TRAIN = {
+    # general:
     "TRAIN_IMG_SIZE": 300,
     "AUGMENT": True,
-    "BATCH_SIZE": 8,
     "MULTI_SCALE_TRAIN": True,
     "IOU_THRESHOLD_LOSS": 0.5,
-    "EPOCHS": 51,
     "NUMBER_WORKERS": 4,
+    # optimization:
+    "EPOCHS": 51,
+    "BATCH_SIZE": 8,
     "LR_INIT": 1e-4,  # 0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)
     "LR_END": 1e-6,  # 0.2,  # final OneCycleLR learning rate (lr0 * lrf)
     "MOMENTUM": 0.937,  # SGD momentum/Adam beta1
     "WEIGHT_DECAY": 0.0005,  # optimizer weight decay 5e-4
+    "WARMUP_EPOCHS": 2,  # warmup epochs (fractions ok)
+    "WARMUP_MOMENTUM": 0.8,  # warmup initial momentum
+    "WARMUP_BIAS_LR": 0.1,  # warmup initial bias lr
+    # loss:
     "giou": 0.05,  # box loss gain
     "cls": 0.5,  # cls loss gain
     "cls_pw": 1.0,  # cls BCELoss positive_weight
@@ -31,5 +38,18 @@ TRAIN = {
     # anchors: 0  # anchors per output grid (0 to ignore)
     "fl_gamma": 1.5,  # focal loss gamma (efficientDet default gamma=1.5)
     "giou_loss_ratio": 1.0,
-    "WARMUP_EPOCHS": 2,
+    # augmentations:
+    "hsv_h": 0.015,  # image HSV-Hue augmentation (fraction)
+    "hsv_s": 0.7,  # image HSV-Saturation augmentation (fraction)
+    "hsv_v": 0.4,  # image HSV-Value augmentation (fraction)
+    "degrees": 0.0,  # image rotation (+/- deg)
+    "translate": 0.1,  # image translation (+/- fraction)
+    "scale": 0.5,  # image scale (+/- gain)
+    "shear": 0.0,  # image shear (+/- deg)
+    "perspective": 0.0,  # image perspective (+/- fraction), range 0-0.001
+    "flipud": 0.0,  # image flip up-down (probability)
+    "fliplr": 0.5,  # image flip left-right (probability)
+    "mosaic": 0.0,  # image mosaic (probability)
+    "mixup": 0.5,  # image mixup (probability)
+    "copy_paste": 0.0,  # segment copy-paste (probability)
 }
