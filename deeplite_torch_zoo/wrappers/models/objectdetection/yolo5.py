@@ -29,25 +29,21 @@ model_urls = {
     "yolov5_6s_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6s-voc-20classes_821-6654b7ae075935fd.pt",
     "yolov5_6n_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
     "yolov5_6m_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6m-voc-20classes_902-50c151baffbf896e.pt",
-    "yolov5s_coco_80": "deeplite_torch_zoo/weight/yolo5s-coco-80classes.pt",
-    "yolov5m_coco_80": "deeplite_torch_zoo/weight/yolo5m-coco-80classes.pt",
-    "yolov5l_coco_80": "deeplite_torch_zoo/weight/yolo5l-coco-80classes.pt",
-    "yolov5x_coco_80": "deeplite_torch_zoo/weight/yolo5x-coco-80classes.pt",
     "yolov5_6s_coco_80": "http://download.deeplite.ai/zoo/models/yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",
     "yolov5_6m_coco_80": "http://download.deeplite.ai/zoo/models/yolov5_6m-coco-80classes_374-f93fa94b629c45ab.pt",
     "yolov5_6n_coco_80": "http://download.deeplite.ai/zoo/models/yolov5_6n-coco-80classes_211-e9e44a7de1f08ea2.pt",
 }
 
 yolov5_cfg = {
-    "yolov5s": "deeplite_torch_zoo/src/objectdetection/configs/yolov5s.yaml",
-    "yolov5m": "deeplite_torch_zoo/src/objectdetection/configs/yolov5m.yaml",
-    "yolov5l": "deeplite_torch_zoo/src/objectdetection/configs/yolov5l.yaml",
-    "yolov5x": "deeplite_torch_zoo/src/objectdetection/configs/yolov5x.yaml",
-    "yolov5_6s": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6s.yaml",
-    "yolov5_6m": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6m.yaml",
-    "yolov5_6l": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6l.yaml",
-    "yolov5_6x": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6x.yaml",
-    "yolov5_6n": "deeplite_torch_zoo/src/objectdetection/configs/yolov5_6n.yaml",
+    "yolov5s": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5s.yaml",
+    "yolov5m": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5m.yaml",
+    "yolov5l": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5l.yaml",
+    "yolov5x": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5x.yaml",
+    "yolov5_6s": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5_6s.yaml",
+    "yolov5_6m": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5_6m.yaml",
+    "yolov5_6l": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5_6l.yaml",
+    "yolov5_6x": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5_6x.yaml",
+    "yolov5_6n": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5_6n.yaml",
 }
 
 YOLOV5_MODELS = list(yolov5_cfg.keys())

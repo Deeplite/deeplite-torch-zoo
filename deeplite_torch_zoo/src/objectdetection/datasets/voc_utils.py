@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 from tqdm import tqdm
 
-import deeplite_torch_zoo.src.objectdetection.configs.voc_config as cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
 
 
 def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=False):

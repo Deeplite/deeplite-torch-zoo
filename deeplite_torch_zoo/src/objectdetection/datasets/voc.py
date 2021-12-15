@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-import deeplite_torch_zoo.src.objectdetection.configs.voc_config as cfg
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import (
     Mixup, RandomAffine, RandomCrop, RandomHorizontalFlip, Resize,
     AugmentHSV, Albumentations)

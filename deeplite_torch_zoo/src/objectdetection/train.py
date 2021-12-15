@@ -6,10 +6,9 @@ from pathlib import Path
 
 import torch
 import torch.optim as optim
-from tqdm import tqdm
 from pycocotools.coco import COCO
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyp_config as hyp_cfg_scratch
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
 
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
