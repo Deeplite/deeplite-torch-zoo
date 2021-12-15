@@ -3,11 +3,13 @@ import os
 import re
 import random
 import math
+import functools
 from pathlib import Path
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
 from pycocotools.coco import COCO
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
@@ -85,7 +87,7 @@ class Trainer(object):
         if resume:
             self.__load_model_weights(weight_path, resume)
 
-        self.optimizer, self.scheduler = make_od_optimizer(self.model,
+        self.optimizer, self.scheduler, self.warmup_training_callback = make_od_optimizer(self.model,
             self.epochs, hyp_config=self.hyp_config)
 
     def _get_model(self):
@@ -164,19 +166,22 @@ class Trainer(object):
         print(self.model)
         print("The number of samples in the train dataset split: {}".format(len(self.train_dataset)))
 
+        num_batches = len(self.train_dataloader)
+
         for epoch in range(self.start_epoch, self.epochs):
             self.model.train()
 
             mloss = torch.zeros(4)
             for i, (imgs, targets, labels_length, _) in enumerate(self.train_dataloader):
-                self.scheduler.step()
+                num_iter = i + epoch * num_batches
+                self.warmup_training_callback(self.train_dataloader, epoch, num_iter)
+
                 imgs = imgs.to(self.device)
-
                 p, p_d = self.model(imgs)
-
                 loss, loss_giou, loss_conf, loss_cls = self.criterion(
                     p, p_d, targets, labels_length, imgs.shape[-1]
                 )
+
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
@@ -190,6 +195,8 @@ class Trainer(object):
                 # multi-scale training (320-608 pixel resolution)
                 if self.multi_scale_train:
                     self.train_dataset._img_size = random.choice(range(10, 20)) * 32
+
+            self.scheduler.step()
 
             mAP = 0
             if epoch % opt.eval_freq == 0:
@@ -230,12 +237,28 @@ def make_od_optimizer(model, epochs, hyp_config=None, hyp_config_name=None, line
         lf = one_cycle(1, hyp_config.TRAIN['lrf'], epochs)  # cosine 1->hyp['lrf']
 
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
-    return optimizer, scheduler
+    warmup_training_fn = functools.partial(warmup_training, optimizer=optimizer, scheduler=scheduler,
+        hyp_config=hyp_config)
+    return optimizer, scheduler, warmup_training_fn
 
 
 def one_cycle(y1=0.0, y2=1.0, steps=100):
     # lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf
     return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
+
+
+def warmup_training(train_dataloder, epoch, iter_number, optimizer=None, scheduler=None, hyp_config=None):
+    num_batches_per_epoch = len(train_dataloder)
+    warmup_iters_number = hyp_config.TRAIN['warmup_epochs'] * num_batches_per_epoch
+    if iter_number < warmup_iters_number:
+        xi = [0, warmup_iters_number]  # x interp
+        for j, x in enumerate(optimizer.param_groups):
+            # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
+            x['lr'] = np.interp(iter_number, xi, [hyp_config.TRAIN['warmup_bias_lr'] if j == 2 else 0.0,
+                x['initial_lr'] * scheduler.lr_lambdas[0](epoch)])
+            if 'momentum' in x:
+                x['momentum'] = np.interp(iter_number, xi, [hyp_config.TRAIN['warmup_momentum'],
+                    hyp_config.TRAIN['momentum']])
 
 
 if __name__ == "__main__":
