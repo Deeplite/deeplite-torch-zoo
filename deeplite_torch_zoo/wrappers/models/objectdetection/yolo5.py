@@ -26,7 +26,7 @@ model_urls = {
     "yolov5m_wider_face_8": "http://download.deeplite.ai/zoo/models/yolo5m-widerface-8cls-878_8a99aaf8b8b9157b.pt",
     "yolov5l_voc_24": "http://download.deeplite.ai/zoo/models/yolo5l_voc-24_885_391dfc95d193faf5.pt",
     "yolov5m_voc_24": "http://download.deeplite.ai/zoo/models/yolo5m_voc_24_871_54be57d3f5a35a7b.pt",
-    "yolov5_6s_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6s-voc-20classes_821-6654b7ae075935fd.pt",
+    "yolov5_6s_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6s-voc-20classes_871-4ceb1b22b227c05c.pt",
     "yolov5_6n_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
     "yolov5_6m_voc_20": "http://download.deeplite.ai/zoo/models/yolo5_6m-voc-20classes_902-50c151baffbf896e.pt",
     "yolov5_6s_coco_80": "http://download.deeplite.ai/zoo/models/yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",
