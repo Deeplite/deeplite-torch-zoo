@@ -21,7 +21,7 @@ YOLOV3_MODELS = ["yolov3"]
 
 
 def yolo3(
-    _set_classes="voc_20", num_classes=20, pretrained=False,
+    net="yolov3", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda", **kwargs
 ):
     model = Yolov3(num_classes=num_classes)
