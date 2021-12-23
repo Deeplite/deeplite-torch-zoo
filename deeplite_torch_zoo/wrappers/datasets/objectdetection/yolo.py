@@ -86,7 +86,7 @@ def prepare_yolo_voc_data(vockit_data_root, annotation_path, standard_voc_format
         train_data_paths, test_data_paths = [vockit_data_root,], [vockit_data_root,]
 
     if not (os.path.exists(train_anno_path) and os.path.exists(test_anno_path)):
-        prepare_voc_data(vockit_data_root, annotation_path)
+        prepare_voc_data(train_data_paths, test_data_paths, annotation_path)
 
 
 def _get_voc_for_yolo(annotation_path, num_classes=None, img_size=448):
