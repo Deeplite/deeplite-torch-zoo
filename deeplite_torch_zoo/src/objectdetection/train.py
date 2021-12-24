@@ -36,6 +36,7 @@ DATASET_TO_HP_CONFIG_MAP = {
     'coco': hyp_cfg_scratch,
     'wider_face': hyp_cfg_scratch,
     'lisa': hyp_cfg_lisa,
+    'person_detection': hyp_cfg_scratch,
 }
 HP_CONFIG_MAP = {
     'scratch': hyp_cfg_scratch,
@@ -47,7 +48,8 @@ class Trainer(object):
         init_seeds(0)
 
         self.model_name = opt.net
-        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "wider_face"]
+        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full",
+            "lisa_subset11", "wider_face", "person_detection"]
         assert self.model_name in YOLO_MODEL_NAMES
 
         if opt.hp_config is None:
@@ -70,7 +72,7 @@ class Trainer(object):
             model_name=self.model_name,
             batch_size=opt.batch_size,
             num_workers=opt.n_cpu,
-            img_size=self.hyp_config.TRAIN["TRAIN_IMG_SIZE"]
+            img_size=self.hyp_config.TRAIN["TRAIN_IMG_SIZE"],
         )
 
         self.train_dataloader = dataset_splits["train"]
