@@ -40,7 +40,7 @@ INSTALL_REQUIRES = [
 if sys.version_info >= (3 , 7):
     INSTALL_REQUIRES.append("numpy==1.21.4")
 else:
-    INSTALL_REQUIRES.append("numpy==1.18.5")
+    INSTALL_REQUIRES.append("numpy==1.19.5")
 
 
 def create_init_files_in_submodules():
@@ -104,7 +104,7 @@ setup(
         'sdist': gitcmd_sdist,
     },
     name="deeplite-torch-zoo",
-    version="1.0.6",
+    version="1.2.0",
     description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
     long_description=long_description,
     long_description_content_type="text/markdown",
