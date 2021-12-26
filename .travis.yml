@@ -11,6 +11,10 @@ jobs:
     - python: 3.8
       env: PYTAG="py38"
 
+env:
+  global:
+    - TWINE_USERNAME="__token__"
+    - TWINE_PASSWORD=$PYPITOKEN 
 # command to install dependencies
 install:
   - python -m pip install --upgrade pip  
@@ -51,12 +55,9 @@ deploy:
       condition: "$TRAVIS_TAG =~ -release$"
 
   # Prod deployment
-  - provider: pypi
-    username: "__token__"
-    password: $PYPITOKEN
-    skip_existing: true
-    distributions: "bdist_wheel"
-    #skip_cleanup: true
+  - provider: script # PyPi
+    script: python3 -m twine upload --skip-existing dist/*.whl
+    skip_cleanup: true
     on:
       branch: master
       tags: true
