@@ -1,9 +1,15 @@
 language: python
-#cache: pip
-python:
-  - "3.6"      # current default Python on Travis CI
-  - "3.7.2"
-  - "3.8"
+jobs:
+  include:
+    # perform a linux build
+    - python: 3.6
+      env: PYTAG="py36"
+
+    - python: 3.7
+      env: PYTAG="py37"
+
+    - python: 3.8
+      env: PYTAG="py38"
 
 # command to install dependencies
 install:
@@ -24,7 +30,7 @@ script:
 
 before_deploy:
   - python setup.py install
-  - python setup.py bdist_wheel
+  - python setup.py bdist_wheel --python-tag $PYTAG
   - pip install -U s3pypi
   - pip install sphinx
   - pip install sphinx_rtd_theme
