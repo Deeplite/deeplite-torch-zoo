@@ -4,7 +4,7 @@ import argparse
 
 import torch
 import torch.nn.functional as F
-import torch.optim as optim
+from torch import optim
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import StepLR
 
@@ -141,12 +141,13 @@ def main():
     optimizer = optim.SGD(model.parameters(), lr=args.lr)
     criterion = CrossEntropyLoss()
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, data_splits["train"], optimizer, criterion, epoch)
         test(model, device, data_splits["test"])
         scheduler.step()
 
-    torch.save(model.state_dict(), "checkpoint.pt")
+    torch.save(model.state_dict(), "{}_checkpoint.pt".format(args.arch))
 
 
 if __name__ == "__main__":
