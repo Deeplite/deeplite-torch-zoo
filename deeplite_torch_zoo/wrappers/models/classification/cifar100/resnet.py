@@ -9,7 +9,7 @@
 """
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.resnet import ResNet, BasicBlock, Bottleneck
+from deeplite_torch_zoo.src.classification.cifar_models.resnet import ResNet, BasicBlock, Bottleneck
 
 
 __all__ = [

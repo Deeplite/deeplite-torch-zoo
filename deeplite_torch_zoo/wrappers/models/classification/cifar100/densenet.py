@@ -9,7 +9,7 @@
 """
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.densenet import DenseNet, Bottleneck
+from deeplite_torch_zoo.src.classification.cifar_models.densenet import DenseNet, Bottleneck
 
 
 __all__ = [

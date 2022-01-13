@@ -9,7 +9,7 @@
 """
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.vgg import VGG
+from deeplite_torch_zoo.src.classification.cifar_models.vgg import VGG
 
 
 __all__ = [

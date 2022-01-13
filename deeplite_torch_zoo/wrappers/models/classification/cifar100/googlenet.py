@@ -10,7 +10,7 @@
 """
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.googlenet import GoogLeNet
+from deeplite_torch_zoo.src.classification.cifar_models.googlenet import GoogLeNet
 
 
 __all__ = ["googlenet_cifar100"]

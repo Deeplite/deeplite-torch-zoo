@@ -9,7 +9,7 @@
 """
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.resnext import ResNeXt
+from deeplite_torch_zoo.src.classification.cifar_models.resnext import ResNeXt
 
 
 __all__ = [
