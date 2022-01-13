@@ -52,7 +52,7 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
     return len(image_ids) - excluded
 
 
-def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation):
+def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, train_test_split):
     print("Preparing VOC dataset for YOLO. Onetime process...")
     train_annotation_path = os.path.join(
         str(data_root_annotation), "train_annotation.txt"
@@ -66,11 +66,13 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation):
     if os.path.exists(test_annotation_path):
         os.remove(test_annotation_path)
 
+    train_file_tag, test_file_tag = train_test_split
+
     len_train = 0
     for train_data_path in train_data_paths:
         len_train += parse_voc_annotation(
             train_data_path,
-            "trainval",
+            train_file_tag,
             train_annotation_path,
             use_difficult_bbox=False,
         )
@@ -79,7 +81,7 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation):
     for test_data_path in test_data_paths:
         len_test += parse_voc_annotation(
             test_data_path,
-            "test",
+            test_file_tag,
             test_annotation_path,
             use_difficult_bbox=False,
         )

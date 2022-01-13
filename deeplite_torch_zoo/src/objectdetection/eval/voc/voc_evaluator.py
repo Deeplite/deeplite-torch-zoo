@@ -24,8 +24,10 @@ class VOCEvaluator(Evaluator):
         visiual=False,
         net="yolo3",
         img_size=448,
+        is_07_subset=False,
     ):
-
+        self.is_07_subset = is_07_subset
+        self.test_file = "test.txt" if not self.is_07_subset else "val.txt"
         data_path = "deeplite_torch_zoo/results/voc/{net}".format(net=net)
 
         super(VOCEvaluator, self).__init__(
@@ -58,7 +60,7 @@ class VOCEvaluator(Evaluator):
 
     def evaluate(self, multi_test=False, flip_test=False):
         img_inds_file = os.path.join(
-            self.val_data_path, "ImageSets", "Main", "test.txt"
+            self.val_data_path, "ImageSets", "Main", self.test_file
         )
         with open(img_inds_file, "r") as f:
             lines = f.readlines()
@@ -120,7 +122,6 @@ class VOCEvaluator(Evaluator):
 
     def __calc_APs(self, iou_thresh=0.5, use_07_metric=False):
         """
-        计算每个类别的ap值
         :param iou_thresh:
         :param use_07_metric:
         :return:dict{cls:ap}
@@ -128,7 +129,7 @@ class VOCEvaluator(Evaluator):
         filename = os.path.join(self.pred_result_path, "comp4_det_test_{:s}.txt")
         cachedir = os.path.join(self.pred_result_path, "cache")
         annopath = os.path.join(self.val_data_path, "Annotations", "{:s}.xml")
-        imagesetfile = os.path.join(self.val_data_path, "ImageSets", "Main", "test.txt")
+        imagesetfile = os.path.join(self.val_data_path, "ImageSets", "Main", self.test_file)
         APs = {}
         for i, cls in enumerate(self.classes):
             R, P, AP = voc_eval.voc_eval(
@@ -148,7 +149,7 @@ class VOCEvaluator(Evaluator):
 
 
 def yolo_eval_voc(
-    model, data_root, num_classes=20, device="cuda", net="yolo3", img_size=448, **kwargs
+    model, data_root, num_classes=20, device="cuda", net="yolo3", img_size=448, is_07_subset=False, **kwargs
 ):
 
     mAP = 0
@@ -156,7 +157,7 @@ def yolo_eval_voc(
     model.to(device)
     with torch.no_grad():
         APs = VOCEvaluator(
-            model, data_root, num_classes=num_classes, net=net, img_size=img_size
+            model, data_root, num_classes=num_classes, net=net, img_size=img_size, is_07_subset=is_07_subset,
         ).evaluate()
         for i in APs:
             # print("{} --> mAP : {}".format(i, APs[i]))
