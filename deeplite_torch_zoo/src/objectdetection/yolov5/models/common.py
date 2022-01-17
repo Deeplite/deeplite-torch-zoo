@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from torch.nn.modules.activation import LeakyReLU
 
-from deeplite_torch_zoo.src.objectdetection.utils.registry import Registry
+from deeplite_torch_zoo.utils.registry import Registry
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.activations import \
     Hardswish
 
