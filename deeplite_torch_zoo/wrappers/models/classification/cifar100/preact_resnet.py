@@ -10,7 +10,7 @@
 
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.preact_resnet import PreActResNet, PreActBlock, PreActBottleneck
+from deeplite_torch_zoo.src.classification.cifar_models.preact_resnet import PreActResNet, PreActBlock, PreActBottleneck
 
 __all__ = [
     # 'pre_act_resnet34', 'pre_act_resnet50', 'pre_act_resnet101', 'pre_act_resnet152'

@@ -7,7 +7,7 @@
 
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.lenet import LeNet5
+from deeplite_torch_zoo.src.classification.mnist_models.lenet import LeNet5
 
 
 __all__ = ["lenet5_mnist"]

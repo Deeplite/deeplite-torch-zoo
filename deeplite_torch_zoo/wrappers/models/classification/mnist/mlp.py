@@ -2,7 +2,7 @@ from torch.hub import load_state_dict_from_url
 
 __all__ = ["mlp2_mnist", "mlp4_mnist", "mlp8_mnist"]
 
-from deeplite_torch_zoo.src.classification.mlp import MLP
+from deeplite_torch_zoo.src.classification.mnist_models.mlp import MLP
 
 model_urls = {
     "mlp2": "http://download.deeplite.ai/zoo/models/mlp2-mnist-cd7538f979ca4d0e.pth",

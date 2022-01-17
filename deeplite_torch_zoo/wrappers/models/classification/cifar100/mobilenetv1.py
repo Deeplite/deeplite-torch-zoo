@@ -9,7 +9,7 @@
 """
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.mobilenetv1 import MobileNet
+from deeplite_torch_zoo.src.classification.cifar_models.mobilenetv1 import MobileNet
 
 
 __all__ = ["mobilenet_v1_cifar100"]

@@ -1,6 +1,7 @@
 from torch.hub import load_state_dict_from_url
 
-from deeplite_torch_zoo.src.classification.mobilenetv3 import mobilenetv3_large, mobilenetv3_small
+from deeplite_torch_zoo.src.classification.mobilenets.mobilenetv3 import mobilenetv3_large, mobilenetv3_small
+
 
 __all__ = ["mobilenetv3_small_vww", "mobilenetv3_large_vww"]
 

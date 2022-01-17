@@ -10,7 +10,7 @@
 
 
 from torch.hub import load_state_dict_from_url
-from deeplite_torch_zoo.src.classification.shufflenetv2 import ShuffleNetV2
+from deeplite_torch_zoo.src.classification.cifar_models.shufflenetv2 import ShuffleNetV2
 
 
 __all__ = ["shufflenet_v2_1_0_cifar100"]
