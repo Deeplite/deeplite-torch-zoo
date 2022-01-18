@@ -63,7 +63,7 @@ class Detect(nn.Module):
 
 class YoloV5_6(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
-    def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None):  # model, input channels, number of classes
+    def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None, activation_type='silu'):  # model, input channels, number of classes
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -81,7 +81,7 @@ class YoloV5_6(nn.Module):
         if anchors:
             logger.info(f'Overriding model.yaml anchors with anchors={anchors}')
             self.yaml['anchors'] = round(anchors)  # override yaml value
-        self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch])  # model, savelist
+        self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch], activation_type=activation_type)  # model, savelist
         self.names = [str(i) for i in range(self.yaml['nc'])]  # default names
         self.inplace = self.yaml.get('inplace', True)
 
@@ -202,7 +202,7 @@ class YoloV5_6(nn.Module):
         return self
 
 
-def parse_model(d, ch):  # model_dict, input_channels(3)
+def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
     logger.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
     anchors, nc, gd, gw = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple']
     na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
@@ -219,13 +219,13 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                 BottleneckCSP, C3, C3TR, C3SPP, C3Ghost]:
+                 BottleneckCSP, C3, C3v6, C3TR, C3SPP, C3Ghost]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3, C3TR, C3Ghost]:
+            if m in [BottleneckCSP, C3, C3v6, C3TR, C3Ghost]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:
@@ -245,7 +245,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
 
         kwargs = dict()
         if m in CUSTOM_ACTIVATION_MODULES.registry_dict.values():
-            kwargs.update({'activation_type': 'silu'})
+            kwargs.update({'activation_type': activation_type})
 
         m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
