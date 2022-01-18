@@ -244,8 +244,8 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             c2 = ch[f]
 
         kwargs = dict()
-        if m in YOLOV5_6_SPECIFIC_MODULES.registry_dict.values():
-            kwargs.update({'yolov5_version_6': True})
+        if m in CUSTOM_ACTIVATION_MODULES.registry_dict.values():
+            kwargs.update({'activation_type': 'silu'})
 
         m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
