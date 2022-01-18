@@ -21,3 +21,5 @@ if 'src/segmentation/deeplab/repo/' not in os.environ["PYTHONPATH"]:
 
 if MISSING:
 	os.environ["PYTHONPATH"] = os.pathsep.join(path)
+
+from deeplite_torch_zoo.wrappers import get_data_splits_by_name, get_model_by_name, list_models

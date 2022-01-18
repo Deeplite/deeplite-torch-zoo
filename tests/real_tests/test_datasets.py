@@ -1,7 +1,7 @@
 import unittest
 import pytest
 
-from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
+from deeplite_torch_zoo import get_data_splits_by_name
 
 
 class TestDatasets(unittest.TestCase):
