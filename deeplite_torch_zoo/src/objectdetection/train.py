@@ -122,7 +122,7 @@ class Trainer(object):
             'device': self.device,
             'hyp_cfg': self.hyp_config,
         }
-        model_name_to_loss_cls = lambda name: 'yolo5' if 'yolov5_6' in name \
+        model_name_to_loss_cls = lambda name: 'yolo5' if ('yolov5_6' in name) or  ('yolov4_6' in name) \
             else 'yolo3'
         return loss_cls_map[model_name_to_loss_cls(self.model_name)](**loss_kwargs)
 
