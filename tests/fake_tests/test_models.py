@@ -3,7 +3,7 @@ import unittest
 import pytest
 import torch
 
-from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_splits_by_name, get_models_names_for
+from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name
 from tests.fake_tests.Datasets.FakeDataset import *
 
 

@@ -5,7 +5,7 @@ import torch
 
 from pycocotools.coco import COCO
 
-from deeplite_torch_zoo.wrappers.wrapper import get_model_by_name, get_data_splits_by_name
+from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name
 from deeplite_torch_zoo.wrappers.eval import *
 
 
