@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from functools import partial
 from collections import namedtuple
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
@@ -48,7 +49,12 @@ yolov5_cfg = {
     "yolov5_6n": "deeplite_torch_zoo/src/objectdetection/configs/model_configs/yolov5_6n.yaml",
 }
 
-YOLOV5_MODELS = list(yolov5_cfg.keys())
+YOLOV5_MODELS = []
+MODEL_NAME_SUFFICES = ('relu', )
+for model_name_tag in yolov5_cfg:
+    YOLOV5_MODELS.append(model_name_tag)
+    for model_name_suffix in MODEL_NAME_SUFFICES:
+        YOLOV5_MODELS.append('_'.join((model_name_tag, model_name_suffix)))
 
 
 def yolo5(
@@ -64,11 +70,13 @@ def yolo5(
 
 
 def yolo5_6(
-    net="yolov5_6s", _set_classes="voc_20", num_classes=20,
+    net="yolov5_6s", _set_classes="voc_20", num_classes=20, activation_type="silu",
     pretrained=False, progress=True, device="cuda"
 ):
+    for suffix in MODEL_NAME_SUFFICES:
+        net = re.sub(f'\_{suffix}$', '', net) # pylint: disable=W1401
     config_path = get_project_root() / yolov5_cfg[net]
-    model = YoloV5_6(config_path, ch=3, nc=num_classes)
+    model = YoloV5_6(config_path, ch=3, nc=num_classes, activation_type=activation_type)
     if pretrained:
         checkpoint_url = model_urls[f"{net}_{_set_classes}"]
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
@@ -78,6 +86,7 @@ def yolo5_6(
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolov5[smlx]$": yolo5,
     "^yolov5_6[nsmlx]$": yolo5_6,
+    "^yolov5_6[nsmlx]_relu$": partial(yolo5_6, activation_type="relu"),
 }
 
 def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
@@ -101,7 +110,8 @@ def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
 
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
-    'person_detection_1': ModelSet(1, ['yolov5_6n', 'yolov5_6s']),
+    'person_detection_1': ModelSet(1, ['yolov5_6n', 'yolov5_6s',
+        'yolov5_6n_relu', 'yolov5_6s_relu']),
     'voc_20': ModelSet(20, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m']),
     'voc_24': ModelSet(24, ['yolov5m', 'yolov5l']),

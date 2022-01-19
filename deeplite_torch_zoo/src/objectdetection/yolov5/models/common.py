@@ -20,8 +20,15 @@ except:
             return x * torch.nn.functional.softplus(x).tanh()
 
 
-# Registry for the modules that are different in YOLOv5 v.6 compared to v.2
-YOLOV5_6_SPECIFIC_MODULES = Registry('yolov5_6_specific_modules')
+# Registry for the modules that contain custom activation fn inside
+CUSTOM_ACTIVATION_MODULES = Registry('custom_activation_modules')
+
+ACTIVATION_FN_NAME_MAP = {
+    'relu': nn.ReLU,
+    'silu': nn.SiLU,
+    'hardswish': Hardswish,
+    'mish': Mish,
+}
 
 
 def autopad(k, p=None):  # kernel, padding
@@ -31,22 +38,22 @@ def autopad(k, p=None):  # kernel, padding
     return p
 
 
-def DWConv(c1, c2, k=1, s=1, act=True, yolov5_version_6=False):
+def DWConv(c1, c2, k=1, s=1, act=True, activation_type='hardswish'):
     # Depthwise convolution
-    Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+    Conv_ = functools.partial(Conv, activation_type=activation_type)
     return Conv_(c1, c2, k, s, g=math.gcd(c1, c2), act=act)
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('Conv')
+@CUSTOM_ACTIVATION_MODULES.register('Conv')
 class Conv(nn.Module):
     # Standard convolution
     def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act=True, yolov5_version_6=False
+        self, c1, c2, k=1, s=1, p=None, g=1, act=True, activation_type='hardswish'
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super(Conv, self).__init__()
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
-        activation_function = Hardswish if not yolov5_version_6 else nn.SiLU
+        activation_function = ACTIVATION_FN_NAME_MAP[activation_type]
         self.act = activation_function() if act else nn.Identity()
 
     def forward(self, x):
@@ -55,14 +62,14 @@ class Conv(nn.Module):
     def fuseforward(self, x):
         return self.act(self.conv(x))
 
-@YOLOV5_6_SPECIFIC_MODULES.register('Bottleneck')
+@CUSTOM_ACTIVATION_MODULES.register('Bottleneck')
 class Bottleneck(nn.Module):
     # Standard bottleneck
     def __init__(
-        self, c1, c2, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
+        self, c1, c2, shortcut=True, g=1, e=0.5, activation_type='hardswish',
     ):  # ch_in, ch_out, shortcut, groups, expansion
         super(Bottleneck, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = Conv_(c_, c2, 3, 1, g=g)
@@ -72,15 +79,15 @@ class Bottleneck(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP')
+@CUSTOM_ACTIVATION_MODULES.register('BottleneckCSP')
 class BottleneckCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish',
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
-        Bottleneck_ = functools.partial(Bottleneck, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
+        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
@@ -98,15 +105,15 @@ class BottleneckCSP(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP2')
+@CUSTOM_ACTIVATION_MODULES.register('BottleneckCSP2')
 class BottleneckCSP2(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, yolov5_version_6=False,
+        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, activation_type='hardswish',
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP2, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
-        Bottleneck_ = functools.partial(Bottleneck, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
+        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
         c_ = int(c2)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
@@ -124,15 +131,15 @@ class BottleneckCSP2(nn.Module):
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('BottleneckCSP2Leaky')
+@CUSTOM_ACTIVATION_MODULES.register('BottleneckCSP2Leaky')
 class BottleneckCSP2Leaky(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, yolov5_version_6=False,
+        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, activation_type='hardswish',
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP2Leaky, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
-        Bottleneck_ = functools.partial(Bottleneck, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
+        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
         c_ = int(c2)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
@@ -150,14 +157,14 @@ class BottleneckCSP2Leaky(nn.Module):
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('VoVCSP')
+@CUSTOM_ACTIVATION_MODULES.register('VoVCSP')
 class VoVCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, yolov5_version_6=False,
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish',
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(VoVCSP, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = int(c2)  # hidden channels
         self.cv1 = Conv_(c1 // 2, c_ // 2, 3, 1)
         self.cv2 = Conv_(c_ // 2, c_ // 2, 3, 1)
@@ -170,12 +177,12 @@ class VoVCSP(nn.Module):
         return self.cv3(torch.cat((x1, x2), dim=1))
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('SPP')
+@CUSTOM_ACTIVATION_MODULES.register('SPP')
 class SPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13), yolov5_version_6=False):
+    def __init__(self, c1, c2, k=(5, 9, 13), activation_type='hardswish'):
         super(SPP, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = Conv_(c_ * (len(k) + 1), c2, 1, 1)
@@ -188,12 +195,12 @@ class SPP(nn.Module):
         return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('SPPCSP')
+@CUSTOM_ACTIVATION_MODULES.register('SPPCSP')
 class SPPCSP(nn.Module):
     # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), yolov5_version_6=False):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hardswish'):
         super(SPPCSP, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = int(2 * c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
@@ -215,11 +222,11 @@ class SPPCSP(nn.Module):
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('SPPCSPLeaky')
+@CUSTOM_ACTIVATION_MODULES.register('SPPCSPLeaky')
 class SPPCSPLeaky(nn.Module):
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), yolov5_version_6=False):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hardswish'):
         super(SPPCSPLeaky, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = int(2 * c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
@@ -241,14 +248,14 @@ class SPPCSPLeaky(nn.Module):
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('Focus')
+@CUSTOM_ACTIVATION_MODULES.register('Focus')
 class Focus(nn.Module):
     # Focus wh information into c-space
     def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act=True, yolov5_version_6=False,
+        self, c1, c2, k=1, s=1, p=None, g=1, act=True, activation_type='hardswish',
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super(Focus, self).__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
         self.conv = Conv_(c1 * 4, c2, k, s, p, g, act)
 
     def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
@@ -301,12 +308,12 @@ class Classify(nn.Module):
         return self.flat(self.conv(z))  # flatten to x(b,c2)
 
 
-@YOLOV5_6_SPECIFIC_MODULES.register('SPPF')
+@CUSTOM_ACTIVATION_MODULES.register('SPPF')
 class SPPF(nn.Module):
     # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
-    def __init__(self, c1, c2, k=5, yolov5_version_6=False):  # equivalent to SPP(k=(5, 9, 13))
+    def __init__(self, c1, c2, k=5, activation_type='hardswish'):  # equivalent to SPP(k=(5, 9, 13))
         super().__init__()
-        Conv_ = functools.partial(Conv, yolov5_version_6=yolov5_version_6)
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = c1 // 2  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = Conv_(c_ * 4, c2, 1, 1)
