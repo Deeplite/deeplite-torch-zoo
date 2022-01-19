@@ -79,7 +79,10 @@ To test the installation, one can run the basic tests using `pytest` command in 
 
 # How to Use
 
-The ``deeplite-torch-zoo`` is collection of benchmark computer vision datasets and pretrained models. There are two primary wrapper functions to load datasets and models, ``get_data_splits_by_name``, ``get_model_by_name`` (available in ``deeplite_torch_zoo.wrappers.wrapper``)
+The ``deeplite-torch-zoo`` is collection of benchmark computer vision datasets and pretrained models. There are two primary wrapper functions to load datasets and models, ``get_data_splits_by_name``, ``get_model_by_name`` which can be imported as
+```{.python}
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
+```
 
 ## Loading Datasets
 
@@ -149,7 +152,11 @@ To evaluate a model, the following style of code could be used,
 
 # Available Models
 
-There is an important utility function ``list_models`` (available in ``deeplite_torch_zoo.wrappers.wrapper``). This utility will help in listing all available pretrained models or datasets.
+There is an important utility function ``list_models`` which can be imported as 
+```{.python}
+from deeplite_torch_zoo import list_models
+```
+ This utility will help in listing all available pretrained models or datasets.
 
 For instance ``list_models("yolo3")`` will provide the following result. Similar results can be obtained using ``list_models("yo")``.
 
