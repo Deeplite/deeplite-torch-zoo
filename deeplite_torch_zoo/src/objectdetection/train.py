@@ -211,7 +211,9 @@ class Trainer(object):
                 elif opt.dataset_type == "coco":
                     gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
 
-                Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes, _set=opt.dataset_type, device=self.device, net=opt.net)
+                Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
+                                _set=opt.dataset_type, device=self.device, net=opt.net,
+                                img_size=opt.test_img_res)
                 mAP = Aps["mAP"]
                 self.__save_model_weights(epoch, mAP)
                 print("best mAP : %g" % (self.best_mAP))
@@ -339,6 +341,13 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="The hyperparameter configuration name to use. Available options: 'scratch', 'finetune'",
+    )
+    parser.add_argument(
+        "--test_img_res",
+        dest="test_img_res",
+        type=int,
+        default=448,
+        help="Image resolution to use during model testing",
     )
     opt = parser.parse_args()
 
