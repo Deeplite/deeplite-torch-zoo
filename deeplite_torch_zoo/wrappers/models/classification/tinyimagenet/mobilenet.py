@@ -1,6 +1,7 @@
 
 from torchvision import models
 from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["mobilenet_v2_tinyimagenet"]
@@ -11,6 +12,7 @@ model_urls = {
 }
 
 
+@MODEL_WRAPPER_REGISTRY.register('mobilenet_v2','tinyimagenet','classification')
 def mobilenet_v2_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.mobilenet_v2(num_classes=100)
     if pretrained:

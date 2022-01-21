@@ -11,6 +11,7 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.mobilenetv2 import MobileNetV2
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["mobilenet_v2_cifar100"]
@@ -32,5 +33,6 @@ def _mobilenetv2(arch, pretrained=False, progress=True, device='cuda'):
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('mobilenet_v2','cifar100','classification')
 def mobilenet_v2_cifar100(pretrained=False, progress=True, device='cuda'):
     return _mobilenetv2("mobilenet_v2", pretrained, progress, device=device)

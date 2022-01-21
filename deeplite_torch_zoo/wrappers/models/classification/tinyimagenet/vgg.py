@@ -1,6 +1,7 @@
 
 from torchvision import models
 from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["vgg19_tinyimagenet"]
@@ -11,6 +12,7 @@ model_urls = {
 }
 
 
+@MODEL_WRAPPER_REGISTRY.register('vgg19','tinyimagenet','classification')
 def vgg19_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.vgg19(num_classes=100)
     if pretrained:

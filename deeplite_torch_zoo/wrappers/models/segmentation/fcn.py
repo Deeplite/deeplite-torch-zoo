@@ -1,6 +1,7 @@
 from torch.hub import load_state_dict_from_url
 
 from torchfcn.models import FCN32s as FCN
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["fcn32_voc_20"]
@@ -28,6 +29,7 @@ def fcn32(
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('fcn32','voc20','segmentation')
 def fcn32_voc_20(pretrained=True, progress=False, device='cuda'):
     return fcn32(
         net="fcn32",

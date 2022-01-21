@@ -2,6 +2,7 @@ from torch.hub import load_state_dict_from_url
 
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite
 from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [
@@ -20,6 +21,7 @@ model_urls = {
 }
 
 
+@MODEL_WRAPPER_REGISTRY.register('mb2_ssd_lite',None,'objectdetection')
 def mb2_ssd_lite(
     net="mb2_ssd_lite",
     _dataset="voc_20",
@@ -44,6 +46,7 @@ def mb2_ssd_lite(
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('mb2_ssd_lite',"voc20",'objectdetection')
 def mb2_ssd_lite_voc_20(pretrained=False, progress=True, device="cuda"):
     return mb2_ssd_lite(
         net="mb2_ssd_lite",
@@ -55,6 +58,7 @@ def mb2_ssd_lite_voc_20(pretrained=False, progress=True, device="cuda"):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('mb2_ssd_lite',"voc_1",'objectdetection')
 def mb2_ssd_lite_voc_1(pretrained=False, progress=True, device="cuda"):
     return mb2_ssd_lite(
         net="mb2_ssd_lite",
@@ -66,6 +70,7 @@ def mb2_ssd_lite_voc_1(pretrained=False, progress=True, device="cuda"):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('mb2_ssd_lite',"voc_2",'objectdetection')
 def mb2_ssd_lite_voc_2(pretrained=False, progress=True, device="cuda"):
     return mb2_ssd_lite(
         net="mb2_ssd_lite",
@@ -77,6 +82,7 @@ def mb2_ssd_lite_voc_2(pretrained=False, progress=True, device="cuda"):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('mb2_ssd_lite',"subcls",'objectdetection')
 def mb2_ssd_lite_subcls(num_classes=21, pretrained=True, progress=False, device="cuda"):
     model = create_mobilenetv2_ssd_lite(num_classes)
     if pretrained:
