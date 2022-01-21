@@ -50,7 +50,7 @@ def pre_act_resnet18_cifar100(pretrained=False, progress=True, device='cuda'):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet34', None, 'classification')
+#@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet34', None, 'classification')
 def pre_act_resnet34(pretrained=False, progress=True):
     return _pre_act_resnet(
         "pre_act_resnet34",
@@ -61,7 +61,7 @@ def pre_act_resnet34(pretrained=False, progress=True):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet50', None, 'classification')
+#@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet50', None, 'classification')
 def pre_act_resnet50(pretrained=False, progress=True):
     return _pre_act_resnet(
         "pre_act_resnet50",
@@ -72,7 +72,7 @@ def pre_act_resnet50(pretrained=False, progress=True):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet101', None, 'classification')
+#@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet101', None, 'classification')
 def pre_act_resnet101(pretrained=False, progress=True):
     return _pre_act_resnet(
         "pre_act_resnet101",
@@ -83,7 +83,7 @@ def pre_act_resnet101(pretrained=False, progress=True):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet152', None, 'classification')
+#@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet152', None, 'classification')
 def pre_act_resnet152(pretrained=False, progress=True):
     return _pre_act_resnet(
         "pre_act_resnet152",

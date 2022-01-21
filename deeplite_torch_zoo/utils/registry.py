@@ -50,7 +50,7 @@ class Model_Registry:
     def register(self, model_name, dataset = None, model_type = None):
 
         def wrap(func):
-            model_key = (model_name, dataset, model_type)
+            model_key = (model_name, dataset)
             if model_key in self._registry_dict:
                 raise KeyError('Model {} is already registered in {}'.format(model_key, self._name))
             self._registry_dict[model_key] = func
@@ -58,8 +58,8 @@ class Model_Registry:
 
         return wrap
 
-    def get(self, model_name, dataset = None, model_type = None):
-        model_key = (model_name, dataset, model_type)
+    def get(self, model_name, dataset = None):
+        model_key = (model_name, dataset)
         if model_key not in self._registry_dict:
             raise KeyError('{} is unknown type of {} '.format(model_key, self._name))
         return self._registry_dict[model_key]
