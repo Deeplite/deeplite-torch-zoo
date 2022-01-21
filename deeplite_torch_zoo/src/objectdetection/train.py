@@ -9,16 +9,19 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.cuda import amp
+
 import numpy as np
 from pycocotools.coco import COCO
 
+
+from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
 import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
-from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
-from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6
+from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6, yolo4_6
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
     YoloV3Loss
@@ -92,6 +95,8 @@ class Trainer(object):
         self.optimizer, self.scheduler, self.warmup_training_callback = make_od_optimizer(self.model,
             self.epochs, hyp_config=self.hyp_config)
 
+        self.scaler = amp.GradScaler()
+
     def _get_model(self):
         net_name_to_model_fn_map = {
             "^yolov3$": yolo3,
@@ -99,6 +104,7 @@ class Trainer(object):
             "^yolov5_6[nsmlx]$": yolo5_6,
             "^yolov5_6[nsmlx]_relu$": functools.partial(yolo5_6, activation_type='relu'),
             "^yolov4[smlx]$": yolo4,
+            "^yolov4_6[smlx]$": yolo4_6,
         }
         default_model_fn_args = {
             "pretrained": opt.pretrained,
@@ -122,7 +128,7 @@ class Trainer(object):
             'device': self.device,
             'hyp_cfg': self.hyp_config,
         }
-        model_name_to_loss_cls = lambda name: 'yolo5' if 'yolov5_6' in name \
+        model_name_to_loss_cls = lambda name: 'yolo5' if ('yolov5_6' in name) or  ('yolov4_6' in name) \
             else 'yolo3'
         return loss_cls_map[model_name_to_loss_cls(self.model_name)](**loss_kwargs)
 
@@ -175,25 +181,29 @@ class Trainer(object):
             self.model.train()
 
             mloss = torch.zeros(4)
+            self.optimizer.zero_grad()
             for i, (imgs, targets, labels_length, _) in enumerate(self.train_dataloader):
                 num_iter = i + epoch * num_batches
                 self.warmup_training_callback(self.train_dataloader, epoch, num_iter)
 
-                imgs = imgs.to(self.device)
-                p, p_d = self.model(imgs)
-                loss, loss_giou, loss_conf, loss_cls = self.criterion(
-                    p, p_d, targets, labels_length, imgs.shape[-1]
-                )
+                with amp.autocast():
+                    imgs = imgs.to(self.device)
+                    p, p_d = self.model(imgs)
+                    loss, loss_giou, loss_conf, loss_cls = self.criterion(
+                        p, p_d, targets, labels_length, imgs.shape[-1]
+                    )
+                    # Update running mean of tracked metrics
+                    loss_items = torch.tensor([loss_giou, loss_conf, loss_cls, loss])
+                    mloss = (mloss * i + loss_items) / (i + 1)
 
+                self.scaler.scale(loss).backward()
+                self.scaler.step(self.optimizer)  # optimizer.step
+                self.scaler.update()
                 self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
 
-                # Update running mean of tracked metrics
-                loss_items = torch.tensor([loss_giou, loss_conf, loss_cls, loss])
-                mloss = (mloss * i + loss_items) / (i + 1)
-
-                print(f"\repoch {epoch}/{self.epochs} - Iteration: {i}/{len(self.train_dataloader)}, loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    loss {mloss[3]:0.4f}", end="")
+                print(f"\repoch {epoch}/{self.epochs} - Iteration: {i}/{len(self.train_dataloader)}, " \
+                    f" loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    " \
+                    f"loss {mloss[3]:0.4f}", end="")
 
                 # multi-scale training (320-608 pixel resolution)
                 if self.multi_scale_train:
@@ -203,6 +213,7 @@ class Trainer(object):
 
             mAP = 0
             if epoch % opt.eval_freq == 0:
+                self.model.eval()
                 eval_func = get_eval_func(opt.dataset_type)
                 test_set = opt.img_dir
                 gt = None
