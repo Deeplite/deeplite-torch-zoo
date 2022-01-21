@@ -13,6 +13,7 @@ def get_project_root() -> Path:
 
 __all__ = [
     "yolo4",
+    "yolo4_6",
     "YOLOV4_MODELS",
 ]
 
@@ -23,8 +24,8 @@ model_urls = {
     "yolov4x_voc_20": "http://download.deeplite.ai/zoo/models/yolo4x-voc-20classes_882-187f352b9d0d29c6.pth",
     "yolov4m_lisa_11": "http://download.deeplite.ai/zoo/models/yolov4m-lisa_11_880-6615c5e27557fab0.pth",
     "yolov4l_leaky_voc_20": "http://download.deeplite.ai/zoo/models/yolo4l-leaky-voc-20classes_891-2c0f78ee3938ade3.pt",
-    "yolov4_6s_coco_80": "",
-    "yolov4_6m_coco_80": "",
+    "yolov4_6s_coco_80": "http://download.deeplite.ai/zoo/models/yolov4_6s-coco-80classes-288_b112910223d6c56d.pt",
+    "yolov4_6m_coco_80": "http://download.deeplite.ai/zoo/models/yolov4_6m-coco-80classes-309_02b2013002a4724b.pt",
 }
 
 yolov4_cfg = {
@@ -67,6 +68,7 @@ def yolo4_6(
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolov4[smlx]$": yolo4,
     "^yolov4_6[nsmlx]$": yolo4_6,
+    "^yolov4[smlx]_leaky$": yolo4,
 }
 
 
