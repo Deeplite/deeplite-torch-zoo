@@ -171,11 +171,29 @@ class Trainer(object):
             )
         del chkpt
 
+    def evaluate(self):
+        self.model.eval()
+        eval_func = get_eval_func(opt.dataset_type)
+        test_set = opt.img_dir
+        gt = None
+        if opt.dataset_type in ("voc", "voc07"):
+            test_set = opt.img_dir / "VOC2007"
+        elif opt.dataset_type == "coco":
+            gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
+        Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
+                        _set=opt.dataset_type, device=self.device, net=opt.net,
+                        img_size=opt.test_img_res)
+        return Aps
+
     def train(self):
         print(self.model)
         print("The number of samples in the train dataset split: {}".format(len(self.train_dataset)))
 
         num_batches = len(self.train_dataloader)
+
+        if opt.eval_before_train:
+            Aps = self.evaluate()
+            print(f"Initial mAP values: {Aps}")
 
         for epoch in range(self.start_epoch, self.epochs):
             self.model.train()
@@ -213,18 +231,7 @@ class Trainer(object):
 
             mAP = 0
             if epoch % opt.eval_freq == 0:
-                self.model.eval()
-                eval_func = get_eval_func(opt.dataset_type)
-                test_set = opt.img_dir
-                gt = None
-                if opt.dataset_type in ("voc", "voc07"):
-                    test_set = opt.img_dir / "VOC2007"
-                elif opt.dataset_type == "coco":
-                    gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
-
-                Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
-                                _set=opt.dataset_type, device=self.device, net=opt.net,
-                                img_size=opt.test_img_res)
+                Aps = self.evaluate()
                 mAP = Aps["mAP"]
                 self.__save_model_weights(epoch, mAP)
                 print("best mAP : %g" % (self.best_mAP))
@@ -359,6 +366,13 @@ if __name__ == "__main__":
         type=int,
         default=448,
         help="Image resolution to use during model testing",
+    )
+    parser.add_argument(
+        "--eval_before_train",
+        dest="eval_before_train",
+        action="store_true",
+        default=False,
+        help="Run model evaluation before training",
     )
     opt = parser.parse_args()
 
