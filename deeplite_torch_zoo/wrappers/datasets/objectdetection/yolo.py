@@ -191,7 +191,7 @@ def get_person_detection_for_yolo(
 
 
 def get_voc07_for_yolo(
-    data_root, batch_size=32, num_workers=4, num_classes=1, img_size=448, fp16=False, distributed=False, device="cuda", **kwargs
+    data_root, batch_size=32, num_workers=4, num_classes=20, img_size=448, fp16=False, distributed=False, device="cuda", **kwargs
 ):
     if len(kwargs):
         print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
