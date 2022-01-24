@@ -5,6 +5,7 @@ from pycocotools.cocoeval import COCOeval
 
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
+from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
 
 
 class COCOEvaluator(Evaluator):
@@ -117,8 +118,6 @@ class SSDCOCOEvaluator(COCOEvaluator):
 
 
 def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", net="ssd"):
-    mAP = 0
-    result = {}
     model.to(device)
     with torch.no_grad():
         return SSDCOCOEvaluator(
@@ -130,14 +129,13 @@ def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", ne
         ).evaluate()
 
 
-def yolo_eval_coco(model, data_root, gt=None, device="cuda", net="yolo3", **kwargs):
-    from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
-    mAP = 0
-    result = {}
+def yolo_eval_coco(model, data_root, gt=None, device="cuda",
+                   net="yolo3", img_size=448, **kwargs):
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
     val_coco_root = os.path.join(data_root, "val2017")
-    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate, classes=DATA["CLASSES"], missing_ids=MISSING_IDS)
+    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate,
+        classes=DATA["CLASSES"], missing_ids=MISSING_IDS)
 
     model.to(device)
     with torch.no_grad():
-        return YoloCOCOEvaluator(model, dataset, gt=gt, net=net).evaluate()
+        return YoloCOCOEvaluator(model, dataset, gt=gt, net=net, img_size=img_size).evaluate()

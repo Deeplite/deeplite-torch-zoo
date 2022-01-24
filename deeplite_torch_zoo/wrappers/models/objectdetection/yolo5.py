@@ -65,7 +65,8 @@ def yolo5(
     net="yolov5s", _set_classes="voc_20", num_classes=20,
     pretrained=False, progress=True, device="cuda"
 ):
-    config_path = get_project_root() / yolov5_cfg[net]
+    config_key = net
+    config_path = get_project_root() / yolov5_cfg[config_key]
     model = YoloV5(config_path, ch=3, nc=num_classes)
     if pretrained:
         checkpoint_url = model_urls[f"{net}_{_set_classes}"]
@@ -79,8 +80,8 @@ def yolo5_6(
     pretrained=False, progress=True, device="cuda"
 ):
     for suffix in MODEL_NAME_SUFFICES:
-        net = re.sub(f'\_{suffix}$', '', net) # pylint: disable=W1401
-    config_path = get_project_root() / yolov5_cfg[net]
+        config_key = re.sub(f'\_{suffix}$', '', net) # pylint: disable=W1401
+    config_path = get_project_root() / yolov5_cfg[config_key]
     model = YoloV5_6(config_path, ch=3, nc=num_classes, activation_type=activation_type)
     if pretrained:
         checkpoint_url = model_urls[f"{net}_{_set_classes}"]

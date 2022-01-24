@@ -2,6 +2,7 @@ import os
 import shutil
 from os.path import expanduser
 from pathlib import Path
+from tqdm import tqdm
 
 import cv2
 import numpy as np
@@ -70,7 +71,7 @@ class VOCEvaluator(Evaluator):
             shutil.rmtree(self.pred_result_path)
         os.mkdir(self.pred_result_path)
 
-        for img_ind in img_inds:
+        for img_ind in tqdm(img_inds):
             img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpg")
             img = cv2.imread(img_path)
             self.process_image(
