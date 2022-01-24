@@ -37,6 +37,8 @@ model_urls = {
     "yolov5_6n_person_detection_1": "http://download.deeplite.ai/zoo/models/yolov5_6n-person-detection-1class_696-fff2a2c720e20752.pt",
     "yolov5_6s_relu_person_detection_1": "http://download.deeplite.ai/zoo/models/yolov5_6s_relu-person-detection-1class_682-45ae979a06b80767.pt",
     "yolov5_6m_relu_person_detection_1": "http://download.deeplite.ai/zoo/models/yolov5_6m_relu-person-detection-1class_709-3f59321c540d2d1c.pt",
+    "yolov5_6n_voc07_20": "http://download.deeplite.ai/zoo/models/yolov5_6n-voc07-20classes-620_037230667eff7b12.pt",
+    "yolov5_6s_voc07_20": "http://download.deeplite.ai/zoo/models/yolov5_6s-voc07-20classes-687_4d221fd4edc09ce1.pt",
 }
 
 yolov5_cfg = {
