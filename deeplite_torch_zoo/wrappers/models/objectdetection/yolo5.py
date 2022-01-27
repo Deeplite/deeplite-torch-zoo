@@ -35,6 +35,8 @@ model_urls = {
     "yolov5_6s_voc_20": "yolo5_6s-voc-20classes_871-4ceb1b22b227c05c.pt",
     "yolov5_6n_voc_20": "yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
     "yolov5_6m_voc_20": "yolo5_6m-voc-20classes_902-50c151baffbf896e.pt",
+    "yolov5_6s_relu_voc_20": "yolov5_6s_relu-voc-20classes-819_a35dff53b174e383.pt",
+    "yolov5_6m_relu_voc_20": "yolov5_6m_relu-voc-20classes-856_c5c23135e6d5012f.pt",
     "yolov5_6s_coco_80": "yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",
     "yolov5_6m_coco_80": "yolov5_6m-coco-80classes_374-f93fa94b629c45ab.pt",
     "yolov5_6n_coco_80": "yolov5_6n-coco-80classes_211-e9e44a7de1f08ea2.pt",
@@ -80,7 +82,7 @@ def yolo5(
 
 
 def yolo5_6(
-    net="yolov5_6s", _set_classes="voc_20", num_classes=20, activation_type="silu",
+    net="yolov5_6s", _set_classes="voc_20", num_classes=20, activation_type=None,
     pretrained=False, progress=True, device="cuda"
 ):
     for suffix in MODEL_NAME_SUFFICES:
@@ -123,7 +125,7 @@ wrapper_funcs = {
     'person_detection_1': ModelSet(1, ['yolov5_6n', 'yolov5_6s',
         'yolov5_6n_relu', 'yolov5_6s_relu']),
     'voc_20': ModelSet(20, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
-        'yolov5_6n', 'yolov5_6s', 'yolov5_6m']),
+        'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6m_relu', 'yolov5_6s_relu']),
     'voc_24': ModelSet(24, ['yolov5m', 'yolov5l']),
     'wider_face_8': ModelSet(8, ['yolov5m', 'yolov5l']),
     'coco_80': ModelSet(80, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
