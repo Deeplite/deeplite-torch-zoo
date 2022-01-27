@@ -111,12 +111,12 @@ DATASET_WRAPPER_FNS = {
     'lisa': DatasetParameters(20, 416, create_lisa_datasets),
     'voc': DatasetParameters(20, 448, create_voc_datasets),
     'voc07': DatasetParameters(20, 448, create_voc07_datasets),
-    'widerface': DatasetParameters(1, 448, create_widerface_datasets),
+    'wider_face': DatasetParameters(1, 448, create_widerface_datasets),
     'person_detection': DatasetParameters(1, 320, create_person_detection_datasets),
 }
 
-for dataset_name, dataset_parameters in DATASET_WRAPPER_FNS.items():
-    wrapper_name = f'get_{dataset_name}_for_yolo'
-    globals()[wrapper_name] = make_dataset_wrapper(wrapper_name, num_classes=dataset_parameters.num_classes,
+for dataset_name_key, dataset_parameters in DATASET_WRAPPER_FNS.items():
+    wrapper_fn_name = f'get_{dataset_name_key}_for_yolo'
+    globals()[wrapper_fn_name] = make_dataset_wrapper(wrapper_fn_name, num_classes=dataset_parameters.num_classes,
         img_size=dataset_parameters.img_size, dataset_create_fn=dataset_parameters.dataset_create_fn)
-    __all__.append(wrapper_name)
+    __all__.append(wrapper_fn_name)
