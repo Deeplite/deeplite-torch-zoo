@@ -29,7 +29,7 @@ def fcn32(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('fcn32','voc20','segmentation')
+@MODEL_WRAPPER_REGISTRY.register('fcn32','voc_20','segmentation')
 def fcn32_voc_20(pretrained=True, progress=False, device='cuda'):
     return fcn32(
         net="fcn32",

@@ -48,7 +48,7 @@ def get_model_by_name(
     returns a model (pretrained or fresh) with respect to the dataset
     """
     model_name = model_name.lower()
-    model = MODEL_WRAPPER_REGISTRY.get(model_name, dataset_name)
+    model = MODEL_WRAPPER_REGISTRY.get((model_name, dataset_name))
     model = model(pretrained=pretrained, progress=progress, device=device)
     if fp16:
         model = model.half()
@@ -71,11 +71,11 @@ def list_models(key_word="*"):
             matched_models[model_name] = matched_models.get(model_name,[])
             matched_models[model_name].append(model_key)
 
-    print ( "_"*80)
-    print (f"{'Available Models':25} |Trained on datasets")
-    print ( "-"*80)
+    print( "_"*80)
+    print(f"{'Available Models':25} |Trained on datasets")
+    print( "-"*80)
     for model_name, model_dataset_keys in matched_models.items():
-        print (f"{model_name:{25}} | ", end='')
+        print(f"{model_name:{25}} | ", end='')
 
         matched_datasets = []
         for _, matched_dataset in model_dataset_keys:
