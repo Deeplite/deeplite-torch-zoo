@@ -46,7 +46,7 @@ def mb2_ssd_lite(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('mb2_ssd_lite',"voc20",'objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('mb2_ssd_lite',"voc_20",'objectdetection')
 def mb2_ssd_lite_voc_20(pretrained=False, progress=True, device="cuda"):
     return mb2_ssd_lite(
         net="mb2_ssd_lite",

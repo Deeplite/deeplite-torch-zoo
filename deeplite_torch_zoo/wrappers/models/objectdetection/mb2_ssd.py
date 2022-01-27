@@ -57,7 +57,7 @@ def mb2_ssd_coco_gm_6(pretrained=False, progress=True, device="cuda"):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('mb2_ssd','voc20','objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('mb2_ssd','voc_20','objectdetection')
 def mb2_ssd_voc_20(pretrained=False, progress=True, device="cuda"):
     return mb2_ssd(
         net="mb2_ssd",

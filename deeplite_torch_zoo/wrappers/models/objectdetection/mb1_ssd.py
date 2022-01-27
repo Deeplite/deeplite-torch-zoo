@@ -13,7 +13,7 @@ model_urls = {
 }
 
 
-@MODEL_WRAPPER_REGISTRY.register('mb1_ssd','voc20','objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('mb1_ssd','voc_20')
 def mb1_ssd_voc_20(num_classes=20, pretrained=False, progress=True, device='cuda'):
     model = create_mobilenetv1_ssd(num_classes + 1)
     config = MOBILENET_CONFIG()

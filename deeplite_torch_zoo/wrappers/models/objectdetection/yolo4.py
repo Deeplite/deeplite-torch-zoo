@@ -79,7 +79,7 @@ def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
         if re.match(net_name, net):
             model_wrapper_fn = model_fn
-          
+
     model_name = net.replace('v','')
     @MODEL_WRAPPER_REGISTRY.register(model_name,_set_classes,'objectdetection')
     def wrapper_func(pretrained=False, progress=True, device="cuda"):

@@ -27,7 +27,7 @@ def _resnet_vww(arch, pretrained=False, progress=True, device='cuda'):
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet19','vww','classification')
+@MODEL_WRAPPER_REGISTRY.register('resnet18','vww','classification')
 def resnet18_vww(pretrained=False, progress=True, device='cuda'):
     return _resnet_vww("resnet18", pretrained=pretrained, progress=progress, device=device)
 
