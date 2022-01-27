@@ -39,9 +39,12 @@ class Registry:
         return self._name
 
 
-class Model_Registry(Registry):
+class TupleKeyRegistry(Registry):
+    """
+    Registry class with key as a tuple of 2 items
+    """
 
-    def register(self, model_name, dataset=None, model_type=None):
+    def register(self, model_name, dataset=None):
         def wrap(func):
             model_key = (model_name, dataset)
             if model_key in self._registry_dict:
@@ -52,4 +55,4 @@ class Model_Registry(Registry):
         return wrap
 
 
-MODEL_WRAPPER_REGISTRY = Model_Registry('model_wrappers')
+MODEL_WRAPPER_REGISTRY = TupleKeyRegistry('model_wrappers')
