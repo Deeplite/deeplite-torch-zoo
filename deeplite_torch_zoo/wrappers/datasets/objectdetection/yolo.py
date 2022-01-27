@@ -1,32 +1,42 @@
 import os
 import sys
-from pathlib import Path
+from collections import namedtuple
 
-from ..utils import get_dataloader
-
+from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.src.objectdetection.datasets.voc import VocDataset
-from deeplite_torch_zoo.src.objectdetection.datasets.voc_utils import prepare_voc_data
+from deeplite_torch_zoo.src.objectdetection.datasets.voc_utils import prepare_yolo_voc_data
 from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
 from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.src.objectdetection.datasets.transforms import random_transform_fn
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
 
-__all__ = [
-    "get_coco_for_yolo",
-    "get_lisa_for_yolo",
-    "get_voc_for_yolo",
-    "get_wider_face_for_yolo",
-    "get_person_detection_for_yolo",
-    "get_voc07_for_yolo"
-]
+
+__all__ = []
 
 
-def get_coco_for_yolo(
-    data_root, batch_size=32, num_workers=1, num_classes=80, img_size=416,
-    fp16=False, distributed=False, device="cuda", **kwargs
-):
-    if len(kwargs):
-        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+def make_dataset_wrapper(wrapper_name, num_classes, img_size, dataset_create_fn):
+    def wrapper_func(data_root, batch_size=32, num_workers=1, num_classes=num_classes,
+        img_size=img_size, fp16=False, distributed=False, device="cuda", **kwargs):
+
+        if len(kwargs):
+            print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+
+        train_dataset, test_dataset = dataset_create_fn(data_root, num_classes, img_size)
+
+        train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
+            fp16=fp16, distributed=distributed, shuffle=not distributed,
+            collate_fn=train_dataset.collate_img_label_fn, device=device)
+
+        test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
+            distributed=distributed, shuffle=False, collate_fn=test_dataset.collate_img_label_fn, device=device)
+
+        return {"train": train_loader, "val": test_loader, "test": test_loader}
+
+    wrapper_func.__name__ = wrapper_name
+    return wrapper_func
+
+
+def create_coco_datasets(data_root, num_classes, img_size):
 
     from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
 
@@ -45,55 +55,17 @@ def get_coco_for_yolo(
         classes=DATA["CLASSES"], missing_ids=MISSING_IDS
     )
 
-    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=not distributed, collate_fn=train_dataset.collate_img_label_fn, device=device)
-
-    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=False, collate_fn=test_dataset.collate_img_label_fn, device=device)
-
-    return {"train": train_loader, "val": test_loader, "test": test_loader}
+    return train_dataset, test_dataset
 
 
-def get_lisa_for_yolo(data_root, batch_size=32, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
-
-    if len(kwargs):
-        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
-
-    # setup dataset
-    train_dataset = LISA(data_root, _set="train")
-    test_dataset = LISA(data_root, _set="valid")
-
-    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=not distributed, collate_fn=train_dataset.collate_fn, device=device)
-
-    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=False, collate_fn=test_dataset.collate_fn, device=device)
-
-    return {"train": train_loader, "val": test_loader, "test": test_loader}
+def create_lisa_datasets(data_root, num_classes, img_size):
+    return LISA(data_root, _set="train", img_size=img_size), LISA(data_root, _set="valid", img_size=img_size)
 
 
-def prepare_yolo_voc_data(vockit_data_root, annotation_path, standard_voc_format=True, is_07_subset=False):
-
-    Path(annotation_path).mkdir(parents=True, exist_ok=True)
-
-    train_anno_path = os.path.join(str(annotation_path), "train_annotation.txt")
-    test_anno_path = os.path.join(str(annotation_path), "test_annotation.txt")
-
-    if standard_voc_format:
-        train_data_paths = [os.path.join(vockit_data_root, "VOC2007"),
-                os.path.join(vockit_data_root, "VOC2012")] if not is_07_subset \
-                    else [os.path.join(vockit_data_root, "VOC2007"),]
-        test_data_paths = [os.path.join(vockit_data_root, "VOC2007"),]
-    else:
-        train_data_paths, test_data_paths = [vockit_data_root,], [vockit_data_root,]
-
-    train_test_split = ('trainval', 'test') if not is_07_subset else ('train', 'val')
-
-    if not (os.path.exists(train_anno_path) and os.path.exists(test_anno_path)):
-        prepare_voc_data(train_data_paths, test_data_paths, annotation_path, train_test_split)
-
-
-def _get_voc_for_yolo(annotation_path, num_classes=None, img_size=448):
+def create_voc_datasets(data_root, num_classes, img_size, is_07_subset=False, standard_voc_format=True):
+    annotation_path = os.path.join(data_root, "yolo_data")
+    prepare_yolo_voc_data(data_root, annotation_path,
+        is_07_subset=is_07_subset, standard_voc_format=standard_voc_format)
     train_dataset = VocDataset(
         num_classes=num_classes,
         annotation_path=annotation_path,
@@ -109,38 +81,15 @@ def _get_voc_for_yolo(annotation_path, num_classes=None, img_size=448):
     return train_dataset, test_dataset
 
 
-def get_voc_for_yolo(
-    data_root, batch_size=32, num_workers=4, num_classes=None, img_size=448, fp16=False, distributed=False, device="cuda", **kwargs
-):
-    if len(kwargs):
-        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
-
-    annotation_path = os.path.join(data_root, "yolo_data")
-    prepare_yolo_voc_data(data_root, annotation_path)
-    train_dataset, test_dataset = _get_voc_for_yolo(
-        annotation_path, num_classes=num_classes, img_size=img_size
-    )
-
-    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=not distributed, collate_fn=train_dataset.collate_img_label_fn, device=device)
-
-    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=False, collate_fn=test_dataset.collate_img_label_fn, device=device)
-
-
-    return {"train": train_loader, "val": test_loader, "test": test_loader}
-
-
-
-def _get_widerface_for_yolo(root, num_classes=None, img_size=448):
+def create_widerface_datasets(data_root, num_classes, img_size):
     train_dataset = WiderFace(
-        root=root,
+        root=data_root,
         num_classes=num_classes,
         split="train",
         img_size=img_size,
     )
     test_dataset = WiderFace(
-        root=root,
+        root=data_root,
         num_classes=num_classes,
         split="test",
         img_size=img_size,
@@ -148,65 +97,26 @@ def _get_widerface_for_yolo(root, num_classes=None, img_size=448):
     return train_dataset, test_dataset
 
 
-def get_wider_face_for_yolo(
-    data_root, batch_size=32, num_workers=4, num_classes=None, img_size=448, fp16=False, distributed=False, device="cuda", **kwargs
-):
-    if len(kwargs):
-        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
-
-    train_dataset, test_dataset = _get_widerface_for_yolo(
-        data_root, num_classes=num_classes, img_size=img_size
-    )
-
-    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=not distributed, collate_fn=train_dataset.collate_img_label_fn, device=device)
-
-    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=False, collate_fn=test_dataset.collate_img_label_fn, device=device)
+def create_voc07_datasets(data_root, num_classes, img_size):
+    return create_voc_datasets(data_root, num_classes, img_size, is_07_subset=True)
 
 
-    return {"train": train_loader, "val": test_loader, "test": test_loader}
+def create_person_detection_datasets(data_root, num_classes, img_size):
+    return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False)
 
 
-def get_person_detection_for_yolo(
-    data_root, batch_size=32, num_workers=4, num_classes=1, img_size=448, fp16=False, distributed=False, device="cuda", **kwargs
-):
-    if len(kwargs):
-        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+DatasetParameters = namedtuple('DatasetParameters', ['num_classes', 'img_size', 'dataset_create_fn'])
+DATASET_WRAPPER_FNS = {
+    'coco': DatasetParameters(80, 416, create_coco_datasets),
+    'lisa': DatasetParameters(20, 416, create_lisa_datasets),
+    'voc': DatasetParameters(20, 448, create_voc_datasets),
+    'voc07': DatasetParameters(20, 448, create_voc07_datasets),
+    'widerface': DatasetParameters(1, 448, create_widerface_datasets),
+    'person_detection': DatasetParameters(1, 320, create_person_detection_datasets),
+}
 
-    annotation_path = os.path.join(data_root, "yolo_data")
-    prepare_yolo_voc_data(data_root, annotation_path, standard_voc_format=False)
-    train_dataset, test_dataset = _get_voc_for_yolo(
-        annotation_path, num_classes=num_classes, img_size=img_size
-    )
-
-    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=not distributed, collate_fn=train_dataset.collate_img_label_fn, device=device)
-
-    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=False, collate_fn=test_dataset.collate_img_label_fn, device=device)
-
-
-    return {"train": train_loader, "val": test_loader, "test": test_loader}
-
-
-def get_voc07_for_yolo(
-    data_root, batch_size=32, num_workers=4, num_classes=20, img_size=448, fp16=False, distributed=False, device="cuda", **kwargs
-):
-    if len(kwargs):
-        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
-
-    annotation_path = os.path.join(data_root, "yolo_data")
-    prepare_yolo_voc_data(data_root, annotation_path, is_07_subset=True)
-    train_dataset, test_dataset = _get_voc_for_yolo(
-        annotation_path, num_classes=num_classes, img_size=img_size
-    )
-
-    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=not distributed, collate_fn=train_dataset.collate_img_label_fn, device=device)
-
-    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers, fp16=fp16,
-        distributed=distributed, shuffle=False, collate_fn=test_dataset.collate_img_label_fn, device=device)
-
-
-    return {"train": train_loader, "val": test_loader, "test": test_loader}
+for dataset_name, dataset_parameters in DATASET_WRAPPER_FNS.items():
+    wrapper_name = f'get_{dataset_name}_for_yolo'
+    globals()[wrapper_name] = make_dataset_wrapper(wrapper_name, num_classes=dataset_parameters.num_classes,
+        img_size=dataset_parameters.img_size, dataset_create_fn=dataset_parameters.dataset_create_fn)
+    __all__.append(wrapper_name)
