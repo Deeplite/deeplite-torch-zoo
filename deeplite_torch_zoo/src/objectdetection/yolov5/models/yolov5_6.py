@@ -63,7 +63,7 @@ class Detect(nn.Module):
 
 class YoloV5_6(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
-    def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None, activation_type='silu'):  # model, input channels, number of classes
+    def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None, activation_type=None):  # model, input channels, number of classes
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -205,6 +205,7 @@ class YoloV5_6(nn.Module):
 def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
     logger.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
     anchors, nc, gd, gw = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple']
+    activation_type = activation_type if activation_type is not None else d['activation_type']
     na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
 

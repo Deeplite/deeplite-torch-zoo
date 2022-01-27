@@ -2,6 +2,7 @@
 nc: 80  # number of classes
 depth_multiple: 0.33  # model depth multiple
 width_multiple: 0.50  # layer channel multiple
+activation_type: silu
 
 # anchors
 anchors:
@@ -33,7 +34,7 @@ head:
    [-1, 1, nn.Upsample, [None, 2, 'nearest']],
    [8, 1, Conv, [256, 1, 1]], # route backbone P4
    [[-1, -2], 1, Concat, [1]],
-   [-1, 2, BottleneckCSP2, [256]], # 16 
+   [-1, 2, BottleneckCSP2, [256]], # 16
    [-1, 1, Conv, [128, 1, 1]],
    [-1, 1, nn.Upsample, [None, 2, 'nearest']],
    [6, 1, Conv, [128, 1, 1]], # route backbone P3

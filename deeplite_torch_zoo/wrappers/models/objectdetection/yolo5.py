@@ -75,7 +75,7 @@ def yolo5(
 
 
 def yolo5_6(
-    net="yolov5_6s", _set_classes="voc_20", num_classes=20, activation_type="silu",
+    net="yolov5_6s", _set_classes="voc_20", num_classes=20, activation_type=None,
     pretrained=False, progress=True, device="cuda"
 ):
     for suffix in MODEL_NAME_SUFFICES:
