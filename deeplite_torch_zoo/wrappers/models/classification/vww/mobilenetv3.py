@@ -26,11 +26,11 @@ def _mobilenetv3_vww(arch="small", pretrained=False, progress=True, device='cuda
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('mobilenetv3_small','vww','classification')
+@MODEL_WRAPPER_REGISTRY.register('mobilenetv3_small', 'vww')
 def mobilenetv3_small_vww(pretrained=False, progress=True, device='cuda'):
     return _mobilenetv3_vww(arch="small", pretrained=pretrained, progress=progress, device=device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('mobilenetv3_large','vww','classification')
+@MODEL_WRAPPER_REGISTRY.register('mobilenetv3_large', 'vww')
 def mobilenetv3_large_vww(pretrained=False, progress=True, device='cuda'):
     return _mobilenetv3_vww(arch="large", pretrained=pretrained, progress=progress, device=device)

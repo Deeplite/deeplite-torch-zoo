@@ -32,7 +32,7 @@ def _shufflenetv2(arch, net_size=1, pretrained=False, progress=True, device='cud
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('shufflenet_v2_1_0','cifar100', 'classification')
+@MODEL_WRAPPER_REGISTRY.register('shufflenet_v2_1_0', 'cifar100')
 def shufflenet_v2_1_0_cifar100(pretrained=False, progress=True, device='cuda'):
     return _shufflenetv2(
         "shufflenet_v2", net_size=1, pretrained=pretrained, progress=progress, device=device

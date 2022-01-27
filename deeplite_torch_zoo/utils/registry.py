@@ -41,8 +41,7 @@ class Registry:
 
 class Model_Registry(Registry):
 
-    def register(self, model_name, dataset = None, model_type = None):
-
+    def register(self, model_name, dataset=None, model_type=None):
         def wrap(func):
             model_key = (model_name, dataset)
             if model_key in self._registry_dict:
@@ -51,5 +50,6 @@ class Model_Registry(Registry):
             return func
 
         return wrap
+
 
 MODEL_WRAPPER_REGISTRY = Model_Registry('model_wrappers')

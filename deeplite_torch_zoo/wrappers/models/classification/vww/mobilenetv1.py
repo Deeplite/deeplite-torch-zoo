@@ -21,6 +21,6 @@ def _mobilenetv1_vww(arch, pretrained=False, progress=True, device='cuda'):
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('mobilenet_v1','vww','classification')
+@MODEL_WRAPPER_REGISTRY.register('mobilenet_v1', 'vww')
 def mobilenet_v1_vww(pretrained=False, progress=True, device='cuda'):
     return _mobilenetv1_vww("mobilenetv1", pretrained=pretrained, progress=progress, device=device)

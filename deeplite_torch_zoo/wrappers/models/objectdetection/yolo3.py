@@ -22,7 +22,7 @@ model_urls = {
 YOLOV3_MODELS = ["yolov3"]
 
 
-@MODEL_WRAPPER_REGISTRY.register('yolo3',None,'objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('yolo3')
 def yolo3(
     net="yolov3", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda", **kwargs
@@ -36,8 +36,9 @@ def yolo3(
 
 
 def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
-    model_name = net.replace('v','')
-    @MODEL_WRAPPER_REGISTRY.register(model_name,_set_classes,'objectdetection')
+    model_name = net.replace('v', '')
+
+    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return yolo3(
             net=net,

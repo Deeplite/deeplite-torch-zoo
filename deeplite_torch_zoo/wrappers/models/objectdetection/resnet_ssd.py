@@ -28,16 +28,16 @@ def resnet_ssd(backbone="resnet18", dataset="voc_20", num_classes=20, pretrained
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet18_ssd','voc_20','objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('resnet18_ssd', 'voc_20')
 def resnet18_ssd_voc_20(pretrained=False, progress=True, device='cuda'):
     return resnet_ssd(backbone="resnet18", dataset="voc_20", num_classes=20, pretrained=pretrained, progress=progress, device=device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet34_ssd','voc_20','objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('resnet34_ssd', 'voc_20')
 def resnet34_ssd_voc_20(pretrained=False, progress=True, device='cuda'):
     return resnet_ssd(backbone="resnet34", dataset="voc_20", num_classes=20, pretrained=pretrained, progress=progress, device=device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet50_ssd','voc_20','objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('resnet50_ssd', 'voc_20')
 def resnet50_ssd_voc_20(pretrained=False, progress=True, device='cuda'):
     return resnet_ssd(backbone="resnet50", dataset="voc_20", num_classes=20, pretrained=pretrained, progress=progress, device=device)

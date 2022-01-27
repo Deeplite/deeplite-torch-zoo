@@ -26,11 +26,11 @@ def vgg_ssd(dataset="voc_20", num_classes=20, pretrained=False, progress=True, d
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('vgg16_ssd','voc_20','objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('vgg16_ssd', 'voc_20')
 def vgg16_ssd_voc_20(pretrained=False, progress=True, device='cuda'):
     return vgg_ssd(dataset="voc_20", num_classes=20, pretrained=pretrained, progress=progress, device=device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('vgg16_ssd','wider_face','objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('vgg16_ssd', 'wider_face')
 def vgg16_ssd_wider_face(pretrained=False, progress=True, device='cuda'):
     return vgg_ssd(dataset="wider_face", num_classes=1, pretrained=pretrained, progress=progress, device=device)

@@ -12,7 +12,7 @@ model_urls = {
 }
 
 
-@MODEL_WRAPPER_REGISTRY.register('mobilenet_v2','tinyimagenet','classification')
+@MODEL_WRAPPER_REGISTRY.register('mobilenet_v2', 'tinyimagenet')
 def mobilenet_v2_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.mobilenet_v2(num_classes=100)
     if pretrained:

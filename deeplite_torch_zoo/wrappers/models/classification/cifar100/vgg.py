@@ -48,6 +48,6 @@ def vgg16(pretrained=False, progress=True, device='cuda'):
     return _vgg("vgg16", pretrained, progress, device=device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('vgg19','cifar100','classification')
+@MODEL_WRAPPER_REGISTRY.register('vgg19', 'cifar100')
 def vgg19_cifar100(pretrained=False, progress=True, device='cuda'):
     return _vgg("vgg19", pretrained, progress, device=device)

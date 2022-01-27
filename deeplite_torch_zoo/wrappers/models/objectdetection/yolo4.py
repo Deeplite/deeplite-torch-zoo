@@ -43,7 +43,7 @@ yolov4_cfg = {
 YOLOV4_MODELS = list(yolov4_cfg.keys())
 
 
-@MODEL_WRAPPER_REGISTRY.register('yolo4',None,'objectdetection')
+@MODEL_WRAPPER_REGISTRY.register('yolo4')
 def yolo4(
     net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda",
@@ -81,7 +81,8 @@ def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
             model_wrapper_fn = model_fn
 
     model_name = net.replace('v','')
-    @MODEL_WRAPPER_REGISTRY.register(model_name,_set_classes,'objectdetection')
+
+    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return model_wrapper_fn(
             net=net,

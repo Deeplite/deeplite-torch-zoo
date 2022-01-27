@@ -32,7 +32,7 @@ def deeplab(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('deeplab_mobilenet','voc_20','segmentation')
+@MODEL_WRAPPER_REGISTRY.register('deeplab_mobilenet', 'voc_20')
 def deeplab_mobilenet_voc_20(pretrained=True, progress=False, device='cuda'):
     return deeplab(
         backbone="mobilenet",

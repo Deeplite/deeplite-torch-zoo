@@ -1,6 +1,8 @@
 from deeplite_torch_zoo.wrappers.datasets import *
 from deeplite_torch_zoo.wrappers.models import *
 from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+
+
 __all__ = ["get_data_splits_by_name", "get_model_by_name", "list_models"]
 
 
@@ -71,9 +73,9 @@ def list_models(key_word="*"):
             matched_models[model_name] = matched_models.get(model_name,[])
             matched_models[model_name].append(model_key)
 
-    print( "_"*80)
+    print("_" * 80)
     print(f"{'Available Models':25} |Trained on datasets")
-    print( "-"*80)
+    print("-" * 80)
     for model_name, model_dataset_keys in matched_models.items():
         print(f"{model_name:{25}} | ", end='')
 
@@ -82,8 +84,8 @@ def list_models(key_word="*"):
             if matched_dataset:
                 matched_datasets.append(matched_dataset)
         matched_datasets_str = ", ".join(matched_datasets)
-        print (matched_datasets_str)
-    print( "_"*80)
+        print(matched_datasets_str)
+    print("_" * 80)
 
 
 def get_models_names_for(dataset_name="imagenet"):

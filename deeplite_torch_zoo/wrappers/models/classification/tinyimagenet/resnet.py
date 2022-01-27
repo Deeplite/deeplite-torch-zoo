@@ -14,7 +14,7 @@ model_urls = {
 }
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet18','tinyimagenet','classification')
+@MODEL_WRAPPER_REGISTRY.register('resnet18', 'tinyimagenet')
 def resnet18_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.resnet18(num_classes=100)
     if pretrained:
@@ -25,7 +25,7 @@ def resnet18_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet34','tinyimagenet','classification')
+@MODEL_WRAPPER_REGISTRY.register('resnet34', 'tinyimagenet')
 def resnet34_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.resnet34(num_classes=100)
     if pretrained:
@@ -36,7 +36,7 @@ def resnet34_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet50','tinyimagenet','classification')
+@MODEL_WRAPPER_REGISTRY.register('resnet50', 'tinyimagenet')
 def resnet50_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.resnet50(num_classes=100)
     if pretrained:
