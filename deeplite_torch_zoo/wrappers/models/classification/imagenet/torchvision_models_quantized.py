@@ -32,4 +32,4 @@ def make_wrapper_func(wrapper_fn_name, model_name_key):
 for model_name_tag in MODEL_NAMES:
     wrapper_name = "_".join(("q", model_name_tag, "imagenet"))
     globals()[wrapper_name] = make_wrapper_func( wrapper_name, model_name_tag)
-    print(wrapper_name)
+
