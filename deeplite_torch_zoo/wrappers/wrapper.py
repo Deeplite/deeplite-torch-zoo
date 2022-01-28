@@ -50,8 +50,8 @@ def get_model_by_name(
     returns a model (pretrained or fresh) with respect to the dataset
     """
     model_name = model_name.lower()
-    model = MODEL_WRAPPER_REGISTRY.get((model_name, dataset_name))
-    model = model(pretrained=pretrained, progress=progress, device=device)
+    model_func = MODEL_WRAPPER_REGISTRY.get((model_name, dataset_name))
+    model = model_func(pretrained=pretrained, progress=progress, device=device)
     if fp16:
         model = model.half()
 
