@@ -1,4 +1,6 @@
 from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+
 
 __all__ = ["mlp2_mnist", "mlp4_mnist", "mlp8_mnist"]
 
@@ -22,6 +24,7 @@ def _mlp10_mnist(arch, n_hiddens, pretrained=False, progress=True, device="cuda"
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('mlp2', 'mnist')
 def mlp2_mnist(pretrained=False, progress=True, device="cuda"):
     return _mlp10_mnist(
         "mlp2",
@@ -32,6 +35,7 @@ def mlp2_mnist(pretrained=False, progress=True, device="cuda"):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('mlp4', 'mnist')
 def mlp4_mnist(pretrained=False, progress=True, device="cuda"):
     return _mlp10_mnist(
         "mlp4",
@@ -42,6 +46,7 @@ def mlp4_mnist(pretrained=False, progress=True, device="cuda"):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('mlp8', 'mnist')
 def mlp8_mnist(pretrained=False, progress=True, device="cuda"):
     return _mlp10_mnist(
         "mlp8",

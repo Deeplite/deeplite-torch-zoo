@@ -1,5 +1,7 @@
 from deeplite_torch_zoo.wrappers.datasets import *
 from deeplite_torch_zoo.wrappers.models import *
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+
 
 __all__ = ["get_data_splits_by_name", "get_model_by_name", "list_models"]
 
@@ -47,16 +49,12 @@ def get_model_by_name(
 
     returns a model (pretrained or fresh) with respect to the dataset
     """
-    dataset_name = dataset_name.lower()
     model_name = model_name.lower()
-    if dataset_name != "":
-        func = f"{model_name}_{dataset_name}"
-    else:
-        func = f"{model_name}"
-    assert func in globals(), f"function {func} doesn't exist"
-    model = globals()[func](pretrained=pretrained, progress=progress, device=device)
+    model_func = MODEL_WRAPPER_REGISTRY.get((model_name, dataset_name))
+    model = model_func(pretrained=pretrained, progress=progress, device=device)
     if fp16:
         model = model.half()
+
     return model
 
 
@@ -65,10 +63,29 @@ def list_models(key_word="*"):
     A helper function to list all existing models or dataset calls
     It takes a `model_name` or a `dataset_name` and prints all matching function calls
     """
+    matched_models = {}
 
-    for _f in globals().keys():
-        if key_word == "*" or key_word in _f:
-            print(_f)
+    models_data = MODEL_WRAPPER_REGISTRY.registry_dict
+    for model_key in models_data:
+        model_name = model_key[0]
+        dataset_name = model_key[1] or ''
+        if key_word=="*" or key_word in model_name or key_word in dataset_name:
+            matched_models[model_name] = matched_models.get(model_name,[])
+            matched_models[model_name].append(model_key)
+
+    print("_" * 80)
+    print(f"{'Available Models':25} |Trained on datasets")
+    print("-" * 80)
+    for model_name, model_dataset_keys in matched_models.items():
+        print(f"{model_name:{25}} | ", end='')
+
+        matched_datasets = []
+        for _, matched_dataset in model_dataset_keys:
+            if matched_dataset:
+                matched_datasets.append(matched_dataset)
+        matched_datasets_str = ", ".join(matched_datasets)
+        print(matched_datasets_str)
+    print("_" * 80)
 
 
 def get_models_names_for(dataset_name="imagenet"):

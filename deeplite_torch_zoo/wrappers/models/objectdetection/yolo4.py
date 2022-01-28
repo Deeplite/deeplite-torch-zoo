@@ -5,6 +5,8 @@ from collections import namedtuple
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+
 
 
 def get_project_root() -> Path:
@@ -41,6 +43,7 @@ yolov4_cfg = {
 YOLOV4_MODELS = list(yolov4_cfg.keys())
 
 
+@MODEL_WRAPPER_REGISTRY.register('yolo4')
 def yolo4(
     net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda",
@@ -73,11 +76,13 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
 
 
 def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
-
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
         if re.match(net_name, net):
             model_wrapper_fn = model_fn
 
+    model_name = net.replace('v','')
+
+    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return model_wrapper_fn(
             net=net,

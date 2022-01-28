@@ -1,5 +1,8 @@
 import torchvision
 
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+
+
 MODEL_NAMES = [
     "alexnet",
     "resnet18",
@@ -42,6 +45,7 @@ MODEL_NAMES = [
 
 
 def make_wrapper_func(wrapper_fn_name, model_name_key):
+    @MODEL_WRAPPER_REGISTRY.register(model_name_key, 'imagenet')
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         model = torchvision.models.__dict__[model_name_key](pretrained=pretrained)
         return model.to(device)

@@ -37,3 +37,22 @@ class Registry:
     @property
     def name(self):
         return self._name
+
+
+class TupleKeyRegistry(Registry):
+    """
+    Registry class with key as a tuple of 2 items
+    """
+
+    def register(self, model_name, dataset=None):
+        def wrap(func):
+            model_key = (model_name, dataset)
+            if model_key in self._registry_dict:
+                raise KeyError('Model {} is already registered in {}'.format(model_key, self._name))
+            self._registry_dict[model_key] = func
+            return func
+
+        return wrap
+
+
+MODEL_WRAPPER_REGISTRY = TupleKeyRegistry('model_wrappers')

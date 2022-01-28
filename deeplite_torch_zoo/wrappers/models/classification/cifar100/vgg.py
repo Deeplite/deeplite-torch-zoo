@@ -10,6 +10,7 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.vgg import VGG
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [
@@ -47,5 +48,6 @@ def vgg16(pretrained=False, progress=True, device='cuda'):
     return _vgg("vgg16", pretrained, progress, device=device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('vgg19', 'cifar100')
 def vgg19_cifar100(pretrained=False, progress=True, device='cuda'):
     return _vgg("vgg19", pretrained, progress, device=device)
