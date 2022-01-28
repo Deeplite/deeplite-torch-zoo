@@ -8,11 +8,13 @@ from setuptools.command.sdist import sdist
 from setuptools import setup, find_packages
 from subprocess import check_call
 
+
 with open('LICENSE.md') as f:
     license = f.read()
 
 with open('README.md') as f:
     long_description = f.read()
+
 
 # Package
 HERE = pathlib.Path(__file__).parent
@@ -21,26 +23,19 @@ INSTALL_REQUIRES = [
     "torch>=1.4, <=1.8.1",
     "opencv-python",
     "scipy>=1.4.1",
-    "pycocotools",
+    "numpy==1.19.5",
+    "pycocotools==2.0.4",
     "Cython==0.28.4",
     "scikit-image==0.16.2",
     "tqdm==4.46.0",
     "albumentations==1.0.3",
     "pretrainedmodels==0.7.4",
-    "torchfcn",
-    "tensorboardX",
-    "pytz",
-    "mmcv==1.2.0",
-    "json-tricks>=3.15.4",
+    "torchfcn==1.9.7",
+    "tensorboardX==2.4.1",
     "pyvww==0.1.1",
-    "black",
-    "isort",
+    "timm==0.5.4",
+    "pytz",
 ]
-
-if sys.version_info >= (3 , 7):
-    INSTALL_REQUIRES.append("numpy==1.21.4")
-else:
-    INSTALL_REQUIRES.append("numpy==1.19.5")
 
 
 def create_init_files_in_submodules():
