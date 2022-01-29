@@ -2,7 +2,7 @@ from torch.hub import load_state_dict_from_url
 
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite
 from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
-from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 __all__ = [
     "mb2_ssd_lite",

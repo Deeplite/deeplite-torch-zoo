@@ -34,6 +34,7 @@ INSTALL_REQUIRES = [
     "tensorboardX==2.4.1",
     "pyvww==0.1.1",
     "timm==0.5.4",
+    "texttable==1.6.4",
     "pytz",
 ]
 

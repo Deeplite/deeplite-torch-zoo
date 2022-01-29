@@ -1,6 +1,6 @@
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.mobilenets.mobilenetv1 import MobileNetV1
-from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["mobilenet_v1_vww"]
