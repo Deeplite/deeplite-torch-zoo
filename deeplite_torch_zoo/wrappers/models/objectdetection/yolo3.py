@@ -3,7 +3,7 @@ from collections import namedtuple
 
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.yolov3 import Yolov3
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
-from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [

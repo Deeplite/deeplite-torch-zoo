@@ -1,7 +1,7 @@
 from torch.hub import load_state_dict_from_url
 
 from torchfcn.models import FCN32s as FCN
-from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["fcn32_voc_20"]

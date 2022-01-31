@@ -1,6 +1,6 @@
 import torchvision
 
-from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 MODEL_NAMES = [
