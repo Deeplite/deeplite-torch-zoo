@@ -20,14 +20,11 @@ import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
-import deeplite_torch_zoo.src.objectdetection.yolov3.utils.gpu as gpu
-from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6, yolo4_6
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import select_device, init_seeds
+from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
-from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
-    YoloV3Loss
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import init_seeds
 
 from deeplite_torch_zoo.wrappers.models import YOLOV3_MODELS, YOLOV4_MODELS, YOLOV5_MODELS
 
@@ -62,7 +59,7 @@ class Trainer(object):
         else:
             self.hyp_config = HP_CONFIG_MAP[opt.hp_config]
 
-        self.device = gpu.select_device(gpu_id, force_cpu=False)
+        self.device = select_device(gpu_id)
         self.start_epoch = 0
         self.best_mAP = 0.0
         self.epochs = self.hyp_config.TRAIN["EPOCHS"]
@@ -104,7 +101,6 @@ class Trainer(object):
             "^yolov5_6[nsmlx]$": yolo5_6,
             "^yolov5_6[nsmlx]_relu$": functools.partial(yolo5_6, activation_type='relu'),
             "^yolov4[smlx]$": yolo4,
-            "^yolov4_6[smlx]$": yolo4_6,
         }
         default_model_fn_args = {
             "pretrained": opt.pretrained,
@@ -118,19 +114,13 @@ class Trainer(object):
                 return model_fn(self.model_name, **default_model_fn_args)
 
     def _get_loss(self):
-        loss_cls_map = {
-            'yolo3': YoloV3Loss,
-            'yolo5': YoloV5Loss,
-        }
         loss_kwargs = {
             'model': self.model,
             'num_classes': self.num_classes,
             'device': self.device,
             'hyp_cfg': self.hyp_config,
         }
-        model_name_to_loss_cls = lambda name: 'yolo5' if ('yolov5_6' in name) or  ('yolov4_6' in name) \
-            else 'yolo3'
-        return loss_cls_map[model_name_to_loss_cls(self.model_name)](**loss_kwargs)
+        return YoloV5Loss(**loss_kwargs)
 
     def __load_model_weights(self, weight_path, resume):
         if resume:
