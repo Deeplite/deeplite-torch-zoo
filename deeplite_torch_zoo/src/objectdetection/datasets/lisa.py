@@ -126,7 +126,7 @@ class LISA(DLZooDataset):
         """
         return len(self.images)
 
-    def collate_fn(self, sample):
+    def collate_img_label_fn(self, sample):
         images = []
         labels = []
         lengths = []

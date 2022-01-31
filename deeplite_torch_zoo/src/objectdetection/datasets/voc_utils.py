@@ -1,8 +1,7 @@
-import argparse
-import sys
-
 import os
+import argparse
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 from tqdm import tqdm
 
@@ -91,6 +90,27 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, tr
             len_train, len_test
         )
     )
+
+
+def prepare_yolo_voc_data(vockit_data_root, annotation_path, standard_voc_format=True, is_07_subset=False):
+
+    Path(annotation_path).mkdir(parents=True, exist_ok=True)
+
+    train_anno_path = os.path.join(str(annotation_path), "train_annotation.txt")
+    test_anno_path = os.path.join(str(annotation_path), "test_annotation.txt")
+
+    if standard_voc_format:
+        train_data_paths = [os.path.join(vockit_data_root, "VOC2007"),
+                os.path.join(vockit_data_root, "VOC2012")] if not is_07_subset \
+                    else [os.path.join(vockit_data_root, "VOC2007"),]
+        test_data_paths = [os.path.join(vockit_data_root, "VOC2007"),]
+    else:
+        train_data_paths, test_data_paths = [vockit_data_root,], [vockit_data_root,]
+
+    train_test_split = ('trainval', 'test') if not is_07_subset else ('train', 'val')
+
+    if not (os.path.exists(train_anno_path) and os.path.exists(test_anno_path)):
+        prepare_voc_data(train_data_paths, test_data_paths, annotation_path, train_test_split)
 
 
 if __name__ == "__main__":
