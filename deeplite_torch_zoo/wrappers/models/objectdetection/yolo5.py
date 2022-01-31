@@ -6,7 +6,7 @@ from collections import namedtuple
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
-from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 def get_project_root() -> Path:

@@ -1,6 +1,6 @@
 
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
-from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["fasterrcnn_resnet50_fpn_coco_80"]

@@ -27,7 +27,7 @@ class Registry:
 
     def get(self, name):
         if name not in self._registry_dict:
-            raise KeyError('{} is unknown type of {} '.format(name, self._name))
+            raise KeyError('{} was not found in the {} '.format(name, self._name))
         return self._registry_dict[name]
 
     @property
@@ -53,6 +53,3 @@ class TupleKeyRegistry(Registry):
             return func
 
         return wrap
-
-
-MODEL_WRAPPER_REGISTRY = TupleKeyRegistry('model_wrappers')

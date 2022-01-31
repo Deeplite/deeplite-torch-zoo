@@ -2,7 +2,7 @@ from torch.hub import load_state_dict_from_url
 
 from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.models.net import EncoderDecoderNet
 from deeplite_torch_zoo.src.segmentation.Unet.model.unet_model import UNet
-from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 __all__ = [
     "unet_enc_dec",
