@@ -3,6 +3,8 @@ from collections import namedtuple
 
 from deeplite_torch_zoo.src.objectdetection.yolov3.model.yolov3 import Yolov3
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+
 
 __all__ = [
     "yolo3",
@@ -20,6 +22,7 @@ model_urls = {
 YOLOV3_MODELS = ["yolov3"]
 
 
+@MODEL_WRAPPER_REGISTRY.register('yolo3')
 def yolo3(
     net="yolov3", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda", **kwargs
@@ -33,6 +36,9 @@ def yolo3(
 
 
 def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
+    model_name = net.replace('v', '')
+
+    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return yolo3(
             net=net,

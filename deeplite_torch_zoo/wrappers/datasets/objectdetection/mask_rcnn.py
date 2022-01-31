@@ -1,6 +1,6 @@
 import os
 
-from ..utils import get_dataloader
+from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.src.objectdetection.ssd.datasets.coco import CocoDetectionBoundingBox
 
 

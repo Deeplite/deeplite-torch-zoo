@@ -6,7 +6,7 @@
 
 # Deeplite Torch Zoo
 
-The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and benchmark datasets for PyTorch framework. The models are grouped under different datasets and different task types such as classification, object detection, and segmentation. The primary aim of this ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html) 
+The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and benchmark datasets for PyTorch framework. The models are grouped under different datasets and different task types such as classification, object detection, and segmentation. The primary aim of this ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
 
 * [Installation](#Installation)
     * [Install using pip](#Install-using-pip)
@@ -30,7 +30,7 @@ The ``deeplite-torch-zoo`` package is a collection of popular CNN model architec
 ## Install using pip
 
 
-Use following command to install the package from our internal PyPI repository. 
+Use following command to install the package from our internal PyPI repository.
 
 ```
     $ pip install --upgrade pip
@@ -56,25 +56,21 @@ To test the installation, one can run the basic tests using `pytest` command in 
 
 **Minimal Dependencies**
 
-- numpy==1.18.5
+- numpy==1.19.5
 - torch==1.4.0
 - torchvision==0.5.0
 - opencv-python
 - scipy>=1.4.1
-- pycocotools
+- pycocotools==2.0.4
 - Cython==0.28.4
 - scikit-image==0.15.0
 - tqdm==4.46.0
-- albumentations==0.1.8
+- albumentations==1.0.3
 - pretrainedmodels==0.7.4
-- torchfcn
-- tensorboardX
-- mmcv==1.2.0
-- xtcocotools>=1.6
-- json-tricks>=3.15.4
-- black
-- isort
-
+- torchfcn==1.9.7
+- tensorboardX====2.4.1
+- pyvww==0.1.1
+- timm==0.5.4
 
 
 # How to Use
@@ -97,7 +93,7 @@ The loaded datasets are available as a dictionary of the following format: ``{'t
         dataset_name=DATASET_NAME, batch_size=BATCH_SIZE
     )
 ```
-    
+
 ### Object Detection Datasets
 
 The following sample code loads `PASCAL VOC <http://host.robots.ox.ac.uk/pascal/VOC/>`_ dataset. ``train`` contains data loader for train sets for `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for test set based on `VOC2007`. You also need to provide the model type as well.
@@ -115,7 +111,7 @@ data_splits = get_data_splits_by_name(
 
 ## Loading Models
 
-Models are provided with weights pretrained on specific datasets. Thus, one could load a model ``X`` pretrained on dataset ``Y``, for getting the appropriate weights. 
+Models are provided with weights pretrained on specific datasets. Thus, one could load a model ``X`` pretrained on dataset ``Y``, for getting the appropriate weights.
 
 ### Classification Models
 
@@ -128,7 +124,7 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
         device="cpu", # or "gpu"
     )
 ```
-    
+
 ### Object Detection Models
 
 ```{.python}
@@ -152,7 +148,7 @@ To evaluate a model, the following style of code could be used,
 
 # Available Models
 
-There is an important utility function ``list_models`` which can be imported as 
+There is an important utility function ``list_models`` which can be imported as
 ```{.python}
 from deeplite_torch_zoo import list_models
 ```
@@ -169,7 +165,7 @@ For instance ``list_models("yolo3")`` will provide the following result. Similar
     yolo3_lisa_11
 ```
 
-    
+
 
 # Available Datasets
 
@@ -208,7 +204,7 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 ## Credit
 
 ### Object Detection
-- The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)  
+- The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of resnet-ssd: [Nvidia-SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
 - The implementation of yolov3: [ultralytics/yolov3](https://github.com/ultralytics/yolov3)
 - The implementation of yolov4: [WongKinYiu/PyTorch_YOLOv4](https://github.com/WongKinYiu/PyTorch_YOLOv4)

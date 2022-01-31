@@ -1,6 +1,6 @@
 from torch.hub import load_state_dict_from_url
-
 from deeplite_torch_zoo.src.classification.mobilenets.mobilenetv1 import MobileNetV1
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["mobilenet_v1_vww"]
@@ -21,5 +21,6 @@ def _mobilenetv1_vww(arch, pretrained=False, progress=True, device='cuda'):
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('mobilenet_v1', 'vww')
 def mobilenet_v1_vww(pretrained=False, progress=True, device='cuda'):
     return _mobilenetv1_vww("mobilenetv1", pretrained=pretrained, progress=progress, device=device)

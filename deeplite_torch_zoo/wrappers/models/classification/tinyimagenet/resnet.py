@@ -1,6 +1,7 @@
 
 from torchvision import models
 from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["resnet18_tinyimagenet", "resnet34_tinyimagenet", "resnet50_tinyimagenet"]
@@ -13,6 +14,7 @@ model_urls = {
 }
 
 
+@MODEL_WRAPPER_REGISTRY.register('resnet18', 'tinyimagenet')
 def resnet18_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.resnet18(num_classes=100)
     if pretrained:
@@ -23,6 +25,7 @@ def resnet18_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('resnet34', 'tinyimagenet')
 def resnet34_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.resnet34(num_classes=100)
     if pretrained:
@@ -33,6 +36,7 @@ def resnet34_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('resnet50', 'tinyimagenet')
 def resnet50_tinyimagenet(pretrained=False, progress=True, device="cuda"):
     model = models.resnet50(num_classes=100)
     if pretrained:

@@ -12,6 +12,8 @@ from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.mobilenet_v2_ssd
 from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG_CONFIG
 from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import MOBILENET_CONFIG
 
+from deeplite_torch_zoo.utils.registry import MODEL_WRAPPER_REGISTRY
+
 
 __all__ = []
 
@@ -47,7 +49,7 @@ def ssd_model(model_name, dataset, create_model_fn, config, num_classes=20, pret
 
 
 def make_wrapper_func(wrapper_name, model_name, dataset, create_model_fn, config, num_classes):
-
+    @MODEL_WRAPPER_REGISTRY.register(model_name, dataset)
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return ssd_model(
             model_name=model_name,

@@ -7,7 +7,6 @@ import shutil
 import fcn
 import imageio
 import numpy as np
-import pytz
 import torch
 import tqdm
 import utils
@@ -25,7 +24,7 @@ class Trainer(solver):
         if opts.mode in ["val", "demo"]:
             return
 
-        self.timestamp_start = datetime.datetime.now(pytz.timezone("America/Bogota"))
+        self.timestamp_start = datetime.datetime.now()
 
         self.interval_validate = opts.cfg.get(
             "interval_validate", len(self.train_loader)
@@ -119,7 +118,7 @@ class Trainer(solver):
 
         with open(osp.join(self.out, "log.csv"), "a") as f:
             elapsed_time = (
-                datetime.datetime.now(pytz.timezone("America/Bogota"))
+                datetime.datetime.now()
                 - self.timestamp_start
             ).total_seconds()
             log = (
@@ -200,7 +199,7 @@ class Trainer(solver):
 
             with open(osp.join(self.out, "log.csv"), "a") as f:
                 elapsed_time = (
-                    datetime.datetime.now(pytz.timezone("America/Bogota"))
+                    datetime.datetime.now()
                     - self.timestamp_start
                 ).total_seconds()
                 log = (

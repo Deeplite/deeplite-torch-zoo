@@ -9,7 +9,6 @@ from distutils.version import LooseVersion
 import fcn
 import imageio
 import numpy as np
-import pytz
 import scipy.misc
 import torch
 import torch.nn.functional as F
@@ -69,7 +68,7 @@ class Trainer(object):
         self.train_loader = train_loader
         self.val_loader = val_loader
 
-        self.timestamp_start = datetime.datetime.now(pytz.timezone("Asia/Tokyo"))
+        self.timestamp_start = datetime.datetime.now()
         self.size_average = size_average
 
         self.interval_validate = 5
