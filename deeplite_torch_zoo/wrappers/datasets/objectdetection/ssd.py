@@ -15,6 +15,7 @@ from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config im
     MOBILENET_CONFIG,
 )
 from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
 __all__ = []
@@ -102,7 +103,9 @@ DATASET_WRAPPER_FNS = {
 
 for dataset_name_key, wrapper_fn in DATASET_WRAPPER_FNS.items():
     wrapper_fn_name = f'get_{dataset_name_key}_for_ssd'
-    globals()[wrapper_fn_name] = make_dataset_wrapper(wrapper_fn_name, dataset_create_fn=wrapper_fn)
+    func = make_dataset_wrapper(wrapper_fn_name, dataset_create_fn=wrapper_fn)
+    globals()[wrapper_fn_name] = func
+    DATA_WRAPPER_REGISTRY.register(dataset_name_key, 'ssd')(func)
     __all__.append(wrapper_fn_name)
 
 
@@ -117,8 +120,10 @@ VOC_DATASET_MODEL_WRAPPERS = {
 
 for model_name_key, model_config in VOC_DATASET_MODEL_WRAPPERS.items():
     wrapper_fn_name = f'get_voc_for_{model_name_key}'
-    globals()[wrapper_fn_name] = partial(globals()['get_voc_for_ssd'],
+    func= partial(globals()['get_voc_for_ssd'],
         config=model_config, num_classes=21)
+    globals()[wrapper_fn_name] = func
+    DATA_WRAPPER_REGISTRY.register('voc', model_name_key)(func)
     __all__.append(wrapper_fn_name)
 
 
@@ -128,13 +133,15 @@ WIDERFACE_DATASET_MODEL_WRAPPERS = {
 
 for model_name_key, model_config in WIDERFACE_DATASET_MODEL_WRAPPERS.items():
     wrapper_fn_name = f'get_wider_face_for_{model_name_key}'
-    globals()[wrapper_fn_name] = partial(globals()['get_wider_face_for_ssd'],
+    func= partial(globals()['get_wider_face_for_ssd'],
         config=model_config, num_classes=21)
+    globals()[wrapper_fn_name] = func
+    DATA_WRAPPER_REGISTRY.register('wider_face', model_name_key)(func)
     __all__.append(wrapper_fn_name)
 
 
 COCO_DATASET_MODEL_WRAPPERS = {
-    'get_coco_for_mb2_ssd': {
+    ('coco','mb2_ssd'): {
         'config': MOBILENET_CONFIG(),
         'train_ann_file': "annotations/instances_train2017.json",
         'train_dir': "train2017",
@@ -143,7 +150,7 @@ COCO_DATASET_MODEL_WRAPPERS = {
         'classes': DATA["CLASSES"],
         'missing_ids': MISSING_IDS,
     },
-    'get_coco_gm_for_mb2_ssd': {
+    ('coco_gm','mb2_ssd'): {
         'config': MOBILENET_CONFIG(),
         'train_ann_file': "train_data_COCO.json",
         'train_dir': "images/train",
@@ -153,6 +160,9 @@ COCO_DATASET_MODEL_WRAPPERS = {
     }
 }
 
-for wrapper_fn_name, wrapper_kwargs in COCO_DATASET_MODEL_WRAPPERS.items():
-    globals()[wrapper_fn_name] = partial(globals()['get_coco_for_ssd'], **wrapper_kwargs)
+for (data_key, model_name_key), wrapper_kwargs in COCO_DATASET_MODEL_WRAPPERS.items():
+    wrapper_fn_name = f'get_{data_key}_for_{model_name_key}'
+    func = partial(globals()['get_coco_for_ssd'], **wrapper_kwargs)
+    globals()[wrapper_fn_name] = func
+    DATA_WRAPPER_REGISTRY.register(data_key, model_name_key)(func)
     __all__.append(wrapper_fn_name)

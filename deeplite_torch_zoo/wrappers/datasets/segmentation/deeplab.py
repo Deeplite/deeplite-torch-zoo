@@ -1,5 +1,6 @@
 from torch.utils.data import DataLoader
 
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 from deeplite_torch_zoo.src.segmentation.deeplab.dataloaders.datasets import (
     combine_dbs,
     pascal,
@@ -10,6 +11,7 @@ from deeplite_torch_zoo.src.segmentation.deeplab.dataloaders.datasets import (
 __all__ = ["get_voc_for_deeplab_mobilenet"]
 
 
+@DATA_WRAPPER_REGISTRY.register('voc', 'deeplab_mobilenet')
 def get_voc_for_deeplab_mobilenet(
     data_root, sbd_root=None, batch_size=4, num_workers=4, img_size=512, **kwargs
 ):

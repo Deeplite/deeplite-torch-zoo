@@ -6,6 +6,8 @@ import texttable
 from deeplite_torch_zoo.wrappers.datasets import *
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+
 
 
 __all__ = ["get_data_splits_by_name", "get_model_by_name",
@@ -34,15 +36,13 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
        'test' : test_data_loader
     }
     """
-    dataset_name = dataset_name.lower()
-    func = f"get_{dataset_name}"
+
     if model_name is not None:
         model_name = normalize_model_name(model_name)
-        model_name = model_name.lower()
-        func = f"get_{dataset_name}_for_{model_name}"
 
-    assert func in globals(), f"function {func} doesn't exist"
-    return globals()[func](data_root=data_root, **kwargs)
+    data_func = DATA_WRAPPER_REGISTRY.get((dataset_name.lower(), model_name.lower()))
+    data_split = data_func(data_root=data_root, **kwargs)
+    return data_split
 
 
 def get_model_by_name(

@@ -3,10 +3,12 @@ import pyvww
 
 from ..utils import get_dataloader
 from torchvision import transforms
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 __all__ = ["get_vww"]
 
 
+@DATA_WRAPPER_REGISTRY.register('vww')
 def get_vww(data_root="", batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
 
     if len(kwargs):
