@@ -24,18 +24,14 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-
 import numpy as np
-import torch
-import random
-import cv2
-
 from PIL import ImageFile
-from PIL import Image
+
+import torch
 from torchvision.datasets import CocoDetection
 
 from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
+
 
 class CocoDetectionBoundingBox(CocoDetection):
     def __init__(

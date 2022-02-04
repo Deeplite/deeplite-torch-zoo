@@ -21,5 +21,7 @@ def get_eval_func(_set):
         return yolo_eval_wider_face
     if 'person_detection' in _set:
         return yolo_eval_voc
+    if 'vehicle_detection' in _set:
+        return partial(yolo_eval_coco, subsample_category='car')
 
     raise ValueError

@@ -28,6 +28,7 @@ from deeplite_torch_zoo.src.objectdetection.yolov3.model.loss.yolo_loss import \
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import init_seeds
+from deeplite_torch_zoo.src.objectdetection.eval.coco.coco_evaluator import SubsampledCOCO
 
 from deeplite_torch_zoo.wrappers.models import YOLOV3_MODELS, YOLOV4_MODELS, YOLOV5_MODELS
 
@@ -38,7 +39,8 @@ DATASET_TO_HP_CONFIG_MAP = {
     'lisa': hyp_cfg_lisa,
 }
 
-for dataset_name in ('voc', 'coco', 'wider_face', 'person_detection', 'voc07'):
+for dataset_name in ('voc', 'coco', 'wider_face', 'person_detection',
+    'vehicle_detection', 'voc07'):
     DATASET_TO_HP_CONFIG_MAP[dataset_name] = hyp_cfg_scratch
 
 HP_CONFIG_MAP = {
@@ -52,7 +54,7 @@ class Trainer(object):
 
         self.model_name = opt.net
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full",
-            "lisa_subset11", "wider_face", "person_detection", "voc07"]
+            "lisa_subset11", "wider_face", "person_detection", "voc07", "vehicle_detection"]
         assert self.model_name in YOLO_MODEL_NAMES
 
         if opt.hp_config is None:
@@ -180,6 +182,9 @@ class Trainer(object):
             test_set = opt.img_dir / "VOC2007"
         elif opt.dataset_type == "coco":
             gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
+        elif opt.dataset_type == "vehicle_detection":
+            gt = SubsampledCOCO(opt.img_dir / "annotations/instances_val2017.json",
+                subsample_categories=['car'])
         Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
                         _set=opt.dataset_type, device=self.device, net=opt.net,
                         img_size=opt.test_img_res)
