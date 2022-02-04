@@ -5,7 +5,7 @@ import pytest
 import torch
 
 from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name
-from tests.fake_tests.Datasets.FakeDataset import VocYoloFake
+from tests.mock_datasets import VocYoloFake
 
 
 MOCK_DATASETS_PATH = Path('tests/fixture/datasets')
