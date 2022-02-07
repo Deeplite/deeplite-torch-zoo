@@ -9,6 +9,7 @@ from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
 from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.src.objectdetection.datasets.transforms import random_transform_fn
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
 __all__ = []
@@ -117,6 +118,8 @@ DATASET_WRAPPER_FNS = {
 
 for dataset_name_key, dataset_parameters in DATASET_WRAPPER_FNS.items():
     wrapper_fn_name = f'get_{dataset_name_key}_for_yolo'
-    globals()[wrapper_fn_name] = make_dataset_wrapper(wrapper_fn_name, num_classes=dataset_parameters.num_classes,
+    func = make_dataset_wrapper(wrapper_fn_name, num_classes=dataset_parameters.num_classes,
         img_size=dataset_parameters.img_size, dataset_create_fn=dataset_parameters.dataset_create_fn)
+    globals()[wrapper_fn_name] = func
+    DATA_WRAPPER_REGISTRY.register(dataset_name_key, 'yolo')(func)
     __all__.append(wrapper_fn_name)

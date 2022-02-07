@@ -3,11 +3,13 @@ import albumentations as albu
 from torch.utils.data import DataLoader
 from deeplite_torch_zoo.src.segmentation.datasets.pascal_voc import PascalVocDataset
 from deeplite_torch_zoo.src.segmentation.datasets.carvana import BasicDataset
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
 __all__ = ["get_carvana_for_unet", "get_voc_for_unet"]
 
 
+@DATA_WRAPPER_REGISTRY.register('carvana', 'unet')
 def get_carvana_for_unet(data_root, batch_size=4, num_workers=4, **kwargs):
     train_dataset = BasicDataset(
         os.path.join(data_root, "train_imgs/"),
@@ -39,6 +41,7 @@ def get_carvana_for_unet(data_root, batch_size=4, num_workers=4, **kwargs):
     return {"train": train_loader, "test": val_loader}
 
 
+@DATA_WRAPPER_REGISTRY.register('voc', 'unet')
 def get_voc_for_unet(
     data_root, num_classes=21, batch_size=4, num_workers=4, img_size=512, net="unet", **kwargs
 ):

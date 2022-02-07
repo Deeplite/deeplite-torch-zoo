@@ -44,11 +44,11 @@ class TupleKeyRegistry(Registry):
     Registry class with key as a tuple of 2 items
     """
 
-    def register(self, model_name, dataset=None):
+    def register(self, key1, key2=None):
         def wrap(func):
-            model_key = (model_name, dataset)
+            model_key = (key1, key2)
             if model_key in self._registry_dict:
-                raise KeyError('Model {} is already registered in {}'.format(model_key, self._name))
+                raise KeyError('Key {} is already registered in {}'.format(model_key, self._name))
             self._registry_dict[model_key] = func
             return func
 

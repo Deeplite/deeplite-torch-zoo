@@ -3,10 +3,13 @@ from torchvision import datasets
 from torchvision import transforms
 
 from ..utils import get_dataloader
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+
 
 __all__ = ["get_tinyimagenet"]
 
 
+@DATA_WRAPPER_REGISTRY.register('tinyimagenet')
 def get_tinyimagenet(data_root, batch_size=128, num_workers=4, fp16=False, device="cuda", distributed=False, **kwargs):
 
     if len(kwargs):
