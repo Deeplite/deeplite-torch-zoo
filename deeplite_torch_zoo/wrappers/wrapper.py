@@ -36,12 +36,13 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
        'test' : test_data_loader
     }
     """
-
+    datasplit_key = (dataset_name.lower(), )
     if model_name is not None:
         model_name = normalize_model_name(model_name)
         model_name = model_name.lower()
+        datasplit_key += (model_name, )
 
-    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get((dataset_name.lower(), model_name))
+    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(datasplit_key)
     data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
     return data_split
 
