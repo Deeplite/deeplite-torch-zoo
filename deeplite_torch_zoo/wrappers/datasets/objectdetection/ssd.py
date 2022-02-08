@@ -120,10 +120,10 @@ VOC_DATASET_MODEL_WRAPPERS = {
 
 for model_name_key, model_config in VOC_DATASET_MODEL_WRAPPERS.items():
     wrapper_fn_name = f'get_voc_for_{model_name_key}'
-    func= partial(globals()['get_voc_for_ssd'],
+    wrapper_fn = partial(globals()['get_voc_for_ssd'],
         config=model_config, num_classes=21)
-    globals()[wrapper_fn_name] = func
-    DATA_WRAPPER_REGISTRY.register('voc', model_name_key)(func)
+    globals()[wrapper_fn_name] = wrapper_fn
+    DATA_WRAPPER_REGISTRY.register('voc', model_name_key)(wrapper_fn)
     __all__.append(wrapper_fn_name)
 
 
@@ -133,10 +133,10 @@ WIDERFACE_DATASET_MODEL_WRAPPERS = {
 
 for model_name_key, model_config in WIDERFACE_DATASET_MODEL_WRAPPERS.items():
     wrapper_fn_name = f'get_wider_face_for_{model_name_key}'
-    func= partial(globals()['get_wider_face_for_ssd'],
+    wrapper_fn = partial(globals()['get_wider_face_for_ssd'],
         config=model_config, num_classes=21)
-    globals()[wrapper_fn_name] = func
-    DATA_WRAPPER_REGISTRY.register('wider_face', model_name_key)(func)
+    globals()[wrapper_fn_name] = wrapper_fn
+    DATA_WRAPPER_REGISTRY.register('wider_face', model_name_key)(wrapper_fn)
     __all__.append(wrapper_fn_name)
 
 
@@ -162,7 +162,7 @@ COCO_DATASET_MODEL_WRAPPERS = {
 
 for (data_key, model_name_key), wrapper_kwargs in COCO_DATASET_MODEL_WRAPPERS.items():
     wrapper_fn_name = f'get_{data_key}_for_{model_name_key}'
-    func = partial(globals()['get_coco_for_ssd'], **wrapper_kwargs)
-    globals()[wrapper_fn_name] = func
-    DATA_WRAPPER_REGISTRY.register(data_key, model_name_key)(func)
+    wrapper_fn = partial(globals()['get_coco_for_ssd'], **wrapper_kwargs)
+    globals()[wrapper_fn_name] = wrapper_fn
+    DATA_WRAPPER_REGISTRY.register(data_key, model_name_key)(wrapper_fn)
     __all__.append(wrapper_fn_name)
