@@ -24,8 +24,14 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import time
+import json
+
 import numpy as np
 from PIL import ImageFile
+
+from pycocotools.coco import COCO
+from collections import defaultdict
 
 import torch
 from torchvision.datasets import CocoDetection
@@ -54,10 +60,13 @@ class CocoDetectionBoundingBox(CocoDetection):
         self.missing_ids = missing_ids
         if category == "all":
             self.all_categories = True
-            self.category_id = -1
-        elif isinstance(category, int):
+            self.category_ids = -1
+        elif isinstance(category, list):
             self.all_categories = False
-            self.category_id = category
+            self.category_ids = category
+            self.coco = SubsampledCOCO(ann_file_name, classes)
+            self.ids = list(sorted(self.coco.imgs.keys()))
+
         ImageFile.LOAD_TRUNCATED_IMAGES = True
 
     def __getitem__(self, index):
@@ -70,7 +79,7 @@ class CocoDetectionBoundingBox(CocoDetection):
         for target in targets:
             bbox = torch.tensor(target["bbox"], dtype=torch.float32)  # in xywh format
             category_id = target["category_id"]
-            if (not self.all_categories) and (category_id != self.category_id):
+            if (not self.all_categories) and (category_id not in self.category_ids):
                 continue
             conf = torch.tensor([1.0])
             category_id = self._delete_coco_empty_category(category_id)
@@ -160,3 +169,31 @@ class CocoDetectionBoundingBox(CocoDetection):
             else:
                 break
         return new_id
+
+
+class SubsampledCOCO(COCO):
+    def __init__(self, annotation_file=None, subsample_categories=None):
+        """
+        Constructor of Microsoft COCO helper class for reading and visualizing annotations.
+        :param annotation_file (str): location of annotation file
+        :param image_folder (str): location to the folder that hosts images.
+        :return:
+        """
+        # load dataset
+        self.dataset,self.anns,self.cats,self.imgs = dict(),dict(),dict(),dict()
+        self.imgToAnns, self.catToImgs = defaultdict(list), defaultdict(list)
+        if not annotation_file == None:
+            print('loading annotations into memory...')
+            tic = time.time()
+            dataset = json.load(open(annotation_file, 'r'))
+            assert type(dataset)==dict, 'annotation file format {} not supported'.format(type(dataset))
+            print('Done (t={:0.2f}s)'.format(time.time()- tic))
+            self.dataset = dataset
+            self.dataset['categories'] = [cat for cat in self.dataset['categories']
+                if cat['name'] in subsample_categories]
+            category_ids = [cat['id'] for cat in self.dataset['categories']]
+            self.dataset['annotations'] = [ann for ann in self.dataset['annotations'] if
+                ann['category_id'] in category_ids]
+            image_ids = [ann['image_id'] for ann in self.dataset['annotations']]
+            self.dataset['images'] = [img for img in self.dataset['images'] if img['id'] in image_ids]
+            self.createIndex()
