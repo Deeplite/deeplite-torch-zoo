@@ -1,4 +1,4 @@
-from deeplite_torch_zoo.utils.registry import TupleKeyRegistry
+from deeplite_torch_zoo.utils.registry import Registry
 
-MODEL_WRAPPER_REGISTRY = TupleKeyRegistry('model wrapper registry')
-DATA_WRAPPER_REGISTRY = TupleKeyRegistry('data wrapper registry')
+MODEL_WRAPPER_REGISTRY = Registry('model wrapper function registry')
+DATA_WRAPPER_REGISTRY = Registry('data split wrapper function registry')
