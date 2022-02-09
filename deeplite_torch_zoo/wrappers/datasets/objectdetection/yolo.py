@@ -105,6 +105,8 @@ def create_voc07_datasets(data_root, num_classes, img_size):
 def create_person_detection_datasets(data_root, num_classes, img_size):
     return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False)
 
+def create_person_pet_vehice_datasets(data_root, num_classes, img_size):
+    return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False)
 
 DatasetParameters = namedtuple('DatasetParameters', ['num_classes', 'img_size', 'dataset_create_fn'])
 DATASET_WRAPPER_FNS = {
@@ -114,6 +116,7 @@ DATASET_WRAPPER_FNS = {
     'voc07': DatasetParameters(20, 448, create_voc07_datasets),
     'wider_face': DatasetParameters(1, 448, create_widerface_datasets),
     'person_detection': DatasetParameters(1, 320, create_person_detection_datasets),
+    'person_pet_vehicle_detection': DatasetParameters(3, 320, create_person_pet_vehice_datasets),
 }
 
 for dataset_name_key, dataset_parameters in DATASET_WRAPPER_FNS.items():

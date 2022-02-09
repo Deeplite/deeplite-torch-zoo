@@ -52,7 +52,7 @@ class Trainer(object):
 
         self.model_name = opt.net
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full",
-            "lisa_subset11", "wider_face", "person_detection", "voc07"]
+            "lisa_subset11", "wider_face", "person_detection", "voc07", "person_pet_vehicle_detection"]
         assert self.model_name in YOLO_MODEL_NAMES
 
         if opt.hp_config is None:
@@ -178,6 +178,8 @@ class Trainer(object):
         gt = None
         if opt.dataset_type in ("voc", "voc07"):
             test_set = opt.img_dir / "VOC2007"
+        if opt.dataset_type == "person_pet_vehicle_detection":
+            test_set = opt.img_dir 
         elif opt.dataset_type == "coco":
             gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
         Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
