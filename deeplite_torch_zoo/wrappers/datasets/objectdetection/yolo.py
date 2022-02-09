@@ -121,8 +121,8 @@ DATASET_WRAPPER_FNS = {
 
 for dataset_name_key, dataset_parameters in DATASET_WRAPPER_FNS.items():
     wrapper_fn_name = f'get_{dataset_name_key}_for_yolo'
-    func = make_dataset_wrapper(wrapper_fn_name, num_classes=dataset_parameters.num_classes,
+    wrapper_fn = make_dataset_wrapper(wrapper_fn_name, num_classes=dataset_parameters.num_classes,
         img_size=dataset_parameters.img_size, dataset_create_fn=dataset_parameters.dataset_create_fn)
-    globals()[wrapper_fn_name] = func
-    DATA_WRAPPER_REGISTRY.register(dataset_name_key, 'yolo')(func)
+    globals()[wrapper_fn_name] = wrapper_fn
+    DATA_WRAPPER_REGISTRY.register(dataset_name_key, 'yolo')(wrapper_fn)
     __all__.append(wrapper_fn_name)
