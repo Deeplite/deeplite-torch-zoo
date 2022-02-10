@@ -47,6 +47,7 @@ DATA = {
     ],
     "CLASSES_1": ["person"],
     "CLASSES_2": ["car", "person"],
+    "CLASSES_3": ["person", "dog", "car"], 
     "NUM": 20,
 }
 
