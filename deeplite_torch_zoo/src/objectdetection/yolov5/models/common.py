@@ -28,6 +28,7 @@ ACTIVATION_FN_NAME_MAP = {
     'silu': nn.SiLU,
     'hardswish': Hardswish,
     'mish': Mish,
+    'leakyrelu': nn.LeakyReLU,
 }
 
 

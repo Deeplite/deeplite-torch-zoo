@@ -3,23 +3,24 @@
 
 
 class Registry:
-    """ Generic registry implentation taken from
+    """ Generic registry implentation modified from
     https://github.com/openvinotoolkit/openvino/blob/master/tools/pot/openvino/tools/pot/utils/registry.py """
 
     def __init__(self, name):
         self._name = name
         self._registry_dict = dict()
 
-    def register(self, name=None):
+    def register(self, name=None, *args):
         def _register(obj_name, obj):
             if obj_name in self._registry_dict:
-                raise KeyError('{} is already registered in {}'.format(name, self._name))
+                raise KeyError('{} is already registered in {}'.format(obj_name, self._name))
             self._registry_dict[obj_name] = obj
 
         def wrap(obj):
             cls_name = name
             if cls_name is None:
                 cls_name = obj.__name__
+            cls_name = (cls_name, *args)
             _register(cls_name, obj)
             return obj
 
@@ -27,7 +28,7 @@ class Registry:
 
     def get(self, name):
         if name not in self._registry_dict:
-            raise KeyError('{} is unknown type of {} '.format(name, self._name))
+            raise KeyError('{} was not found in the {} '.format(name, self._name))
         return self._registry_dict[name]
 
     @property

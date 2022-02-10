@@ -10,6 +10,7 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.resnet import ResNet, BasicBlock, Bottleneck
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [
@@ -38,6 +39,7 @@ def _resnet(arch, block, layers, pretrained=False, progress=True, device='cuda')
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('resnet18', 'cifar100')
 def resnet18_cifar100(pretrained=False, progress=True, device='cuda'):
     return _resnet(
         "resnet18", BasicBlock, [2, 2, 2, 2], pretrained=pretrained, progress=progress, device=device
@@ -50,6 +52,7 @@ def resnet34(pretrained=False, progress=True, device='cuda'):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('resnet50', 'cifar100')
 def resnet50_cifar100(pretrained=False, progress=True, device='cuda'):
     return _resnet(
         "resnet50", Bottleneck, [3, 4, 6, 3], pretrained=pretrained, progress=progress, device=device

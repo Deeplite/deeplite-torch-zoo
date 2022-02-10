@@ -79,15 +79,12 @@ def label_accuracy_score(label_trues, label_preds, n_class):
 def get_log_dir(model_name, config_id, cfg):
     # load config
     # import datetime
-    # import pytz
     import os
     import os.path as osp
 
     import yaml
 
     name = "MODEL-%s" % (model_name)
-    # now = datetime.datetime.now(pytz.timezone('America/Bogota'))
-    # name += '_TIME-%s' % now.strftime('%Y%m%d-%H%M%S')
     # create out
     log_dir = osp.join("logs", name)
     if not osp.exists(log_dir):

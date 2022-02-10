@@ -10,11 +10,12 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.densenet import DenseNet, Bottleneck
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [
     # 'densenet161', 'densenet169', 'densenet201'
-    "densenet121_cifar100"
+    "densenet121_cifar100",
 ]
 
 model_urls = {
@@ -35,6 +36,7 @@ def _densenet(arch, block, layers, growth_rate=32, pretrained=False, progress=Tr
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('densenet121', 'cifar100')
 def densenet121_cifar100(pretrained=False, progress=True, device='cuda'):
     return _densenet(
         "densenet121",
@@ -47,6 +49,7 @@ def densenet121_cifar100(pretrained=False, progress=True, device='cuda'):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('densenet161')
 def densenet161(pretrained=False, progress=True):
     return _densenet(
         "densenet161",
@@ -58,6 +61,7 @@ def densenet161(pretrained=False, progress=True):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('densenet169')
 def densenet169(pretrained=False, progress=True):
     return _densenet(
         "densenet169",
@@ -69,6 +73,7 @@ def densenet169(pretrained=False, progress=True):
     )
 
 
+@MODEL_WRAPPER_REGISTRY.register('densenet201')
 def densenet201(pretrained=False, progress=True):
     return _densenet(
         "densenet201",

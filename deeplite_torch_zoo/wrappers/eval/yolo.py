@@ -21,5 +21,6 @@ def get_eval_func(_set):
         return yolo_eval_wider_face
     if 'person_detection' in _set:
         return yolo_eval_voc
-
+    if 'person_pet_vehicle_detection' in _set:
+        return yolo_eval_voc
     raise ValueError

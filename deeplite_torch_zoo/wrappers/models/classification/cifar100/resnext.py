@@ -10,6 +10,7 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.resnext import ResNeXt
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [
@@ -41,6 +42,7 @@ def _resnext(
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('resnext29_2x64d', 'cifar100')
 def resnext29_2x64d_cifar100(pretrained=False, progress=True, device='cuda'):
     return _resnext(
         "resnext29_2x64d",

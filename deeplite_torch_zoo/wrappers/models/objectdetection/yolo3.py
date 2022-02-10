@@ -6,6 +6,8 @@ from collections import namedtuple
 import deeplite_torch_zoo
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+
 
 
 def get_project_root() -> Path:
@@ -18,7 +20,7 @@ __all__ = [
 ]
 
 CFG_PATH = "deeplite_torch_zoo/src/objectdetection/configs/model_configs"
-CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models"
+CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
     "yolov3_voc_20": "yolo3-voc-0_839-a6149826183808aa.pth",
@@ -36,6 +38,7 @@ yolov3_cfg = {
 YOLOV3_MODELS = list(yolov3_cfg.keys())
 
 
+@MODEL_WRAPPER_REGISTRY.register('yolo3')
 def yolo3(
     net="yolov3", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda", **kwargs
@@ -50,6 +53,9 @@ def yolo3(
 
 
 def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
+    model_name = net.replace('v', '')
+
+    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return yolo3(
             net=net,

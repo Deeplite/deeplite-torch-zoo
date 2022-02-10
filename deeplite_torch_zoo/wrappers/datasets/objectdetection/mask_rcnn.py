@@ -1,7 +1,8 @@
 import os
 
-from ..utils import get_dataloader
+from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.src.objectdetection.ssd.datasets.coco import CocoDetectionBoundingBox
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
 __all__ = ["get_coco_for_fasterrcnn_resnet50_fpn"]
@@ -14,6 +15,7 @@ def _get_coco_for_rcnn(data_root, val_ann_file=None, val_dir=None):
     return test_dataset
 
 
+@DATA_WRAPPER_REGISTRY.register('coco', 'fasterrcnn_resnet50_fpn')
 def get_coco_for_fasterrcnn_resnet50_fpn(
     data_root, batch_size=32, num_workers=4, distributed=False, fp16=False, val_dir="val2017",
     val_ann_file="annotations/instances_val2017.json", device="cuda", **kwargs):

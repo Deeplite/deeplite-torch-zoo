@@ -49,7 +49,7 @@ class Trainer(object):
 
         self.model_name = opt.net
         assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full",
-            "lisa_subset11", "wider_face", "person_detection", "voc07"]
+            "lisa_subset11", "wider_face", "person_detection", "voc07", "person_pet_vehicle_detection"]
         assert self.model_name in YOLO_MODEL_NAMES
 
         if opt.hp_config is None:

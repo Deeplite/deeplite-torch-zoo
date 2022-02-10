@@ -11,6 +11,8 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.preact_resnet import PreActResNet, PreActBlock, PreActBottleneck
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+
 
 __all__ = [
     # 'pre_act_resnet34', 'pre_act_resnet50', 'pre_act_resnet101', 'pre_act_resnet152'
@@ -36,6 +38,7 @@ def _pre_act_resnet(arch, block, layers, pretrained=False, progress=True, device
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet18', 'cifar100')
 def pre_act_resnet18_cifar100(pretrained=False, progress=True, device='cuda'):
     return _pre_act_resnet(
         "pre_act_resnet18",

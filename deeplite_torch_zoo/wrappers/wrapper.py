@@ -1,7 +1,17 @@
-from deeplite_torch_zoo.wrappers.datasets import *
-from deeplite_torch_zoo.wrappers.models import *
+import fnmatch
+import collections
 
-__all__ = ["get_data_splits_by_name", "get_model_by_name", "list_models"]
+import texttable
+
+import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
+import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+
+
+
+__all__ = ["get_data_splits_by_name", "get_model_by_name",
+    "list_models"]
 
 
 def normalize_model_name(net):
@@ -26,58 +36,66 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
        'test' : test_data_loader
     }
     """
-    dataset_name = dataset_name.lower()
-    func = f"get_{dataset_name}"
+    datasplit_key = (dataset_name.lower(), )
     if model_name is not None:
         model_name = normalize_model_name(model_name)
         model_name = model_name.lower()
-        func = f"get_{dataset_name}_for_{model_name}"
+        datasplit_key += (model_name, )
 
-    assert func in globals(), f"function {func} doesn't exist"
-    return globals()[func](data_root=data_root, **kwargs)
+    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(datasplit_key)
+    data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
+    return data_split
 
 
 def get_model_by_name(
     model_name="", dataset_name="", pretrained=False, progress=False, fp16=False, device="cuda"
 ):
     """
-    The models function calls in the format of (`model_name`_`dataset_name`) all lower case.
-    :param pretrained: Loads the pretrained model's wieghts.
+    Tries to find a matching model creation fn in the registry and creates a new model object
+    :param model_name: Name of the model to create
+    :param dataset_name: Name of dataset the model was trained / is to be trained on
+    :param pretrained: Whether to load pretrained weights
+    :param progress: Whether to enable the progressbar
+    :param fp16: Whether to convert the model to fp16 precision
     :param device: Loads the model either on a gpu (`cuda`, `cuda:device_id`) or cpu.
 
-    returns a model (pretrained or fresh) with respect to the dataset
+    returns a corresponding model object (optionally with pretrained weights)
     """
-    dataset_name = dataset_name.lower()
-    model_name = model_name.lower()
-    if dataset_name != "":
-        func = f"{model_name}_{dataset_name}"
-    else:
-        func = f"{model_name}"
-    assert func in globals(), f"function {func} doesn't exist"
-    model = globals()[func](pretrained=pretrained, progress=progress, device=device)
-    if fp16:
-        model = model.half()
-    return model
+    model_func = MODEL_WRAPPER_REGISTRY.get((model_name.lower(), dataset_name))
+    model = model_func(pretrained=pretrained, progress=progress, device=device)
+    return model.half() if fp16 else model
 
 
-def list_models(key_word="*"):
+def list_models(filter='', print_table=True):
     """
     A helper function to list all existing models or dataset calls
-    It takes a `model_name` or a `dataset_name` and prints all matching function calls
+    It takes a `model_name` or a `dataset_name` as a filter and
+    prints a table of corresponding available models
     """
+    filter = '*' + filter + '*'
+    all_models = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
+    all_models = [(model_name, dataset_name) for model_name, dataset_name in all_models
+        if dataset_name is not None]
+    all_models = {model_name + '_' + dataset_name: (model_name, dataset_name)
+        for model_name, dataset_name in all_models}
 
-    for _f in globals().keys():
-        if key_word == "*" or key_word in _f:
-            print(_f)
+    models = []
+    include_filters = filter if isinstance(filter, (tuple, list)) else [filter]
+    for f in include_filters:
+        include_models = fnmatch.filter(all_models.keys(), f)
+        if include_models:
+            models = set(models).union(include_models)
 
+    model_dataset_pairs = [all_models[model_key] for model_key in sorted(models)]
 
-def get_models_names_for(dataset_name="imagenet"):
-    dataset_name = f"_{dataset_name}*"
-    model_names = []
-    for _f in globals().keys():
-        _f += "*"
-        if dataset_name in _f:
-            model_name = _f.replace(dataset_name, '')
-            assert model_name not in model_names
-            model_names.append(model_name)
-    return model_names
+    if print_table:
+        table = texttable.Texttable()
+        rows = collections.defaultdict(list)
+        for model, dataset in model_dataset_pairs:
+            rows[model].extend([dataset])
+        for model in rows:
+            rows[model] = ', '.join(rows[model])
+        table.add_rows([['Available models', 'Source datasets'], *rows.items()])
+        print(table.draw())
+
+    return model_dataset_pairs

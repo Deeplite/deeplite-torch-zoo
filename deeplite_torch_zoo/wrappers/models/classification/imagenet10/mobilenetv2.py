@@ -1,5 +1,7 @@
 import torchvision
 from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+
 
 __all__ = [
     # 'mobilenet_v2_1_0',
@@ -23,6 +25,7 @@ def _mobilenetv2_imagenet10(arch, alpha=1.0, pretrained=False, progress=True, de
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('mobilenet_v2_0_35', 'imagenet10')
 def mobilenet_v2_0_35_imagenet10(pretrained=False, progress=True, device='cuda'):
     return _mobilenetv2_imagenet10(
         "mobilenetv2_0.35", alpha=0.35, pretrained=pretrained, progress=progress, device=device

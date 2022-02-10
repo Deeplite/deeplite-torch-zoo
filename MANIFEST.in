@@ -1,1 +1,1 @@
-recursive-include data *.yaml
+recursive-include deeplite_torch_zoo/src *.yaml

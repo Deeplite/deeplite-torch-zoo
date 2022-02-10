@@ -11,6 +11,7 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.shufflenetv2 import ShuffleNetV2
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["shufflenet_v2_1_0_cifar100"]
@@ -31,6 +32,7 @@ def _shufflenetv2(arch, net_size=1, pretrained=False, progress=True, device='cud
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('shufflenet_v2_1_0', 'cifar100')
 def shufflenet_v2_1_0_cifar100(pretrained=False, progress=True, device='cuda'):
     return _shufflenetv2(
         "shufflenet_v2", net_size=1, pretrained=pretrained, progress=progress, device=device

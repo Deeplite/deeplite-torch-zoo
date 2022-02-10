@@ -11,7 +11,7 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.googlenet import GoogLeNet
-
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 __all__ = ["googlenet_cifar100"]
 
@@ -31,5 +31,6 @@ def _googlenet(arch, pretrained=False, progress=True, device='cuda'):
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('googlenet', 'cifar100')
 def googlenet_cifar100(pretrained=False, progress=True, device='cuda'):
     return _googlenet("googlenet", pretrained, progress, device=device)

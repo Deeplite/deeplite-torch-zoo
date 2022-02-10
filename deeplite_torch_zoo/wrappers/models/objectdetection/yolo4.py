@@ -6,6 +6,8 @@ from collections import namedtuple
 import deeplite_torch_zoo
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+
 
 
 def get_project_root() -> Path:
@@ -18,15 +20,15 @@ __all__ = [
 ]
 
 CFG_PATH = "deeplite_torch_zoo/src/objectdetection/configs/model_configs"
-CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models"
+CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
     "yolov4s_voc_20": "yolov4s-voc-20classes_849_58041e8852a4b2e2.pt",
     "yolov4m_voc_20": "yolov4m-voc-20classes_874_e0c8e179992b5da2.pt",
-    # "yolov4l_voc_20": "yolo4l-voc-20classes_872-9f54132ce2934fbf.pth",
-    # "yolov4x_voc_20": "yolo4x-voc-20classes_882-187f352b9d0d29c6.pth",
-    # "yolov4m_lisa_11": "yolov4m-lisa_11_880-6615c5e27557fab0.pth",
-    # "yolov4l_leaky_voc_20": "yolo4l-leaky-voc-20classes_891-2c0f78ee3938ade3.pt",
+    "yolov4l_voc_20": "yolo4l-voc-20classes_872-9f54132ce2934fbf.pth",
+    "yolov4x_voc_20": "yolo4x-voc-20classes_882-187f352b9d0d29c6.pth",
+    "yolov4m_lisa_11": "yolov4m-lisa_11_880-6615c5e27557fab0.pth",
+    "yolov4l_leaky_voc_20": "yolo4l-leaky-voc-20classes_891-2c0f78ee3938ade3.pt",
     "yolov4s_coco_80": "yolov4_6s-coco-80classes-288_b112910223d6c56d.pt",
     "yolov4m_coco_80": "yolov4_6m-coco-80classes-309_02b2013002a4724b.pt",
 }
@@ -42,6 +44,7 @@ yolov4_cfg = {
 YOLOV4_MODELS = list(yolov4_cfg.keys())
 
 
+@MODEL_WRAPPER_REGISTRY.register('yolo4')
 def yolo4(
     net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda",
@@ -61,11 +64,13 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
 
 
 def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
-
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
         if re.match(net_name, net):
             model_wrapper_fn = model_fn
 
+    model_name = net.replace('v','')
+
+    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return model_wrapper_fn(
             net=net,

@@ -1,5 +1,8 @@
 import torchvision
 
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+
+
 MODEL_NAMES = [
     "mobilenet_v2",
     "mobilenet_v3_large",
@@ -16,6 +19,8 @@ MODEL_NAMES = [
 
 
 def make_wrapper_func(wrapper_fn_name, model_name_key):
+    q_model_name = "_".join(("q", model_name_tag))
+    @MODEL_WRAPPER_REGISTRY.register(q_model_name, 'imagenet')
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         model = torchvision.models.quantization.__dict__[model_name_key](pretrained=pretrained)
         return model.to(device)

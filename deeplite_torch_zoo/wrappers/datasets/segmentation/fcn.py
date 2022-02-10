@@ -1,10 +1,12 @@
 from torch.utils.data import DataLoader
 from deeplite_torch_zoo.src.segmentation.fcn.data_loader import Pascal_Data as FCN_Voc
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
 __all__ = ["get_voc_for_fcn32"]
 
 
+@DATA_WRAPPER_REGISTRY.register('voc', 'fcn32')
 def get_voc_for_fcn32(data_root, num_workers=4, backbone="vgg", **kwargs):
     train_dataset = FCN_Voc(root=data_root, image_set="train", backbone=backbone)
     valid_dataset = FCN_Voc(root=data_root, image_set="val", backbone=backbone)

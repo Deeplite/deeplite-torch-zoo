@@ -1,20 +1,15 @@
-from __future__ import print_function
-
 import argparse
 
 import torch
 import torch.nn.functional as F
-import torch.optim as optim
+from torch import optim
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import StepLR
 
-import deeplite_torch_zoo
-import deeplite_torch_zoo.models.mnist
-
-criterion = CrossEntropyLoss()
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
 
 
-def train(args, model, device, train_loader, optimizer, epoch):
+def train(args, model, device, train_loader, optimizer, criterion, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -74,7 +69,7 @@ def main():
         help="input batch size for training (default: 64)",
     )
     parser.add_argument(
-        "--dataset", metavar="DATASET", default="mnist", help="dataset to use"
+        "--dataset", metavar="DATASET", default="cifar100", help="dataset to use"
     )
     parser.add_argument(
         "-j",
@@ -122,29 +117,35 @@ def main():
         metavar="N",
         help="how many batches to wait before logging training status",
     )
-
+    parser.add_argument('-a', '--arch', metavar='ARCH', default='vgg19', help='model architecture')
     args = parser.parse_args()
 
     device = torch.device("cuda")
 
-    data_splits = deeplite_torch_zoo.get_data_splits_by_name(
+    data_splits = get_data_splits_by_name(
         dataset_name=args.dataset,
         data_root=args.data_root,
         batch_size=args.batch_size,
         num_torch_workers=args.workers,
     )
-    model = deeplite_torch_zoo.models.mnist.lenet5()
+    model = get_model_by_name(
+        model_name=args.arch,
+        dataset_name=args.dataset,
+        pretrained=True,
+        progress=True,
+        device=device)
 
     model.to(device)
     optimizer = optim.SGD(model.parameters(), lr=args.lr)
-
+    criterion = CrossEntropyLoss()
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+
     for epoch in range(1, args.epochs + 1):
-        train(args, model, device, data_splits["train"], optimizer, epoch)
+        train(args, model, device, data_splits["train"], optimizer, criterion, epoch)
         test(model, device, data_splits["test"])
         scheduler.step()
 
-    torch.save(model.state_dict(), "checkpoint.pt")
+    torch.save(model.state_dict(), "{}_checkpoint.pt".format(args.arch))
 
 
 if __name__ == "__main__":

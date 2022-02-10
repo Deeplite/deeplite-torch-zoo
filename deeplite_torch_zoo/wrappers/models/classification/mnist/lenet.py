@@ -8,6 +8,7 @@
 
 from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.mnist_models.lenet import LeNet5
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = ["lenet5_mnist"]
@@ -30,6 +31,7 @@ def _lenet_mnist(arch, pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('lenet5', 'mnist')
 def lenet5_mnist(pretrained=False, progress=True, device="cuda"):
     return _lenet_mnist(
         "lenet5", pretrained=pretrained, progress=progress, device=device

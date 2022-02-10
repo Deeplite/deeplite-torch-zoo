@@ -8,6 +8,7 @@ import deeplite_torch_zoo
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 def get_project_root() -> Path:
@@ -21,7 +22,7 @@ __all__ = [
 ]
 
 CFG_PATH = "deeplite_torch_zoo/src/objectdetection/configs/model_configs"
-CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models"
+CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
     "yolov5s_voc_20": "yolov5s_voc-0_837-1e922891b803a8b7.pt",
@@ -44,8 +45,11 @@ model_urls = {
     "yolov5_6n_person_detection_1": "yolov5_6n-person-detection-1class_696-fff2a2c720e20752.pt",
     "yolov5_6s_relu_person_detection_1": "yolov5_6s_relu-person-detection-1class_682-45ae979a06b80767.pt",
     "yolov5_6m_relu_person_detection_1": "yolov5_6m_relu-person-detection-1class_709-3f59321c540d2d1c.pt",
+    "yolov5_6n_relu_person_detection_1": "yolov5_6n_relu-person-detection-1class_621-6794298f12d33ba8.pt",
     "yolov5_6n_voc07_20": "yolov5_6n-voc07-20classes-620_037230667eff7b12.pt",
     "yolov5_6s_voc07_20": "yolov5_6s-voc07-20classes-687_4d221fd4edc09ce1.pt",
+    "yolov5_6s_relu_voc_20": "yolov5_6s_relu-voc-20classes-819_a35dff53b174e383.pt",
+    "yolov5_6m_relu_voc_20": "yolov5_6m_relu-voc-20classes-856_c5c23135e6d5012f.pt",
 }
 
 yolov5_cfg = {
@@ -68,6 +72,7 @@ for model_name_tag in yolov5_cfg:
         YOLOV5_MODELS.append('_'.join((model_name_tag, model_name_suffix)))
 
 
+@MODEL_WRAPPER_REGISTRY.register('yolo5')
 def yolo5(
     net="yolov5s", _set_classes="voc_20", num_classes=20,
     pretrained=False, progress=True, device="cuda"
@@ -81,6 +86,7 @@ def yolo5(
     return model.to(device)
 
 
+@MODEL_WRAPPER_REGISTRY.register('yolo5_6')
 def yolo5_6(
     net="yolov5_6s", _set_classes="voc_20", num_classes=20, activation_type=None,
     pretrained=False, progress=True, device="cuda"
@@ -107,6 +113,8 @@ def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
         if re.match(net_name, net):
             model_wrapper_fn = model_fn
 
+    model_name = net.replace('v','')
+    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return model_wrapper_fn(
             net=net,
@@ -123,7 +131,7 @@ def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
     'person_detection_1': ModelSet(1, ['yolov5_6n', 'yolov5_6s',
-        'yolov5_6n_relu', 'yolov5_6s_relu']),
+        'yolov5_6n_relu', 'yolov5_6s_relu', 'yolov5_6m_relu']),
     'voc_20': ModelSet(20, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6m_relu', 'yolov5_6s_relu']),
     'voc_24': ModelSet(24, ['yolov5m', 'yolov5l']),
