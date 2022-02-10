@@ -138,8 +138,8 @@ deeplite_torch_zoo/results/
 deeplite_torch_zoo/weight/
 deeplite_torch_zoo/weights/
 data/
-deeplite_torch_zoo/src/objectdetection/models/ 
-deeplite_torch_zoo/src/objectdetection/deeplite_torch_zoo/
+training_scripts/object_detection/models/
+training_scripts/object_detection/deeplite_torch_zoo/
 # Generated files
 ._*
 

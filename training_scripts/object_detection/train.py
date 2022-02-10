@@ -178,8 +178,6 @@ class Trainer(object):
         gt = None
         if opt.dataset_type in ("voc", "voc07"):
             test_set = opt.img_dir / "VOC2007"
-        if opt.dataset_type == "person_pet_vehicle_detection":
-            test_set = opt.img_dir 
         elif opt.dataset_type == "coco":
             gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
         Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
