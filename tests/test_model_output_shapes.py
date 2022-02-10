@@ -97,11 +97,18 @@ DETECTION_MODEL_TESTS = [
         [(52, 52, 3, 7), (26, 26, 3, 7), (13, 13, 3, 7)]),
 ]
 
-YOLO_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4l_leaky', 'yolo4x']
+YOLO_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l',
+               'yolo4l_leaky', 'yolo4x', 'yolo5s', 'yolo5m']
 
 for model_name in YOLO_MODELS:
     DETECTION_MODEL_TESTS.append((model_name, 'voc_20', {'num_classes': 21, 'img_size': 416},
             [(52, 52, 3, 25), (26, 26, 3, 25), (13, 13, 3, 25)]))
+
+YOLO5_6_MODELS = ['yolo5_6n', 'yolo5_6s', 'yolo5_6m']
+
+for model_name in YOLO5_6_MODELS:
+    DETECTION_MODEL_TESTS.append((model_name, 'voc_20', {'num_classes': 21, 'img_size': 416},
+            [(3, 52, 52, 25), (3, 26, 26, 25), (3, 13, 13, 25)]))
 
 
 @pytest.mark.parametrize(
@@ -135,9 +142,10 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
         assert y[0][0].shape == (1, *output_shapes[0])
         assert y[0][1].shape == (1, *output_shapes[1])
         assert y[0][2].shape == (1, *output_shapes[2])
-        assert y[1][0].shape == (1, *output_shapes[0])
-        assert y[1][1].shape == (1, *output_shapes[1])
-        assert y[1][2].shape == (1, *output_shapes[2])
+        if y[1] is not None:
+            assert y[1][0].shape == (1, *output_shapes[0])
+            assert y[1][1].shape == (1, *output_shapes[1])
+            assert y[1][2].shape == (1, *output_shapes[2])
     else:
         img, _, _ = next(iter(train_loader))
         model.eval()
