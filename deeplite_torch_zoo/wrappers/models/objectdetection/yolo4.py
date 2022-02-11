@@ -43,7 +43,6 @@ yolov4_cfg = {
 YOLOV4_MODELS = list(yolov4_cfg.keys())
 
 
-@MODEL_WRAPPER_REGISTRY.register('yolo4')
 def yolo4(
     net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda",

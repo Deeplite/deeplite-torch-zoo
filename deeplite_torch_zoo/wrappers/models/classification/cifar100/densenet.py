@@ -14,15 +14,11 @@ from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [
-    # 'densenet161', 'densenet169', 'densenet201'
     "densenet121_cifar100",
 ]
 
 model_urls = {
     "densenet121": "http://download.deeplite.ai/zoo/models/densenet121-cifar100-7e4ec64b17b04532.pth",
-    "densenet161": "",
-    "densenet169": "",
-    "densenet201": "",
 }
 
 
@@ -49,7 +45,6 @@ def densenet121_cifar100(pretrained=False, progress=True, device='cuda'):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('densenet161')
 def densenet161(pretrained=False, progress=True):
     return _densenet(
         "densenet161",
@@ -61,7 +56,6 @@ def densenet161(pretrained=False, progress=True):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('densenet169')
 def densenet169(pretrained=False, progress=True):
     return _densenet(
         "densenet169",
@@ -73,7 +67,6 @@ def densenet169(pretrained=False, progress=True):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('densenet201')
 def densenet201(pretrained=False, progress=True):
     return _densenet(
         "densenet201",
