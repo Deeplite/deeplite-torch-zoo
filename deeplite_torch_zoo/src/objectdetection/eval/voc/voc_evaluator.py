@@ -26,6 +26,7 @@ class VOCEvaluator(Evaluator):
         net="yolo3",
         img_size=448,
         is_07_subset=False,
+        progressbar=False,
     ):
         self.is_07_subset = is_07_subset
         self.test_file = "test.txt" if not self.is_07_subset else "val.txt"
@@ -35,6 +36,7 @@ class VOCEvaluator(Evaluator):
             model=model, data_path=data_path, img_size=img_size, net=net
         )
 
+        self.progressbar = progressbar
         self.classes = cfg.DATA["CLASSES"]
         if num_classes == 1:
             self.classes = cfg.DATA["CLASSES_1"]
@@ -73,7 +75,7 @@ class VOCEvaluator(Evaluator):
             shutil.rmtree(self.pred_result_path)
         os.mkdir(self.pred_result_path)
 
-        for img_ind in tqdm(img_inds):
+        for img_ind in tqdm(img_inds, disable=not self.progressbar):
             img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpg")
             img = cv2.imread(img_path)
             self.process_image(
@@ -152,7 +154,8 @@ class VOCEvaluator(Evaluator):
 
 
 def yolo_eval_voc(
-    model, data_root, num_classes=20, device="cuda", net="yolo3", img_size=448, is_07_subset=False, **kwargs
+    model, data_root, num_classes=20, device="cuda", net="yolo3",
+    img_size=448, is_07_subset=False, progressbar=False, **kwargs
 ):
 
     mAP = 0
@@ -160,7 +163,8 @@ def yolo_eval_voc(
     model.to(device)
     with torch.no_grad():
         APs = VOCEvaluator(
-            model, data_root, num_classes=num_classes, net=net, img_size=img_size, is_07_subset=is_07_subset,
+            model, data_root, num_classes=num_classes, net=net,
+            img_size=img_size, is_07_subset=is_07_subset, progressbar=progressbar,
         ).evaluate()
         for i in APs:
             # print("{} --> mAP : {}".format(i, APs[i]))
