@@ -65,7 +65,6 @@ for model_name_tag in yolov5_cfg:
         YOLOV5_MODELS.append('_'.join((model_name_tag, model_name_suffix)))
 
 
-@MODEL_WRAPPER_REGISTRY.register('yolo5')
 def yolo5(
     net="yolov5s", _set_classes="voc_20", num_classes=20,
     pretrained=False, progress=True, device="cuda"
@@ -79,7 +78,6 @@ def yolo5(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('yolo5_6')
 def yolo5_6(
     net="yolov5_6s", _set_classes="voc_20", num_classes=20, activation_type=None,
     pretrained=False, progress=True, device="cuda"

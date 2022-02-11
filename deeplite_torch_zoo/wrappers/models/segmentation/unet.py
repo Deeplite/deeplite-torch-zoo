@@ -34,7 +34,6 @@ def unet_carvana(pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_enc_dec')
 def unet_enc_dec(
     enc_type="resnet50",
     dec_type="unet_scse",

@@ -22,7 +22,6 @@ model_urls = {
 YOLOV3_MODELS = ["yolov3"]
 
 
-@MODEL_WRAPPER_REGISTRY.register('yolo3')
 def yolo3(
     net="yolov3", _set_classes="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda", **kwargs

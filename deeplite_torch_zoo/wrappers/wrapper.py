@@ -66,7 +66,7 @@ def get_model_by_name(
     return model.half() if fp16 else model
 
 
-def list_models(filter='', print_table=True):
+def list_models(filter='', print_table=True, return_list=False):
     """
     A helper function to list all existing models or dataset calls
     It takes a `model_name` or a `dataset_name` as a filter and
@@ -98,4 +98,6 @@ def list_models(filter='', print_table=True):
         table.add_rows([['Available models', 'Source datasets'], *rows.items()])
         print(table.draw())
 
-    return model_dataset_pairs
+    if return_list:
+        return model_dataset_pairs
+    return None
