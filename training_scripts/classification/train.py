@@ -25,6 +25,7 @@ import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
 from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 from timm.data import resolve_data_config
 from timm.models import safe_model_name, resume_checkpoint, load_checkpoint,\
@@ -71,10 +72,8 @@ parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 # Dataset parameters
 parser.add_argument('data_dir', metavar='DIR',
                     help='path to dataset')
-parser.add_argument('--dataset', '-d', metavar='NAME', default='',
-                    help='dataset type (default: ImageFolder/ImageTar if empty)')
 parser.add_argument('--dataset-name', default='imagenet',
-                    help='dataset name (e.g. "imagenet", "cifar100")')
+                    help='dataset name (e.g. "imagenet", "imagenet16", "cifar100")')
 parser.add_argument('--train-split', metavar='NAME', default='train',
                     help='dataset train split (default: train)')
 parser.add_argument('--val-split', metavar='NAME', default='validation',
@@ -89,6 +88,8 @@ parser.add_argument('--model', default='resnet50', type=str, metavar='MODEL',
                     help='Name of model to train (default: "resnet50"')
 parser.add_argument('--pretrained', action='store_true', default=False,
                     help='Start with pretrained version of specified network (if avail)')
+parser.add_argument('--pretraining_original_dataset', type=str, default='imagenet',
+                    help='Dataset which was used to produce initial weights for finetuning')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='Resume full model and optimizer state from checkpoint (default: none)')
 parser.add_argument('--no-resume-opt', action='store_true', default=False,
@@ -315,12 +316,17 @@ def main():
     if args.fuser:
         set_jit_fuser(args.fuser)
 
-    model = get_model_by_name(
-        model_name=args.model,
+    data_splits = get_data_splits_by_name(
         dataset_name=args.dataset_name,
-        pretrained=args.pretrained,
-        progress=True,
+        data_root=args.data_dir,
+        batch_size=args.batch_size,
     )
+    loader_train, loader_eval = data_splits['train'], data_splits['test']
+
+    model_wrapper_fn = MODEL_WRAPPER_REGISTRY.get((args.model.lower(),
+        args.pretraining_original_dataset))
+    model = model_wrapper_fn(pretrained=args.pretrained, progress=True,
+        num_classes=len(loader_train.dataset.classes))
 
     if args.local_rank == 0:
         _logger.info(
@@ -420,13 +426,6 @@ def main():
 
     if args.local_rank == 0:
         _logger.info('Scheduled epochs: {}'.format(num_epochs))
-
-    data_splits = get_data_splits_by_name(
-        dataset_name=args.dataset_name,
-        data_root=args.data_dir,
-        batch_size=args.batch_size,
-    )
-    loader_train, loader_eval = data_splits['train'], data_splits['test']
 
     # setup loss function
     if args.jsd_loss:
