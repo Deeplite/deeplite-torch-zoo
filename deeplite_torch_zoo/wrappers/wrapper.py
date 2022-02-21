@@ -14,16 +14,6 @@ __all__ = ["get_data_splits_by_name", "get_model_by_name",
     "list_models"]
 
 
-def normalize_model_name(net):
-    if "yolo" in net:
-        return "yolo"
-    if "unet" in net:
-        return "unet"
-    if "ssd300" in net:
-        return "ssd300"
-    return net
-
-
 def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kwargs):
     """
     The datasets function calls in the format of (get_`dataset_name`_for_`model_name`).
@@ -36,13 +26,25 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
        'test' : test_data_loader
     }
     """
+
+    def normalize_model_name(model_name):
+        if "yolo" in model_name:
+            return "yolo"
+        if "unet" in model_name:
+            return "unet"
+        if "ssd300" in model_name:
+            return "ssd300"
+        return model_name
+
     datasplit_key = (dataset_name.lower(), )
     if model_name is not None:
         model_name = normalize_model_name(model_name)
         model_name = model_name.lower()
-        datasplit_key += (model_name, )
+        datasplit_model_name_key = datasplit_key + (model_name, )
 
-    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(datasplit_key)
+    registry_key = datasplit_model_name_key if datasplit_model_name_key in \
+        DATA_WRAPPER_REGISTRY.registry_dict else datasplit_key
+    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(registry_key)
     data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
     return data_split
 
