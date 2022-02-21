@@ -8,9 +8,9 @@
 
 """
 
-from torch.hub import load_state_dict_from_url
 from deeplite_torch_zoo.src.classification.cifar_models.densenet import DenseNet, Bottleneck
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 
 
 __all__ = [
@@ -22,23 +22,23 @@ model_urls = {
 }
 
 
-def _densenet(arch, block, layers, growth_rate=32, pretrained=False, progress=True, device='cuda'):
-    model = DenseNet(block, layers, growth_rate)
+def _densenet(arch, block, layers, growth_rate=32, pretrained=False, num_classes=100, progress=True, device='cuda'):
+    model = DenseNet(block, layers, growth_rate, num_classes=num_classes)
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[arch]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register('densenet121', 'cifar100')
-def densenet121_cifar100(pretrained=False, progress=True, device='cuda'):
+def densenet121_cifar100(pretrained=False, num_classes=100, progress=True, device='cuda'):
     return _densenet(
         "densenet121",
         Bottleneck,
         [6, 12, 24, 16],
         growth_rate=32,
+        num_classes=num_classes,
         pretrained=pretrained,
         progress=progress,
         device=device,

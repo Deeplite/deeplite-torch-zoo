@@ -1,4 +1,4 @@
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.src.classification.mobilenets.mobilenetv1 import MobileNetV1
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
@@ -10,17 +10,15 @@ model_urls = {
 }
 
 
-def _mobilenetv1_vww(arch, pretrained=False, progress=True, device='cuda'):
-    model = MobileNetV1()
+def _mobilenetv1_vww(arch, pretrained=False, progress=True, num_classes=2, device='cuda'):
+    model = MobileNetV1(num_classes=num_classes)
 
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[arch]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register('mobilenet_v1', 'vww')
-def mobilenet_v1_vww(pretrained=False, progress=True, device='cuda'):
-    return _mobilenetv1_vww("mobilenetv1", pretrained=pretrained, progress=progress, device=device)
+def mobilenet_v1_vww(pretrained=False, progress=True, num_classes=2, device='cuda'):
+    return _mobilenetv1_vww("mobilenetv1", pretrained=pretrained, progress=progress, num_classes=num_classes, device=device)

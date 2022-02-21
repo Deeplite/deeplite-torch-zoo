@@ -8,31 +8,25 @@
 
 """
 
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.src.classification.cifar_models.vgg import VGG
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [
-    # 'vgg11', 'vgg13', 'vgg16'
     "vgg19_cifar100"
 ]
 
 model_urls = {
-    "vgg11": "",
-    "vgg13": "",
-    "vgg16": "",
     "vgg19": "http://download.deeplite.ai/zoo/models/vgg19-cifar100-6d791de492a133b6.pth",
 }
 
 
-def _vgg(cfg, pretrained=False, progress=True, device='cuda'):
-    model = VGG(cfg)
+def _vgg(cfg, pretrained=False, progress=True, num_classes=100, device='cuda'):
+    model = VGG(cfg, num_classes=num_classes)
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[cfg], progress=progress, check_hash=True
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[cfg]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
@@ -49,5 +43,5 @@ def vgg16(pretrained=False, progress=True, device='cuda'):
 
 
 @MODEL_WRAPPER_REGISTRY.register('vgg19', 'cifar100')
-def vgg19_cifar100(pretrained=False, progress=True, device='cuda'):
-    return _vgg("vgg19", pretrained, progress, device=device)
+def vgg19_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
+    return _vgg("vgg19", pretrained, progress, num_classes=num_classes, device=device)

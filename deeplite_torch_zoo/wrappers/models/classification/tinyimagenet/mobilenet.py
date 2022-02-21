@@ -1,6 +1,6 @@
 
 from torchvision import models
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
@@ -13,11 +13,9 @@ model_urls = {
 
 
 @MODEL_WRAPPER_REGISTRY.register('mobilenet_v2', 'tinyimagenet')
-def mobilenet_v2_tinyimagenet(pretrained=False, progress=True, device="cuda"):
-    model = models.mobilenet_v2(num_classes=100)
+def mobilenet_v2_tinyimagenet(pretrained=False, progress=True, num_classes=100, device="cuda"):
+    model = models.mobilenet_v2(num_classes=num_classes)
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls["mobilenet_v2"], progress=progress, check_hash=True, map_location=device
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls['mobilenet_v2']
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)

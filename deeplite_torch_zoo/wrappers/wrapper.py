@@ -11,7 +11,7 @@ from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
 __all__ = ["get_data_splits_by_name", "get_model_by_name",
-    "list_models"]
+    "list_models", "create_model"]
 
 
 def normalize_model_name(net):
@@ -63,6 +63,19 @@ def get_model_by_name(
     """
     model_func = MODEL_WRAPPER_REGISTRY.get((model_name.lower(), dataset_name))
     model = model_func(pretrained=pretrained, progress=progress, device=device)
+    return model.half() if fp16 else model
+
+
+def create_model(
+    model_name="", pretraining_dataset="", num_classes=None, progress=False, fp16=False, device="cuda", **kwargs
+):
+    """
+    """
+    model_func = MODEL_WRAPPER_REGISTRY.get((model_name.lower(), pretraining_dataset))
+    model_wrapper_kwargs = {'pretrained': True, 'progress': progress, 'device': device, **kwargs}
+    if num_classes is not None:
+        model_wrapper_kwargs.update({'num_classes': num_classes})
+    model = model_func(**model_wrapper_kwargs)
     return model.half() if fp16 else model
 
 

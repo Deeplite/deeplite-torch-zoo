@@ -9,41 +9,35 @@
 """
 
 
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.src.classification.cifar_models.preact_resnet import PreActResNet, PreActBlock, PreActBottleneck
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
 __all__ = [
-    # 'pre_act_resnet34', 'pre_act_resnet50', 'pre_act_resnet101', 'pre_act_resnet152'
     "pre_act_resnet18_cifar100"
 ]
 
 model_urls = {
     "pre_act_resnet18": "http://download.deeplite.ai/zoo/models/pre_act_resnet18-cifar100-1c4d1dc76ee9c6f6.pth",
-    "pre_act_resnet34": "",
-    "pre_act_resnet50": "",
-    "pre_act_resnet101": "",
-    "pre_act_resnet152": "",
 }
 
 
-def _pre_act_resnet(arch, block, layers, pretrained=False, progress=True, device='cuda'):
-    model = PreActResNet(block, layers)
+def _pre_act_resnet(arch, block, layers,  num_classes=100, pretrained=False, progress=True, device='cuda'):
+    model = PreActResNet(block, layers, num_classes=num_classes)
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[arch]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register('pre_act_resnet18', 'cifar100')
-def pre_act_resnet18_cifar100(pretrained=False, progress=True, device='cuda'):
+def pre_act_resnet18_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
     return _pre_act_resnet(
         "pre_act_resnet18",
         PreActBlock,
         [2, 2, 2, 2],
+        num_classes=num_classes,
         pretrained=pretrained,
         progress=progress,
         device=device,

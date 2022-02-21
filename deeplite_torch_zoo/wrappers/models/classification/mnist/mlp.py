@@ -1,4 +1,4 @@
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
@@ -13,45 +13,46 @@ model_urls = {
 }
 
 
-def _mlp10_mnist(arch, n_hiddens, pretrained=False, progress=True, device="cuda"):
-    model = MLP(input_dims=784, n_hiddens=n_hiddens, n_class=10)
+def _mlp10_mnist(arch, n_hiddens, pretrained=False, progress=True, num_classes=10, device="cuda"):
+    model = MLP(input_dims=784, n_hiddens=n_hiddens, n_class=num_classes)
 
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True, map_location=device
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[arch]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register('mlp2', 'mnist')
-def mlp2_mnist(pretrained=False, progress=True, device="cuda"):
+def mlp2_mnist(pretrained=False, progress=True, num_classes=10, device="cuda"):
     return _mlp10_mnist(
         "mlp2",
         n_hiddens=[128, 128],
         pretrained=pretrained,
         progress=progress,
+        num_classes=num_classes,
         device=device,
     )
 
 
 @MODEL_WRAPPER_REGISTRY.register('mlp4', 'mnist')
-def mlp4_mnist(pretrained=False, progress=True, device="cuda"):
+def mlp4_mnist(pretrained=False, progress=True, num_classes=10, device="cuda"):
     return _mlp10_mnist(
         "mlp4",
         n_hiddens=[128, 128, 128, 128],
         pretrained=pretrained,
         progress=progress,
+        num_classes=num_classes,
         device=device,
     )
 
 
 @MODEL_WRAPPER_REGISTRY.register('mlp8', 'mnist')
-def mlp8_mnist(pretrained=False, progress=True, device="cuda"):
+def mlp8_mnist(pretrained=False, progress=True, num_classes=10, device="cuda"):
     return _mlp10_mnist(
         "mlp8",
         n_hiddens=[128, 128, 128, 128, 128, 128, 128, 128],
         pretrained=pretrained,
         progress=progress,
+        num_classes=num_classes,
         device=device,
     )

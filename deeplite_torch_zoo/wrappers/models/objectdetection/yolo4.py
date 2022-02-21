@@ -44,25 +44,25 @@ YOLOV4_MODELS = list(yolov4_cfg.keys())
 
 
 def yolo4(
-    net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False,
+    net="yolov4s", dataset_name="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda",
 ):
     config_path = get_project_root() / yolov4_cfg[net]
     model = YoloV5(config_path, ch=3, nc=num_classes)
     if pretrained:
-        checkpoint_url = model_urls[f"{net}_{_set_classes}"]
+        checkpoint_url = model_urls[f"{net}_{dataset_name}"]
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
 def yolo4_6(
-    net="yolov4s", _set_classes="voc_20", num_classes=20, pretrained=False,
+    net="yolov4s", dataset_name="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda",
 ):
     config_path = get_project_root() / yolov4_cfg[net]
     model = YoloV5_6(config_path, ch=3, nc=num_classes)
     if pretrained:
-        checkpoint_url = model_urls[f"{net}_{_set_classes}"]
+        checkpoint_url = model_urls[f"{net}_{dataset_name}"]
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
@@ -74,18 +74,18 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
 }
 
 
-def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
+def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
         if re.match(net_name, net):
             model_wrapper_fn = model_fn
 
-    model_name = net.replace('v','')
+    model_name = net.replace('v', '')
 
-    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
-    def wrapper_func(pretrained=False, progress=True, device="cuda"):
+    @MODEL_WRAPPER_REGISTRY.register(model_name, dataset_name)
+    def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return model_wrapper_fn(
             net=net,
-            _set_classes=_set_classes,
+            dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
             progress=progress,
