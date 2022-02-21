@@ -1,17 +1,19 @@
 import fnmatch
 import collections
-
 import texttable
+
+import sys
 
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
+import deeplite_torch_zoo.wrappers.eval # pylint: disable=unused-import
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
 __all__ = ["get_data_splits_by_name", "get_model_by_name",
-    "list_models"]
+    "list_models", "get_eval_function"]
 
 
 def normalize_model_name(net):
@@ -22,6 +24,73 @@ def normalize_model_name(net):
     if "ssd300" in net:
         return "ssd300"
     return net
+
+
+def get_eval_querry(model_name, dataset_name):
+
+    if ('yolo' in model_name):
+        querry_1 = 'object_detection'
+        querry_2 = 'yolo'
+        if ('voc07' in dataset_name):
+            querry_3 = 'voc07'
+            return [querry_1, querry_2, querry_3]
+        elif (('voc'in dataset_name) or ('person_detection' in dataset_name) or ('person_pet_vehicle_detection' in dataset_name)):
+            querry_3 = 'voc'
+            return [querry_1, querry_2, querry_3]
+        elif ('lisa' in dataset_name):
+            querry_3 = 'lisa'
+            return [querry_1, querry_2, querry_3]
+        elif ('car_detection' in dataset_name):
+            querry_3 = 'car_detection'
+            return [querry_1, querry_2, querry_3]
+        elif ('wider_face' in dataset_name):
+            querry_3 = 'wider_face'
+            return [querry_1, querry_2, querry_3]
+        elif ('coco' in dataset_name):
+            querry_3 = 'coco'
+            return [querry_1, querry_2, querry_3]
+        
+        
+    elif ("ssd" in model_name):
+        querry_1 = 'object_detection'
+        querry_2 = model_name
+        querry_3 = 'general_obj_detect_dataset'
+        return [querry_1, querry_2, querry_3]
+
+    elif ("rcnn" in model_name):
+        querry_1 = 'object_detection'
+        querry_2 = model_name
+        querry_3 = dataset_name
+        return [querry_1, querry_2, querry_3]
+    
+    elif ("unet" in model_name):
+        querry_1 = 'segmentation'
+        querry_3 = 'general_seg_dataset'
+        if ("unet_scse" in model_name):
+            querry_2 = "unet_scse"
+        else:
+            querry_2 = "unet"
+        return [querry_1, querry_2, querry_3]
+
+    elif ("fcn" in model_name):
+        querry_1 = 'segmentation'
+        querry_2 = 'fcn'
+        querry_3 = 'general_seg_dataset'
+        return [querry_1, querry_2, querry_3]
+    
+    elif ('deeplab' in model_name):
+        querry_1 = 'segmentation'
+        querry_2 = 'deeplab'
+        querry_3 = 'general_seg_dataset'
+        return [querry_1, querry_2, querry_3]
+
+    else:
+        querry_1 = 'classification'
+        querry_2 = 'general_classification_model'
+        querry_3 = 'general_classification_dataset'
+        return [querry_1, querry_2, querry_3]
+
+
 
 
 def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kwargs):
@@ -44,6 +113,7 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
 
     data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(datasplit_key)
     data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
+    
     return data_split
 
 
@@ -63,7 +133,26 @@ def get_model_by_name(
     """
     model_func = MODEL_WRAPPER_REGISTRY.get((model_name.lower(), dataset_name))
     model = model_func(pretrained=pretrained, progress=progress, device=device)
+
     return model.half() if fp16 else model
+
+
+
+def get_eval_function(model_name="",dataset_name=""):
+
+    """
+    Tries to find a matching model creation fn in the registry and identify the task type
+    using model name and dataset name.
+    :param model_name: Name of the model to create
+    :param dataset_name: Name of dataset the model was trained / is to be trained on
+
+    returns a corresponding evaluation funcgion
+    """
+
+    task_type, model, data_name = get_eval_querry(model_name.lower(), dataset_name)
+    eval_func = EVAL_WRAPPER_REGISTRY.get((task_type, model, data_name))
+
+    return eval_func
 
 
 def list_models(filter='', print_table=True, return_list=False):

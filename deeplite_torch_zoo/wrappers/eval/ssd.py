@@ -11,7 +11,7 @@ from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.vgg_ssd import c
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd_predictor
 from deeplite_torch_zoo.src.objectdetection.ssd.models.mobilenetv2_ssd import create_mobilenetv2_ssd_predictor
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite_predictor
-
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 __all__ = [
 			"vgg16_ssd_eval_func",
@@ -20,7 +20,7 @@ __all__ = [
 			"mb2_ssd_lite_eval_func",
 		]
 
-
+@EVAL_WRAPPER_REGISTRY.register('object_detection','vgg16_ssd','general_obj_detect_dataset')
 def vgg16_ssd_eval_func(
     model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
@@ -42,7 +42,7 @@ def vgg16_ssd_eval_func(
 
     return stat
 
-
+@EVAL_WRAPPER_REGISTRY.register('object_detection','mb1_ssd','general_obj_detect_dataset')
 def mb1_ssd_eval_func(
     model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
@@ -67,7 +67,7 @@ def mb1_ssd_eval_func(
 
     return stat
 
-
+@EVAL_WRAPPER_REGISTRY.register('object_detection','mb2_ssd','general_obj_detect_dataset')
 def mb2_ssd_eval_func(
     model, data_loader, gt=None, iou_threshold=0.5, use_2007_metric=True, _set="voc", device="cuda"
 ):
@@ -88,7 +88,7 @@ def mb2_ssd_eval_func(
 
     return stat
 
-
+@EVAL_WRAPPER_REGISTRY.register('object_detection','mb2_ssd_lite','general_obj_detect_dataset')
 def mb2_ssd_lite_eval_func(
     model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
