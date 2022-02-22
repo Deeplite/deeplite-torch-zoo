@@ -52,7 +52,7 @@ class ModelWrapperRegistry(Registry):
     def task_type_map(self):
         return self._task_type_map
 
-    def register(self, model_name=None, dataset_name=None, task_type=None):
+    def register(self, model_name, dataset_name, task_type):
         def _register(obj_name, obj, task_type):
             if obj_name in self._registry_dict:
                 raise KeyError(f'{obj_name} is already registered in the model wrapper registry')
