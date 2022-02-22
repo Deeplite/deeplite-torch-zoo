@@ -42,7 +42,7 @@ def _resnext(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnext29_2x64d', 'cifar100')
+@MODEL_WRAPPER_REGISTRY.register(model_name='resnext29_2x64d', dataset_name='cifar100', task_type='classification')
 def resnext29_2x64d_cifar100(pretrained=False, progress=True, device='cuda'):
     return _resnext(
         "resnext29_2x64d",

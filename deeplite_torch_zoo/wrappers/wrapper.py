@@ -61,7 +61,7 @@ def get_model_by_name(
 
     returns a corresponding model object (optionally with pretrained weights)
     """
-    model_func = MODEL_WRAPPER_REGISTRY.get((model_name.lower(), dataset_name))
+    model_func = MODEL_WRAPPER_REGISTRY.get(model_name=model_name.lower(), dataset_name=dataset_name)
     model = model_func(pretrained=pretrained, progress=progress, device=device)
     return model.half() if fp16 else model
 

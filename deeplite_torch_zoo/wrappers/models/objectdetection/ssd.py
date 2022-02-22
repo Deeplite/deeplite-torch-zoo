@@ -50,7 +50,8 @@ def ssd_model(model_name, dataset, create_model_fn, config, num_classes=20, pret
 
 
 def make_wrapper_func(wrapper_name, model_name, dataset, create_model_fn, config, num_classes):
-    @MODEL_WRAPPER_REGISTRY.register(model_name, dataset)
+    @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset,
+        task_type='object_detection')
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return ssd_model(
             model_name=model_name,

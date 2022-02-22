@@ -23,7 +23,7 @@ model_urls = {
 }
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet', 'carvana')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet', dataset_name='carvana')
 def unet_carvana(pretrained=False, progress=True, device="cuda"):
     model = UNet(n_channels=3, n_classes=1, bilinear=True)
     if pretrained:
@@ -61,7 +61,7 @@ def unet_enc_dec(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_scse_resnet18', 'voc_20')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_20')
 def unet_scse_resnet18_voc_20(pretrained=True, progress=False, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
@@ -75,7 +75,7 @@ def unet_scse_resnet18_voc_20(pretrained=True, progress=False, device="cuda"):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_scse_resnet18', 'voc_1')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_1')
 def unet_scse_resnet18_voc_1(pretrained=True, progress=False, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
@@ -89,7 +89,7 @@ def unet_scse_resnet18_voc_1(pretrained=True, progress=False, device="cuda"):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_scse_resnet18', 'voc_2')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_2')
 def unet_scse_resnet18_voc_2(pretrained=True, progress=False, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
@@ -103,7 +103,7 @@ def unet_scse_resnet18_voc_2(pretrained=True, progress=False, device="cuda"):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_scse_resnet18', 'carvana')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='carvana')
 def unet_scse_resnet18_carvana(pretrained=True, progress=False, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
