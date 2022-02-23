@@ -21,6 +21,6 @@ def _resnet_imagenet10(arch, pretrained=False, progress=True, device='cuda'):
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet18', 'imagenet10')
+@MODEL_WRAPPER_REGISTRY.register(model_name='resnet18', dataset_name='imagenet10', task_type='classification')
 def resnet18_imagenet10(pretrained=False, progress=True, device='cuda'):
     return _resnet_imagenet10("resnet18", pretrained=pretrained, progress=progress, device=device)

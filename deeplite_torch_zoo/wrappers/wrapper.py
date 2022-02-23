@@ -61,23 +61,30 @@ def get_model_by_name(
 
     returns a corresponding model object (optionally with pretrained weights)
     """
-    model_func = MODEL_WRAPPER_REGISTRY.get((model_name.lower(), dataset_name))
+    model_func = MODEL_WRAPPER_REGISTRY.get(model_name=model_name.lower(), dataset_name=dataset_name)
     model = model_func(pretrained=pretrained, progress=progress, device=device)
     return model.half() if fp16 else model
 
 
-def list_models(filter='', print_table=True, return_list=False):
+def list_models(filter='', print_table=True, return_list=False, task_type_filter=None):
     """
     A helper function to list all existing models or dataset calls
     It takes a `model_name` or a `dataset_name` as a filter and
     prints a table of corresponding available models
     """
+
     filter = '*' + filter + '*'
-    all_models = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
-    all_models = [(model_name, dataset_name) for model_name, dataset_name in all_models
-        if dataset_name is not None]
-    all_models = {model_name + '_' + dataset_name: (model_name, dataset_name)
-        for model_name, dataset_name in all_models}
+    all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
+
+    if task_type_filter is not None:
+        allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
+        if task_type_filter not in allowed_task_types:
+            raise RuntimeError(f'Wrong task type filter value. Allowed values are {allowed_task_types}')
+        all_model_keys = [model_key for model_key in all_model_keys if
+            MODEL_WRAPPER_REGISTRY.task_type_map[model_key] == task_type_filter]
+
+    all_models = {model_key.model_name + '_' + model_key.dataset_name:
+        model_key for model_key in all_model_keys}
 
     models = []
     include_filters = filter if isinstance(filter, (tuple, list)) else [filter]
@@ -86,18 +93,18 @@ def list_models(filter='', print_table=True, return_list=False):
         if include_models:
             models = set(models).union(include_models)
 
-    model_dataset_pairs = [all_models[model_key] for model_key in sorted(models)]
+    found_model_keys = [all_models[model] for model in sorted(models)]
 
     if print_table:
         table = texttable.Texttable()
         rows = collections.defaultdict(list)
-        for model, dataset in model_dataset_pairs:
-            rows[model].extend([dataset])
+        for model_key in found_model_keys:
+            rows[model_key.model_name].extend([model_key.dataset_name])
         for model in rows:
             rows[model] = ', '.join(rows[model])
         table.add_rows([['Available models', 'Source datasets'], *rows.items()])
         print(table.draw())
 
     if return_list:
-        return model_dataset_pairs
+        return [(model_key.model_name, model_key.dataset_name) for model_key in found_model_keys]
     return None

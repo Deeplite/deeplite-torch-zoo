@@ -27,11 +27,11 @@ def _resnet_imagenet16(arch, pretrained=False, progress=True, device='cuda'):
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet18', 'imagenet16')
+@MODEL_WRAPPER_REGISTRY.register(model_name='resnet18', dataset_name='imagenet16', task_type='classification')
 def resnet18_imagenet16(pretrained=False, progress=True, device='cuda'):
     return _resnet_imagenet16("resnet18", pretrained=pretrained, progress=progress, device=device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet50', 'imagenet16')
+@MODEL_WRAPPER_REGISTRY.register(model_name='resnet50', dataset_name='imagenet16', task_type='classification')
 def resnet50_imagenet16(pretrained=False, progress=True, device='cuda'):
     return _resnet_imagenet16("resnet50", pretrained=pretrained, progress=progress, device=device)

@@ -323,8 +323,8 @@ def main():
     )
     loader_train, loader_eval = data_splits['train'], data_splits['test']
 
-    model_wrapper_fn = MODEL_WRAPPER_REGISTRY.get((args.model.lower(),
-        args.pretraining_original_dataset))
+    model_wrapper_fn = MODEL_WRAPPER_REGISTRY.get(model_name=args.model.lower(),
+        dataset_name=args.pretraining_original_dataset)
     model = model_wrapper_fn(pretrained=args.pretrained, progress=True,
         num_classes=len(loader_train.dataset.classes))
 

@@ -24,7 +24,7 @@ def _mlp10_mnist(arch, n_hiddens, pretrained=False, progress=True, device="cuda"
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('mlp2', 'mnist')
+@MODEL_WRAPPER_REGISTRY.register(model_name='mlp2', dataset_name='mnist', task_type='classification')
 def mlp2_mnist(pretrained=False, progress=True, device="cuda"):
     return _mlp10_mnist(
         "mlp2",
@@ -35,7 +35,7 @@ def mlp2_mnist(pretrained=False, progress=True, device="cuda"):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('mlp4', 'mnist')
+@MODEL_WRAPPER_REGISTRY.register(model_name='mlp4', dataset_name='mnist', task_type='classification')
 def mlp4_mnist(pretrained=False, progress=True, device="cuda"):
     return _mlp10_mnist(
         "mlp4",
@@ -46,7 +46,7 @@ def mlp4_mnist(pretrained=False, progress=True, device="cuda"):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('mlp8', 'mnist')
+@MODEL_WRAPPER_REGISTRY.register(model_name='mlp8', dataset_name='mnist', task_type='classification')
 def mlp8_mnist(pretrained=False, progress=True, device="cuda"):
     return _mlp10_mnist(
         "mlp8",

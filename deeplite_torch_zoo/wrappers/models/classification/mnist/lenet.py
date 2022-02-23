@@ -31,7 +31,7 @@ def _lenet_mnist(arch, pretrained=False, progress=True, device="cuda"):
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('lenet5', 'mnist')
+@MODEL_WRAPPER_REGISTRY.register(model_name='lenet5', dataset_name='mnist', task_type='classification')
 def lenet5_mnist(pretrained=False, progress=True, device="cuda"):
     return _lenet_mnist(
         "lenet5", pretrained=pretrained, progress=progress, device=device

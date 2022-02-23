@@ -39,7 +39,7 @@ def _resnet(arch, block, layers, pretrained=False, progress=True, device='cuda')
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet18', 'cifar100')
+@MODEL_WRAPPER_REGISTRY.register(model_name='resnet18', dataset_name='cifar100', task_type='classification')
 def resnet18_cifar100(pretrained=False, progress=True, device='cuda'):
     return _resnet(
         "resnet18", BasicBlock, [2, 2, 2, 2], pretrained=pretrained, progress=progress, device=device
@@ -52,7 +52,7 @@ def resnet34(pretrained=False, progress=True, device='cuda'):
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet50', 'cifar100')
+@MODEL_WRAPPER_REGISTRY.register(model_name='resnet50', dataset_name='cifar100', task_type='classification')
 def resnet50_cifar100(pretrained=False, progress=True, device='cuda'):
     return _resnet(
         "resnet50", Bottleneck, [3, 4, 6, 3], pretrained=pretrained, progress=progress, device=device

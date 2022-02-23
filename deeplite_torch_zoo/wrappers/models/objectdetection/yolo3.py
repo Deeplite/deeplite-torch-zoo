@@ -37,7 +37,8 @@ def yolo3(
 def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
     model_name = net.replace('v', '')
 
-    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
+    @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=_set_classes,
+        task_type='object_detection')
     def wrapper_func(pretrained=False, progress=True, device="cuda"):
         return yolo3(
             net=net,
