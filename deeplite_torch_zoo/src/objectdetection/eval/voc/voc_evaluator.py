@@ -7,6 +7,7 @@ from tqdm import tqdm
 import cv2
 import numpy as np
 import torch
+from functools import partial
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
@@ -14,7 +15,7 @@ from deeplite_torch_zoo.src.objectdetection.eval.voc import voc_eval
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (cxcywh2xyxy, nms)
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
-
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 class VOCEvaluator(Evaluator):
     def __init__(
@@ -153,6 +154,11 @@ class VOCEvaluator(Evaluator):
         return APs
 
 
+
+
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='person_pet_vehicle_detection')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='person_detection')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='voc')
 def yolo_eval_voc(
     model, data_root, num_classes=20, device="cuda", net="yolo3",
     img_size=448, is_07_subset=False, progressbar=False, **kwargs
@@ -173,5 +179,15 @@ def yolo_eval_voc(
         mAP = mAP / len(APs)
         # print('mAP:%g' % (mAP))
         result["mAP"] = mAP
+
+    return result
+
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='voc07')
+def yolo_voc07_eval(
+    model, data_root, num_classes=20, device="cuda", net="yolo3",
+    img_size=448, is_07_subset=True, progressbar=False, **kwargs
+):
+    result = yolo_eval_voc(model, data_root, num_classes=20, device="cuda", net="yolo3",
+                img_size=448, is_07_subset=True, progressbar=False, **kwargs)
 
     return result

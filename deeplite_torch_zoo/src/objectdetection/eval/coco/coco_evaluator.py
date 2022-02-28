@@ -8,7 +8,7 @@ from pycocotools.cocoeval import COCOeval
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
 from deeplite_torch_zoo.src.objectdetection.configs.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
-
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 class COCOEvaluator(Evaluator):
     def __init__(
@@ -134,9 +134,32 @@ def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", ne
             net=net
         ).evaluate()
 
-
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='coco')
 def yolo_eval_coco(model, data_root, gt=None, device="cuda",
                    net="yolo3", img_size=448, subsample_categories=None, progressbar=False, **kwargs):
+    val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
+    val_coco_root = os.path.join(data_root, "val2017")
+
+    if subsample_categories is not None:
+        categories = subsample_categories
+        category_indices = [COCO_DATA_CATEGORIES["CLASSES"].index(cat) + 1 for cat in categories]
+        missing_ids = [category for category in list(range(1, 92)) if category not in category_indices]
+    else:
+        categories = COCO_DATA_CATEGORIES["CLASSES"]
+        category_indices = 'all'
+        missing_ids = COCO_MISSING_IDS
+
+    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate,
+        classes=categories, category=category_indices, missing_ids=missing_ids)
+
+    model.to(device)
+    with torch.no_grad():
+        return YoloCOCOEvaluator(model, dataset, gt=gt, net=net,
+            img_size=img_size, progressbar=progressbar).evaluate()
+
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='car_detection')
+def yolo_eval_coco_car(model, data_root, gt=None, device="cuda",
+                   net="yolo3", img_size=448, subsample_categories=["car"], progressbar=False, **kwargs):
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
     val_coco_root = os.path.join(data_root, "val2017")
 

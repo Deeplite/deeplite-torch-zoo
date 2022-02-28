@@ -1,9 +1,9 @@
 
 import torch
-
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 __all__ = ["classification_eval"]
 
-
+@EVAL_WRAPPER_REGISTRY.register(task_type='classification',model_name=None, dataset_name=None)
 def classification_eval(model, dataloader, device="cuda"):
     size = len(dataloader.dataset)
     if device == "cuda":

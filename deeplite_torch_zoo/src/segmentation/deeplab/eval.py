@@ -2,8 +2,8 @@ import numpy as np
 import torch
 
 from deeplite_torch_zoo.src.segmentation.deeplab.utils.metrics import Evaluator
-
-
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
+@EVAL_WRAPPER_REGISTRY.register(task_type='semantic_segmentation',model_name='deeplab_mobilenet',dataset_name=None)
 def evaluate_deeplab(model, loader, device="cuda"):
     model.eval()
     if "cuda" in device:

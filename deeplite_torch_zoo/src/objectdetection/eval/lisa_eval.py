@@ -25,7 +25,7 @@ from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.metrics import MAP
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import post_process
 from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
-
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 class Demo(Evaluator):
     """docstring for Demo"""
@@ -136,7 +136,7 @@ class LISAEval(Evaluator):
 
         return ap  # Average Precision  (AP) @[ IoU=050 ]
 
-
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='lisa')
 def yolo_eval_lisa(model, data_root, device="cuda", net="yolov3", img_size=448, **kwargs):
 
     mAP = 0

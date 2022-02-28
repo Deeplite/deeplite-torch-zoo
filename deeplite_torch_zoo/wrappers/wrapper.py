@@ -1,16 +1,18 @@
 import fnmatch
 import collections
 
+from collections import namedtuple
 import texttable
 
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
+import deeplite_torch_zoo.wrappers.eval  # pylint: disable=unused-import
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
-
-__all__ = ["get_data_splits_by_name", "get_model_by_name",
+__all__ = ["get_data_splits_by_name", "get_model_by_name", "get_eval_function",
     "list_models"]
 
 
@@ -22,6 +24,23 @@ def normalize_model_name(net):
     if "ssd300" in net:
         return "ssd300"
     return net
+
+def normalize_dataset_name(data):
+    if 'voc07' in data:
+        return 'voc07'
+    if 'voc' in data:
+        return 'voc'
+    if 'coco' in data:
+        return 'coco'
+    if 'wider_face' in data:
+        return 'wider_face'
+    if 'lisa' in data:
+        return 'lisa'
+    if 'person_detection' in data:
+        return 'person_detection'
+    return data
+
+
 
 
 def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kwargs):
@@ -65,6 +84,29 @@ def get_model_by_name(
     model = model_func(pretrained=pretrained, progress=progress, device=device)
     return model.half() if fp16 else model
 
+def get_eval_function(model_name="", dataset_name=""):
+    
+    _register_key = namedtuple('RegistryKey', ['model_name', 'dataset_name'])
+    key = _register_key(model_name=model_name, dataset_name=dataset_name)
+    task_type = MODEL_WRAPPER_REGISTRY.task_type_map[key]
+
+    # print("****",EVAL_WRAPPER_REGISTRY._registry_dict.keys())
+
+    if task_type == 'classification':
+        return EVAL_WRAPPER_REGISTRY.get(task_type=task_type,)
+
+    elif task_type == 'semantic_segmentation':
+        return EVAL_WRAPPER_REGISTRY.get(task_type=task_type,model_name=model_name,)
+    
+    elif task_type == 'object_detection':
+        return EVAL_WRAPPER_REGISTRY.get(task_type=task_type,
+                                model_name=normalize_model_name(model_name.lower()),
+                                dataset_name=normalize_dataset_name(dataset_name.lower()))
+    
+    return None
+    
+
+
 
 def list_models(filter='', print_table=True, return_list=False, task_type_filter=None):
     """
@@ -82,10 +124,10 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
             raise RuntimeError(f'Wrong task type filter value. Allowed values are {allowed_task_types}')
         all_model_keys = [model_key for model_key in all_model_keys if
             MODEL_WRAPPER_REGISTRY.task_type_map[model_key] == task_type_filter]
-
+    
     all_models = {model_key.model_name + '_' + model_key.dataset_name:
         model_key for model_key in all_model_keys}
-
+    
     models = []
     include_filters = filter if isinstance(filter, (tuple, list)) else [filter]
     for f in include_filters:

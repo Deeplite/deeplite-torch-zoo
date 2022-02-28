@@ -1,8 +1,10 @@
 import torch
 
 from deeplite_torch_zoo.src.segmentation.fcn.utils import label_accuracy_score
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
+@EVAL_WRAPPER_REGISTRY.register(task_type='semantic_segmentation',model_name='fcn32',dataset_name=None)
 def evaluate_fcn(model, loader, device="cuda"):
     model.eval()
 
@@ -21,4 +23,5 @@ def evaluate_fcn(model, loader, device="cuda"):
                 label_trues.append(lt)
                 label_preds.append(lp)
     metrics = label_accuracy_score(label_trues, label_preds, n_class)
-    return metrics[1]
+    miou = {"miou":metrics[1] }
+    return miou

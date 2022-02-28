@@ -75,3 +75,31 @@ class ModelWrapperRegistry(Registry):
             raise KeyError(f'Model {model_name} on dataset {dataset_name} was not found '
                 'in the model wrapper registry')
         return self._registry_dict[key]
+
+class EvalWrapperRegistry(Registry):
+
+    def __init__(self):
+        super().__init__()
+        self._registry_key = namedtuple('RegistryKey', ['task_type','model_name', 'dataset_name'])
+
+    def register(self, task_type, model_name, dataset_name):
+        def _register(obj_name, obj):
+            if obj_name in self._registry_dict:
+                raise KeyError(f'{obj_name} is already registered in the model wrapper registry')
+            self._registry_dict[obj_name] = obj
+
+        def wrap(obj):
+            cls_name = model_name
+            #self._registry_key.__new__.__defaults__ = (None,) * len(self._registry_key._fields)
+            cls_name = self._registry_key(task_type=task_type,model_name=cls_name, dataset_name=dataset_name)
+            _register(cls_name, obj)
+            return obj
+
+        return wrap
+
+    def get(self, task_type, model_name=None, dataset_name=None):
+        key = self._registry_key(task_type=task_type, model_name=model_name, dataset_name=dataset_name)
+        if key not in self._registry_dict:
+            raise KeyError(f'{task_type} Model {model_name} on dataset {dataset_name} was not found '
+                'in the eval wrapper registry')
+        return self._registry_dict[key]
