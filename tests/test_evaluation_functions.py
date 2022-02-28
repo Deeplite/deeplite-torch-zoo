@@ -24,10 +24,6 @@ objectdetection_eval_list = [rcnn_eval_coco,
                             yolo_eval_coco,
                             yolo_eval_wider_face,
                             ]
-objectdetection_eval_except_list = [('resnet18_ssd', 'voc_20'), 
-                                    ('resnet34_ssd', 'voc_20'), 
-                                    ('resnet50_ssd', 'voc_20'), 
-                                    ('vgg16_ssd', 'wider_face_1')]
 
 
 segmentation_eval_list = [evaluate_fcn, 
@@ -64,16 +60,10 @@ class TestEvalFunction(unittest.TestCase):
         all_objectdetection_models = list_models(task_type_filter='object_detection', 
                             print_table=False, 
                             return_list=True)
-        
-        all_objectdetection_models_removing_exceptions = [x for x in all_objectdetection_models 
-                                        if x not in objectdetection_eval_except_list]
 
-        for (model_name, dataset_name) in all_objectdetection_models_removing_exceptions:
+        for (model_name, dataset_name) in all_objectdetection_models:
             funct  = get_eval_function(model_name=model_name,dataset_name=dataset_name)
-            try:
-                assert funct in objectdetection_eval_list
-            except:
-                print(f'Evaluation function for {model_name} and {dataset_name} do not exist \n')
+            assert funct in objectdetection_eval_list
 
 if __name__ == "__main__":
     unittest.main()

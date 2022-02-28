@@ -20,8 +20,10 @@ __all__ = [
 			"mb2_ssd_lite_eval_func",
             "mb2_ssd_coco_eval_func",
 		]
-
-
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='vgg16_ssd', dataset_name='wider_face')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='resnet50_ssd', dataset_name='voc')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='resnet34_ssd', dataset_name='voc')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='resnet18_ssd', dataset_name='voc')
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='vgg16_ssd', dataset_name='voc')
 def vgg16_ssd_eval_func(
     model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
