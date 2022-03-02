@@ -31,7 +31,7 @@ def _densenet(arch, block, layers, growth_rate=32, pretrained=False, num_classes
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('densenet121', 'cifar100')
+@MODEL_WRAPPER_REGISTRY.register(model_name='densenet121', dataset_name='cifar100', task_type='classification')
 def densenet121_cifar100(pretrained=False, num_classes=100, progress=True, device='cuda'):
     return _densenet(
         "densenet121",

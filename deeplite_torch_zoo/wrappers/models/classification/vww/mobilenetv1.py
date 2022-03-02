@@ -19,6 +19,6 @@ def _mobilenetv1_vww(arch, pretrained=False, progress=True, num_classes=2, devic
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('mobilenet_v1', 'vww')
+@MODEL_WRAPPER_REGISTRY.register(model_name='mobilenet_v1', dataset_name='vww', task_type='classification')
 def mobilenet_v1_vww(pretrained=False, progress=True, num_classes=2, device='cuda'):
     return _mobilenetv1_vww("mobilenetv1", pretrained=pretrained, progress=progress, num_classes=num_classes, device=device)

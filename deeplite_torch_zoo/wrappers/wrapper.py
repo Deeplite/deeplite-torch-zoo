@@ -14,16 +14,6 @@ __all__ = ["get_data_splits_by_name", "get_model_by_name",
     "list_models", "create_model"]
 
 
-def normalize_model_name(net):
-    if "yolo" in net:
-        return "yolo"
-    if "unet" in net:
-        return "unet"
-    if "ssd300" in net:
-        return "ssd300"
-    return net
-
-
 def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kwargs):
     """
     The datasets function calls in the format of (get_`dataset_name`_for_`model_name`).
@@ -36,13 +26,25 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
        'test' : test_data_loader
     }
     """
+
+    def normalize_model_name(model_name):
+        if "yolo" in model_name:
+            return "yolo"
+        if "unet" in model_name:
+            return "unet"
+        if "ssd300" in model_name:
+            return "ssd300"
+        return model_name
+
     datasplit_key = (dataset_name.lower(), )
     if model_name is not None:
         model_name = normalize_model_name(model_name)
         model_name = model_name.lower()
-        datasplit_key += (model_name, )
+        datasplit_model_name_key = datasplit_key + (model_name, )
 
-    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(datasplit_key)
+    registry_key = datasplit_model_name_key if datasplit_model_name_key in \
+        DATA_WRAPPER_REGISTRY.registry_dict else datasplit_key
+    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(registry_key)
     data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
     return data_split
 
@@ -61,7 +63,7 @@ def get_model_by_name(
 
     returns a corresponding model object (optionally with pretrained weights)
     """
-    model_func = MODEL_WRAPPER_REGISTRY.get((model_name.lower(), dataset_name))
+    model_func = MODEL_WRAPPER_REGISTRY.get(model_name=model_name.lower(), dataset_name=dataset_name)
     model = model_func(pretrained=pretrained, progress=progress, device=device)
     return model.half() if fp16 else model
 
@@ -83,7 +85,7 @@ def create_model(
 
     returns a corresponding model object (optionally with a custom number of classes)
     """
-    model_func = MODEL_WRAPPER_REGISTRY.get((model_name.lower(), pretraining_dataset))
+    model_func = MODEL_WRAPPER_REGISTRY.get(model_name=model_name.lower(), dataset_name=pretraining_dataset)
     model_wrapper_kwargs = {'pretrained': True, 'progress': progress, 'device': device, **kwargs}
     if num_classes is not None:
         model_wrapper_kwargs.update({'num_classes': num_classes})
@@ -91,7 +93,7 @@ def create_model(
     return model.half() if fp16 else model
 
 
-def list_models(filter='', print_table=True, return_list=False):
+def list_models(filter='', print_table=True, return_list=False, task_type_filter=None):
     """
     A helper function to list all existing models or dataset calls
     It takes a `model_name` or a `dataset_name` as a filter and
@@ -102,12 +104,19 @@ def list_models(filter='', print_table=True, return_list=False):
     :param print_table: Whether to print a table with matched models to the console
     :param return_list: Whether to return a list with model names and corresponding datasets
     """
+
     filter = '*' + filter + '*'
-    all_models = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
-    all_models = [(model_name, dataset_name) for model_name, dataset_name in all_models
-        if dataset_name is not None]
-    all_models = {model_name + '_' + dataset_name: (model_name, dataset_name)
-        for model_name, dataset_name in all_models}
+    all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
+
+    if task_type_filter is not None:
+        allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
+        if task_type_filter not in allowed_task_types:
+            raise RuntimeError(f'Wrong task type filter value. Allowed values are {allowed_task_types}')
+        all_model_keys = [model_key for model_key in all_model_keys if
+            MODEL_WRAPPER_REGISTRY.task_type_map[model_key] == task_type_filter]
+
+    all_models = {model_key.model_name + '_' + model_key.dataset_name:
+        model_key for model_key in all_model_keys}
 
     models = []
     include_filters = filter if isinstance(filter, (tuple, list)) else [filter]
@@ -116,18 +125,18 @@ def list_models(filter='', print_table=True, return_list=False):
         if include_models:
             models = set(models).union(include_models)
 
-    model_dataset_pairs = [all_models[model_key] for model_key in sorted(models)]
+    found_model_keys = [all_models[model] for model in sorted(models)]
 
     if print_table:
         table = texttable.Texttable()
         rows = collections.defaultdict(list)
-        for model, dataset in model_dataset_pairs:
-            rows[model].extend([dataset])
+        for model_key in found_model_keys:
+            rows[model_key.model_name].extend([model_key.dataset_name])
         for model in rows:
             rows[model] = ', '.join(rows[model])
         table.add_rows([['Available models', 'Source datasets'], *rows.items()])
         print(table.draw())
 
     if return_list:
-        return model_dataset_pairs
+        return [(model_key.model_name, model_key.dataset_name) for model_key in found_model_keys]
     return None

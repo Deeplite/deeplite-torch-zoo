@@ -27,7 +27,8 @@ def deeplab(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('deeplab_mobilenet', 'voc_20')
+@MODEL_WRAPPER_REGISTRY.register(model_name='deeplab_mobilenet', dataset_name='voc_20',
+    task_type='semantic_segmentation')
 def deeplab_mobilenet_voc_20(pretrained=True, progress=False, num_classes=21, device='cuda'):
     return deeplab(
         backbone="mobilenet",

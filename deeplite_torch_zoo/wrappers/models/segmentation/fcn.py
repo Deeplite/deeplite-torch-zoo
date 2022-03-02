@@ -27,7 +27,7 @@ def fcn32(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('fcn32', 'voc_20')
+@MODEL_WRAPPER_REGISTRY.register(model_name='fcn32', dataset_name='voc_20', task_type='semantic_segmentation')
 def fcn32_voc_20(pretrained=True, progress=False, num_classes=21, device='cuda'):
     return fcn32(
         net="fcn32",

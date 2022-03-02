@@ -23,7 +23,8 @@ model_urls = {
 }
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet', 'carvana')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet', dataset_name='carvana',
+    task_type='semantic_segmentation')
 def unet_carvana(pretrained=False, progress=True, num_classes=1, device="cuda"):
     model = UNet(n_channels=3, n_classes=num_classes, bilinear=True)
     if pretrained:
@@ -55,7 +56,8 @@ def unet_enc_dec(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_scse_resnet18', 'voc_20')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_20',
+    task_type='semantic_segmentation')
 def unet_scse_resnet18_voc_20(pretrained=True, progress=False, num_classes=20, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
@@ -69,7 +71,8 @@ def unet_scse_resnet18_voc_20(pretrained=True, progress=False, num_classes=20, d
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_scse_resnet18', 'voc_1')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_1',
+    task_type='semantic_segmentation')
 def unet_scse_resnet18_voc_1(pretrained=True, progress=False, num_classes=1, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
@@ -83,7 +86,8 @@ def unet_scse_resnet18_voc_1(pretrained=True, progress=False, num_classes=1, dev
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_scse_resnet18', 'voc_2')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_2',
+    task_type='semantic_segmentation')
 def unet_scse_resnet18_voc_2(pretrained=True, progress=False, num_classes=2, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
@@ -97,7 +101,8 @@ def unet_scse_resnet18_voc_2(pretrained=True, progress=False, num_classes=2, dev
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register('unet_scse_resnet18', 'carvana')
+@MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='carvana',
+    task_type='semantic_segmentation')
 def unet_scse_resnet18_carvana(pretrained=True, progress=False, num_classes=1, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",

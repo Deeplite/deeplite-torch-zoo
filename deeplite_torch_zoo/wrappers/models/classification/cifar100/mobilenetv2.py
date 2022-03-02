@@ -31,6 +31,6 @@ def _mobilenetv2(arch, pretrained=False, progress=True, num_classes=100, device=
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('mobilenet_v2', 'cifar100')
+@MODEL_WRAPPER_REGISTRY.register(model_name='mobilenet_v2', dataset_name='cifar100', task_type='classification')
 def mobilenet_v2_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
     return _mobilenetv2("mobilenet_v2", pretrained, progress, num_classes=num_classes, device=device)

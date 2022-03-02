@@ -31,7 +31,7 @@ def _pre_act_resnet(arch, block, layers,  num_classes=100, pretrained=False, pro
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('pre_act_resnet18', 'cifar100')
+@MODEL_WRAPPER_REGISTRY.register(model_name='pre_act_resnet18', dataset_name='cifar100', task_type='classification')
 def pre_act_resnet18_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
     return _pre_act_resnet(
         "pre_act_resnet18",

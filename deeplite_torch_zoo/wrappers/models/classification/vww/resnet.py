@@ -25,11 +25,11 @@ def _resnet_vww(arch, pretrained=False, progress=True, num_classes=2, device='cu
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet18', 'vww')
+@MODEL_WRAPPER_REGISTRY.register(model_name='resnet18', dataset_name='vww', task_type='classification')
 def resnet18_vww(pretrained=False, progress=True, num_classes=2, device='cuda'):
     return _resnet_vww("resnet18", pretrained=pretrained, num_classes=num_classes, progress=progress, device=device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('resnet50', 'vww')
+@MODEL_WRAPPER_REGISTRY.register(model_name='resnet50', dataset_name='vww', task_type='classification')
 def resnet50_vww(pretrained=False, progress=True, num_classes=2, device='cuda'):
     return _resnet_vww("resnet50", pretrained=pretrained, num_classes=num_classes, progress=progress, device=device)

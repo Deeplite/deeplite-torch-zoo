@@ -22,7 +22,7 @@ def _mobilenetv2_imagenet10(arch, alpha=1.0, pretrained=False, progress=True, nu
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('mobilenet_v2_0_35', 'imagenet10')
+@MODEL_WRAPPER_REGISTRY.register(model_name='mobilenet_v2_0_35', dataset_name='imagenet10', task_type='classification')
 def mobilenet_v2_0_35_imagenet10(pretrained=False, progress=True, num_classes=10, device='cuda'):
     return _mobilenetv2_imagenet10(
         "mobilenetv2_0.35", alpha=0.35, pretrained=pretrained, progress=progress, num_classes=num_classes, device=device

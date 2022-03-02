@@ -9,7 +9,7 @@ model_urls = {
 }
 
 
-@MODEL_WRAPPER_REGISTRY.register('vgg19', 'tinyimagenet')
+@MODEL_WRAPPER_REGISTRY.register(model_name='vgg19', dataset_name='tinyimagenet', task_type='classification')
 def vgg19_tinyimagenet(pretrained=False, progress=True, num_classes=100, device="cuda"):
     model = models.vgg19(num_classes=num_classes)
     if pretrained:

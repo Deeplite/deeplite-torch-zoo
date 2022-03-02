@@ -105,7 +105,8 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
             model_wrapper_fn = model_fn
 
     model_name = net.replace('v','')
-    @MODEL_WRAPPER_REGISTRY.register(model_name, dataset_name)
+    @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
+        task_type='object_detection')
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return model_wrapper_fn(
             net=net,

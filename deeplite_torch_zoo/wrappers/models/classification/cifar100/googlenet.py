@@ -29,6 +29,6 @@ def _googlenet(arch, pretrained=False, progress=True, num_classes=100, device='c
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('googlenet', 'cifar100')
+@MODEL_WRAPPER_REGISTRY.register(model_name='googlenet', dataset_name='cifar100', task_type='classification')
 def googlenet_cifar100(pretrained=False, num_classes=100, progress=True, device='cuda'):
     return _googlenet("googlenet", pretrained, progress, device=device, num_classes=num_classes)
