@@ -1,5 +1,5 @@
 import torchvision
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 
@@ -10,17 +10,15 @@ model_urls = {
 }
 
 
-def _resnet_imagenet10(arch, pretrained=False, progress=True, device='cuda'):
-    model = torchvision.models.resnet18(num_classes=10)
+def _resnet_imagenet10(arch, pretrained=False, progress=True, num_classes=10, device='cuda'):
+    model = torchvision.models.resnet18(num_classes=num_classes)
 
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[arch]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register(model_name='resnet18', dataset_name='imagenet10', task_type='classification')
-def resnet18_imagenet10(pretrained=False, progress=True, device='cuda'):
-    return _resnet_imagenet10("resnet18", pretrained=pretrained, progress=progress, device=device)
+def resnet18_imagenet10(pretrained=False, progress=True, num_classes=10, device='cuda'):
+    return _resnet_imagenet10("resnet18", pretrained=pretrained, progress=progress, num_classes=num_classes, device=device)

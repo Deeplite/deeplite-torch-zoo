@@ -1,8 +1,8 @@
-from torch.hub import load_state_dict_from_url
-
 from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.models.net import EncoderDecoderNet
 from deeplite_torch_zoo.src.segmentation.Unet.model.unet_model import UNet
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+
 
 __all__ = [
     "unet_enc_dec",
@@ -25,13 +25,11 @@ model_urls = {
 
 @MODEL_WRAPPER_REGISTRY.register(model_name='unet', dataset_name='carvana',
     task_type='semantic_segmentation')
-def unet_carvana(pretrained=False, progress=True, device="cuda"):
-    model = UNet(n_channels=3, n_classes=1, bilinear=True)
+def unet_carvana(pretrained=False, progress=True, num_classes=1, device="cuda"):
+    model = UNet(n_channels=3, n_classes=num_classes, bilinear=True)
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls["unet_carvana"], progress=progress, check_hash=True, map_location=device
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls["unet_carvana"]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
@@ -52,23 +50,19 @@ def unet_enc_dec(
         num_filters=num_filters,
     )
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[f"{dec_type}_{enc_type}_{dataset_type}"],
-            progress=progress,
-            check_hash=True,
-            map_location=device,
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[f"{dec_type}_{enc_type}_{dataset_type}"]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_20',
     task_type='semantic_segmentation')
-def unet_scse_resnet18_voc_20(pretrained=True, progress=False, device="cuda"):
+def unet_scse_resnet18_voc_20(pretrained=True, progress=False, num_classes=20, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
         dec_type="unet_scse",
-        output_channels=21,
+        output_channels=num_classes+1,
         dataset_type="voc_20",
         num_filters=8,
         pretrained=pretrained,
@@ -79,11 +73,11 @@ def unet_scse_resnet18_voc_20(pretrained=True, progress=False, device="cuda"):
 
 @MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_1',
     task_type='semantic_segmentation')
-def unet_scse_resnet18_voc_1(pretrained=True, progress=False, device="cuda"):
+def unet_scse_resnet18_voc_1(pretrained=True, progress=False, num_classes=1, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
         dec_type="unet_scse",
-        output_channels=1,
+        output_channels=num_classes,
         dataset_type="voc_01",
         num_filters=8,
         pretrained=pretrained,
@@ -94,11 +88,11 @@ def unet_scse_resnet18_voc_1(pretrained=True, progress=False, device="cuda"):
 
 @MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='voc_2',
     task_type='semantic_segmentation')
-def unet_scse_resnet18_voc_2(pretrained=True, progress=False, device="cuda"):
+def unet_scse_resnet18_voc_2(pretrained=True, progress=False, num_classes=2, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
         dec_type="unet_scse",
-        output_channels=3,
+        output_channels=num_classes+1,
         dataset_type="voc_02",
         num_filters=8,
         pretrained=pretrained,
@@ -109,11 +103,11 @@ def unet_scse_resnet18_voc_2(pretrained=True, progress=False, device="cuda"):
 
 @MODEL_WRAPPER_REGISTRY.register(model_name='unet_scse_resnet18', dataset_name='carvana',
     task_type='semantic_segmentation')
-def unet_scse_resnet18_carvana(pretrained=True, progress=False, device="cuda"):
+def unet_scse_resnet18_carvana(pretrained=True, progress=False, num_classes=1, device="cuda"):
     return unet_enc_dec(
         enc_type="resnet18",
         dec_type="unet_scse",
-        output_channels=1,
+        output_channels=num_classes,
         dataset_type="carvana",
         num_filters=8,
         pretrained=pretrained,

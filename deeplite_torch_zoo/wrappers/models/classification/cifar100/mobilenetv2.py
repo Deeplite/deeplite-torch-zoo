@@ -9,7 +9,7 @@
 """
 
 
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.src.classification.cifar_models.mobilenetv2 import MobileNetV2
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
@@ -23,16 +23,14 @@ model_urls = {
 
 
 
-def _mobilenetv2(arch, pretrained=False, progress=True, device='cuda'):
-    model = MobileNetV2()
+def _mobilenetv2(arch, pretrained=False, progress=True, num_classes=100, device='cuda'):
+    model = MobileNetV2(num_classes=num_classes)
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[arch]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register(model_name='mobilenet_v2', dataset_name='cifar100', task_type='classification')
-def mobilenet_v2_cifar100(pretrained=False, progress=True, device='cuda'):
-    return _mobilenetv2("mobilenet_v2", pretrained, progress, device=device)
+def mobilenet_v2_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
+    return _mobilenetv2("mobilenet_v2", pretrained, progress, num_classes=num_classes, device=device)
