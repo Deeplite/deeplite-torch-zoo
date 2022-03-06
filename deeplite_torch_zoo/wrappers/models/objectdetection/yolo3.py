@@ -26,7 +26,7 @@ model_urls = {
     "yolov3_voc_20": "yolo3-voc-0_839-a6149826183808aa.pth",
     "yolov3_voc_1": "yolov3-voc-1cls-0_888-1c73632fc187ef0c.pth",  # person
     "yolov3_voc_2": "yolov3-voc-2cls-0_911-b308f8a2686c19a6.pth",  # person and car
-    "yolov3_lisa_11": "yolov3-lisa_11_830-663a0ec046402856.pth",
+    "yolov3_lisa_11": "",
 }
 
 yolov3_cfg = {
@@ -38,28 +38,28 @@ yolov3_cfg = {
 YOLOV3_MODELS = list(yolov3_cfg.keys())
 
 
-@MODEL_WRAPPER_REGISTRY.register('yolo3')
 def yolo3(
-    net="yolov3", _set_classes="voc_20", num_classes=20, pretrained=False,
+    net="yolov3", dataset_name="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda", **kwargs
 ):
     config_path = get_project_root() / CFG_PATH / yolov3_cfg[net]
     model = YoloV5_6(config_path, ch=3, nc=num_classes)
     if pretrained:
-        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"yolov3_{_set_classes}"])
+        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"yolov3_{dataset_name}"])
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
 
     return model.to(device)
 
 
-def make_wrapper_func(wrapper_name, net, _set_classes, num_classes):
+def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
     model_name = net.replace('v', '')
 
-    @MODEL_WRAPPER_REGISTRY.register(model_name, _set_classes)
-    def wrapper_func(pretrained=False, progress=True, device="cuda"):
+    @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
+        task_type='object_detection')
+    def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return yolo3(
             net=net,
-            _set_classes=_set_classes,
+            dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
             progress=progress,

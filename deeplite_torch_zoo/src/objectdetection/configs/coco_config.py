@@ -1,4 +1,4 @@
-DATA = {
+COCO_DATA_CATEGORIES = {
     "CLASSES": [
         "person",
         "bicycle",
@@ -84,5 +84,5 @@ DATA = {
     "NUM": 80,
 }
 
-MISSING_IDS = [12, 26, 29, 30, 45, 66, 68, 69, 71, 83, 91]
+COCO_MISSING_IDS = [12, 26, 29, 30, 45, 66, 68, 69, 71, 83, 91]
 
