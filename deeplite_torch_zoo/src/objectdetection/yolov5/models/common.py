@@ -21,7 +21,7 @@ except:
 
 
 # Registry for the modules that contain custom activation fn inside
-CUSTOM_ACTIVATION_MODULES = Registry('custom_activation_modules')
+CUSTOM_ACTIVATION_MODULES = Registry()
 
 ACTIVATION_FN_NAME_MAP = {
     'relu': nn.ReLU,
