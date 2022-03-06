@@ -14,7 +14,7 @@ from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG
 from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import (
     MOBILENET_CONFIG,
 )
-from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
+from deeplite_torch_zoo.src.objectdetection.configs.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
@@ -147,8 +147,8 @@ COCO_DATASET_MODEL_WRAPPERS = {
         'train_dir': "train2017",
         'val_ann_file': "annotations/instances_val2017.json",
         'val_dir': "val2017",
-        'classes': DATA["CLASSES"],
-        'missing_ids': MISSING_IDS,
+        'classes': COCO_DATA_CATEGORIES["CLASSES"],
+        'missing_ids': COCO_MISSING_IDS,
     },
     ('coco_gm','mb2_ssd'): {
         'config': MOBILENET_CONFIG(),

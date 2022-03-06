@@ -25,6 +25,7 @@ from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
+from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
 from deeplite_torch_zoo.wrappers.models import YOLOV3_MODELS, YOLOV4_MODELS, YOLOV5_MODELS
 
@@ -35,7 +36,8 @@ DATASET_TO_HP_CONFIG_MAP = {
     'lisa': hyp_cfg_lisa,
 }
 
-for dataset_name in ('voc', 'coco', 'wider_face', 'person_detection', 'voc07'):
+for dataset_name in ('voc', 'coco', 'wider_face', 'person_detection',
+    'car_detection', 'voc07'):
     DATASET_TO_HP_CONFIG_MAP[dataset_name] = hyp_cfg_scratch
 
 HP_CONFIG_MAP = {
@@ -48,8 +50,6 @@ class Trainer(object):
         init_seeds(0)
 
         self.model_name = opt.net
-        assert opt.dataset_type in ["coco", "voc", "lisa", "lisa_full",
-            "lisa_subset11", "wider_face", "person_detection", "voc07", "person_pet_vehicle_detection"]
         assert self.model_name in YOLO_MODEL_NAMES
 
         if opt.hp_config is None:
@@ -107,7 +107,7 @@ class Trainer(object):
             "num_classes": self.num_classes,
             "device": self.device,
             "progress": True,
-            "_set_classes": self.pretraining_source_dataset,
+            "dataset_name": self.pretraining_source_dataset,
         }
         for net_name, model_fn in net_name_to_model_fn_map.items():
             if re.match(net_name, self.model_name):
@@ -170,9 +170,13 @@ class Trainer(object):
             test_set = opt.img_dir / "VOC2007"
         elif opt.dataset_type == "coco":
             gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
+        elif opt.dataset_type == "car_detection":
+            gt = SubsampledCOCO(opt.img_dir / "annotations/instances_val2017.json",
+                subsample_categories=['car'])
+
         Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
                         _set=opt.dataset_type, device=self.device, net=opt.net,
-                        img_size=opt.test_img_res)
+                        img_size=opt.test_img_res, progressbar=True)
         return Aps
 
     def train(self):
@@ -334,7 +338,10 @@ if __name__ == "__main__":
         dest="dataset_type",
         type=str,
         default="voc",
-        help="The type of the dataset used. Currently support 'coco', 'voc', 'lisa' and 'wider_face",
+        choices=["coco", "voc", "lisa", "lisa_full",
+            "lisa_subset11", "wider_face", "person_detection", "voc07",
+            "car_detection", "person_pet_vehicle_detection"],
+        help="Name of the dataset to train/validate on",
     )
     parser.add_argument(
         "--net",

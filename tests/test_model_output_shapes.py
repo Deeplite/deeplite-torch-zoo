@@ -4,7 +4,7 @@ import pytest
 
 import torch
 
-from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name
+from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name, create_model
 from tests.mock_datasets import VocYoloFake
 
 
@@ -197,6 +197,127 @@ def test_segmentation_model_output_shape(model_name, dataset_name, datasplit_kwa
         model_name=model_name,
         dataset_name=dataset_name,
         pretrained=True,
+        progress=False,
+        device="cpu",
+    )
+    if model_name in MODEL_NAME_DATASPLIT_FN_ARG_MAP:
+        model_name = MODEL_NAME_DATASPLIT_FN_ARG_MAP[model_name]
+    test_loader = get_data_splits_by_name(
+        data_root=MOCK_DATASETS_PATH if 'voc' in dataset_name else MOCK_CARVANA_PATH,
+        dataset_name=DATASET_NAME_DATASPLIT_FN_ARG_MAP[dataset_name],
+        model_name=model_name,
+        num_workers=0,
+        device="cpu",
+        **datasplit_kwargs,
+    )["test"]
+    dataset = test_loader.dataset
+    if 'unet' in model_name:
+        img, msk, _ = dataset[0]
+    else:
+        img, msk = dataset[0]
+    model.eval()
+    y = model(torch.unsqueeze(img, dim=0))
+    assert y.shape == (*output_shape, *msk.shape)
+
+
+CUSTOM_NUM_CLASSES = 42
+
+CLASSIFICATION_CREATE_MODEL_TESTS = [
+    ('resnet18', 'imagenet16', 224, 3, CUSTOM_NUM_CLASSES),
+    ('resnet18', 'imagenet10', 224, 3, CUSTOM_NUM_CLASSES),
+    ('resnet18', 'vww', 224, 3, CUSTOM_NUM_CLASSES),
+    ('lenet5', 'mnist', 28, 1, CUSTOM_NUM_CLASSES),
+    ('wide_resnet50_2', 'imagenet', 224, 3, CUSTOM_NUM_CLASSES),
+]
+
+@pytest.mark.parametrize(
+    ('model_name', 'dataset_name', 'input_resolution', 'num_inp_channels', 'target_output_shape'),
+    CLASSIFICATION_CREATE_MODEL_TESTS,
+)
+def test_create_classification_model_output_shape(model_name, dataset_name, input_resolution,
+    num_inp_channels, target_output_shape):
+    model = create_model(
+        model_name=model_name,
+        pretraining_dataset=dataset_name,
+        num_classes=CUSTOM_NUM_CLASSES,
+        progress=False,
+        device="cpu",
+    )
+    y = model(torch.randn(TEST_BATCH_SIZE, num_inp_channels, input_resolution, input_resolution))
+    assert y.shape == (TEST_BATCH_SIZE, target_output_shape)
+
+
+DETECTION_CREATE_MODEL_TESTS = [
+    ('mb1_ssd', 'voc_20', {}, [(3000, CUSTOM_NUM_CLASSES+1), (3000, 4)]),
+    ('yolo3', 'voc_1', {'num_classes': 1, 'img_size': 416},
+        [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
+         (3, 26, 26, CUSTOM_NUM_CLASSES+5),
+         (3, 13, 13, CUSTOM_NUM_CLASSES+5)]),
+    ('yolo4s', 'voc_20', {'num_classes': 21, 'img_size': 416},
+            [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
+             (3, 26, 26, CUSTOM_NUM_CLASSES+5),
+             (3, 13, 13, CUSTOM_NUM_CLASSES+5)]),
+    ('yolo5_6n', 'voc_20', {'num_classes': 21, 'img_size': 416},
+            [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
+             (3, 26, 26, CUSTOM_NUM_CLASSES+5),
+             (3, 13, 13, CUSTOM_NUM_CLASSES+5)])
+]
+@pytest.mark.parametrize(
+    ('model_name', 'dataset_name', 'datasplit_kwargs', 'output_shapes'),
+    DETECTION_CREATE_MODEL_TESTS,
+)
+def test_create_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs, output_shapes):
+    model = create_model(
+        model_name=model_name,
+        pretraining_dataset=dataset_name,
+        num_classes=CUSTOM_NUM_CLASSES,
+        progress=False,
+        device="cpu",
+    )
+    if model_name in MODEL_NAME_DATASPLIT_FN_ARG_MAP:
+        model_name = MODEL_NAME_DATASPLIT_FN_ARG_MAP[model_name]
+    train_loader = get_data_splits_by_name(
+        data_root=MOCK_VOC_PATH,
+        dataset_name=DATASET_NAME_DATASPLIT_FN_ARG_MAP[dataset_name],
+        model_name=model_name,
+        batch_size=TEST_BATCH_SIZE,
+        num_workers=0,
+        device="cpu",
+        **datasplit_kwargs,
+    )["train"]
+
+    if 'yolo' in model_name:
+        dataset = train_loader.dataset
+        img, _, _, _ = dataset[0]
+        y = model(torch.unsqueeze(img, dim=0))
+        assert y[0][0].shape == (1, *output_shapes[0])
+        assert y[0][1].shape == (1, *output_shapes[1])
+        assert y[0][2].shape == (1, *output_shapes[2])
+        if y[1] is not None:
+            assert y[1][0].shape == (1, *output_shapes[0])
+            assert y[1][1].shape == (1, *output_shapes[1])
+            assert y[1][2].shape == (1, *output_shapes[2])
+    else:
+        img, _, _ = next(iter(train_loader))
+        model.eval()
+        y1, y2 = model(img)
+        assert y1.shape == (TEST_BATCH_SIZE, *output_shapes[0])
+        assert y2.shape == (TEST_BATCH_SIZE, *output_shapes[1])
+
+
+@pytest.mark.parametrize(
+    ('model_name', 'dataset_name', 'datasplit_kwargs', 'output_shape'),
+    [
+        ('deeplab_mobilenet', 'voc_20', {'backbone': 'vgg'}, (1, CUSTOM_NUM_CLASSES)),
+        ('fcn32', 'voc_20', {'backbone': 'vgg'}, (1, CUSTOM_NUM_CLASSES)),
+        ('unet_scse_resnet18', 'voc_2', {'num_classes': 3}, (1, CUSTOM_NUM_CLASSES+1)),
+    ],
+)
+def test_create_segmentation_model_output_shape(model_name, dataset_name, datasplit_kwargs, output_shape):
+    model = create_model(
+        model_name=model_name,
+        pretraining_dataset=dataset_name,
+        num_classes=CUSTOM_NUM_CLASSES,
         progress=False,
         device="cpu",
     )

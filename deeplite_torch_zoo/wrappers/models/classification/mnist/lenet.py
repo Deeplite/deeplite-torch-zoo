@@ -6,7 +6,7 @@
 """
 
 
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.src.classification.mnist_models.lenet import LeNet5
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
@@ -20,19 +20,17 @@ model_urls = {
 
 
 
-def _lenet_mnist(arch, pretrained=False, progress=True, device="cuda"):
-    model = LeNet5()
+def _lenet_mnist(arch, pretrained=False, progress=True, num_classes=10, device="cuda"):
+    model = LeNet5(output=num_classes)
 
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True, map_location=device
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[arch]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register('lenet5', 'mnist')
-def lenet5_mnist(pretrained=False, progress=True, device="cuda"):
+@MODEL_WRAPPER_REGISTRY.register(model_name='lenet5', dataset_name='mnist', task_type='classification')
+def lenet5_mnist(pretrained=False, progress=True, num_classes=10, device="cuda"):
     return _lenet_mnist(
-        "lenet5", pretrained=pretrained, progress=progress, device=device
+        "lenet5", pretrained=pretrained, progress=progress, num_classes=num_classes, device=device
     )

@@ -1,11 +1,13 @@
 import os
+
+from tqdm import tqdm
 import numpy as np
 import torch
 from pycocotools.cocoeval import COCOeval
 
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
-from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
+from deeplite_torch_zoo.src.objectdetection.configs.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
 
 
 class COCOEvaluator(Evaluator):
@@ -17,12 +19,14 @@ class COCOEvaluator(Evaluator):
         net="yolo3",
         img_size=448,
         gt=None,
+        progressbar=False,
     ):
         data_path = "results/coco/{net}/".format(net=net)
         super(COCOEvaluator, self).__init__(
             model=model, data_path=data_path, net=net, img_size=img_size
         )
         self.dataset = dataset
+        self.progressbar = progressbar
 
         self.classes = self.dataset.classes
         self.__visiual = visualize
@@ -32,7 +36,7 @@ class COCOEvaluator(Evaluator):
 
     def evaluate(self, multi_test=False, flip_test=False):
         results = []
-        for img, _, _, img_ind in self.dataset:
+        for img, _, _, img_ind in tqdm(self.dataset, disable=not self.progressbar):
             results += self.process_image(img, int(img_ind))
 
         results = np.array(results).astype(np.float32)
@@ -51,14 +55,16 @@ class COCOEvaluator(Evaluator):
 
 
 class YoloCOCOEvaluator(COCOEvaluator):
-    def __init__(self, model, dataset, gt=None, visualize=False, net="yolo3", img_size=448):
+    def __init__(self, model, dataset, gt=None, visualize=False,
+        net="yolo3", img_size=448, progressbar=False):
         super().__init__(
             model=model,
             dataset=dataset,
             gt=gt,
             visualize=visualize,
             net=net,
-            img_size=img_size
+            img_size=img_size,
+            progressbar=progressbar,
         )
 
     def process_image(self, img, img_ind, multi_test=False, flip_test=False, **kwargs):
@@ -70,8 +76,8 @@ class YoloCOCOEvaluator(COCOEvaluator):
             coor = np.array(bbox[:4], dtype=np.int32)
             score = bbox[4]
             class_ind = int(bbox[5])
-
             class_name = self.classes[class_ind]
+
             xmin, ymin, xmax, ymax = coor
             results.append(
                 [
@@ -130,12 +136,23 @@ def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", ne
 
 
 def yolo_eval_coco(model, data_root, gt=None, device="cuda",
-                   net="yolo3", img_size=448, **kwargs):
+                   net="yolo3", img_size=448, subsample_categories=None, progressbar=False, **kwargs):
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
     val_coco_root = os.path.join(data_root, "val2017")
+
+    if subsample_categories is not None:
+        categories = subsample_categories
+        category_indices = [COCO_DATA_CATEGORIES["CLASSES"].index(cat) + 1 for cat in categories]
+        missing_ids = [category for category in list(range(1, 92)) if category not in category_indices]
+    else:
+        categories = COCO_DATA_CATEGORIES["CLASSES"]
+        category_indices = 'all'
+        missing_ids = COCO_MISSING_IDS
+
     dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate,
-        classes=DATA["CLASSES"], missing_ids=MISSING_IDS)
+        classes=categories, category=category_indices, missing_ids=missing_ids)
 
     model.to(device)
     with torch.no_grad():
-        return YoloCOCOEvaluator(model, dataset, gt=gt, net=net, img_size=img_size).evaluate()
+        return YoloCOCOEvaluator(model, dataset, gt=gt, net=net,
+            img_size=img_size, progressbar=progressbar).evaluate()

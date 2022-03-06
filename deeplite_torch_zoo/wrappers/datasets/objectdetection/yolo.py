@@ -9,6 +9,7 @@ from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
 from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.src.objectdetection.datasets.transforms import random_transform_fn
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
+from deeplite_torch_zoo.src.objectdetection.configs.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
@@ -37,23 +38,32 @@ def make_dataset_wrapper(wrapper_name, num_classes, img_size, dataset_create_fn)
     return wrapper_func
 
 
-def create_coco_datasets(data_root, num_classes, img_size):
-
-    from deeplite_torch_zoo.src.objectdetection.configs.coco_config import MISSING_IDS, DATA
+def create_coco_datasets(data_root, num_classes, img_size, subsample_categories=None):
 
     train_trans = random_transform_fn
     train_annotate = os.path.join(data_root, "annotations/instances_train2017.json")
     train_coco_root = os.path.join(data_root, "train2017")
+
+
+    if subsample_categories is not None:
+        categories = subsample_categories
+        category_indices = [COCO_DATA_CATEGORIES["CLASSES"].index(cat) + 1 for cat in categories]
+        missing_ids = [category for category in list(range(1, 92)) if category not in category_indices]
+    else:
+        categories = COCO_DATA_CATEGORIES["CLASSES"]
+        category_indices = 'all'
+        missing_ids = COCO_MISSING_IDS
+
     train_dataset = CocoDetectionBoundingBox(
         train_coco_root, train_annotate, num_classes=num_classes, transform=train_trans,
-        img_size=img_size, classes=DATA["CLASSES"], missing_ids=MISSING_IDS
+        img_size=img_size, classes=categories, category=category_indices, missing_ids=missing_ids
     )
 
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
     val_coco_root = os.path.join(data_root, "val2017")
     test_dataset = CocoDetectionBoundingBox(
         val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size,
-        classes=DATA["CLASSES"], missing_ids=MISSING_IDS
+        classes=categories, category=category_indices, missing_ids=missing_ids
     )
 
     return train_dataset, test_dataset
@@ -99,11 +109,18 @@ def create_widerface_datasets(data_root, num_classes, img_size):
 
 
 def create_voc07_datasets(data_root, num_classes, img_size):
+    """VOC2007 dataset with a 'train' set for training and 'val' set for testing"""
     return create_voc_datasets(data_root, num_classes, img_size, is_07_subset=True)
 
 
 def create_person_detection_datasets(data_root, num_classes, img_size):
+    """Person detection (1 class) dataset in VOC format"""
     return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False)
+
+
+def create_car_detection_datasets(data_root, num_classes, img_size):
+    """Part of COCO containing only the 'car' class"""
+    return create_coco_datasets(data_root, num_classes, img_size, subsample_categories=['car'])
 
 
 def create_person_pet_vehice_datasets(data_root, num_classes, img_size):
@@ -121,6 +138,7 @@ DATASET_WRAPPER_FNS = {
     'voc07': DatasetParameters(20, 448, create_voc07_datasets),
     'wider_face': DatasetParameters(1, 448, create_widerface_datasets),
     'person_detection': DatasetParameters(1, 320, create_person_detection_datasets),
+    'car_detection': DatasetParameters(1, 320, create_car_detection_datasets),
     'person_pet_vehicle_detection': DatasetParameters(3, 320, create_person_pet_vehice_datasets),
 }
 
