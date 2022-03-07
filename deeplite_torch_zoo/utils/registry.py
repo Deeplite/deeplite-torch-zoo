@@ -3,7 +3,47 @@
 
 from collections import namedtuple
 
+def normalize_model_name(net):
+    if "yolo" in net:
+        net = "yolo"
+    elif "unet_scse" in net:
+        net = "unet_scse"
+    elif "unet" in net:
+        net = "unet"
+    elif "ssd300" in net:
+        net = "ssd300"
+    elif "deeplab" in net:
+        net = "deeplab"
+    elif "fcn" in net:
+        net = "fcn"
+    elif "mb2_ssd_lite" in net:
+        net = "mb2_ssd_lite"
+    elif "mb2_ssd" in net:
+        net = "mb2_ssd"
+    elif "mb1_ssd" in net:
+        net = "mb1_ssd"
+    elif "ssd" in net:
+        net = "ssd"
+    elif "rcnn" in net:
+        net = "rcnn"
+    return net
 
+def normalize_dataset_name(data):
+    if 'voc07' in data:
+        data = 'voc07'
+    elif 'voc' in data:
+        data = 'voc'
+    elif 'coco' in data:
+        data = 'coco'
+    elif 'wider_face' in data:
+        data = 'wider_face'
+    elif 'lisa' in data:
+        data = 'lisa'
+    elif 'person_detection' in data:
+        data = 'voc'
+    elif 'person_pet_vehicle_detection':
+        data = 'voc'
+    return data
 class Registry:
     """ Generic registry implentation modified from
     https://github.com/openvinotoolkit/openvino/blob/master/tools/pot/openvino/tools/pot/utils/registry.py """
@@ -80,25 +120,34 @@ class EvalWrapperRegistry(Registry):
 
     def __init__(self):
         super().__init__()
-        self._registry_key = namedtuple('RegistryKey', ['task_type','model_name', 'dataset_name'])
-
-    def register(self, task_type, model_name, dataset_name):
+    
+    def register(self, name=None):
         def _register(obj_name, obj):
             if obj_name in self._registry_dict:
                 raise KeyError(f'{obj_name} is already registered in the model wrapper registry')
             self._registry_dict[obj_name] = obj
 
         def wrap(obj):
-            cls_name = model_name
-            #self._registry_key.__new__.__defaults__ = (None,) * len(self._registry_key._fields)
-            cls_name = self._registry_key(task_type=task_type,model_name=cls_name, dataset_name=dataset_name)
+            cls_name = name
+            if cls_name is None:
+                cls_name = obj.__name__
+            cls_name = (cls_name)
             _register(cls_name, obj)
             return obj
 
         return wrap
 
-    def get(self, task_type, model_name=None, dataset_name=None):
-        key = self._registry_key(task_type=task_type, model_name=model_name, dataset_name=dataset_name)
+    def get(self, task_type, model_name, dataset_name):
+        if task_type == "classification":
+            key = "classification"
+        elif task_type == "semantic_segmentation":
+            model_type = normalize_model_name(model_name)
+            key = task_type +"_"+ model_type
+        elif task_type == 'object_detection':
+            model_type = normalize_model_name(model_name)
+            dataset_type = normalize_dataset_name(dataset_name)
+            key = task_type + "_" + model_type + "_" + dataset_type
+        
         if key not in self._registry_dict:
             raise KeyError(f'{task_type} Model {model_name} on dataset {dataset_name} was not found '
                 'in the eval wrapper registry')

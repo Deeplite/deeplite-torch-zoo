@@ -18,29 +18,14 @@ __all__ = ["get_data_splits_by_name", "get_model_by_name", "get_eval_function",
 
 def normalize_model_name(net):
     if "yolo" in net:
-        return "yolo"
-    if "unet" in net:
-        return "unet"
-    if "ssd300" in net:
-        return "ssd300"
+        net = "yolo"
+    elif "unet_scse" in net:
+        net = "unet_scse"
+    elif "unet" in net:
+        net = "unet"
+    elif "ssd300" in net:
+        net = "ssd300"
     return net
-
-def normalize_dataset_name(data):
-    if 'voc07' in data:
-        return 'voc07'
-    if 'voc' in data:
-        return 'voc'
-    if 'coco' in data:
-        return 'coco'
-    if 'wider_face' in data:
-        return 'wider_face'
-    if 'lisa' in data:
-        return 'lisa'
-    if 'person_detection' in data:
-        return 'person_detection'
-    return data
-
-
 
 
 def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kwargs):
@@ -85,27 +70,11 @@ def get_model_by_name(
     return model.half() if fp16 else model
 
 def get_eval_function(model_name="", dataset_name=""):
-    
     _register_key = namedtuple('RegistryKey', ['model_name', 'dataset_name'])
     key = _register_key(model_name=model_name, dataset_name=dataset_name)
     task_type = MODEL_WRAPPER_REGISTRY.task_type_map[key]
-
-    # print("****",EVAL_WRAPPER_REGISTRY._registry_dict.keys())
-
-    if task_type == 'classification':
-        return EVAL_WRAPPER_REGISTRY.get(task_type=task_type,)
-
-    elif task_type == 'semantic_segmentation':
-        return EVAL_WRAPPER_REGISTRY.get(task_type=task_type,model_name=model_name,)
-    
-    elif task_type == 'object_detection':
-        return EVAL_WRAPPER_REGISTRY.get(task_type=task_type,
-                                model_name=normalize_model_name(model_name.lower()),
-                                dataset_name=normalize_dataset_name(dataset_name.lower()))
-    
-    return None
-    
-
+    eval_function = EVAL_WRAPPER_REGISTRY.get(task_type=task_type, model_name=model_name, dataset_name=dataset_name)
+    return eval_function
 
 
 def list_models(filter='', print_table=True, return_list=False, task_type_filter=None):
@@ -114,29 +83,23 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
     It takes a `model_name` or a `dataset_name` as a filter and
     prints a table of corresponding available models
     """
-
     filter = '*' + filter + '*'
     all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
-
     if task_type_filter is not None:
         allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
         if task_type_filter not in allowed_task_types:
             raise RuntimeError(f'Wrong task type filter value. Allowed values are {allowed_task_types}')
         all_model_keys = [model_key for model_key in all_model_keys if
             MODEL_WRAPPER_REGISTRY.task_type_map[model_key] == task_type_filter]
-    
     all_models = {model_key.model_name + '_' + model_key.dataset_name:
         model_key for model_key in all_model_keys}
-    
     models = []
     include_filters = filter if isinstance(filter, (tuple, list)) else [filter]
     for f in include_filters:
         include_models = fnmatch.filter(all_models.keys(), f)
         if include_models:
             models = set(models).union(include_models)
-
     found_model_keys = [all_models[model] for model in sorted(models)]
-
     if print_table:
         table = texttable.Texttable()
         rows = collections.defaultdict(list)
@@ -146,7 +109,6 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
             rows[model] = ', '.join(rows[model])
         table.add_rows([['Available models', 'Source datasets'], *rows.items()])
         print(table.draw())
-
     if return_list:
         return [(model_key.model_name, model_key.dataset_name) for model_key in found_model_keys]
     return None

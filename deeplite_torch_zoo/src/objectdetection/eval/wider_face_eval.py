@@ -77,7 +77,7 @@ class WiderFaceEval(Evaluator):
 
         return _ap  # Average Precision  (AP) @[ IoU=050 ]
 
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='wider_face')
+@EVAL_WRAPPER_REGISTRY.register('object_detection_yolo_wider_face')
 def yolo_eval_wider_face(model, data_root, device="cuda", net="yolov3", img_size=448, **kwargs):
 
     mAP = 0

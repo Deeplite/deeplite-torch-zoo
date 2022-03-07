@@ -134,7 +134,7 @@ def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", ne
             net=net
         ).evaluate()
 
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='coco')
+@EVAL_WRAPPER_REGISTRY.register('object_detection_yolo_coco')
 def yolo_eval_coco(model, data_root, gt=None, device="cuda",
                    net="yolo3", img_size=448, subsample_categories=None, progressbar=False, **kwargs):
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
@@ -157,7 +157,7 @@ def yolo_eval_coco(model, data_root, gt=None, device="cuda",
         return YoloCOCOEvaluator(model, dataset, gt=gt, net=net,
             img_size=img_size, progressbar=progressbar).evaluate()
 
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection',model_name='yolo', dataset_name='car_detection')
+@EVAL_WRAPPER_REGISTRY.register('object_detection_yolo_car_detection')
 def yolo_eval_coco_car(model, data_root, gt=None, device="cuda",
                    net="yolo3", img_size=448, subsample_categories=["car"], progressbar=False, **kwargs):
     val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")

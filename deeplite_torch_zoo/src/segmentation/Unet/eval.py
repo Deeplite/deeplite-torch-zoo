@@ -9,7 +9,7 @@ from deeplite_torch_zoo.src.segmentation.Unet.dice_loss import dice_coeff
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
-@EVAL_WRAPPER_REGISTRY.register(task_type='semantic_segmentation',model_name='unet',dataset_name=None)
+@EVAL_WRAPPER_REGISTRY.register('semantic_segmentation_unet')
 def eval_net(net, loader, device="cuda"):
     """Evaluation without the densecrf with the dice coefficient"""
     net.eval()
@@ -35,7 +35,7 @@ def eval_net(net, loader, device="cuda"):
     net.train()
     return tot / n_val
 
-@EVAL_WRAPPER_REGISTRY.register(task_type='semantic_segmentation',model_name='unet_scse_resnet18',dataset_name=None)
+@EVAL_WRAPPER_REGISTRY.register('semantic_segmentation_unet_scse')
 def eval_net_miou(model, loader, device="cuda", net_type="unet"):
     """Evaluation without the densecrf with the dice coefficient"""
     num_classes = loader.dataset.num_classes
