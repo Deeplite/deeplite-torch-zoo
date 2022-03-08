@@ -16,9 +16,9 @@ from pycocotools.coco import COCO
 
 
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import select_device, init_seeds
 from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6

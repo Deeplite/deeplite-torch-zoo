@@ -7,7 +7,7 @@ from pycocotools.cocoeval import COCOeval
 
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
-from deeplite_torch_zoo.src.objectdetection.configs.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
+from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
 
 
 class COCOEvaluator(Evaluator):

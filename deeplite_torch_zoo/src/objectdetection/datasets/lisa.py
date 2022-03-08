@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import torch
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as lisa_cfg
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as lisa_cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
 
 

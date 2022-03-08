@@ -28,7 +28,7 @@ ACTIVATION_FN_NAME_MAP = {
     'silu': nn.SiLU,
     'hardswish': Hardswish,
     'mish': Mish,
-    'leakyrelu': nn.LeakyReLU,
+    'leakyrelu': LeakyReLU,
 }
 
 
@@ -95,7 +95,7 @@ class BottleneckCSP(nn.Module):
         self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         self.cv4 = Conv_(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
-        self.act = nn.LeakyReLU(0.1, inplace=True)
+        self.act = ACTIVATION_FN_NAME_MAP[activation_type]
         self.m = nn.Sequential(
             *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
         )
@@ -120,7 +120,7 @@ class BottleneckCSP2(nn.Module):
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         self.cv3 = Conv_(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = Mish()
+        self.act = ACTIVATION_FN_NAME_MAP[activation_type]
         self.m = nn.Sequential(
             *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
         )
@@ -139,14 +139,15 @@ class BottleneckCSP2Leaky(nn.Module):
         self, c1, c2, n=1, shortcut=False, g=1, e=0.5, activation_type='hardswish',
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSP2Leaky, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
+        # LeakyReLU activation fixed for this block
+        Conv_ = functools.partial(Conv, activation_type='leakyrelu')
+        Bottleneck_ = functools.partial(Bottleneck, activation_type='leakyrelu')
         c_ = int(c2)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         self.cv3 = Conv_(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = LeakyReLU(negative_slope=0.1)
+        self.act = LeakyReLU(negative_slope=0.1, inplace=True)
         self.m = nn.Sequential(
             *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
         )
@@ -213,7 +214,7 @@ class SPPCSP(nn.Module):
         self.cv5 = Conv_(4 * c_, c_, 1, 1)
         self.cv6 = Conv_(c_, c_, 3, 1)
         self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = Mish()
+        self.act = ACTIVATION_FN_NAME_MAP[activation_type]
         self.cv7 = Conv_(2 * c_, c2, 1, 1)
 
     def forward(self, x):
@@ -227,7 +228,8 @@ class SPPCSP(nn.Module):
 class SPPCSPLeaky(nn.Module):
     def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hardswish'):
         super(SPPCSPLeaky, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
+        # LeakyReLU activation fixed for this block
+        Conv_ = functools.partial(Conv, activation_type='leakyrelu')
         c_ = int(2 * c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
@@ -239,7 +241,7 @@ class SPPCSPLeaky(nn.Module):
         self.cv5 = Conv_(4 * c_, c_, 1, 1)
         self.cv6 = Conv_(c_, c_, 3, 1)
         self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = LeakyReLU(negative_slope=0.1)
+        self.act = LeakyReLU(negative_slope=0.1, inplace=True)
         self.cv7 = Conv_(2 * c_, c2, 1, 1)
 
     def forward(self, x):
@@ -354,3 +356,53 @@ class Expand(nn.Module):
         x = x.view(b, s, s, c // s ** 2, h, w)  # x(1,2,2,16,80,80)
         x = x.permute(0, 3, 4, 1, 5, 2).contiguous()  # x(1,16,80,2,80,2)
         return x.view(b, c // s ** 2, h * s, w * s)  # x(1,16,160,160)
+
+
+class ReOrg(nn.Module):
+    def __init__(self):
+        super(ReOrg, self).__init__()
+
+    def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
+        return torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
+
+
+@CUSTOM_ACTIVATION_MODULES.register('BottleneckCSPF')
+class BottleneckCSPF(nn.Module):
+    # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
+        super(BottleneckCSPF, self).__init__()
+        Conv_ = functools.partial(Conv, activation_type=activation_type)
+        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv_(c1, c_, 1, 1)
+        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
+        self.cv4 = Conv_(2 * c_, c2, 1, 1)
+        self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
+        self.act = ACTIVATION_FN_NAME_MAP[activation_type]
+        self.m = nn.Sequential(*[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)])
+
+    def forward(self, x):
+        y1 = self.m(self.cv1(x))
+        y2 = self.cv2(x)
+        return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+
+class ImplicitA(nn.Module):
+    def __init__(self, channel):
+        super(ImplicitA, self).__init__()
+        self.channel = channel
+        self.implicit = nn.Parameter(torch.zeros(1, channel, 1, 1))
+        nn.init.normal_(self.implicit, std=.02)
+
+    def forward(self, x):
+        return self.implicit.expand_as(x) + x
+
+
+class ImplicitM(nn.Module):
+    def __init__(self, channel):
+        super(ImplicitM, self).__init__()
+        self.channel = channel
+        self.implicit = nn.Parameter(torch.ones(1, channel, 1, 1))
+        nn.init.normal_(self.implicit, mean=1., std=.02)
+
+    def forward(self, x):
+        return self.implicit.expand_as(x) * x

@@ -19,7 +19,7 @@ __all__ = [
     "YOLOV3_MODELS",
 ]
 
-CFG_PATH = "deeplite_torch_zoo/src/objectdetection/configs/model_configs"
+CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {

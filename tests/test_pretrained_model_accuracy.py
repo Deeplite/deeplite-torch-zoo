@@ -282,7 +282,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        from deeplite_torch_zoo.src.objectdetection.configs.coco_config import DATA, MISSING_IDS
+        from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import DATA, MISSING_IDS
         test_loader = get_data_splits_by_name(
             data_root="/neutrino/datasets/coco2017/",
             dataset_name="coco",
