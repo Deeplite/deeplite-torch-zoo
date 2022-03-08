@@ -1,3 +1,4 @@
+import re
 import fnmatch
 import collections
 
@@ -27,23 +28,20 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
     }
     """
 
-    def normalize_model_name(model_name):
-        if "yolo" in model_name:
-            return "yolo"
-        if "unet" in model_name:
-            return "unet"
-        if "ssd300" in model_name:
-            return "ssd300"
+    def simplify_model_name(model_name):
+        MODEL_NAME_SUBSTRINGS = ['yolo', 'unet', 'ssd300']
+        for substring in MODEL_NAME_SUBSTRINGS:
+            if re.search(substring, model_name):
+                return substring
         return model_name
 
-    datasplit_key = (dataset_name.lower(), )
+    registry_key = (dataset_name.lower(), )
     if model_name is not None:
-        model_name = normalize_model_name(model_name)
-        model_name = model_name.lower()
-        datasplit_model_name_key = datasplit_key + (model_name, )
+        model_name = simplify_model_name(model_name).lower()
+        datasplit_model_name_key = registry_key + (model_name, )
+        if datasplit_model_name_key in DATA_WRAPPER_REGISTRY.registry_dict:
+            registry_key = datasplit_model_name_key
 
-    registry_key = datasplit_model_name_key if datasplit_model_name_key in \
-        DATA_WRAPPER_REGISTRY.registry_dict else datasplit_key
     data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(registry_key)
     data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
     return data_split
