@@ -40,7 +40,7 @@ DATASET_TO_HP_CONFIG_MAP = {
 }
 
 for dataset_name in ('voc', 'coco', 'wider_face', 'person_detection',
-    'car_detection', 'voc07'):
+    'car_detection', 'voc07', 'coco_eight_class'):
     DATASET_TO_HP_CONFIG_MAP[dataset_name] = hyp_cfg_scratch
 
 HP_CONFIG_MAP = {
@@ -178,12 +178,13 @@ class Trainer(object):
         gt = None
         if opt.dataset_type in ("voc", "voc07"):
             test_set = opt.img_dir / "VOC2007"
+        elif opt.dataset_type == "coco_eight_class":
+            test_set = opt.img_dir 
         elif opt.dataset_type == "coco":
             gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
         elif opt.dataset_type == "car_detection":
             gt = SubsampledCOCO(opt.img_dir / "annotations/instances_val2017.json",
                 subsample_categories=['car'])
-
         Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
                         _set=opt.dataset_type, device=self.device, net=opt.net,
                         img_size=opt.test_img_res, progressbar=True)
@@ -236,6 +237,7 @@ class Trainer(object):
             mAP = 0
             if epoch % opt.eval_freq == 0:
                 Aps = self.evaluate()
+                print(f"mAP values: {Aps}")
                 mAP = Aps["mAP"]
                 self.__save_model_weights(epoch, mAP)
                 print("best mAP : %g" % (self.best_mAP))
@@ -350,7 +352,7 @@ if __name__ == "__main__":
         default="voc",
         choices=["coco", "voc", "lisa", "lisa_full",
             "lisa_subset11", "wider_face", "person_detection", "voc07",
-            "car_detection", "person_pet_vehicle_detection"],
+            "car_detection", "person_pet_vehicle_detection", "coco_eight_class"],
         help="Name of the dataset to train/validate on",
     )
     parser.add_argument(
