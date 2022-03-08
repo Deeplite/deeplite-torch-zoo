@@ -25,10 +25,10 @@ CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 model_urls = {
     "yolov4s_voc_20": "yolov4s-voc-20classes_849_58041e8852a4b2e2.pt",
     "yolov4m_voc_20": "yolov4m-voc-20classes_874_e0c8e179992b5da2.pt",
-    "yolov4l_voc_20": "",
-    "yolov4x_voc_20": "",
-    "yolov4m_lisa_11": "",
-    "yolov4l_leaky_voc_20": "",
+    "yolov4l_voc_20": "yolo4l-voc-20classes_872-9f54132ce2934fbf.pth",
+    "yolov4x_voc_20": "yolo4x-voc-20classes_882-187f352b9d0d29c6.pth",
+    "yolov4m_lisa_11": "yolov4m-lisa_11_880-6615c5e27557fab0.pth",
+    "yolov4l_leaky_voc_20": "yolo4l-leaky-voc-20classes_891-2c0f78ee3938ade3.pt",
     "yolov4s_coco_80": "yolov4_6s-coco-80classes-288_b112910223d6c56d.pt",
     "yolov4m_coco_80": "yolov4_6m-coco-80classes-309_02b2013002a4724b.pt",
 }

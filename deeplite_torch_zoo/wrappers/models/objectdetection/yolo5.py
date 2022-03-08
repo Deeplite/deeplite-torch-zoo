@@ -48,8 +48,6 @@ model_urls = {
     "yolov5_6n_relu_person_detection_1": "yolov5_6n_relu-person-detection-1class_621-6794298f12d33ba8.pt",
     "yolov5_6n_voc07_20": "yolov5_6n-voc07-20classes-620_037230667eff7b12.pt",
     "yolov5_6s_voc07_20": "yolov5_6s-voc07-20classes-687_4d221fd4edc09ce1.pt",
-    "yolov5_6s_relu_voc_20": "yolov5_6s_relu-voc-20classes-819_a35dff53b174e383.pt",
-    "yolov5_6m_relu_voc_20": "yolov5_6m_relu-voc-20classes-856_c5c23135e6d5012f.pt",
 }
 
 yolov5_cfg = {
