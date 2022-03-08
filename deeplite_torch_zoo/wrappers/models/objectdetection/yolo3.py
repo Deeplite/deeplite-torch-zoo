@@ -1,9 +1,17 @@
 
+from pathlib import Path
+import urllib.parse as urlparse
 from collections import namedtuple
 
-from deeplite_torch_zoo.src.objectdetection.yolov3.model.yolov3 import Yolov3
+import deeplite_torch_zoo
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+
+
+
+def get_project_root() -> Path:
+    return Path(deeplite_torch_zoo.__file__).parents[1]
 
 
 __all__ = [
@@ -11,24 +19,33 @@ __all__ = [
     "YOLOV3_MODELS",
 ]
 
+CFG_PATH = "deeplite_torch_zoo/src/objectdetection/configs/model_configs"
+CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
-    "yolov3_voc_20": "http://download.deeplite.ai/zoo/models/yolo3-voc-0_839-a6149826183808aa.pth",
-    "yolov3_voc_1": "http://download.deeplite.ai/zoo/models/yolov3-voc-1cls-0_888-1c73632fc187ef0c.pth",  # person
-    "yolov3_voc_2": "http://download.deeplite.ai/zoo/models/yolov3-voc-2cls-0_911-b308f8a2686c19a6.pth",  # person and car
-    "yolov3_lisa_11": "http://download.deeplite.ai/zoo/models/yolov3-lisa_11_830-663a0ec046402856.pth",
+    "yolov3_voc_20": "yolo3-voc-0_839-a6149826183808aa.pth",
+    "yolov3_voc_1": "yolov3-voc-1cls-0_888-1c73632fc187ef0c.pth",  # person
+    "yolov3_voc_2": "yolov3-voc-2cls-0_911-b308f8a2686c19a6.pth",  # person and car
+    "yolov3_lisa_11": "yolov3-lisa_11_830-663a0ec046402856.pth",
 }
 
-YOLOV3_MODELS = ["yolov3"]
+yolov3_cfg = {
+    "yolov3": "yolov3.yaml",
+    "yolov3_tiny": "yolov3-tiny.yaml",
+    "yolov3_spp": "yolov3-spp.yaml",
+}
+
+YOLOV3_MODELS = list(yolov3_cfg.keys())
 
 
 def yolo3(
     net="yolov3", dataset_name="voc_20", num_classes=20, pretrained=False,
     progress=True, device="cuda", **kwargs
 ):
-    model = Yolov3(num_classes=num_classes)
+    config_path = get_project_root() / CFG_PATH / yolov3_cfg[net]
+    model = YoloV5_6(config_path, ch=3, nc=num_classes)
     if pretrained:
-        checkpoint_url = model_urls[f"yolov3_{dataset_name}"]
+        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"yolov3_{dataset_name}"])
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
 
     return model.to(device)
