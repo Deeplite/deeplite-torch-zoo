@@ -111,7 +111,7 @@ class Trainer(object):
             "num_classes": self.num_classes,
             "device": self.device,
             "progress": True,
-            "_set_classes": self.pretraining_source_dataset,
+            "dataset_name": self.pretraining_source_dataset,
         }
         for net_name, model_fn in net_name_to_model_fn_map.items():
             if re.match(net_name, self.model_name):

@@ -33,6 +33,7 @@ script:
   - codecov
 
 before_deploy:
+  - pip install markupsafe==2.0.1
   - python setup.py install
   - pip install twine
   - python setup.py bdist_wheel --python-tag $PYTAG
