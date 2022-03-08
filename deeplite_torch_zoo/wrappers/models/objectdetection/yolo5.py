@@ -80,7 +80,7 @@ def yolo5(
 
 def yolo5_6(
     net="yolov5_6s", dataset_name="voc_20", num_classes=20, activation_type=None,
-    pretrained=False, progress=True, device="cuda"
+    pretrained=False, progress=True, device="cuda", _set_classes = "voc_20"
 ):
     for suffix in MODEL_NAME_SUFFICES:
         config_key = re.sub(f'\_{suffix}$', '', net) # pylint: disable=W1401

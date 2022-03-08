@@ -38,14 +38,18 @@ class VOCEvaluator(Evaluator):
 
         self.progressbar = progressbar
         self.classes = cfg.DATA["CLASSES"]
+        self.all_classes = cfg.DATA["ALLCLASSES"]
         if num_classes == 1:
             self.classes = cfg.DATA["CLASSES_1"]
         elif num_classes == 2:
             self.classes = cfg.DATA["CLASSES_2"]
         elif num_classes == 3:
             self.classes = cfg.DATA["CLASSES_3"]
-            
-        self.all_classes = cfg.DATA["ALLCLASSES"]
+        elif num_classes == 8:
+            self.classes = cfg.DATA["CLASSES_8"]
+            self.all_classes = cfg.DATA["CLASSES_8"]
+        
+        
         self.num_classes = len(self.classes)
         self.class_to_id = dict(zip(self.classes, range(self.num_classes)))
         self.id_to_class = {v: k for k, v in self.class_to_id.items()}
@@ -55,6 +59,7 @@ class VOCEvaluator(Evaluator):
         self.map_selected_ids_to_all = {
             k: self.class_to_id_all[v] for k, v in self.id_to_class.items()
         }
+
         self.map_all_ids_to_selected = {
             v: k for k, v in self.map_selected_ids_to_all.items()
         }

@@ -19,6 +19,9 @@ class VocDataset(DLZooDataset):
             self.classes = cfg.DATA["CLASSES_1"]
         elif num_classes == 2:
             self.classes = cfg.DATA["CLASSES_2"]
+        elif num_classes == 8:
+            self.classes = cfg.DATA["CLASSES_8"]
+            self.all_classes = self.classes          
 
         self.all_classes = cfg.DATA["ALLCLASSES"]
         self.annotation_path = annotation_path
