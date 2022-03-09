@@ -2,30 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections import namedtuple
+import re
 
-def normalize_model_name(net):
-    if "yolo" in net:
-        net = "yolo"
-    elif "unet_scse" in net:
-        net = "unet_scse"
-    elif "unet" in net:
-        net = "unet"
-    elif "ssd300" in net:
-        net = "ssd300"
-    elif "deeplab" in net:
-        net = "deeplab"
-    elif "fcn" in net:
-        net = "fcn"
-    elif "mb2_ssd_lite" in net:
-        net = "mb2_ssd_lite"
-    elif "mb2_ssd" in net:
-        net = "mb2_ssd"
-    elif "mb1_ssd" in net:
-        net = "mb1_ssd"
-    elif "ssd" in net:
-        net = "ssd"
-    elif "rcnn" in net:
-        net = "rcnn"
+def extract_model_type(net):
+    MODEL_NAME_SUBSTRINGS = ["yolo", "unet_scse", "unet", "ssd300", "deeplab",
+                            "fcn", "mb2_ssd_lite","mb2_ssd", "mb1_ssd", "ssd", "rcnn"]
+    for substring in MODEL_NAME_SUBSTRINGS:
+        if re.search(substring, net):
+            return substring
     return net
 
 def normalize_dataset_name(data):
@@ -44,6 +28,7 @@ def normalize_dataset_name(data):
     elif 'person_pet_vehicle_detection':
         data = 'voc'
     return data
+
 class Registry:
     """ Generic registry implentation modified from
     https://github.com/openvinotoolkit/openvino/blob/master/tools/pot/openvino/tools/pot/utils/registry.py """
@@ -141,10 +126,10 @@ class EvalWrapperRegistry(Registry):
         if task_type == "classification":
             key = "classification"
         elif task_type == "semantic_segmentation":
-            model_type = normalize_model_name(model_name)
+            model_type = extract_model_type(model_name)
             key = task_type +"_"+ model_type
         elif task_type == 'object_detection':
-            model_type = normalize_model_name(model_name)
+            model_type = extract_model_type(model_name)
             dataset_type = normalize_dataset_name(dataset_name)
             key = task_type + "_" + model_type + "_" + dataset_type
         
