@@ -92,19 +92,19 @@ DETECTION_MODEL_TESTS = [
     ('resnet34_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
     ('resnet50_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
     ('yolo3', 'voc_1', {'num_classes': 1, 'img_size': 416},
-        [(52, 52, 3, 6), (26, 26, 3, 6), (13, 13, 3, 6)]),
+        [(3, 52, 52, 6), (3, 26, 26, 6), (3, 13, 13, 6)]),
     ('yolo3', 'voc_2', {'num_classes': 2, 'img_size': 416},
-        [(52, 52, 3, 7), (26, 26, 3, 7), (13, 13, 3, 7)]),
+        [(3, 52, 52, 7), (3, 26, 26, 7), (3, 13, 13, 7)]),
 ]
 
-YOLO_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l',
-               'yolo4l_leaky', 'yolo4x', 'yolo5s', 'yolo5m']
+YOLO_MODELS = ['yolo5s', 'yolo5m']
 
 for model_name in YOLO_MODELS:
     DETECTION_MODEL_TESTS.append((model_name, 'voc_20', {'num_classes': 21, 'img_size': 416},
             [(52, 52, 3, 25), (26, 26, 3, 25), (13, 13, 3, 25)]))
 
-YOLO5_6_MODELS = ['yolo5_6n', 'yolo5_6s', 'yolo5_6m']
+YOLO5_6_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4l_leaky', 'yolo4x',
+    'yolo5_6n', 'yolo5_6s', 'yolo5_6m']
 
 for model_name in YOLO5_6_MODELS:
     DETECTION_MODEL_TESTS.append((model_name, 'voc_20', {'num_classes': 21, 'img_size': 416},
@@ -157,7 +157,7 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
 @pytest.mark.parametrize(
     ('model_name', 'num_classes', 'output_shape'),
     [
-        ('yolo3', 12, [(52, 52, 3, 16), (26, 26, 3, 16), (13, 13, 3, 16)]),
+        ('yolo3', 12, [(3, 52, 52, 16), (3, 26, 26, 16), (3, 13, 13, 16)]),
     ],
 )
 def test_detection_model_output_shape_lisa_11_fake(model_name, num_classes, output_shape):
@@ -174,9 +174,10 @@ def test_detection_model_output_shape_lisa_11_fake(model_name, num_classes, outp
     assert y[0][0].shape == (1, *output_shape[0])
     assert y[0][1].shape == (1, *output_shape[1])
     assert y[0][2].shape == (1, *output_shape[2])
-    assert y[1][0].shape == (1, *output_shape[0])
-    assert y[1][1].shape == (1, *output_shape[1])
-    assert y[1][2].shape == (1, *output_shape[2])
+    if y[1] is not None:
+        assert y[1][0].shape == (1, *output_shape[0])
+        assert y[1][1].shape == (1, *output_shape[1])
+        assert y[1][2].shape == (1, *output_shape[2])
 
 
 @pytest.mark.parametrize(
@@ -249,13 +250,13 @@ def test_create_classification_model_output_shape(model_name, dataset_name, inpu
 DETECTION_CREATE_MODEL_TESTS = [
     ('mb1_ssd', 'voc_20', {}, [(3000, CUSTOM_NUM_CLASSES+1), (3000, 4)]),
     ('yolo3', 'voc_1', {'num_classes': 1, 'img_size': 416},
-        [(52, 52, 3, CUSTOM_NUM_CLASSES+5),
-         (26, 26, 3, CUSTOM_NUM_CLASSES+5),
-         (13, 13, 3, CUSTOM_NUM_CLASSES+5)]),
+        [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
+         (3, 26, 26, CUSTOM_NUM_CLASSES+5),
+         (3, 13, 13, CUSTOM_NUM_CLASSES+5)]),
     ('yolo4s', 'voc_20', {'num_classes': 21, 'img_size': 416},
-            [(52, 52, 3, CUSTOM_NUM_CLASSES+5),
-             (26, 26, 3, CUSTOM_NUM_CLASSES+5),
-             (13, 13, 3, CUSTOM_NUM_CLASSES+5)]),
+            [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
+             (3, 26, 26, CUSTOM_NUM_CLASSES+5),
+             (3, 13, 13, CUSTOM_NUM_CLASSES+5)]),
     ('yolo5_6n', 'voc_20', {'num_classes': 21, 'img_size': 416},
             [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
              (3, 26, 26, CUSTOM_NUM_CLASSES+5),

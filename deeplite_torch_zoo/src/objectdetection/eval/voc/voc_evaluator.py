@@ -12,8 +12,8 @@ import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.voc import voc_eval
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (cxcywh2xyxy, nms)
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import (cxcywh2xyxy, nms)
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.visualize import visualize_boxes
 
 
 class VOCEvaluator(Evaluator):

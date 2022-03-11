@@ -9,8 +9,7 @@ import torch
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (cxcywh2xyxy, nms, post_process)
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import nms, post_process
 
 
 class Evaluator(object):

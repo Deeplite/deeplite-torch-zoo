@@ -23,8 +23,8 @@ import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as li
 from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.metrics import MAP
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import post_process
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import post_process
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.visualize import visualize_boxes
 
 
 class Demo(Evaluator):
