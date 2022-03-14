@@ -50,6 +50,7 @@ model_urls = {
     "yolov5_6n_relu_person_detection_1": "yolov5_6n_relu-person-detection-1class_621-6794298f12d33ba8.pt",
     "yolov5_6n_voc07_20": "yolov5_6n-voc07-20classes-620_037230667eff7b12.pt",
     "yolov5_6s_voc07_20": "yolov5_6s-voc07-20classes-687_4d221fd4edc09ce1.pt",
+    "yolov5_6sa_person_detection_1": "yolov5_6sa-person-detection-1class_659_015807ae6899af0f.pt",
 }
 
 yolov5_cfg = {
@@ -62,6 +63,8 @@ yolov5_cfg = {
     "yolov5_6l": "yolov5_6l.yaml",
     "yolov5_6x": "yolov5_6x.yaml",
     "yolov5_6n": "yolov5_6n.yaml",
+    "yolov5_6sa": "yolov5_6sa.yaml",
+    "yolov5_6ma": "yolov5_6ma.yaml",
 }
 
 YOLOV5_MODELS = []
@@ -102,6 +105,7 @@ def yolo5_6(
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolov5[smlx]$": yolo5,
     "^yolov5_6[nsmlx]$": yolo5_6,
+    "^yolov5_6[nsmlx]a$": yolo5_6,
     "^yolov5_6[nsmlx]_relu$": partial(yolo5_6, activation_type="relu"),
 }
 
@@ -130,7 +134,7 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
     'person_detection_1': ModelSet(1, ['yolov5_6n', 'yolov5_6s',
-        'yolov5_6n_relu', 'yolov5_6s_relu', 'yolov5_6m_relu']),
+        'yolov5_6n_relu', 'yolov5_6s_relu', 'yolov5_6m_relu', 'yolov5_6sa']),
     'voc_20': ModelSet(20, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6m_relu', 'yolov5_6s_relu']),
     'voc_24': ModelSet(24, ['yolov5m', 'yolov5l']),
