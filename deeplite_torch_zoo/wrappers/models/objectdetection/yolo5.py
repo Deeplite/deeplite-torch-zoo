@@ -36,6 +36,8 @@ model_urls = {
     "yolov5_6s_voc_20": "yolo5_6s-voc-20classes_871-4ceb1b22b227c05c.pt",
     "yolov5_6n_voc_20": "yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
     "yolov5_6m_voc_20": "yolo5_6m-voc-20classes_902-50c151baffbf896e.pt",
+    "yolov5_6l_voc_20": "yolov5_6l-voc-20classes_875_3fb90f0c405f170c.pt",
+    "yolov5_6x_voc_20": "yolov5_6x-voc-20classes_884_a2b6fb7234218cf6.pt",
     "yolov5_6s_relu_voc_20": "yolov5_6s_relu-voc-20classes-819_a35dff53b174e383.pt",
     "yolov5_6m_relu_voc_20": "yolov5_6m_relu-voc-20classes-856_c5c23135e6d5012f.pt",
     "yolov5_6s_coco_80": "yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",

@@ -23,7 +23,7 @@ CFG_PATH = "deeplite_torch_zoo/src/objectdetection/configs/model_configs"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
-    "yolov3_voc_20": "yolo3-voc-0_839-a6149826183808aa.pth",
+    "yolov3_voc_20": "yolov3-voc-20classes-912_c94dc14873207830.pt",
     "yolov3_voc_1": "yolov3-voc-1cls-0_888-1c73632fc187ef0c.pth",  # person
     "yolov3_voc_2": "yolov3-voc-2cls-0_911-b308f8a2686c19a6.pth",  # person and car
     "yolov3_lisa_11": "yolov3-lisa_11_830-663a0ec046402856.pth",
