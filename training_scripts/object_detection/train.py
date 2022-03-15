@@ -99,6 +99,7 @@ class Trainer(object):
             "^yolov3$": yolo3,
             "^yolov5[smlx]$": yolo5,
             "^yolov5_6[nsmlx]$": yolo5_6,
+            "^yolov5_6[nsmlx]a$": yolo5_6,
             "^yolov5_6[nsmlx]_relu$": functools.partial(yolo5_6, activation_type='relu'),
             "^yolov4[smlx]$": yolo4,
         }
