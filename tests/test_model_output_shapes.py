@@ -30,6 +30,7 @@ DATASET_NAME_DATASPLIT_FN_ARG_MAP = {
     'voc_1': 'voc',
     'voc_2': 'voc',
     'carvana': 'carvana',
+    'person_detection_1': 'person_detection',
 }
 
 CLASSIFICATION_MODEL_TESTS = [
@@ -97,18 +98,26 @@ DETECTION_MODEL_TESTS = [
         [(3, 52, 52, 7), (3, 26, 26, 7), (3, 13, 13, 7)]),
 ]
 
-YOLO_MODELS = ['yolo5s', 'yolo5m']
+YOLO_MODELS = ['yolo5s', 'yolo5m', 'yolo5l', 'yolo5x']
 
 for model_name in YOLO_MODELS:
     DETECTION_MODEL_TESTS.append((model_name, 'voc_20', {'num_classes': 21, 'img_size': 416},
             [(52, 52, 3, 25), (26, 26, 3, 25), (13, 13, 3, 25)]))
 
-YOLO5_6_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4l_leaky', 'yolo4x',
-    'yolo5_6n', 'yolo5_6s', 'yolo5_6m']
+YOLO5_6_VOC_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4l_leaky', 'yolo4x',
+    'yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
+    'yolo5_6s_relu', 'yolo5_6m_relu']
 
-for model_name in YOLO5_6_MODELS:
+YOLO5_6_PERSON_MODELS = ['yolo5_6n', 'yolo5_6s', 'yolo5_6n_relu',
+    'yolo5_6s_relu', 'yolo5_6m_relu']
+
+for model_name in YOLO5_6_VOC_MODELS:
     DETECTION_MODEL_TESTS.append((model_name, 'voc_20', {'num_classes': 21, 'img_size': 416},
             [(3, 52, 52, 25), (3, 26, 26, 25), (3, 13, 13, 25)]))
+
+for model_name in YOLO5_6_PERSON_MODELS:
+    DETECTION_MODEL_TESTS.append((model_name, 'person_detection_1', {'num_classes': 1, 'img_size': 320},
+            [(3, 40, 40, 6), (3, 20, 20, 6), (3, 10, 10, 6)]))
 
 
 @pytest.mark.parametrize(
