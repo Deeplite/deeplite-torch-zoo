@@ -1,1 +1,1 @@
-from deeplite_torch_zoo.wrappers import get_data_splits_by_name, get_model_by_name, list_models, get_eval_function
+from deeplite_torch_zoo.wrappers import get_data_splits_by_name, get_model_by_name, list_models, create_model, get_eval_function

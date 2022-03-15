@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import post_process
+
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import (
     SPP, SPPCSP, SPPCSPLeaky, Bottleneck, BottleneckCSP, BottleneckCSP2, BottleneckCSP2Leaky, Concat, Conv,
     DWConv, Focus, VoVCSP)

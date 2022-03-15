@@ -12,10 +12,10 @@ from functools import partial
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.voc import voc_eval
-from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.tools import (cxcywh2xyxy, nms)
-from deeplite_torch_zoo.src.objectdetection.yolov3.utils.visualize import visualize_boxes
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.visualize import visualize_boxes
+
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
+
 
 class VOCEvaluator(Evaluator):
     def __init__(
@@ -45,7 +45,7 @@ class VOCEvaluator(Evaluator):
             self.classes = cfg.DATA["CLASSES_2"]
         elif num_classes == 3:
             self.classes = cfg.DATA["CLASSES_3"]
-            
+
         self.all_classes = cfg.DATA["ALLCLASSES"]
         self.num_classes = len(self.classes)
         self.class_to_id = dict(zip(self.classes, range(self.num_classes)))
@@ -179,6 +179,7 @@ def yolo_eval_voc(
         result["mAP"] = mAP
 
     return result
+
 
 @EVAL_WRAPPER_REGISTRY.register('object_detection_yolo_voc07')
 def yolo_voc07_eval(

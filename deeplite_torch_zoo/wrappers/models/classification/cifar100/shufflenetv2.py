@@ -9,7 +9,7 @@
 """
 
 
-from torch.hub import load_state_dict_from_url
+from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.src.classification.cifar_models.shufflenetv2 import ShuffleNetV2
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
@@ -22,18 +22,16 @@ model_urls = {
 }
 
 
-def _shufflenetv2(arch, net_size=1, pretrained=False, progress=True, device='cuda'):
-    model = ShuffleNetV2(net_size)
+def _shufflenetv2(arch, net_size=1, pretrained=False, num_classes=100, progress=True, device='cuda'):
+    model = ShuffleNetV2(net_size, num_classes=num_classes)
     if pretrained:
-        state_dict = load_state_dict_from_url(
-            model_urls[arch], progress=progress, check_hash=True
-        )
-        model.load_state_dict(state_dict)
+        checkpoint_url = model_urls[arch]
+        model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register(model_name='shufflenet_v2_1_0', dataset_name='cifar100', task_type='classification')
-def shufflenet_v2_1_0_cifar100(pretrained=False, progress=True, device='cuda'):
+def shufflenet_v2_1_0_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
     return _shufflenetv2(
-        "shufflenet_v2", net_size=1, pretrained=pretrained, progress=progress, device=device
+        "shufflenet_v2", net_size=1, num_classes=num_classes, pretrained=pretrained, progress=progress, device=device
     )

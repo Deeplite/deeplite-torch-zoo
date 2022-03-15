@@ -21,8 +21,9 @@ MODEL_NAMES = [
 def make_wrapper_func(wrapper_fn_name, model_name_key):
     q_model_name = "_".join(("q", model_name_tag))
     @MODEL_WRAPPER_REGISTRY.register(model_name=q_model_name, dataset_name='imagenet', task_type='classification')
-    def wrapper_func(pretrained=False, progress=True, device="cuda"):
-        model = torchvision.models.quantization.__dict__[model_name_key](pretrained=pretrained)
+    def wrapper_func(pretrained=False, progress=True, device="cuda", num_classes=1000):
+        model = torchvision.models.quantization.__dict__[model_name_key](pretrained=pretrained,
+            num_classes=num_classes)
         return model.to(device)
 
     wrapper_func.__name__ = wrapper_fn_name
