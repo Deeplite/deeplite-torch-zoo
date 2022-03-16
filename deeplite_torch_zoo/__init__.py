@@ -3,3 +3,4 @@ from deeplite_torch_zoo.wrappers import get_model_by_name
 from deeplite_torch_zoo.wrappers import list_models
 from deeplite_torch_zoo.wrappers import create_model
 from deeplite_torch_zoo.wrappers import dump_json_model_list
+from deeplite_torch_zoo.wrappers import get_eval_function

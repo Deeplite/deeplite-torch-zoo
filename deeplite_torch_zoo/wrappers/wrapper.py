@@ -1,19 +1,22 @@
+import re
 import json
 import fnmatch
 import subprocess
 import collections
 
+from collections import namedtuple
 import texttable
 
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
+import deeplite_torch_zoo.wrappers.eval  # pylint: disable=unused-import
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
-
-__all__ = ["get_data_splits_by_name", "get_model_by_name", "create_model",
-    "list_models", "dump_json_model_list"]
+__all__ = ["get_data_splits_by_name", "get_model_by_name", "get_eval_function",
+    "list_models",  "create_model", "dump_json_model_list"]
 
 
 def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kwargs):
@@ -29,23 +32,20 @@ def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kw
     }
     """
 
-    def normalize_model_name(model_name):
-        if "yolo" in model_name:
-            return "yolo"
-        if "unet" in model_name:
-            return "unet"
-        if "ssd300" in model_name:
-            return "ssd300"
+    def simplify_model_name(model_name):
+        MODEL_NAME_SUBSTRINGS = ['yolo', 'unet', 'ssd300']
+        for substring in MODEL_NAME_SUBSTRINGS:
+            if re.search(substring, model_name):
+                return substring
         return model_name
 
-    datasplit_key = (dataset_name.lower(), )
+    registry_key = (dataset_name.lower(), )
     if model_name is not None:
-        model_name = normalize_model_name(model_name)
-        model_name = model_name.lower()
-        datasplit_model_name_key = datasplit_key + (model_name, )
+        model_name = simplify_model_name(model_name).lower()
+        datasplit_model_name_key = registry_key + (model_name, )
+        if datasplit_model_name_key in DATA_WRAPPER_REGISTRY.registry_dict:
+            registry_key = datasplit_model_name_key
 
-    registry_key = datasplit_model_name_key if datasplit_model_name_key in \
-        DATA_WRAPPER_REGISTRY.registry_dict else datasplit_key
     data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(registry_key)
     data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
     return data_split
@@ -68,6 +68,15 @@ def get_model_by_name(
     model_func = MODEL_WRAPPER_REGISTRY.get(model_name=model_name.lower(), dataset_name=dataset_name)
     model = model_func(pretrained=pretrained, progress=progress, device=device)
     return model.half() if fp16 else model
+
+
+def get_eval_function(model_name="", dataset_name=""):
+    _register_key = namedtuple('RegistryKey', ['model_name', 'dataset_name'])
+    key = _register_key(model_name=model_name, dataset_name=dataset_name)
+    task_type = MODEL_WRAPPER_REGISTRY.task_type_map[key]
+    eval_function = EVAL_WRAPPER_REGISTRY.get(task_type=task_type, model_name=model_name,
+        dataset_name=dataset_name)
+    return eval_function
 
 
 def create_model(
@@ -106,29 +115,23 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
     :param print_table: Whether to print a table with matched models to the console
     :param return_list: Whether to return a list with model names and corresponding datasets
     """
-
     filter = '*' + filter + '*'
     all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
-
     if task_type_filter is not None:
         allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
         if task_type_filter not in allowed_task_types:
             raise RuntimeError(f'Wrong task type filter value. Allowed values are {allowed_task_types}')
         all_model_keys = [model_key for model_key in all_model_keys if
             MODEL_WRAPPER_REGISTRY.task_type_map[model_key] == task_type_filter]
-
     all_models = {model_key.model_name + '_' + model_key.dataset_name:
         model_key for model_key in all_model_keys}
-
     models = []
     include_filters = filter if isinstance(filter, (tuple, list)) else [filter]
     for f in include_filters:
         include_models = fnmatch.filter(all_models.keys(), f)
         if include_models:
             models = set(models).union(include_models)
-
     found_model_keys = [all_models[model] for model in sorted(models)]
-
     if print_table:
         table = texttable.Texttable()
         rows = collections.defaultdict(list)

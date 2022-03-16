@@ -38,3 +38,4 @@ class RCNNCOCOEvaluator(COCOEvaluator):
                 ]
             )
         return results
+

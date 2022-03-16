@@ -14,10 +14,8 @@
 # ==============================================================================
 
 """A set of functions that are used for visualization.
-
 These functions often receive an image, perform some visualization on the image.
 The functions do not return a value, instead they modify the image itself.
-
 """
 import collections
 
@@ -189,12 +187,10 @@ def visualize_boxes_and_labels_on_image_array(
     skip_labels=False,
 ):
     """Overlay labeled boxes on an image with formatted scores and label names.
-
     This function groups boxes that correspond to the same location
     and creates a display string for each detection and overlays these
     on the image. Note that this function modifies the image in place, and returns
     that same image.
-
     Args:
         image: uint8 numpy array with shape (img_height, img_width, 3)
         boxes: a numpy array of shape [N, 4]
@@ -222,7 +218,6 @@ def visualize_boxes_and_labels_on_image_array(
             boxes
         skip_scores: whether to skip score when drawing a single detection
         skip_labels: whether to skip label when drawing a single detection
-
     Returns:
         uint8 numpy array with shape (img_height, img_width, 3) with overlaid boxes.
     """
@@ -307,10 +302,8 @@ def draw_bounding_box_on_image_array(
     use_normalized_coordinates=True,
 ):
     """Adds a bounding box to an image (numpy array).
-
     Bounding box coordinates can be specified in either absolute (pixel) or
     normalized coordinates by setting the use_normalized_coordinates argument.
-
     Args:
         image: a numpy array with shape [height, width, 3].
         ymin: ymin of bounding box.
@@ -352,15 +345,12 @@ def draw_bounding_box_on_image(
     use_normalized_coordinates=True,
 ):
     """Adds a bounding box to an image.
-
     Bounding box coordinates can be specified in either absolute (pixel) or
     normalized coordinates by setting the use_normalized_coordinates argument.
-
     Each string in display_str_list is displayed on a separate line above the
     bounding box in black text on a rectangle filled with the input 'color'.
     If the top of the bounding box extends to the edge of the image, the strings
     are displayed below the bounding box.
-
     Args:
         image: a PIL.Image object.
         ymin: ymin of bounding box.
@@ -429,14 +419,12 @@ def draw_bounding_box_on_image(
 
 def draw_mask_on_image_array(image, mask, color="red", alpha=0.4):
     """Draws mask on an image.
-
     Args:
         image: uint8 numpy array with shape (img_height, img_height, 3)
         mask: a uint8 numpy array of shape (img_height, img_height) with
             values between either 0 or 1.
         color: color to draw the keypoints with. Default is red.
         alpha: transparency value between 0 and 1. (default: 0.4)
-
     Raises:
         ValueError: On incorrect data type for image or masks.
     """

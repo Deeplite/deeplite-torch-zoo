@@ -6,8 +6,10 @@ from tqdm import tqdm
 from deeplite_torch_zoo.src.segmentation.eval.utils.metrics import \
     compute_iou_batch
 from deeplite_torch_zoo.src.segmentation.Unet.dice_loss import dice_coeff
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
+@EVAL_WRAPPER_REGISTRY.register('semantic_segmentation_unet')
 def eval_net(net, loader, device="cuda"):
     """Evaluation without the densecrf with the dice coefficient"""
     net.eval()
@@ -33,7 +35,7 @@ def eval_net(net, loader, device="cuda"):
     net.train()
     return tot / n_val
 
-
+@EVAL_WRAPPER_REGISTRY.register('semantic_segmentation_unet_scse')
 def eval_net_miou(model, loader, device="cuda", net_type="unet"):
     """Evaluation without the densecrf with the dice coefficient"""
     num_classes = loader.dataset.num_classes
