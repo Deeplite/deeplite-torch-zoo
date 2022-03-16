@@ -2,8 +2,9 @@ import numpy as np
 import torch
 
 from deeplite_torch_zoo.src.segmentation.deeplab.utils.metrics import Evaluator
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
-
+@EVAL_WRAPPER_REGISTRY.register("semantic_segmentation_deeplab")
 def evaluate_deeplab(model, loader, device="cuda"):
     model.eval()
     if "cuda" in device:

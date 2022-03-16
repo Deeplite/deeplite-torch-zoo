@@ -2,17 +2,31 @@ import re
 import fnmatch
 import collections
 
+from collections import namedtuple
 import texttable
 
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
+import deeplite_torch_zoo.wrappers.eval  # pylint: disable=unused-import
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
+__all__ = ["get_data_splits_by_name", "get_model_by_name", "get_eval_function",
+    "list_models",  "create_model"]
 
-__all__ = ["get_data_splits_by_name", "get_model_by_name",
-    "list_models", "create_model"]
+
+def normalize_model_name(net):
+    if "yolo" in net:
+        net = "yolo"
+    elif "unet_scse" in net:
+        net = "unet_scse"
+    elif "unet" in net:
+        net = "unet"
+    elif "ssd300" in net:
+        net = "ssd300"
+    return net
 
 
 def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kwargs):
@@ -65,6 +79,13 @@ def get_model_by_name(
     model = model_func(pretrained=pretrained, progress=progress, device=device)
     return model.half() if fp16 else model
 
+def get_eval_function(model_name="", dataset_name=""):
+    _register_key = namedtuple('RegistryKey', ['model_name', 'dataset_name'])
+    key = _register_key(model_name=model_name, dataset_name=dataset_name)
+    task_type = MODEL_WRAPPER_REGISTRY.task_type_map[key]
+    eval_function = EVAL_WRAPPER_REGISTRY.get(task_type=task_type, model_name=model_name, dataset_name=dataset_name)
+    return eval_function
+
 
 def create_model(
     model_name="", pretraining_dataset="", num_classes=None, progress=False, fp16=False, device="cuda", **kwargs
@@ -102,29 +123,23 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
     :param print_table: Whether to print a table with matched models to the console
     :param return_list: Whether to return a list with model names and corresponding datasets
     """
-
     filter = '*' + filter + '*'
     all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
-
     if task_type_filter is not None:
         allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
         if task_type_filter not in allowed_task_types:
             raise RuntimeError(f'Wrong task type filter value. Allowed values are {allowed_task_types}')
         all_model_keys = [model_key for model_key in all_model_keys if
             MODEL_WRAPPER_REGISTRY.task_type_map[model_key] == task_type_filter]
-
     all_models = {model_key.model_name + '_' + model_key.dataset_name:
         model_key for model_key in all_model_keys}
-
     models = []
     include_filters = filter if isinstance(filter, (tuple, list)) else [filter]
     for f in include_filters:
         include_models = fnmatch.filter(all_models.keys(), f)
         if include_models:
             models = set(models).union(include_models)
-
     found_model_keys = [all_models[model] for model in sorted(models)]
-
     if print_table:
         table = texttable.Texttable()
         rows = collections.defaultdict(list)
@@ -134,7 +149,6 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
             rows[model] = ', '.join(rows[model])
         table.add_rows([['Available models', 'Source datasets'], *rows.items()])
         print(table.draw())
-
     if return_list:
         return [(model_key.model_name, model_key.dataset_name) for model_key in found_model_keys]
     return None

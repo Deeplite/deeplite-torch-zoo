@@ -87,7 +87,7 @@ class Evaluator(object):
         self, pred_bbox, test_input_size, org_img_shape, valid_scale
     ):
         """
-        预测框进行过滤，去除尺度不合理的框
+        The prediction frame is filtered to remove frames with unreasonable scales
         """
         pred_coor = pred_bbox[:, :4]
         scores = pred_bbox[:, 4]
@@ -96,8 +96,8 @@ class Evaluator(object):
         # (1)
         # (xmin_org, xmax_org) = ((xmin, xmax) - dw) / resize_ratio
         # (ymin_org, ymax_org) = ((ymin, ymax) - dh) / resize_ratio
-        # 需要注意的是，无论我们在训练的时候使用什么数据增强方式，都不影响此处的转换方式
-        # 假设我们对输入测试图片使用了转换方式A，那么此处对bbox的转换方式就是方式A的逆向过程
+        # It should be noted that no matter what data augmentation method we use during training, it does not affect the transformation method here
+        # Suppose we use conversion method A for the input test image, then the conversion method for bbox here is the reverse process of method A
         org_h, org_w = org_img_shape
         resize_ratio = min(1.0 * test_input_size / org_w, 1.0 * test_input_size / org_h)
         dw = (test_input_size - resize_ratio * org_w) / 2
@@ -105,7 +105,7 @@ class Evaluator(object):
         pred_coor[:, 0::2] = 1.0 * (pred_coor[:, 0::2] - dw) / resize_ratio
         pred_coor[:, 1::2] = 1.0 * (pred_coor[:, 1::2] - dh) / resize_ratio
 
-        # (2)将预测的bbox中超出原图的部分裁掉
+        # (2) Cut off the part of the predicted bbox beyond the original image
         pred_coor = np.concatenate(
             [
                 np.maximum(pred_coor[:, :2], [0, 0]),
@@ -113,13 +113,13 @@ class Evaluator(object):
             ],
             axis=-1,
         )
-        # (3)将无效bbox的coor置为0
+        # (3) Set the coor of the invalid bbox to 0
         invalid_mask = np.logical_or(
             (pred_coor[:, 0] > pred_coor[:, 2]), (pred_coor[:, 1] > pred_coor[:, 3])
         )
         pred_coor[invalid_mask] = 0
 
-        # (4)去掉不在有效范围内的bbox
+        # (4) Remove bboxes that are not within the valid range
         bboxes_scale = np.sqrt(
             np.multiply.reduce(pred_coor[:, 2:4] - pred_coor[:, 0:2], axis=-1)
         )
@@ -127,7 +127,7 @@ class Evaluator(object):
             (valid_scale[0] < bboxes_scale), (bboxes_scale < valid_scale[1])
         )
 
-        # (5)将score低于score_threshold的bbox去掉
+        # (5) Remove the bbox whose score is lower than score_threshold
         score_mask = scores > self.conf_thresh
 
         mask = np.logical_and(scale_mask, score_mask)
