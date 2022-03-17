@@ -318,7 +318,7 @@ if __name__ == "__main__":
         "--resume", action="store_true", default=False, help="Resume training flag"
     )
     parser.add_argument(
-        "--pretrained", default=True, help="Train the model from scratch if False"
+        "--pretrained", action="store_true", default=False, help="Train the model from scratch if False"
     )
     parser.add_argument(
         "--pretraining_source_dataset",
