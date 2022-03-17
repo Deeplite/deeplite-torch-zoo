@@ -46,22 +46,9 @@ class VOCEvaluator(Evaluator):
             self.classes = cfg.DATA["CLASSES_2"]
         elif num_classes == 3:
             self.classes = cfg.DATA["CLASSES_3"]
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-        self.all_classes = cfg.DATA["ALLCLASSES"]
-=======
-=======
->>>>>>> 10b5313e1fc35f575e1162b5725d922851f1e3e1
         elif num_classes == 8:
             self.classes = cfg.DATA["CLASSES_8"]
             self.all_classes = cfg.DATA["CLASSES_8"]
-        
-        
-<<<<<<< HEAD
->>>>>>> 10b5313e1fc35f575e1162b5725d922851f1e3e1
-=======
->>>>>>> 10b5313e1fc35f575e1162b5725d922851f1e3e1
         self.num_classes = len(self.classes)
         self.class_to_id = dict(zip(self.classes, range(self.num_classes)))
         self.id_to_class = {v: k for k, v in self.class_to_id.items()}
