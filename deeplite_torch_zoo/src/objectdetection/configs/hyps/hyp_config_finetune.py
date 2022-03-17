@@ -27,7 +27,7 @@ TRAIN = {
     "NUMBER_WORKERS": 4,
     # optimization:
     "BATCH_SIZE": 8,
-    "EPOCHS": 51,
+    "EPOCHS": 251,
     "lr0": 0.0032,  # initial learning rate (SGD=1E-2, Adam=1E-3)
     "lrf": 0.12,  # final OneCycleLR learning rate (lr0 * lrf)
     "momentum": 0.843,  # SGD momentum/Adam beta1

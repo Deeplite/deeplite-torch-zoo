@@ -20,8 +20,10 @@ def get_eval_func(dataset_name):
         'person_detection': yolo_eval_voc,
         'car_detection': partial(yolo_eval_coco, subsample_categories=['car']),
         'person_pet_vehicle_detection': yolo_eval_voc,
+        'coco_eight_class': yolo_eval_voc
     }
     for key, wrapper_fn in EVAL_FN_MAP.items():
         if key in dataset_name:
-            return wrapper_fn
+            return yolo_eval_voc
+            # return wrapper_fn
     return None

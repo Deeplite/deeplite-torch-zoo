@@ -15,12 +15,16 @@ class VocDataset(DLZooDataset):
     def __init__(self, annotation_path, anno_file_type, num_classes=None, img_size=416):
         super().__init__(cfg.TRAIN, img_size)
         self.classes = cfg.DATA["CLASSES"]
+        self.all_classes = cfg.DATA["ALLCLASSES"]
         if num_classes == 1:
             self.classes = cfg.DATA["CLASSES_1"]
         elif num_classes == 2:
             self.classes = cfg.DATA["CLASSES_2"]
+        elif num_classes == 8:
+            self.classes = cfg.DATA["CLASSES_8"]
+            self.all_classes = self.classes          
 
-        self.all_classes = cfg.DATA["ALLCLASSES"]
+
         self.annotation_path = annotation_path
         self.num_classes = len(self.classes)
 

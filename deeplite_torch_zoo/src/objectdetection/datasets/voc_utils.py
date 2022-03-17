@@ -9,7 +9,7 @@ import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
 
 
 def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=False):
-    classes = cfg.DATA["CLASSES"]
+    classes = cfg.DATA["CLASSES_8"]
     img_inds_file = os.path.join(data_path, "ImageSets", "Main", file_type + ".txt")
     with open(img_inds_file, "r") as f:
         lines = f.readlines()
@@ -32,6 +32,7 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
                     continue
                 bbox = obj.find("bndbox")
                 name = obj.find("name").text.lower().strip()
+
                 if name not in classes:
                     continue
                 has_smt = True
