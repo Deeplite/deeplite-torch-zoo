@@ -1,5 +1,7 @@
 import re
+import json
 import fnmatch
+import subprocess
 import collections
 
 from collections import namedtuple
@@ -14,19 +16,7 @@ from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
 __all__ = ["get_data_splits_by_name", "get_model_by_name", "get_eval_function",
-    "list_models",  "create_model"]
-
-
-def normalize_model_name(net):
-    if "yolo" in net:
-        net = "yolo"
-    elif "unet_scse" in net:
-        net = "unet_scse"
-    elif "unet" in net:
-        net = "unet"
-    elif "ssd300" in net:
-        net = "ssd300"
-    return net
+    "list_models",  "create_model", "dump_json_model_list"]
 
 
 def get_data_splits_by_name(data_root="", dataset_name="", model_name=None, **kwargs):
@@ -79,11 +69,13 @@ def get_model_by_name(
     model = model_func(pretrained=pretrained, progress=progress, device=device)
     return model.half() if fp16 else model
 
+
 def get_eval_function(model_name="", dataset_name=""):
     _register_key = namedtuple('RegistryKey', ['model_name', 'dataset_name'])
     key = _register_key(model_name=model_name, dataset_name=dataset_name)
     task_type = MODEL_WRAPPER_REGISTRY.task_type_map[key]
-    eval_function = EVAL_WRAPPER_REGISTRY.get(task_type=task_type, model_name=model_name, dataset_name=dataset_name)
+    eval_function = EVAL_WRAPPER_REGISTRY.get(task_type=task_type, model_name=model_name,
+        dataset_name=dataset_name)
     return eval_function
 
 
@@ -149,6 +141,23 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
             rows[model] = ', '.join(rows[model])
         table.add_rows([['Available models', 'Source datasets'], *rows.items()])
         print(table.draw())
-    if return_list:
-        return [(model_key.model_name, model_key.dataset_name) for model_key in found_model_keys]
-    return None
+
+    return found_model_keys if return_list else None
+
+
+def dump_json_model_list(filepath=None, indent=4):
+    commit_label = subprocess.check_output(['git', 'describe', '--always']).strip().decode()
+
+    if filepath is None:
+        filepath = f'deeplite-torch-zoo_models_{commit_label}.json'
+
+    models_dict = {}
+    allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
+    for task_type in allowed_task_types:
+        task_specific_models = list_models(print_table=False, return_list=True,
+            task_type_filter=task_type)
+        models_dict[task_type] = [{'model_name': model_key.model_name, 'dataset_name': model_key.dataset_name}
+            for model_key in task_specific_models]
+
+    with open(filepath, 'w', encoding='utf-8') as outfile:
+        json.dump(models_dict, outfile, indent=indent)
