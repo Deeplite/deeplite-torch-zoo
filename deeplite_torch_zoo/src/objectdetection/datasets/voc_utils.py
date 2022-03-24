@@ -19,6 +19,10 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
     with open(anno_path, "a") as f:
         for image_id in tqdm(image_ids):
             image_path = os.path.join(data_path, "JPEGImages", image_id + ".jpg")
+
+            if not os.path.exists(image_path): 
+                image_path = os.path.join(data_path, "JPEGImages", image_id + ".jpeg")
+        
             annotation = image_path
             label_path = os.path.join(data_path, "Annotations", image_id + ".xml")
             root = ET.parse(label_path).getroot()

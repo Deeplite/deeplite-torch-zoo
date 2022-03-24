@@ -3,7 +3,7 @@ import shutil
 from os.path import expanduser
 from pathlib import Path
 from tqdm import tqdm
-
+import os
 import cv2
 import numpy as np
 import torch
@@ -81,6 +81,9 @@ class VOCEvaluator(Evaluator):
 
         for img_ind in tqdm(img_inds, disable=not self.progressbar):
             img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpg")
+            if not os.path.exists(img_path): 
+                img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpeg")
+            
             img = cv2.imread(img_path)
             self.process_image(
                 img, img_ind=img_ind, multi_test=multi_test, flip_test=flip_test
