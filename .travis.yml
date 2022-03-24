@@ -5,7 +5,7 @@ jobs:
     - python: 3.6
       env: PYTAG="py36"
 
-    - python: 3.7
+    - python:  3.7.9
       env: PYTAG="py37"
 
     - python: 3.8
