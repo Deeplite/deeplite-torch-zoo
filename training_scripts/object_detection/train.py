@@ -278,100 +278,30 @@ def warmup_training(train_dataloder, epoch, iter_number, optimizer=None, schedul
                 x['momentum'] = np.interp(iter_number, xi, [hyp_config.TRAIN['warmup_momentum'],
                     hyp_config.TRAIN['momentum']])
 
-
-if __name__ == "__main__":
+def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--img-dir",
-        dest="img_dir",
-        type=Path,
-        default="/neutrino/datasets/VOCdevkit",
-        help="The path to the folder containing images to be detected or trained.",
-    )
-    parser.add_argument(
-        "--batch-size",
-        dest="batch_size",
-        type=int,
-        default=10,
-        help="The number of samples in one batch during training or inference.",
-    )
-    parser.add_argument(
-        "--eval-freq",
-        dest="eval_freq",
-        type=int,
-        default=10,
-        help="Evaluation run frequency (in training epochs).",
-    )
-    parser.add_argument(
-        "--weight_path",
-        type=Path,
-        default="models/",
-        help="where weights should be stored",
-    )
-    parser.add_argument(
-        "--checkpoint_save_freq",
-        type=int,
-        default=10,
-        help="Checkpoint dump frequency in training epochs",
-    )
-    parser.add_argument(
-        "--resume", action="store_true", default=False, help="Resume training flag"
-    )
-    parser.add_argument(
-        "--pretrained", action="store_true", default=False, help="Train the model from scratch if False"
-    )
-    parser.add_argument(
-        "--pretraining_source_dataset",
-        type=str,
-        default="voc_20",
-        help="Load pretrained weights fine-tuned on the specified dataset ('voc_20' or 'coco_80')"
-    )
+    parser.add_argument("--img-dir", dest="img_dir", type=Path, default="/neutrino/datasets/VOCdevkit", help="The path to the folder containing images to be detected or trained.")
+    parser.add_argument("--batch-size", dest="batch_size", type=int, default=10, help="The number of samples in one batch during training or inference.")
+    parser.add_argument("--eval-freq", dest="eval_freq", type=int, default=10, help="Evaluation run frequency (in training epochs).")
+    parser.add_argument("--weight_path", type=Path, default="models/", help="where weights should be stored")
+    parser.add_argument("--checkpoint_save_freq", type=int, default=10, help="Checkpoint dump frequency in training epochs")
+    parser.add_argument("--resume", action="store_true", default=False, help="Resume training flag")
+    parser.add_argument("--pretrained", action="store_true", default=False, help="Train the model from scratch if False")
+    parser.add_argument("--pretraining_source_dataset", type=str, default="voc_20", help="Load pretrained weights fine-tuned on the specified dataset ('voc_20' or 'coco_80')")
     parser.add_argument("--gpu_id", type=int, default=0, help="gpu id")
-    parser.add_argument(
-        "--n-cpu",
-        dest="n_cpu",
-        type=int,
-        default=4,
-        help="The number of cpu threads to use during batch generation.",
-    )
-    parser.add_argument(
-        "--dataset",
-        dest="dataset_type",
-        type=str,
-        default="voc",
-        choices=["coco", "voc", "lisa", "lisa_full",
-            "lisa_subset11", "wider_face", "person_detection", "voc07",
-            "car_detection", "person_pet_vehicle_detection"],
+    parser.add_argument("--n-cpu", dest="n_cpu", type=int, default=4, help="The number of cpu threads to use during batch generation.")
+    parser.add_argument("--dataset", dest="dataset_type", type=str, default="voc",
+        choices=["coco", "voc", "lisa", "lisa_full", "lisa_subset11", "wider_face", "person_detection", "voc07", "car_detection", "person_pet_vehicle_detection"],
         help="Name of the dataset to train/validate on",
     )
-    parser.add_argument(
-        "--net",
-        dest="net",
-        type=str,
-        default="yolov4m",
-        help="The type of the network used. Currently support 'yolo3', 'yolo4' and 'yolo5'",
-    )
-    parser.add_argument(
-        "--hp_config",
-        dest="hp_config",
-        type=str,
-        default=None,
-        help="The hyperparameter configuration name to use. Available options: 'scratch', 'finetune'",
-    )
-    parser.add_argument(
-        "--test_img_res",
-        dest="test_img_res",
-        type=int,
-        default=448,
-        help="Image resolution to use during model testing",
-    )
-    parser.add_argument(
-        "--eval_before_train",
-        dest="eval_before_train",
-        action="store_true",
-        default=False,
-        help="Run model evaluation before training",
-    )
+    parser.add_argument("--net", dest="net", type=str, default="yolov4m", help="The type of the network used. Currently support 'yolo3', 'yolo4' and 'yolo5'")
+    parser.add_argument("--hp_config", dest="hp_config", type=str, default=None, help="The hyperparameter configuration name to use. Available options: 'scratch', 'finetune'")
+    parser.add_argument("--test_img_res", dest="test_img_res", type=int, default=448, help="Image resolution to use during model testing")
+    parser.add_argument("--eval_before_train", dest="eval_before_train", action="store_true", default=False, help="Run model evaluation before training")
     opt = parser.parse_args()
+    return opt
 
+
+if __name__ == "__main__":
+    opt = parse_opt()
     Trainer(weight_path=opt.weight_path, resume=opt.resume, gpu_id=opt.gpu_id).train()
