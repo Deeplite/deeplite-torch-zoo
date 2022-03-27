@@ -15,22 +15,18 @@ import numpy as np
 from pycocotools.coco import COCO
 
 
-from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
+from deeplite_torch_zoo import get_data_splits_by_name, create_model
+
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import select_device, init_seeds
-from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
-from deeplite_torch_zoo.wrappers.models import YOLOV3_MODELS, YOLOV4_MODELS, YOLOV5_MODELS
-
-
-YOLO_MODEL_NAMES = YOLOV3_MODELS + YOLOV4_MODELS + YOLOV5_MODELS
 
 DATASET_TO_HP_CONFIG_MAP = {
     'lisa': hyp_cfg_lisa,
@@ -50,7 +46,6 @@ class Trainer(object):
         init_seeds(0)
 
         self.model_name = opt.net
-        assert self.model_name in YOLO_MODEL_NAMES
 
         if opt.hp_config is None:
             for dataset_name in DATASET_TO_HP_CONFIG_MAP:
@@ -82,8 +77,14 @@ class Trainer(object):
         self.weight_path = weight_path / self.model_name / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
 
-        self.pretraining_source_dataset = opt.pretraining_source_dataset
-        self.model = self._get_model()
+        self.model = create_model(
+            model_name=self.model_name,
+            pretraining_dataset=opt.pretraining_source_dataset,
+            pretrained=opt.pretrained,
+            num_classes=self.num_classes,
+            progress=True,
+            device=self.device,
+        )
 
         self.criterion = self._get_loss()
         if resume:
@@ -93,26 +94,6 @@ class Trainer(object):
             self.epochs, hyp_config=self.hyp_config)
 
         self.scaler = amp.GradScaler()
-
-    def _get_model(self):
-        net_name_to_model_fn_map = {
-            "^yolov3$": yolo3,
-            "^yolov5[smlx]$": yolo5,
-            "^yolov5_6[nsmlx]$": yolo5_6,
-            "^yolov5_6[nsmlx]a$": yolo5_6,
-            "^yolov5_6[nsmlx]_relu$": functools.partial(yolo5_6, activation_type='relu'),
-            "^yolov4[smlx]$": yolo4,
-        }
-        default_model_fn_args = {
-            "pretrained": opt.pretrained,
-            "num_classes": self.num_classes,
-            "device": self.device,
-            "progress": True,
-            "dataset_name": self.pretraining_source_dataset,
-        }
-        for net_name, model_fn in net_name_to_model_fn_map.items():
-            if re.match(net_name, self.model_name):
-                return model_fn(self.model_name, **default_model_fn_args)
 
     def _get_loss(self):
         loss_kwargs = {

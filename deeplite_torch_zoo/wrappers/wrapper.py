@@ -80,7 +80,8 @@ def get_eval_function(model_name="", dataset_name=""):
 
 
 def create_model(
-    model_name="", pretraining_dataset="", num_classes=None, progress=False, fp16=False, device="cuda", **kwargs
+    model_name="", pretraining_dataset="", num_classes=None, pretrained=True,
+    progress=False, fp16=False, device="cuda", **kwargs
 ):
     """
     Tries to find a matching model creation wrapper function in the registry (for the corresponding model name
@@ -97,7 +98,7 @@ def create_model(
     returns a corresponding model object (optionally with a custom number of classes)
     """
     model_func = MODEL_WRAPPER_REGISTRY.get(model_name=model_name.lower(), dataset_name=pretraining_dataset)
-    model_wrapper_kwargs = {'pretrained': True, 'progress': progress, 'device': device, **kwargs}
+    model_wrapper_kwargs = {'pretrained': pretrained, 'progress': progress, 'device': device, **kwargs}
     if num_classes is not None:
         model_wrapper_kwargs.update({'num_classes': num_classes})
     model = model_func(**model_wrapper_kwargs)

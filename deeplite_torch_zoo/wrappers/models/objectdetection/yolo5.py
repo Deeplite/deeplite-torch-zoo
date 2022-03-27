@@ -10,23 +10,17 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
+__all__ = []
+
 
 def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
 
-__all__ = [
-    "yolo5",
-    "yolo5_6",
-    "YOLOV5_MODELS",
-]
-
 CFG_PATH = "deeplite_torch_zoo/src/objectdetection/configs/model_configs"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
-    "yolov5l_wider_face_8": "yolo5l-widerface-8cls-898_cdedd11381dbf565.pt",
-    "yolov5m_wider_face_8": "yolo5m-widerface-8cls-878_8a99aaf8b8b9157b.pt",
     "yolov5_6s_coco_80": "yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",
     "yolov5_6m_coco_80": "yolov5_6m-coco-80classes_374-f93fa94b629c45ab.pt",
     "yolov5_6n_coco_80": "yolov5_6n-coco-80classes_211-e9e44a7de1f08ea2.pt",
@@ -39,8 +33,6 @@ voc_model_urls = {
     "yolov5m_voc_20": "yolo5m-voc-20classes_882-1d8265513714a3f6.pt",
     "yolov5l_voc_20": "yolo5l-voc-20classes_899-411aefb761eafaa3.pt",
     "yolov5x_voc_20": "yolo5x-voc-20classes_905-e8ddd018ae29751f.pt",
-    "yolov5l_voc_24": "yolo5l_voc-24_885_391dfc95d193faf5.pt",
-    "yolov5m_voc_24": "yolo5m_voc_24_871_54be57d3f5a35a7b.pt",
     "yolov5_6n_voc_20": "yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
     "yolov5_6s_voc_20": "yolo5_6s-voc-20classes_871-4ceb1b22b227c05c.pt",
     "yolov5_6m_voc_20": "yolo5_6m-voc-20classes_902-50c151baffbf896e.pt",
@@ -79,12 +71,8 @@ yolov5_cfg = {
     "yolov5_6ma": "yolov5_6ma.yaml",
 }
 
-YOLOV5_MODELS = []
+
 MODEL_NAME_SUFFICES = ('relu', )
-for model_name_tag in yolov5_cfg:
-    YOLOV5_MODELS.append(model_name_tag)
-    for model_name_suffix in MODEL_NAME_SUFFICES:
-        YOLOV5_MODELS.append('_'.join((model_name_tag, model_name_suffix)))
 
 
 def yolo5(
@@ -127,7 +115,7 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
         if re.match(net_name, net):
             model_wrapper_fn = model_fn
 
-    model_name = net.replace('v','')
+    model_name = net.replace('v', '')
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection')
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
@@ -150,8 +138,6 @@ wrapper_funcs = {
     'voc_20': ModelSet(20, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6l', 'yolov5_6x',
         'yolov5_6m_relu', 'yolov5_6s_relu']),
-    'voc_24': ModelSet(24, ['yolov5m', 'yolov5l']),
-    'wider_face_8': ModelSet(8, ['yolov5m', 'yolov5l']),
     'coco_80': ModelSet(80, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6sa', 'yolov5_6ma']),
     'voc07_20': ModelSet(20, ['yolov5_6n', 'yolov5_6s']),
