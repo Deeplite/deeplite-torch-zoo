@@ -5,12 +5,15 @@ import torch
 
 from pycocotools.coco import COCO
 
-from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name, get_eval_function
+from deeplite_torch_zoo import (
+    get_model_by_name,
+    get_data_splits_by_name,
+    get_eval_function,
+)
 from deeplite_torch_zoo.wrappers.eval import *
 
 
 class TestModels(unittest.TestCase):
-
     @pytest.mark.test_vgg19_tinyimagenet
     def test_vgg19_tinyimagenet(self):
         model = get_model_by_name(
@@ -25,7 +28,7 @@ class TestModels(unittest.TestCase):
             batch_size=128,
             num_workers=0,
         )["val"]
-        eval_fn = get_eval_function("vgg19","tinyimagenet")
+        eval_fn = get_eval_function("vgg19", "tinyimagenet")
         ACC = eval_fn(model, test_loader)
         print(ACC)
         self.assertEqual(abs(ACC["acc"] - 0.728) < 0.001, True)
@@ -44,7 +47,7 @@ class TestModels(unittest.TestCase):
             batch_size=128,
             num_workers=0,
         )["val"]
-        eval_fn = get_eval_function("mobilenet_v2","tinyimagenet")
+        eval_fn = get_eval_function("mobilenet_v2", "tinyimagenet")
         ACC = eval_fn(model, test_loader)
         print(ACC)
         self.assertEqual(abs(ACC["acc"] - 0.680) < 0.001, True)
@@ -63,7 +66,7 @@ class TestModels(unittest.TestCase):
             batch_size=128,
             num_workers=0,
         )["val"]
-        eval_fn = get_eval_function("resnet18","tinyimagenet")
+        eval_fn = get_eval_function("resnet18", "tinyimagenet")
         ACC = eval_fn(model, test_loader)
         print(ACC)
         self.assertEqual(abs(ACC["acc"] - 0.663) < 0.001, True)
@@ -82,7 +85,7 @@ class TestModels(unittest.TestCase):
             batch_size=128,
             num_workers=0,
         )["val"]
-        eval_fn = get_eval_function("resnet34","tinyimagenet")
+        eval_fn = get_eval_function("resnet34", "tinyimagenet")
         ACC = eval_fn(model, test_loader)
         print(ACC)
         self.assertEqual(abs(ACC["acc"] - 0.686) < 0.001, True)
@@ -101,7 +104,7 @@ class TestModels(unittest.TestCase):
             batch_size=128,
             num_workers=0,
         )["val"]
-        eval_fn = get_eval_function("resnet50","tinyimagenet")
+        eval_fn = get_eval_function("resnet50", "tinyimagenet")
         ACC = eval_fn(model, test_loader)
         print(ACC)
         self.assertEqual(abs(ACC["acc"] - 0.730) < 0.001, True)
@@ -119,7 +122,7 @@ class TestModels(unittest.TestCase):
             dataset_name="vww",
             batch_size=128,
         )["test"]
-        eval_fn = get_eval_function("mobilenetv3_large","vww")
+        eval_fn = get_eval_function("mobilenetv3_large", "vww")
         ACC = eval_fn(model, test_loader)
         self.assertEqual(abs(ACC["acc"] - 0.891) < 0.001, True)
 
@@ -136,7 +139,7 @@ class TestModels(unittest.TestCase):
             dataset_name="vww",
             batch_size=128,
         )["test"]
-        eval_fn = get_eval_function("mobilenetv3_small","vww")
+        eval_fn = get_eval_function("mobilenetv3_small", "vww")
         ACC = eval_fn(model, test_loader)
         self.assertEqual(abs(ACC["acc"] - 0.892) < 0.001, True)
 
@@ -152,9 +155,9 @@ class TestModels(unittest.TestCase):
             data_root="/neutrino/datasets/VOCdevkit",
             dataset_name="voc",
             model_name="resnet18_ssd",
-            batch_size=32
+            batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("resnet18_ssd","voc_20")
+        eval_fn = get_eval_function("resnet18_ssd", "voc_20")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.728) < 0.001, True)
 
@@ -170,9 +173,9 @@ class TestModels(unittest.TestCase):
             data_root="/neutrino/datasets/VOCdevkit",
             dataset_name="voc",
             model_name="resnet34_ssd",
-            batch_size=32
+            batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("resnet34_ssd","voc_20")
+        eval_fn = get_eval_function("resnet34_ssd", "voc_20")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.760) < 0.001, True)
 
@@ -188,9 +191,9 @@ class TestModels(unittest.TestCase):
             data_root="/neutrino/datasets/VOCdevkit",
             dataset_name="voc",
             model_name="resnet50_ssd",
-            batch_size=32
+            batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("resnet50_ssd","voc_20")
+        eval_fn = get_eval_function("resnet50_ssd", "voc_20")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.766) < 0.001, True)
 
@@ -208,7 +211,7 @@ class TestModels(unittest.TestCase):
             model_name="vgg16_ssd",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("vgg16_ssd","voc_20")
+        eval_fn = get_eval_function("vgg16_ssd", "voc_20")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.7731) < 0.001, True)
 
@@ -226,7 +229,7 @@ class TestModels(unittest.TestCase):
             model_name="vgg16_ssd",
             batch_size=8,
         )["test"]
-        eval_fn = get_eval_function("vgg16_ssd","wider_face")
+        eval_fn = get_eval_function("vgg16_ssd", "wider_face")
         APs = eval_fn(model, test_loader)
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.7071) < 0.001, True)
@@ -245,7 +248,7 @@ class TestModels(unittest.TestCase):
             model_name="mb1_ssd",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("mb1_ssd","voc_20")
+        eval_fn = get_eval_function("mb1_ssd", "voc_20")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.6755) < 0.001, True)
 
@@ -263,7 +266,7 @@ class TestModels(unittest.TestCase):
             model_name="mb2_ssd_lite",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("mb2_ssd_lite","voc_20")
+        eval_fn = get_eval_function("mb2_ssd_lite", "voc_20")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.687) < 0.001, True)
 
@@ -281,7 +284,7 @@ class TestModels(unittest.TestCase):
             model_name="mb2_ssd_lite",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("mb2_ssd","voc_20")
+        eval_fn = get_eval_function("mb2_ssd", "voc_20")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.443) < 0.001, True)
 
@@ -293,7 +296,11 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        from deeplite_torch_zoo.src.objectdetection.configs.coco_config import DATA, MISSING_IDS
+        from deeplite_torch_zoo.src.objectdetection.configs.coco_config import (
+            DATA,
+            MISSING_IDS,
+        )
+
         test_loader = get_data_splits_by_name(
             data_root="/neutrino/datasets/coco2017/",
             dataset_name="coco",
@@ -304,8 +311,13 @@ class TestModels(unittest.TestCase):
         )["test"]
         cocoGt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
 
-        eval_fn = get_eval_function("mb2_ssd","coco_80")
-        APs = eval_fn(model, test_loader, gt=cocoGt, _set="coco",)
+        eval_fn = get_eval_function("mb2_ssd", "coco_80")
+        APs = eval_fn(
+            model,
+            test_loader,
+            gt=cocoGt,
+            _set="coco",
+        )
 
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.138) < 0.001, True)
@@ -330,9 +342,14 @@ class TestModels(unittest.TestCase):
             classes=["class1", "class2", "class3", "class4", "class5", "class6"],
         )["test"]
         cocoGt = COCO("/home/ehsan/data/test_data_COCO.json")
-        eval_fn = get_eval_function("mb2_ssd","coco_gm")
-        APs = eval_fn(model, test_loader, gt=cocoGt, _set="coco",)
-        
+        eval_fn = get_eval_function("mb2_ssd", "coco_gm")
+        APs = eval_fn(
+            model,
+            test_loader,
+            gt=cocoGt,
+            _set="coco",
+        )
+
         self.assertEqual(abs(APs["mAP"] - 0.227) < 0.001, True)
 
     @pytest.mark.test_mb2_ssd_lite_voc_1
@@ -350,7 +367,7 @@ class TestModels(unittest.TestCase):
             num_classes=1,
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("mb2_ssd_lite","voc_1")
+        eval_fn = get_eval_function("mb2_ssd_lite", "voc_1")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.664) < 0.001, True)
 
@@ -369,7 +386,7 @@ class TestModels(unittest.TestCase):
             num_classes=2,
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("mb2_ssd_lite","voc_2")
+        eval_fn = get_eval_function("mb2_ssd_lite", "voc_2")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.716) < 0.001, True)
 
@@ -381,59 +398,13 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo3","voc_20")
-        APs = eval_fn(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov3")
+        eval_fn = get_eval_function("yolo3", "voc_20")
+        APs = eval_fn(
+            model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov3"
+        )
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.829) < 0.001, True)
 
-    @pytest.mark.test_yolov3_voc_1
-    def test_yolov3_voc_1(self):
-        model = get_model_by_name(
-            model_name="yolo3",
-            dataset_name="voc_1",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo3","voc_1")
-        APs = eval_fn(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov3_1cls")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.888) < 0.001, True)
-
-    @pytest.mark.test_yolov3_voc_2
-    def test_yolov3_voc_2(self):
-        model = get_model_by_name(
-            model_name="yolo3",
-            dataset_name="voc_2",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo3","voc_2")
-        APs = eval_fn(model,
-            "/neutrino/datasets/VOCdevkit/VOC2007/",
-            num_classes=2,
-            _set="voc",
-            net="yolov3_2cls",)
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.911) < 0.001, True)
-
-    @pytest.mark.skip(
-        reason="we don't know which 6 classes are used to train that model"
-    )
-    @pytest.mark.test_yolov3_voc_6
-    def test_yolov3_voc_6(self):
-        model = get_model_by_name(
-            model_name="yolo3",
-            dataset_name="voc_6",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo3","voc_6")
-        APs = eval_fn(model,
-            "/neutrino/datasets/VOCdevkit/VOC2007/",
-            _set="voc",
-            net="yolov3_6cls",)
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.839) < 0.001, True)
 
     @pytest.mark.test_yolov4s_voc
     def test_yolov4s_voc(self):
@@ -443,8 +414,10 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4s","voc_20")
-        APs = eval_fn(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4s")
+        eval_fn = get_eval_function("yolo4s", "voc_20")
+        APs = eval_fn(
+            model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4s"
+        )
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.857) < 0.001, True)
 
@@ -456,8 +429,10 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4m","voc_20")
-        APs = eval_fn(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4m")
+        eval_fn = get_eval_function("yolo4m", "voc_20")
+        APs = eval_fn(
+            model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4m"
+        )
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.882) < 0.001, True)
 
@@ -469,8 +444,10 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4l","voc_20")
-        APs = eval_fn(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolo4l")
+        eval_fn = get_eval_function("yolo4l", "voc_20")
+        APs = eval_fn(
+            model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolo4l"
+        )
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.882) < 0.001, True)
 
@@ -482,8 +459,13 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4l_leaky","voc_20")
-        APs = eval_fn(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4l_leaky")
+        eval_fn = get_eval_function("yolo4l_leaky", "voc_20")
+        APs = eval_fn(
+            model,
+            "/neutrino/datasets/VOCdevkit/VOC2007/",
+            _set="voc",
+            net="yolov4l_leaky",
+        )
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.890) < 0.001, True)
 
@@ -495,8 +477,10 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4x","voc_20")
-        APs = eval_fn(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4x")
+        eval_fn = get_eval_function("yolo4x", "voc_20")
+        APs = eval_fn(
+            model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4x"
+        )
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.893) < 0.001, True)
 
@@ -508,7 +492,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo5s","voc_20")
+        eval_fn = get_eval_function("yolo5s", "voc_20")
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.837) < 0.001, True)
@@ -521,9 +505,9 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo5m","voc_20")
+        eval_fn = get_eval_function("yolo5m", "voc_20")
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
-        
+
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.882) < 0.001, True)
 
@@ -536,7 +520,7 @@ class TestModels(unittest.TestCase):
             progress=False,
         )
 
-        eval_fn = get_eval_function("yolo5m","voc_24")
+        eval_fn = get_eval_function("yolo5m", "voc_24")
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.871) < 0.001, True)
@@ -549,7 +533,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo5l","voc_20")
+        eval_fn = get_eval_function("yolo5l", "voc_20")
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.899) < 0.001, True)
@@ -563,7 +547,7 @@ class TestModels(unittest.TestCase):
             progress=False,
         )
 
-        eval_fn = get_eval_function("yolo5m","voc_24")
+        eval_fn = get_eval_function("yolo5m", "voc_24")
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.885) < 0.001, True)
@@ -576,7 +560,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo5x","voc_20")
+        eval_fn = get_eval_function("yolo5x", "voc_20")
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
@@ -589,11 +573,10 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo5_6s","voc_20")
+        eval_fn = get_eval_function("yolo5_6s", "voc_20")
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.821) < 0.001, True)
-
 
     @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
     def test_yolov5s_coco(self):
@@ -604,7 +587,7 @@ class TestModels(unittest.TestCase):
             progress=False,
         )
         gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("yolo5s","coco_80")
+        eval_fn = get_eval_function("yolo5s", "coco_80")
         APs = eval_fn(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
@@ -618,7 +601,7 @@ class TestModels(unittest.TestCase):
             progress=False,
         )
         gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("yolo5m","coco_80")
+        eval_fn = get_eval_function("yolo5m", "coco_80")
         APs = eval_fn(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
@@ -632,7 +615,7 @@ class TestModels(unittest.TestCase):
             progress=False,
         )
         gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("yolo5l","coco_80")
+        eval_fn = get_eval_function("yolo5l", "coco_80")
         APs = eval_fn(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
@@ -646,36 +629,10 @@ class TestModels(unittest.TestCase):
             progress=False,
         )
         gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("yolo5x","coco_80")
+        eval_fn = get_eval_function("yolo5x", "coco_80")
         APs = eval_fn(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
-
-    @pytest.mark.test_yolov4m_lisa
-    def test_yolov4m_lisa(self):
-        model = get_model_by_name(
-            model_name="yolo4m",
-            dataset_name="lisa_11",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo4m","lisa_11")
-        APs = eval_fn(model, "/neutrino/datasets/lisa", _set="lisa")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.968) < 0.001, True)
-
-    @pytest.mark.test_yolov3_lisa
-    def test_yolov3_lisa(self):
-        model = get_model_by_name(
-            model_name="yolo3",
-            dataset_name="lisa_11",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo3","lisa_11")
-        APs = eval_fn(model, "/neutrino/datasets/lisa", _set="lisa")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.836) < 0.001, True)
 
     @pytest.mark.test_fasterrcnn_resnet50_fpn_coco
     def test_fasterrcnn_resnet50_fpn_coco(self):
@@ -692,10 +649,9 @@ class TestModels(unittest.TestCase):
             batch_size=32,
         )["test"]
         cocoGt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("fasterrcnn_resnet50_fpn","coco_80")
+        eval_fn = get_eval_function("fasterrcnn_resnet50_fpn", "coco_80")
         APs = eval_fn(model, test_loader, gt=cocoGt)
         self.assertEqual(abs(APs["mAP"] - 0.369) < 0.001, True)
-
 
     @pytest.mark.test_unet_carvana
     def test_unet_carvana(self):
@@ -711,7 +667,7 @@ class TestModels(unittest.TestCase):
             model_name="unet",
             num_workers=1,
         )["test"]
-        eval_fn = get_eval_function("unet","carvana")
+        eval_fn = get_eval_function("unet", "carvana")
         acc = eval_fn(model, test_loader, net="unet")
         dc = acc["dice_coeff"]
         print(dc)
@@ -731,7 +687,7 @@ class TestModels(unittest.TestCase):
             model_name="unet",
             num_workers=1,
         )["test"]
-        eval_fn = get_eval_function("unet_scse_resnet18","voc_20")
+        eval_fn = get_eval_function("unet_scse_resnet18", "voc_20")
         acc = eval_fn(model, test_loader, net="unet_scse_resnet18")
         miou = acc["miou"]
         print(miou)
@@ -752,7 +708,7 @@ class TestModels(unittest.TestCase):
             num_classes=2,
             num_workers=2,
         )["test"]
-        eval_fn = get_eval_function("unet_scse_resnet18","voc_1")
+        eval_fn = get_eval_function("unet_scse_resnet18", "voc_1")
         acc = eval_fn(model, test_loader, net="unet_scse_resnet18")
         miou = acc["miou"]
         print(miou)
@@ -773,7 +729,7 @@ class TestModels(unittest.TestCase):
             num_classes=3,
             num_workers=1,
         )["test"]
-        eval_fn = get_eval_function("unet_scse_resnet18","voc_2")
+        eval_fn = get_eval_function("unet_scse_resnet18", "voc_2")
         acc = eval_fn(model, test_loader, net="unet_scse_resnet18")
         miou = acc["miou"]
         print(miou)
@@ -793,7 +749,7 @@ class TestModels(unittest.TestCase):
             model_name="unet",
             num_workers=1,
         )["test"]
-        eval_fn = get_eval_function("unet_scse_resnet18","carvana")
+        eval_fn = get_eval_function("unet_scse_resnet18", "carvana")
         acc = eval_fn(model, test_loader, net="unet_scse_resnet18")
         miou = acc["miou"]
         print(miou)
@@ -815,7 +771,7 @@ class TestModels(unittest.TestCase):
             batch_size=1,
             backbone="vgg",
         )["test"]
-        eval_fn = get_eval_function("fcn32","voc_20")
+        eval_fn = get_eval_function("fcn32", "voc_20")
         acc = eval_fn(model, test_loader, net="fcn32")
         miou = acc["miou"]
         print(miou)
@@ -837,7 +793,7 @@ class TestModels(unittest.TestCase):
             num_workers=2,
             backbone="vgg",
         )["test"]
-        eval_fn = get_eval_function("deeplab_mobilenet","voc_20")
+        eval_fn = get_eval_function("deeplab_mobilenet", "voc_20")
         acc = eval_fn(model, test_loader, net="deeplab")
         miou = acc["miou"]
         print(miou)
