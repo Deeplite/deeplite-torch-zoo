@@ -30,6 +30,10 @@ model_urls = {
     "yolov5_6n_relu_coco_80": "yolov5_6n_relu-coco-80classes-167-7b6609497c63df79.pt",
 }
 
+coco_eight_class_model_urls = {
+    "yolov5_6n_coco_eight_class": "yolo5_6n-coco-8classes_416_12df57bb4f138d6b.pt",
+}
+
 voc_model_urls = {
     "yolov5s_voc_20": "yolov5s_voc-0_837-1e922891b803a8b7.pt",
     "yolov5m_voc_20": "yolo5m-voc-20classes_882-1d8265513714a3f6.pt",
@@ -57,7 +61,7 @@ person_detection_model_urls = {
 
 model_urls.update(voc_model_urls)
 model_urls.update(person_detection_model_urls)
-
+model_urls.update(coco_eight_class_model_urls)
 
 yolov5_cfg = {
     "yolov5s": "yolov5s.yaml",
@@ -146,6 +150,7 @@ wrapper_funcs = {
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6sa', 'yolov5_6ma',
         'yolov5_6n_hswish', 'yolov5_6n_relu']),
     'voc07_20': ModelSet(20, ['yolov5_6n', 'yolov5_6s']),
+    'coco_eight_class': ModelSet(8, ['yolov5_6n']),
 }
 
 for dataset, model_set in wrapper_funcs.items():

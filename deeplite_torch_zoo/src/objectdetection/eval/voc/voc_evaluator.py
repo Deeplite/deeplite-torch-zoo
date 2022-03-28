@@ -3,7 +3,7 @@ import shutil
 from os.path import expanduser
 from pathlib import Path
 from tqdm import tqdm
-
+import os
 import cv2
 import numpy as np
 import torch
@@ -48,7 +48,7 @@ class VOCEvaluator(Evaluator):
             self.classes = cfg.DATA["CLASSES_3"]
         elif num_classes == 8:
             self.classes = cfg.DATA["CLASSES_8"]
-
+            self.all_classes = cfg.DATA["CLASSES_8"]
         self.num_classes = len(self.classes)
         self.class_to_id = dict(zip(self.classes, range(self.num_classes)))
         self.id_to_class = {v: k for k, v in self.class_to_id.items()}
@@ -81,6 +81,9 @@ class VOCEvaluator(Evaluator):
 
         for img_ind in tqdm(img_inds, disable=not self.progressbar):
             img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpg")
+            if not os.path.exists(img_path): 
+                img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpeg")
+            
             img = cv2.imread(img_path)
             self.process_image(
                 img, img_ind=img_ind, multi_test=multi_test, flip_test=flip_test
