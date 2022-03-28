@@ -5,7 +5,7 @@ jobs:
     - python: 3.6
       env: PYTAG="py36"
 
-    - python: 3.7
+    - python:  3.7.9
       env: PYTAG="py37"
 
     - python: 3.8
@@ -17,7 +17,8 @@ env:
     - TWINE_PASSWORD=$PYPITOKEN 
 # command to install dependencies
 install:
-  - python -m pip install --upgrade pip  
+  - pip install --upgrade pip
+  - pip install --upgrade setuptools
   - pip install .
   - pip install -r requirements-test.txt
   - pip install codecov
@@ -37,7 +38,7 @@ before_deploy:
   - python setup.py install
   - pip install twine
   - python setup.py bdist_wheel --python-tag $PYTAG
-  - pip install -U s3pypi
+  - pip install s3pypi==0.11.1
   - pip install sphinx
   - pip install sphinx_rtd_theme
   - make -C docs html

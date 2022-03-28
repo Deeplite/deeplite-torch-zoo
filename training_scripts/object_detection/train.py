@@ -1,6 +1,6 @@
 import argparse
 import os
-import re
+import hashlib
 import random
 import math
 import functools
@@ -14,43 +14,47 @@ from torch.cuda import amp
 import numpy as np
 from pycocotools.coco import COCO
 
+from deeplite_torch_zoo import get_data_splits_by_name, create_model
 
-from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import select_device, init_seeds
-from deeplite_torch_zoo.wrappers.models import yolo3, yolo4, yolo5, yolo5_6
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
+    select_device,
+    init_seeds,
+)
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
-    YoloV5Loss
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import YoloV5Loss
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
-from deeplite_torch_zoo.wrappers.models import YOLOV3_MODELS, YOLOV4_MODELS, YOLOV5_MODELS
-
-
-YOLO_MODEL_NAMES = YOLOV3_MODELS + YOLOV4_MODELS + YOLOV5_MODELS
 
 DATASET_TO_HP_CONFIG_MAP = {
-    'lisa': hyp_cfg_lisa,
+    "lisa": hyp_cfg_lisa,
 }
 
-for dataset_name in ('voc', 'coco', 'wider_face', 'person_detection',
-    'car_detection', 'voc07', 'coco_eight_class'):
+for dataset_name in (
+    "voc",
+    "coco",
+    "wider_face",
+    "person_detection",
+    "car_detection",
+    "voc07",
+    "coco_eight_class"
+):
     DATASET_TO_HP_CONFIG_MAP[dataset_name] = hyp_cfg_scratch
 
 HP_CONFIG_MAP = {
-    'scratch': hyp_cfg_scratch,
-    'finetune': hyp_cfg_finetune,
+    "scratch": hyp_cfg_scratch,
+    "finetune": hyp_cfg_finetune,
 }
+
 
 class Trainer(object):
     def __init__(self, weight_path, resume, gpu_id):
         init_seeds(0)
 
         self.model_name = opt.net
-        assert self.model_name in YOLO_MODEL_NAMES
 
         if opt.hp_config is None:
             for dataset_name in DATASET_TO_HP_CONFIG_MAP:
@@ -79,47 +83,40 @@ class Trainer(object):
         self.train_dataset = self.train_dataloader.dataset
         self.val_dataloader = dataset_splits["val"]
         self.num_classes = self.train_dataset.num_classes
-        self.weight_path = weight_path / self.model_name / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
+        self.weight_path = (
+            weight_path
+            / self.model_name
+            / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
+        )
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
 
-        self.pretraining_source_dataset = opt.pretraining_source_dataset
-        self.model = self._get_model()
+        self.model = create_model(
+            model_name=self.model_name,
+            pretraining_dataset=opt.pretraining_source_dataset,
+            pretrained=opt.pretrained,
+            num_classes=self.num_classes,
+            progress=True,
+            device=self.device,
+        )
 
         self.criterion = self._get_loss()
         if resume:
             self.__load_model_weights(weight_path, resume)
 
-        self.optimizer, self.scheduler, self.warmup_training_callback = make_od_optimizer(self.model,
-            self.epochs, hyp_config=self.hyp_config)
+        (
+            self.optimizer,
+            self.scheduler,
+            self.warmup_training_callback,
+        ) = make_od_optimizer(self.model, self.epochs, hyp_config=self.hyp_config)
 
         self.scaler = amp.GradScaler()
 
-    def _get_model(self):
-        net_name_to_model_fn_map = {
-            "^yolov3$": yolo3,
-            "^yolov5[smlx]$": yolo5,
-            "^yolov5_6[nsmlx]$": yolo5_6,
-            "^yolov5_6[nsmlx]a$": yolo5_6,
-            "^yolov5_6[nsmlx]_relu$": functools.partial(yolo5_6, activation_type='relu'),
-            "^yolov4[smlx]$": yolo4,
-        }
-        default_model_fn_args = {
-            "pretrained": opt.pretrained,
-            "num_classes": self.num_classes,
-            "device": self.device,
-            "progress": True,
-            "dataset_name": self.pretraining_source_dataset,
-        }
-        for net_name, model_fn in net_name_to_model_fn_map.items():
-            if re.match(net_name, self.model_name):
-                return model_fn(self.model_name, **default_model_fn_args)
-
     def _get_loss(self):
         loss_kwargs = {
-            'model': self.model,
-            'num_classes': self.num_classes,
-            'device': self.device,
-            'hyp_cfg': self.hyp_config,
+            "model": self.model,
+            "num_classes": self.num_classes,
+            "device": self.device,
+            "hyp_cfg": self.hyp_config,
         }
         return YoloV5Loss(**loss_kwargs)
 
@@ -162,6 +159,12 @@ class Trainer(object):
             )
         del chkpt
 
+    def generate_file_hash(self, file_path, hash_size=16):
+        with open(file_path, "rb") as f:
+            bytes = f.read() # read entire file as bytes
+            readable_hash = hashlib.sha256(bytes).hexdigest()
+        return readable_hash[:hash_size]
+
     def evaluate(self):
         self.model.eval()
         eval_func = get_eval_func(opt.dataset_type)
@@ -170,22 +173,49 @@ class Trainer(object):
         if opt.dataset_type in ("voc", "voc07"):
             test_set = opt.img_dir / "VOC2007"
         elif opt.dataset_type == "coco_eight_class":
-            test_set = opt.img_dir 
+            test_set = opt.img_dir
         elif opt.dataset_type == "coco":
             gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
         elif opt.dataset_type == "car_detection":
-            gt = SubsampledCOCO(opt.img_dir / "annotations/instances_val2017.json",
-                subsample_categories=['car'])
-        Aps = eval_func(self.model, test_set, gt=gt, num_classes=self.num_classes,
-                        _set=opt.dataset_type, device=self.device, net=opt.net,
-                        img_size=opt.test_img_res, progressbar=True)
+            gt = SubsampledCOCO(
+                opt.img_dir / "annotations/instances_val2017.json",
+                subsample_categories=["car"],
+            )
+
+        Aps = eval_func(
+            self.model,
+            test_set,
+            gt=gt,
+            num_classes=self.num_classes,
+            _set=opt.dataset_type,
+            device=self.device,
+            net=opt.net,
+            img_size=opt.test_img_res,
+            progressbar=True,
+        )
         return Aps
 
     def train(self):
         print(self.model)
-        print("The number of samples in the train dataset split: {}".format(len(self.train_dataset)))
+        print(
+            "The number of samples in the train dataset split: {}".format(
+                len(self.train_dataset)
+            )
+        )
 
         num_batches = len(self.train_dataloader)
+
+        if opt.generate_checkpoint_name:
+            sd = torch.load(opt.generate_checkpoint_name)
+            self.model.load_state_dict(sd, strict=True)
+            Aps = self.evaluate()
+            model_name = opt.net.replace('yolo', 'yolov')
+            dataset_name = f"{opt.dataset_type}-{self.num_classes}classes"
+            map = str(math.ceil(1000 * Aps['mAP']) / 10).replace('.', '')[:3]
+            hash = self.generate_file_hash(opt.generate_checkpoint_name)
+            zoo_checkpoint_name = f"{model_name}-{dataset_name}-{map}-{hash}.pt"
+            print(zoo_checkpoint_name)
+            return
 
         if opt.eval_before_train:
             Aps = self.evaluate()
@@ -196,7 +226,9 @@ class Trainer(object):
 
             mloss = torch.zeros(4)
             self.optimizer.zero_grad()
-            for i, (imgs, targets, labels_length, _) in enumerate(self.train_dataloader):
+            for i, (imgs, targets, labels_length, _) in enumerate(
+                self.train_dataloader
+            ):
                 num_iter = i + epoch * num_batches
                 self.warmup_training_callback(self.train_dataloader, epoch, num_iter)
 
@@ -215,9 +247,12 @@ class Trainer(object):
                 self.scaler.update()
                 self.optimizer.zero_grad()
 
-                print(f"\repoch {epoch}/{self.epochs} - Iteration: {i}/{len(self.train_dataloader)}, " \
-                    f" loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    " \
-                    f"loss {mloss[3]:0.4f}", end="")
+                print(
+                    f"\repoch {epoch}/{self.epochs} - Iteration: {i}/{len(self.train_dataloader)}, "
+                    f" loss: giou {mloss[0]:0.4f}    conf {mloss[1]:0.4f}    cls {mloss[2]:0.4f}    "
+                    f"loss {mloss[3]:0.4f}",
+                    end="",
+                )
 
                 # multi-scale training (320-608 pixel resolution)
                 if self.multi_scale_train:
@@ -234,31 +269,46 @@ class Trainer(object):
                 print("best mAP : %g" % (self.best_mAP))
 
 
-def make_od_optimizer(model, epochs, hyp_config=None, hyp_config_name=None, linear_lr=False):
+def make_od_optimizer(
+    model, epochs, hyp_config=None, hyp_config_name=None, linear_lr=False
+):
     if hyp_config is None:
         hyp_config = HP_CONFIG_MAP.get(hyp_config_name, hyp_cfg_scratch)
 
     g0, g1, g2 = [], [], []  # optimizer parameter groups
     for v in model.modules():
-        if hasattr(v, 'bias') and isinstance(v.bias, nn.Parameter):  # bias
+        if hasattr(v, "bias") and isinstance(v.bias, nn.Parameter):  # bias
             g2.append(v.bias)
         if isinstance(v, nn.BatchNorm2d):  # weight (no decay)
             g0.append(v.weight)
-        elif hasattr(v, 'weight') and isinstance(v.weight, nn.Parameter):  # weight (with decay)
+        elif hasattr(v, "weight") and isinstance(
+            v.weight, nn.Parameter
+        ):  # weight (with decay)
             g1.append(v.weight)
-    optimizer = optim.SGD(g0, lr=hyp_config.TRAIN['lr0'], momentum=hyp_config.TRAIN['momentum'], nesterov=True)
-    optimizer.add_param_group({'params': g1, 'weight_decay': hyp_config.TRAIN['weight_decay']})  # add g1 with weight_decay
-    optimizer.add_param_group({'params': g2})  # add g2 (biases)
+    optimizer = optim.SGD(
+        g0,
+        lr=hyp_config.TRAIN["lr0"],
+        momentum=hyp_config.TRAIN["momentum"],
+        nesterov=True,
+    )
+    optimizer.add_param_group(
+        {"params": g1, "weight_decay": hyp_config.TRAIN["weight_decay"]}
+    )  # add g1 with weight_decay
+    optimizer.add_param_group({"params": g2})  # add g2 (biases)
 
     # Scheduler
     if linear_lr:
-        lf = lambda x: (1 - x / (epochs - 1)) * (1.0 - hyp_config.TRAIN['lrf']) + hyp_config.TRAIN['lrf']  # linear
+        lf = (
+            lambda x: (1 - x / (epochs - 1)) * (1.0 - hyp_config.TRAIN["lrf"])
+            + hyp_config.TRAIN["lrf"]
+        )  # linear
     else:
-        lf = one_cycle(1, hyp_config.TRAIN['lrf'], epochs)  # cosine 1->hyp['lrf']
+        lf = one_cycle(1, hyp_config.TRAIN["lrf"], epochs)  # cosine 1->hyp['lrf']
 
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
-    warmup_training_fn = functools.partial(warmup_training, optimizer=optimizer, scheduler=scheduler,
-        hyp_config=hyp_config)
+    warmup_training_fn = functools.partial(
+        warmup_training, optimizer=optimizer, scheduler=scheduler, hyp_config=hyp_config
+    )
     return optimizer, scheduler, warmup_training_fn
 
 
@@ -267,27 +317,37 @@ def one_cycle(y1=0.0, y2=1.0, steps=100):
     return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
 
 
-def warmup_training(train_dataloder, epoch, iter_number, optimizer=None, scheduler=None, hyp_config=None):
+def warmup_training(
+    train_dataloder, epoch, iter_number, optimizer=None, scheduler=None, hyp_config=None
+):
     num_batches_per_epoch = len(train_dataloder)
-    warmup_iters_number = hyp_config.TRAIN['warmup_epochs'] * num_batches_per_epoch
+    warmup_iters_number = hyp_config.TRAIN["warmup_epochs"] * num_batches_per_epoch
     if iter_number < warmup_iters_number:
         xi = [0, warmup_iters_number]  # x interp
         for j, x in enumerate(optimizer.param_groups):
             # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
-            x['lr'] = np.interp(iter_number, xi, [hyp_config.TRAIN['warmup_bias_lr'] if j == 2 else 0.0,
-                x['initial_lr'] * scheduler.lr_lambdas[0](epoch)])
-            if 'momentum' in x:
-                x['momentum'] = np.interp(iter_number, xi, [hyp_config.TRAIN['warmup_momentum'],
-                    hyp_config.TRAIN['momentum']])
+            x["lr"] = np.interp(
+                iter_number,
+                xi,
+                [
+                    hyp_config.TRAIN["warmup_bias_lr"] if j == 2 else 0.0,
+                    x["initial_lr"] * scheduler.lr_lambdas[0](epoch),
+                ],
+            )
+            if "momentum" in x:
+                x["momentum"] = np.interp(
+                    iter_number,
+                    xi,
+                    [hyp_config.TRAIN["warmup_momentum"], hyp_config.TRAIN["momentum"]],
+                )
 
 
-if __name__ == "__main__":
+def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--img-dir",
         dest="img_dir",
         type=Path,
-        default="/neutrino/datasets/VOCdevkit",
         help="The path to the folder containing images to be detected or trained.",
     )
     parser.add_argument(
@@ -320,13 +380,16 @@ if __name__ == "__main__":
         "--resume", action="store_true", default=False, help="Resume training flag"
     )
     parser.add_argument(
-        "--pretrained", action="store_true", default=False, help="Train the model from scratch if False"
+        "--pretrained",
+        action="store_true",
+        default=False,
+        help="Train the model from scratch if False",
     )
     parser.add_argument(
         "--pretraining_source_dataset",
         type=str,
         default="voc_20",
-        help="Load pretrained weights fine-tuned on the specified dataset ('voc_20' or 'coco_80')"
+        help="Load pretrained weights fine-tuned on the specified dataset ('voc_20' or 'coco_80')",
     )
     parser.add_argument("--gpu_id", type=int, default=0, help="gpu id")
     parser.add_argument(
@@ -341,17 +404,27 @@ if __name__ == "__main__":
         dest="dataset_type",
         type=str,
         default="voc",
-        choices=["coco", "voc", "lisa", "lisa_full",
-            "lisa_subset11", "wider_face", "person_detection", "voc07",
-            "car_detection", "person_pet_vehicle_detection", "coco_eight_class"],
+        choices=[
+            "coco",
+            "voc",
+            "lisa",
+            "lisa_full",
+            "lisa_subset11",
+            "wider_face",
+            "person_detection",
+            "voc07",
+            "car_detection",
+            "person_pet_vehicle_detection",
+            "coco_eight_class"
+        ],
         help="Name of the dataset to train/validate on",
     )
     parser.add_argument(
         "--net",
         dest="net",
         type=str,
-        default="yolov4m",
-        help="The type of the network used. Currently support 'yolo3', 'yolo4' and 'yolo5'",
+        default="yolov5_6m",
+        help="Specific YOLO model name to be used in training",
     )
     parser.add_argument(
         "--hp_config",
@@ -374,6 +447,17 @@ if __name__ == "__main__":
         default=False,
         help="Run model evaluation before training",
     )
+    parser.add_argument(
+        "--generate_checkpoint_name",
+        dest="generate_checkpoint_name",
+        type=str,
+        default=False,
+        help="Path to the checkpoint file to generate the DL torch zoo name for",
+    )
     opt = parser.parse_args()
+    return opt
 
+
+if __name__ == "__main__":
+    opt = parse_opt()
     Trainer(weight_path=opt.weight_path, resume=opt.resume, gpu_id=opt.gpu_id).train()
