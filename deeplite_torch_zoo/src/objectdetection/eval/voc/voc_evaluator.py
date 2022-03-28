@@ -146,6 +146,7 @@ class VOCEvaluator(Evaluator):
                 cachedir,
                 iou_thresh,
                 use_07_metric,
+                img_size=self.val_shape
             )
             APs[cls] = AP
         if os.path.exists(cachedir):

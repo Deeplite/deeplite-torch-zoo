@@ -75,6 +75,8 @@ def voc_eval(
     cachedir,
     ovthresh=0.5,
     use_07_metric=False,
+    n_bins=10,
+    img_size=448
 ):
     """rec, prec, ap = voc_eval(detpath,
                                 annopath,
@@ -130,6 +132,8 @@ def voc_eval(
     # extract gt objects for this class
     class_recs = {}
     npos = 0
+    n_pos_bins = np.zeros(n_bins)
+
     for imagename in imagenames:
         R = [obj for obj in recs[imagename] if obj["name"] == classname]
         bbox = np.array([x["bbox"] for x in R])
@@ -137,6 +141,14 @@ def voc_eval(
         det = [False] * len(R)
         npos = npos + sum(~difficult)
         class_recs[imagename] = {"bbox": bbox, "difficult": difficult, "det": det}
+        for _bbox, _diff in zip(bbox, difficult):
+            if _diff:
+                continue
+            _area = (_bbox[2] - _bbox[0]) * (_bbox[3] - _bbox[1])
+            _bin_index = int(_area / (img_size * img_size) * n_bins)
+            _bin_index = min(_bin_index, n_bins - 1)
+            n_pos_bins[_bin_index] = n_pos_bins[_bin_index] + 1
+
 
     # read dets
     detfile = detpath.format(classname)
@@ -161,10 +173,8 @@ def voc_eval(
     nd = len(image_ids)
     tp = np.zeros(nd)
     fp = np.zeros(nd)
-    n_bins = 10
-    tp_bins = np.zeros((nd, n_bins + 1))
-    fp_bins = np.zeros((nd, n_bins + 1))
-    img_size = 448
+    tp_bins = np.zeros((nd, n_bins))
+    fp_bins = np.zeros((nd, n_bins))
     for d in range(nd):
         R = class_recs[image_ids[d]]
         bb = BB[d, :].astype(float)
@@ -181,6 +191,8 @@ def voc_eval(
             iw = np.maximum(ixmax - ixmin + 1.0, 0.0)
             ih = np.maximum(iymax - iymin + 1.0, 0.0)
             inters = iw * ih
+            gt_areas = (BBGT[:, 3] - BBGT[:, 1]) * (BBGT[:, 2] - BBGT[:, 0])
+            bb_area = (bb[3] - bb[1]) * (bb[2] - bb[0])
 
             # union
             uni = (
@@ -192,7 +204,9 @@ def voc_eval(
             overlaps = inters / uni
             ovmax = np.max(overlaps)
             jmax = np.argmax(overlaps)
-        bin_index = int(inters[jmax] / (img_size*img_size) * n_bins)
+        bin_index = int(bb_area / (img_size*img_size) * n_bins)
+        bin_index = min(bin_index, n_bins - 1)
+
         if ovmax > ovthresh:
             if not R["difficult"][jmax]:
                 if not R["det"][jmax]:
@@ -206,7 +220,6 @@ def voc_eval(
         else:
             fp[d] = 1.0
             fp_bins[d][bin_index] = 1.0
-    import pdb; pdb.set_trace()
     # compute precision recall
     fp = np.cumsum(fp)
     tp = np.cumsum(tp)
@@ -215,13 +228,14 @@ def voc_eval(
     # ground truth
     prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
     ap = voc_ap(rec, prec, use_07_metric)
-    print(rec, prec, ap)
+    aps = np.zeros(n_bins)
     for b in range(n_bins):
         fp = np.cumsum(fp_bins[:, b])
         tp = np.cumsum(tp_bins[:, b])
-        rec = tp / tp[-1]
-        prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
-        ap = voc_ap(rec, prec, use_07_metric)
-        print(b, rec, prec, ap)
-
+        _rec = tp / n_pos_bins[b]
+        _prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
+        _ap = voc_ap(_rec, _prec, use_07_metric)
+        aps[b] = min(_ap, 1.)
+    print(classname, aps)
+    print(classname, n_pos_bins)
     return rec, prec, ap
