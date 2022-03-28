@@ -22,7 +22,7 @@ TEST = {
 TRAIN = {
     "TRAIN_IMG_SIZE": 448,
     "AUGMENT": True,
-    "MULTI_SCALE_TRAIN": True,
+    "MULTI_SCALE_TRAIN": False,
     "IOU_THRESHOLD_LOSS": 0.5,
     "NUMBER_WORKERS": 4,
     # optimization:

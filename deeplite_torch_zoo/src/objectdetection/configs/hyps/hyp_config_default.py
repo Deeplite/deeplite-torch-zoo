@@ -23,7 +23,7 @@ TRAIN = {
     # general:
     "TRAIN_IMG_SIZE": 448,
     "AUGMENT": True,
-    "MULTI_SCALE_TRAIN": True,
+    "MULTI_SCALE_TRAIN": False,
     "IOU_THRESHOLD_LOSS": 0.5,  # only relevant for YOLOv3 models
     "NUMBER_WORKERS": 4,
     # optimization:

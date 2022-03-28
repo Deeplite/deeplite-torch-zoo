@@ -26,6 +26,8 @@ model_urls = {
     "yolov5_6n_coco_80": "yolov5_6n-coco-80classes_211-e9e44a7de1f08ea2.pt",
     "yolov5_6sa_coco_80": "yolov5_6sa-coco-80classes_297-6c1972b5f7ae6ab6.pt",
     "yolov5_6ma_coco_80": "yolov5_6ma-coco-80classes_365-4756729c4f6a834f.pt",
+    "yolov5_6n_hswish_coco_80": "yolov5_6n_hswish-coco-80classes-183-a2fed163ec98352a.pt",
+    "yolov5_6n_relu_coco_80": "yolov5_6n_relu-coco-80classes-167-7b6609497c63df79.pt",
 }
 
 voc_model_urls = {
@@ -72,7 +74,7 @@ yolov5_cfg = {
 }
 
 
-MODEL_NAME_SUFFICES = ('relu', )
+MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 
 def yolo5(
@@ -92,8 +94,9 @@ def yolo5_6(
     net="yolov5_6s", dataset_name="voc_20", num_classes=20, activation_type=None,
     pretrained=False, progress=True, device="cuda"
 ):
+    config_key = net
     for suffix in MODEL_NAME_SUFFICES:
-        config_key = re.sub(f'\_{suffix}$', '', net) # pylint: disable=W1401
+        config_key = re.sub(f'\_{suffix}$', '', config_key) # pylint: disable=W1401
     config_path = get_project_root() / CFG_PATH / yolov5_cfg[config_key]
     model = YoloV5_6(config_path, ch=3, nc=num_classes, activation_type=activation_type)
     if pretrained:
@@ -107,6 +110,7 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolov5_6[nsmlx]$": yolo5_6,
     "^yolov5_6[nsmlx]a$": yolo5_6,
     "^yolov5_6[nsmlx]_relu$": partial(yolo5_6, activation_type="relu"),
+    "^yolov5_6[nsmlx]_hswish$": partial(yolo5_6, activation_type="hardswish"),
 }
 
 def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
@@ -139,7 +143,8 @@ wrapper_funcs = {
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6l', 'yolov5_6x',
         'yolov5_6m_relu', 'yolov5_6s_relu']),
     'coco_80': ModelSet(80, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
-        'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6sa', 'yolov5_6ma']),
+        'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6sa', 'yolov5_6ma',
+        'yolov5_6n_hswish', 'yolov5_6n_relu']),
     'voc07_20': ModelSet(20, ['yolov5_6n', 'yolov5_6s']),
 }
 
