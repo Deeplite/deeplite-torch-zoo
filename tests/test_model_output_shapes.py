@@ -92,10 +92,6 @@ DETECTION_MODEL_TESTS = [
     ('resnet18_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
     ('resnet34_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
     ('resnet50_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
-    ('yolo3', 'voc_1', {'num_classes': 1, 'img_size': 416},
-        [(3, 52, 52, 6), (3, 26, 26, 6), (3, 13, 13, 6)]),
-    ('yolo3', 'voc_2', {'num_classes': 2, 'img_size': 416},
-        [(3, 52, 52, 7), (3, 26, 26, 7), (3, 13, 13, 7)]),
 ]
 
 YOLO_MODELS = ['yolo5s', 'yolo5m', 'yolo5l', 'yolo5x']
@@ -161,32 +157,6 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
         y1, y2 = model(img)
         assert y1.shape == (TEST_BATCH_SIZE, *output_shapes[0])
         assert y2.shape == (TEST_BATCH_SIZE, *output_shapes[1])
-
-
-@pytest.mark.parametrize(
-    ('model_name', 'num_classes', 'output_shape'),
-    [
-        ('yolo3', 12, [(3, 52, 52, 16), (3, 26, 26, 16), (3, 13, 13, 16)]),
-    ],
-)
-def test_detection_model_output_shape_lisa_11_fake(model_name, num_classes, output_shape):
-    model = get_model_by_name(
-        model_name=model_name,
-        dataset_name="lisa_11",
-        pretrained=True,
-        progress=False,
-        device="cpu",
-    )
-    dataset = VocYoloFake(num_samples=1, num_classes=num_classes, device="cpu")
-    img, _, _, _ = dataset[0]
-    y = model(torch.unsqueeze(img, dim=0))
-    assert y[0][0].shape == (1, *output_shape[0])
-    assert y[0][1].shape == (1, *output_shape[1])
-    assert y[0][2].shape == (1, *output_shape[2])
-    if y[1] is not None:
-        assert y[1][0].shape == (1, *output_shape[0])
-        assert y[1][1].shape == (1, *output_shape[1])
-        assert y[1][2].shape == (1, *output_shape[2])
 
 
 @pytest.mark.parametrize(
@@ -258,10 +228,6 @@ def test_create_classification_model_output_shape(model_name, dataset_name, inpu
 
 DETECTION_CREATE_MODEL_TESTS = [
     ('mb1_ssd', 'voc_20', {}, [(3000, CUSTOM_NUM_CLASSES+1), (3000, 4)]),
-    ('yolo3', 'voc_1', {'num_classes': 1, 'img_size': 416},
-        [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
-         (3, 26, 26, CUSTOM_NUM_CLASSES+5),
-         (3, 13, 13, CUSTOM_NUM_CLASSES+5)]),
     ('yolo4s', 'voc_20', {'num_classes': 21, 'img_size': 416},
             [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
              (3, 26, 26, CUSTOM_NUM_CLASSES+5),
