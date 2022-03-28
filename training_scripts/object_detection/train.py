@@ -343,7 +343,7 @@ if __name__ == "__main__":
         default="voc",
         choices=["coco", "voc", "lisa", "lisa_full",
             "lisa_subset11", "wider_face", "person_detection", "voc07",
-            "car_detection", "person_pet_vehicle_detection", "coco_eight_class"],
+            "car_detection", "person_pet_vehicle_detection", "coco_eight_class", "surveillance_person_class"],
         help="Name of the dataset to train/validate on",
     )
     parser.add_argument(

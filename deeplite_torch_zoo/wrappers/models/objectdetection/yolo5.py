@@ -160,6 +160,7 @@ wrapper_funcs = {
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6sa', 'yolov5_6ma']),
     'voc07_20': ModelSet(20, ['yolov5_6n', 'yolov5_6s']),
     'coco_eight_class': ModelSet(8, ['yolov5_6n']),
+    'surveillance_person_class': ModelSet(8, ['yolov5_6n']),
 }
 
 for dataset, model_set in wrapper_funcs.items():
