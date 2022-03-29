@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 
 

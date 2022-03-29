@@ -5,7 +5,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as cfg
 
 
 def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=False):

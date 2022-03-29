@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_default
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_default
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import xyxy2cxcywh
 
 

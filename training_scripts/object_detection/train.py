@@ -16,9 +16,9 @@ from pycocotools.coco import COCO
 
 from deeplite_torch_zoo import get_data_splits_by_name, create_model
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg_scratch
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
     select_device,
@@ -65,17 +65,20 @@ class Trainer(object):
         self.device = select_device(gpu_id)
         self.start_epoch = 0
         self.best_mAP = 0.0
-        self.epochs = self.hyp_config.TRAIN["EPOCHS"]
+        self.epochs = self.hyp_config.TRAIN["epochs"] if not opt.epochs else opt.epochs
 
-        self.multi_scale_train = self.hyp_config.TRAIN["MULTI_SCALE_TRAIN"]
+        self.multi_scale_train = self.hyp_config.TRAIN["multi_scale_train"]
+
+        train_img_size = self.hyp_config.TRAIN["train_img_size"] if not opt.train_img_res \
+            else opt.train_img_res
 
         dataset_splits = get_data_splits_by_name(
             data_root=opt.img_dir,
             dataset_name=opt.dataset_type,
             model_name=self.model_name,
+            img_size=train_img_size,
             batch_size=opt.batch_size,
             num_workers=opt.n_cpu,
-            img_size=self.hyp_config.TRAIN["TRAIN_IMG_SIZE"],
         )
 
         self.train_dataloader = dataset_splits["train"]
@@ -354,6 +357,13 @@ def parse_opt():
         help="The number of samples in one batch during training or inference.",
     )
     parser.add_argument(
+        "--epochs",
+        dest="epochs",
+        type=int,
+        default=False,
+        help="The number of training epochs. If False, the default config value is used.",
+    )
+    parser.add_argument(
         "--eval-freq",
         dest="eval_freq",
         type=int,
@@ -436,11 +446,25 @@ def parse_opt():
         help="Image resolution to use during model testing",
     )
     parser.add_argument(
+        "--train_img_res",
+        dest="train_img_res",
+        type=int,
+        default=False,
+        help="Image resolution to use during model training. If False, the default config value is used.",
+    )
+    parser.add_argument(
         "--eval_before_train",
         dest="eval_before_train",
         action="store_true",
         default=False,
         help="Run model evaluation before training",
+    )
+    parser.add_argument(
+        "--evaluate",
+        dest="evaluate",
+        action="store_true",
+        default=False,
+        help="Run model evaluation only",
     )
     parser.add_argument(
         "--generate_checkpoint_name",
@@ -455,4 +479,10 @@ def parse_opt():
 
 if __name__ == "__main__":
     opt = parse_opt()
-    Trainer(weight_path=opt.weight_path, resume=opt.resume, gpu_id=opt.gpu_id).train()
+    trainer = Trainer(weight_path=opt.weight_path, resume=opt.resume, gpu_id=opt.gpu_id)
+
+    if opt.evaluate:
+        Aps = trainer.evaluate()
+        print(f"Evaluated mAP values: {Aps}")
+    else:
+        trainer.train()

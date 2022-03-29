@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import (
     SPP, SPPCSP, SPPCSPLeaky, Bottleneck, BottleneckCSP, BottleneckCSP2, BottleneckCSP2Leaky, Concat, Conv,
@@ -44,7 +44,7 @@ class Detect(nn.Module):
         self.m = nn.ModuleList(
             nn.Conv2d(x, self.no * self.na, 1) for x in ch
         )  # output conv
-        self._stride = torch.tensor(hyp_cfg.MODEL["STRIDES"])
+        self._stride = torch.tensor(hyp_cfg.MODEL["strides"])
 
     def forward(self, x):
         # x = x.copy()  # for profiling

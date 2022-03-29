@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import cv2
 import numpy as np
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as cfg
 
 VOC_CLASS_NAMES = {
     "BACKGROUND",
