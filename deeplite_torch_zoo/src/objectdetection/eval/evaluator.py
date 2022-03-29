@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import torch
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as hyp_cfg
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import nms, post_process
 
@@ -17,8 +17,8 @@ class Evaluator(object):
 
         Path(data_path).mkdir(parents=True, exist_ok=True)
         self.pred_result_path = data_path
-        self.conf_thresh = hyp_cfg.TEST["CONF_THRESH"]
-        self.nms_thresh = hyp_cfg.TEST["NMS_THRESH"]
+        self.conf_thresh = hyp_cfg.TEST["conf_thresh"]
+        self.nms_thresh = hyp_cfg.TEST["nms_thresh"]
         self.val_shape = img_size
         self.model = model
         self.device = next(model.parameters()).device

@@ -14,7 +14,7 @@ from deeplite_torch_zoo.src.objectdetection.ssd.config.vgg_ssd_config import VGG
 from deeplite_torch_zoo.src.objectdetection.ssd.config.mobilenetv1_ssd_config import (
     MOBILENET_CONFIG,
 )
-from deeplite_torch_zoo.src.objectdetection.configs.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
+from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 

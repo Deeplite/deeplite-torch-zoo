@@ -296,7 +296,7 @@ class TestModels(unittest.TestCase):
             pretrained=True,
             progress=False,
         )
-        from deeplite_torch_zoo.src.objectdetection.configs.coco_config import (
+        from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import (
             DATA,
             MISSING_IDS,
         )
