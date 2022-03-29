@@ -18,6 +18,16 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(train_len, 391)
         self.assertEqual(test_len, 79)
 
+    def test_cifar10_dataset(self):
+        BATCH_SIZE = 128
+        datasplit = get_data_splits_by_name(
+            dataset_name="cifar10", batch_size=BATCH_SIZE
+        )
+        train_len = len(datasplit["train"])
+        test_len = len(datasplit["test"])
+        self.assertEqual(train_len, 391)
+        self.assertEqual(test_len, 79)
+
     def test_mnist_dataset(self):
         BATCH_SIZE = 128
         datasplit = get_data_splits_by_name(dataset_name="mnist", batch_size=BATCH_SIZE)
