@@ -226,6 +226,11 @@ class Trainer(object):
         for epoch in range(self.start_epoch, self.epochs):
             self.model.train()
 
+            loss_giou_mean = AverageMeter()
+            loss_conf_mean = AverageMeter()
+            loss_cls_mean = AverageMeter()
+            loss_mean = AverageMeter()
+
             mloss = torch.zeros(4)
             self.optimizer.zero_grad()
             for i, (imgs, targets, labels_length, _) in enumerate(self.train_dataloader):
@@ -240,11 +245,16 @@ class Trainer(object):
                     loss_items = torch.tensor([loss_giou, loss_conf, loss_cls, loss])
                     mloss = (mloss * i + loss_items) / (i + 1)
 
+                    loss_giou_mean.update(loss_giou, imgs.size(0))
+                    loss_conf_mean.update(loss_conf, imgs.size(0))
+                    loss_cls_mean.update(loss_cls, imgs.size(0))
+                    loss_mean.update(loss, imgs.size(0))
+
                     global_step = i + len(self.train_dataloader) * epoch
-                    self.tb_writer.add_scalar('train/giou_loss', loss_giou, global_step)
-                    self.tb_writer.add_scalar('train/conf_loss', loss_conf, global_step)
-                    self.tb_writer.add_scalar('train/cls_loss', loss_cls, global_step)
-                    self.tb_writer.add_scalar('train/loss', loss, global_step)
+                    self.tb_writer.add_scalar('train/giou_loss', loss_giou_mean.avg, global_step)
+                    self.tb_writer.add_scalar('train/conf_loss', loss_conf_mean.avg, global_step)
+                    self.tb_writer.add_scalar('train/cls_loss', loss_cls_mean.avg, global_step)
+                    self.tb_writer.add_scalar('train/loss', loss_mean.avg, global_step)
 
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optimizer)  # optimizer.step
@@ -311,6 +321,29 @@ def make_od_optimizer(
     )
 
     return optimizer, scheduler
+
+
+class AverageMeter:
+    """Computes and stores the average and current value"""
+
+    def __init__(self):
+        self.val = None
+        self.avg = None
+        self.sum = None
+        self.count = None
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
 
 
 def parse_opt():
@@ -401,7 +434,7 @@ def parse_opt():
         dest="net",
         type=str,
         default="yolo5_6m",
-        help="Specific YOLO model name to be used in training",
+        help="Specific YOLO model name to be used in training (ex. yolo3, yolo4m, yolo5_6s, ...)",
     )
     parser.add_argument(
         "--hp_config",

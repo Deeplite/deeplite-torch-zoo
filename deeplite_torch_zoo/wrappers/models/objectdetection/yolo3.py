@@ -35,7 +35,7 @@ def yolo3(
     config_path = get_project_root() / CFG_PATH / yolov3_cfg[net]
     model = YoloV5_6(config_path, ch=3, nc=num_classes)
     if pretrained:
-        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"yolov3_{dataset_name}"])
+        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{net}_{dataset_name}"])
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
 
     return model.to(device)

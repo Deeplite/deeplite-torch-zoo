@@ -61,6 +61,7 @@ TEST = {
 }
 
 TRAIN = {
+    # general:
     "train_img_size": 448,
     "multi_scale_train": False,
     # optimization:

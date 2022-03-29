@@ -85,6 +85,6 @@ wrapper_funcs = {
 
 for dataset, model_set in wrapper_funcs.items():
     for model_tag in model_set.model_list:
-        name = '_'.join([model_tag.replace('v', ''), dataset]) # workaround for 'yolo4' -> 'yolov4' names
+        name = '_'.join([model_tag, dataset])
         globals()[name] = make_wrapper_func(name, model_tag, dataset, model_set.num_classes)
         __all__.append(name)
