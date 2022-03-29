@@ -140,18 +140,19 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
 
 
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
+print (model_urls)
 wrapper_funcs = {
     'person_detection_1': ModelSet(1, ['yolov5_6n', 'yolov5_6s',
         'yolov5_6n_relu', 'yolov5_6s_relu', 'yolov5_6m_relu', 'yolov5_6sa']),
     'voc_20': ModelSet(20, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6l', 'yolov5_6x',
-        'yolov5_6m_relu', 'yolov5_6s_relu']),
+        'yolov5_6m_relu', 'yolov5_6s_relu', 'yolov5_6n_hswish', 'yolov5_6n_relu']),
     'coco_80': ModelSet(80, ['yolov5s', 'yolov5m', 'yolov5l', 'yolov5x',
         'yolov5_6n', 'yolov5_6s', 'yolov5_6m', 'yolov5_6sa', 'yolov5_6ma',
         'yolov5_6n_hswish', 'yolov5_6n_relu']),
     'voc07_20': ModelSet(20, ['yolov5_6n', 'yolov5_6s']),
-    'coco_eight_class': ModelSet(8, ['yolov5_6n']),
-    'surveillance_person_class': ModelSet(8, ['yolov5_6n']),
+    'coco_eight_class': ModelSet(8, ['yolov5_6n', 'yolov5_6n_relu', 'yolov5_6n_hswish']),
+    'surveillance_person_class': ModelSet(1, ['yolov5_6n', 'yolov5_6n_relu', 'yolov5_6n_relu_hswish']),
 }
 
 for dataset, model_set in wrapper_funcs.items():

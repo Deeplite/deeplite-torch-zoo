@@ -404,25 +404,9 @@ def parse_opt():
         dest="dataset_type",
         type=str,
         default="voc",
-<<<<<<< HEAD
         choices=["coco", "voc", "lisa", "lisa_full",
             "lisa_subset11", "wider_face", "person_detection", "voc07",
             "car_detection", "person_pet_vehicle_detection", "coco_eight_class", "surveillance_person_class"],
-=======
-        choices=[
-            "coco",
-            "voc",
-            "lisa",
-            "lisa_full",
-            "lisa_subset11",
-            "wider_face",
-            "person_detection",
-            "voc07",
-            "car_detection",
-            "person_pet_vehicle_detection",
-            "coco_eight_class"
-        ],
->>>>>>> 45bee0fb54ffa7369f2c4cfedac6ba3f3aa20a5a
         help="Name of the dataset to train/validate on",
     )
     parser.add_argument(
