@@ -31,7 +31,10 @@ model_urls = {
 }
 
 coco_eight_class_model_urls = {
-    "yolov5_6n_coco_eight_class": "yolo5_6n-coco-8classes_416_12df57bb4f138d6b.pt",
+    "yolov5_6n_coco_eight_class": "yolov5_6n-coco-8classes_416_320px-12df57bb4f138d6b.pt",
+    "yolov5_6n_288_coco_eight_class": "yolov5_6n-surveillance_person_class_857_228px-cb380271ed30a25f.pt",
+    "yolov5_6n_hswish_coco_eight_class": "yolov5_6n_hswish-surveillance_person_class_886_288px-78dadb8d35286a38.pt",
+    "yolov5_6n_relu_coco_eight_class": "yolov5_6n_relu-surveillance_person_class_883_288px-5241f8cd66a82413.pt"
 }
 
 voc_model_urls = {

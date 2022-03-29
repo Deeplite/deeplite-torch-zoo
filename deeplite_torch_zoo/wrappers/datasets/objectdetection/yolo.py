@@ -140,7 +140,7 @@ DATASET_WRAPPER_FNS = {
     'person_detection': DatasetParameters(1, 320, create_person_detection_datasets),
     'car_detection': DatasetParameters(1, 320, create_car_detection_datasets),
     'person_pet_vehicle_detection': DatasetParameters(3, 320, create_person_pet_vehice_datasets),
-    'coco_eight_class': DatasetParameters(8, 512, create_person_pet_vehice_datasets), 
+    'coco_eight_class': DatasetParameters(8, 288, create_person_pet_vehice_datasets), 
     'surveillance_person_class': DatasetParameters(1, 288, create_person_pet_vehice_datasets)
 }
 
