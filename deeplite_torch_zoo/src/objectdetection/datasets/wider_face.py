@@ -9,7 +9,7 @@ from typing import List, Dict, Union
 
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as cfg
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as cfg
 
 
 WF_CLASS_NAMES = {

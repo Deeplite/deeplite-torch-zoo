@@ -9,7 +9,7 @@ from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
 from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.src.objectdetection.datasets.transforms import random_transform_fn
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
-from deeplite_torch_zoo.src.objectdetection.configs.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
+from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
