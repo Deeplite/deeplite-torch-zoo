@@ -3,21 +3,22 @@ import os
 import hashlib
 import random
 import math
-import functools
+import datetime
 from pathlib import Path
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.cuda import amp
+from torch.utils.tensorboard import SummaryWriter
 
-import numpy as np
 from pycocotools.coco import COCO
 
 from deeplite_torch_zoo import get_data_splits_by_name, create_model
 
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as hyp_cfg_voc
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
@@ -26,20 +27,21 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
 )
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import YoloV5Loss
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.scheduler import CosineDecayLR
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
 
 DATASET_TO_HP_CONFIG_MAP = {
     "lisa": hyp_cfg_lisa,
+    "voc": hyp_cfg_voc,
+    "voc07": hyp_cfg_voc,
 }
 
 for dataset_name in (
-    "voc",
     "coco",
     "wider_face",
     "person_detection",
     "car_detection",
-    "voc07",
 ):
     DATASET_TO_HP_CONFIG_MAP[dataset_name] = hyp_cfg_scratch
 
@@ -85,12 +87,17 @@ class Trainer(object):
         self.train_dataset = self.train_dataloader.dataset
         self.val_dataloader = dataset_splits["val"]
         self.num_classes = self.train_dataset.num_classes
+
+        d = datetime.datetime.now()
+        run_id = '{:%Y-%m-%d__%H-%M-%S}'.format(d)
         self.weight_path = (
             weight_path
             / self.model_name
             / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
+            / run_id
         )
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
+        self.tb_writer = SummaryWriter(self.weight_path)
 
         self.model = create_model(
             model_name=self.model_name,
@@ -101,26 +108,23 @@ class Trainer(object):
             device=self.device,
         )
 
-        self.criterion = self._get_loss()
+        self.criterion = YoloV5Loss(
+            model=self.model,
+            num_classes=self.num_classes,
+            device=self.device,
+            hyp_cfg=self.hyp_config,
+        )
         if resume:
             self.__load_model_weights(weight_path, resume)
 
-        (
-            self.optimizer,
-            self.scheduler,
-            self.warmup_training_callback,
-        ) = make_od_optimizer(self.model, self.epochs, hyp_config=self.hyp_config)
-
+        self.optimizer, self.scheduler = make_od_optimizer(
+            self.model,
+            num_iters_per_epoch=len(self.train_dataloader),
+            epochs=self.epochs,
+            hyp_config=self.hyp_config,
+            tb_writer=self.tb_writer
+        )
         self.scaler = amp.GradScaler()
-
-    def _get_loss(self):
-        loss_kwargs = {
-            "model": self.model,
-            "num_classes": self.num_classes,
-            "device": self.device,
-            "hyp_cfg": self.hyp_config,
-        }
-        return YoloV5Loss(**loss_kwargs)
 
     def __load_model_weights(self, weight_path, resume):
         if resume:
@@ -203,8 +207,6 @@ class Trainer(object):
             )
         )
 
-        num_batches = len(self.train_dataloader)
-
         if opt.generate_checkpoint_name:
             sd = torch.load(opt.generate_checkpoint_name)
             self.model.load_state_dict(sd, strict=True)
@@ -226,12 +228,8 @@ class Trainer(object):
 
             mloss = torch.zeros(4)
             self.optimizer.zero_grad()
-            for i, (imgs, targets, labels_length, _) in enumerate(
-                self.train_dataloader
-            ):
-                num_iter = i + epoch * num_batches
-                self.warmup_training_callback(self.train_dataloader, epoch, num_iter)
-
+            for i, (imgs, targets, labels_length, _) in enumerate(self.train_dataloader):
+                self.scheduler.step()
                 with amp.autocast():
                     imgs = imgs.to(self.device)
                     p, p_d = self.model(imgs)
@@ -241,6 +239,12 @@ class Trainer(object):
                     # Update running mean of tracked metrics
                     loss_items = torch.tensor([loss_giou, loss_conf, loss_cls, loss])
                     mloss = (mloss * i + loss_items) / (i + 1)
+
+                    global_step = i + len(self.train_dataloader) * epoch
+                    self.tb_writer.add_scalar('train/giou_loss', loss_giou, global_step)
+                    self.tb_writer.add_scalar('train/conf_loss', loss_conf, global_step)
+                    self.tb_writer.add_scalar('train/cls_loss', loss_cls, global_step)
+                    self.tb_writer.add_scalar('train/loss', loss, global_step)
 
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optimizer)  # optimizer.step
@@ -258,18 +262,18 @@ class Trainer(object):
                 if self.multi_scale_train:
                     self.train_dataset._img_size = random.choice(range(10, 20)) * 32
 
-            self.scheduler.step()
-
             mAP = 0
             if epoch % opt.eval_freq == 0:
                 Aps = self.evaluate()
                 mAP = Aps["mAP"]
+                self.tb_writer.add_scalar('eval/mAP', mAP, epoch)
                 self.__save_model_weights(epoch, mAP)
                 print("best mAP : %g" % (self.best_mAP))
 
 
 def make_od_optimizer(
-    model, epochs, hyp_config=None, hyp_config_name=None, linear_lr=False
+    model, num_iters_per_epoch, epochs,
+    hyp_config=None, hyp_config_name=None, tb_writer=None
 ):
     if hyp_config is None:
         hyp_config = HP_CONFIG_MAP.get(hyp_config_name, hyp_cfg_scratch)
@@ -296,49 +300,17 @@ def make_od_optimizer(
     optimizer.add_param_group({"params": g2})  # add g2 (biases)
 
     # Scheduler
-    if linear_lr:
-        lf = (
-            lambda x: (1 - x / (epochs - 1)) * (1.0 - hyp_config.TRAIN["lrf"])
-            + hyp_config.TRAIN["lrf"]
-        )  # linear
-    else:
-        lf = one_cycle(1, hyp_config.TRAIN["lrf"], epochs)  # cosine 1->hyp['lrf']
-
-    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
-    warmup_training_fn = functools.partial(
-        warmup_training, optimizer=optimizer, scheduler=scheduler, hyp_config=hyp_config
+    tb_write_fn = lambda lr, t: tb_writer.add_scalar("train/learning_rate", lr, t)
+    scheduler = CosineDecayLR(
+        optimizer,
+        T_max=epochs * num_iters_per_epoch,
+        lr_init=hyp_config.TRAIN["lr0"],
+        lr_min=hyp_config.TRAIN["lr0"] * hyp_config.TRAIN["lrf"],
+        warmup=hyp_config.TRAIN["warmup_epochs"] * num_iters_per_epoch,
+        writer_step_fn=tb_write_fn,
     )
-    return optimizer, scheduler, warmup_training_fn
 
-
-def one_cycle(y1=0.0, y2=1.0, steps=100):
-    # lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf
-    return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
-
-
-def warmup_training(
-    train_dataloder, epoch, iter_number, optimizer=None, scheduler=None, hyp_config=None
-):
-    num_batches_per_epoch = len(train_dataloder)
-    warmup_iters_number = hyp_config.TRAIN["warmup_epochs"] * num_batches_per_epoch
-    if iter_number < warmup_iters_number:
-        xi = [0, warmup_iters_number]  # x interp
-        for j, x in enumerate(optimizer.param_groups):
-            # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
-            x["lr"] = np.interp(
-                iter_number,
-                xi,
-                [
-                    hyp_config.TRAIN["warmup_bias_lr"] if j == 2 else 0.0,
-                    x["initial_lr"] * scheduler.lr_lambdas[0](epoch),
-                ],
-            )
-            if "momentum" in x:
-                x["momentum"] = np.interp(
-                    iter_number,
-                    xi,
-                    [hyp_config.TRAIN["warmup_momentum"], hyp_config.TRAIN["momentum"]],
-                )
+    return optimizer, scheduler
 
 
 def parse_opt():
@@ -373,7 +345,7 @@ def parse_opt():
     parser.add_argument(
         "--weight_path",
         type=Path,
-        default="models/",
+        default="models",
         help="where weights should be stored",
     )
     parser.add_argument(
@@ -428,7 +400,7 @@ def parse_opt():
         "--net",
         dest="net",
         type=str,
-        default="yolov5_6m",
+        default="yolo5_6m",
         help="Specific YOLO model name to be used in training",
     )
     parser.add_argument(
