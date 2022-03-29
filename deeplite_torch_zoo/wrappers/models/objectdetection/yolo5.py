@@ -140,7 +140,7 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
 
 
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
-print (model_urls)
+
 wrapper_funcs = {
     'person_detection_1': ModelSet(1, ['yolov5_6n', 'yolov5_6s',
         'yolov5_6n_relu', 'yolov5_6s_relu', 'yolov5_6m_relu', 'yolov5_6sa']),
