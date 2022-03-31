@@ -8,25 +8,17 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
+__all__ = []
 
 
 def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
-
-__all__ = [
-    "yolo3",
-    "YOLOV3_MODELS",
-]
-
 CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
-    "yolov3_voc_20": "yolo3-voc-0_839-a6149826183808aa.pth",
-    "yolov3_voc_1": "yolov3-voc-1cls-0_888-1c73632fc187ef0c.pth",  # person
-    "yolov3_voc_2": "yolov3-voc-2cls-0_911-b308f8a2686c19a6.pth",  # person and car
-    "yolov3_lisa_11": "yolov3-lisa_11_830-663a0ec046402856.pth",
+    "yolov3_voc_20": "yolov3-voc-20classes-912_c94dc14873207830.pt",
 }
 
 yolov3_cfg = {
@@ -34,8 +26,6 @@ yolov3_cfg = {
     "yolov3_tiny": "yolov3-tiny.yaml",
     "yolov3_spp": "yolov3-spp.yaml",
 }
-
-YOLOV3_MODELS = list(yolov3_cfg.keys())
 
 
 def yolo3(
@@ -72,9 +62,6 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
     'voc_20': ModelSet(20, ['yolov3']),
-    'voc_1': ModelSet(1, ['yolov3']),
-    'voc_2': ModelSet(2, ['yolov3']),
-    'lisa_11': ModelSet(11, ['yolov3']),
 }
 
 for dataset, model_set in wrapper_funcs.items():

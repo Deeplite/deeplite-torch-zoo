@@ -23,8 +23,8 @@ import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lis
 from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.metrics import MAP
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import post_process
 
+from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
 class WiderFaceEval(Evaluator):
@@ -77,6 +77,7 @@ class WiderFaceEval(Evaluator):
         return _ap  # Average Precision  (AP) @[ IoU=050 ]
 
 
+@EVAL_WRAPPER_REGISTRY.register('object_detection_yolo_wider_face')
 def yolo_eval_wider_face(model, data_root, device="cuda", net="yolov3", img_size=448, **kwargs):
 
     mAP = 0

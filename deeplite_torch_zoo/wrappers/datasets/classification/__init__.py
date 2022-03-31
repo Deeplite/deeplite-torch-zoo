@@ -3,7 +3,7 @@ try:
 except ImportError:
     pass
 
-from .cifar100 import *
+from .cifar import *
 from .imagenet import *
 from .mnist import *
 from .vww import *

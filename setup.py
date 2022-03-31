@@ -100,7 +100,7 @@ setup(
         'sdist': gitcmd_sdist,
     },
     name="deeplite-torch-zoo",
-    version="1.2.3",
+    version="1.2.4",
     description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
     long_description=long_description,
     long_description_content_type="text/markdown",

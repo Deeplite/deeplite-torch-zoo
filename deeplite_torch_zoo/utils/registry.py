@@ -2,7 +2,32 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections import namedtuple
+import re
 
+def extract_model_type(net):
+    MODEL_NAME_SUBSTRINGS = ["yolo", "unet_scse", "unet", "ssd300", "deeplab",
+                            "fcn", "mb2_ssd_lite","mb2_ssd", "mb1_ssd", "ssd", "rcnn"]
+    for substring in MODEL_NAME_SUBSTRINGS:
+        if re.search(substring, net):
+            return substring
+    return net
+
+def normalize_dataset_name(data):
+    if 'voc07' in data:
+        data = 'voc07'
+    elif 'voc' in data:
+        data = 'voc'
+    elif 'coco' in data:
+        data = 'coco'
+    elif 'wider_face' in data:
+        data = 'wider_face'
+    elif 'lisa' in data:
+        data = 'lisa'
+    elif 'person_detection' in data:
+        data = 'voc'
+    elif 'person_pet_vehicle_detection':
+        data = 'voc'
+    return data
 
 class Registry:
     """ Generic registry implentation modified from
@@ -74,4 +99,41 @@ class ModelWrapperRegistry(Registry):
         if key not in self._registry_dict:
             raise KeyError(f'Model {model_name} on dataset {dataset_name} was not found '
                 'in the model wrapper registry')
+        return self._registry_dict[key]
+
+class EvalWrapperRegistry(Registry):
+
+    def __init__(self):
+        super().__init__()
+    
+    def register(self, name=None):
+        def _register(obj_name, obj):
+            if obj_name in self._registry_dict:
+                raise KeyError(f'{obj_name} is already registered in the model wrapper registry')
+            self._registry_dict[obj_name] = obj
+
+        def wrap(obj):
+            cls_name = name
+            if cls_name is None:
+                cls_name = obj.__name__
+            cls_name = (cls_name)
+            _register(cls_name, obj)
+            return obj
+
+        return wrap
+
+    def get(self, task_type, model_name, dataset_name):
+        if task_type == "classification":
+            key = "classification"
+        elif task_type == "semantic_segmentation":
+            model_type = extract_model_type(model_name)
+            key = task_type +"_"+ model_type
+        elif task_type == 'object_detection':
+            model_type = extract_model_type(model_name)
+            dataset_type = normalize_dataset_name(dataset_name)
+            key = task_type + "_" + model_type + "_" + dataset_type
+        
+        if key not in self._registry_dict:
+            raise KeyError(f'{task_type} Model {model_name} on dataset {dataset_name} was not found '
+                'in the eval wrapper registry')
         return self._registry_dict[key]

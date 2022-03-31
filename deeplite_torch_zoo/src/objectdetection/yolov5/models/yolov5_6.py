@@ -2,6 +2,8 @@ import logging
 from copy import deepcopy
 from pathlib import Path
 
+import torch
+
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 
@@ -11,6 +13,16 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import fuse
 
 
 logger = logging.getLogger(__name__)
+
+
+class no_jit_trace:
+    def __enter__(self):
+        self.state = torch._C._get_tracing_state()
+        torch._C._set_tracing_state(None)
+
+    def __exit__(self, *args):
+        torch._C._set_tracing_state(self.state)
+        self.state = None
 
 
 class Detect(nn.Module):
@@ -37,8 +49,12 @@ class Detect(nn.Module):
             x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
 
             if not self.training:  # inference
-                if self.onnx_dynamic or self.grid[i].shape[2:4] != x[i].shape[2:4]:
+
+                if self.onnx_dynamic:
                     self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+                with no_jit_trace():
+                    if self.grid[i].shape[2:4] != x[i].shape[2:4]:
+                        self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
 
                 y = x[i].sigmoid()
                 if self.inplace:

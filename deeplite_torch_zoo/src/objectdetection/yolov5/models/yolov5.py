@@ -44,7 +44,7 @@ class Detect(nn.Module):
         self.m = nn.ModuleList(
             nn.Conv2d(x, self.no * self.na, 1) for x in ch
         )  # output conv
-        self._stride = torch.tensor(hyp_cfg.MODEL["STRIDES"])
+        self._stride = torch.tensor(hyp_cfg.MODEL["strides"])
 
     def forward(self, x):
         # x = x.copy()  # for profiling
