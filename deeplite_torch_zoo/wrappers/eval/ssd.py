@@ -13,15 +13,21 @@ from deeplite_torch_zoo.src.objectdetection.ssd.models.mobilenetv2_ssd import cr
 from deeplite_torch_zoo.src.objectdetection.ssd.repo.vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite_predictor
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
+
 __all__ = [
-            "vgg16_ssd_eval_func",
-            "mb1_ssd_eval_func",
-            "mb2_ssd_eval_func",
-            "mb2_ssd_lite_eval_func",
-            "mb2_ssd_coco_eval_func",
-		]
-@EVAL_WRAPPER_REGISTRY.register('object_detection_ssd_wider_face')
-@EVAL_WRAPPER_REGISTRY.register('object_detection_ssd_voc')
+    "vgg16_ssd_eval_func",
+    "mb1_ssd_eval_func",
+    "mb2_ssd_eval_func",
+    "mb2_ssd_lite_eval_func",
+    "mb2_ssd_coco_eval_func",
+]
+
+
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='ssd', dataset_type='wider_face')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='ssd', dataset_type='voc')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='resnet18_ssd', dataset_type='voc')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='resnet34_ssd', dataset_type='voc')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='resnet50_ssd', dataset_type='voc')
 def vgg16_ssd_eval_func(
     model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
@@ -43,7 +49,8 @@ def vgg16_ssd_eval_func(
 
     return stat
 
-@EVAL_WRAPPER_REGISTRY.register('object_detection_mb1_ssd_voc')
+
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='mb1_ssd', dataset_type='voc')
 def mb1_ssd_eval_func(
     model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
@@ -68,7 +75,8 @@ def mb1_ssd_eval_func(
 
     return stat
 
-@EVAL_WRAPPER_REGISTRY.register('object_detection_mb2_ssd_voc')
+
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='mb2_ssd', dataset_type='voc')
 def mb2_ssd_eval_func(
     model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):
@@ -94,7 +102,7 @@ def mb2_ssd_eval_func(
     return stat
 
 
-@EVAL_WRAPPER_REGISTRY.register('object_detection_mb2_ssd_coco')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='mb2_ssd', dataset_type='coco')
 def mb2_ssd_coco_eval_func(
     model, data_loader, gt=None, iou_threshold=0.5, use_2007_metric=True, _set="voc", device="cuda"
 ):
@@ -115,7 +123,8 @@ def mb2_ssd_coco_eval_func(
 
     return stat
 
-@EVAL_WRAPPER_REGISTRY.register('object_detection_mb2_ssd_lite_voc')
+
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='mb2_ssd_lite', dataset_type='voc')
 def mb2_ssd_lite_eval_func(
     model, data_loader, iou_threshold=0.5, use_2007_metric=True, device="cuda"
 ):

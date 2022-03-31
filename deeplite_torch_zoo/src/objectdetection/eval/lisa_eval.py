@@ -137,7 +137,7 @@ class LISAEval(Evaluator):
 
         return ap  # Average Precision  (AP) @[ IoU=050 ]
 
-@EVAL_WRAPPER_REGISTRY.register('object_detection_yolo_lisa')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='lisa')
 def yolo_eval_lisa(model, data_root, device="cuda", net="yolov3", img_size=448, **kwargs):
 
     mAP = 0

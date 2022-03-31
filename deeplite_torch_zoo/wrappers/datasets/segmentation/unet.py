@@ -9,7 +9,7 @@ from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 __all__ = ["get_carvana_for_unet", "get_voc_for_unet"]
 
 
-@DATA_WRAPPER_REGISTRY.register('carvana', 'unet')
+@DATA_WRAPPER_REGISTRY.register(dataset_name='carvana', model_type='unet')
 def get_carvana_for_unet(data_root, batch_size=4, num_workers=4, **kwargs):
     train_dataset = BasicDataset(
         os.path.join(data_root, "train_imgs/"),

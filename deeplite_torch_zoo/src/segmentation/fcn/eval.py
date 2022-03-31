@@ -4,7 +4,7 @@ from deeplite_torch_zoo.src.segmentation.fcn.utils import label_accuracy_score
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
-@EVAL_WRAPPER_REGISTRY.register('semantic_segmentation_fcn')
+@EVAL_WRAPPER_REGISTRY.register(task_type='semantic_segmentation', model_type='fcn')
 def evaluate_fcn(model, loader, device="cuda"):
     model.eval()
 

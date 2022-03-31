@@ -10,7 +10,7 @@ from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 __all__ = ["get_mnist"]
 
 
-@DATA_WRAPPER_REGISTRY.register("mnist")
+@DATA_WRAPPER_REGISTRY.register(dataset_name="mnist")
 def get_mnist(data_root="", batch_size=128, num_workers=4, fp16=False, download=True, device="cuda", distributed=False, **kwargs):
 
     if len(kwargs):
