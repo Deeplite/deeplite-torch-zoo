@@ -1,19 +1,3 @@
-DATA = {
-    "CLASSES": [
-        "speedLimit15",
-        "speedLimit25",
-        "speedLimit30",
-        "speedLimit35",
-        "speedLimit40",
-        "speedLimit45",
-        "speedLimit50",
-        "speedLimit55",
-        "speedLimit65",
-        "truckSpeedLimit55",
-        "speedLimitUrdbl",
-    ],
-    "NUM": 11,
-}
 
 MODEL = {
     "strides": [8, 16, 32],
