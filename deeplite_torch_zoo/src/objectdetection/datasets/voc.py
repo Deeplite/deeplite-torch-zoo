@@ -18,6 +18,7 @@ class VocDataset(DLZooDataset):
         self.all_classes = cfg.DATA["ALLCLASSES"]
         if num_classes == 1:
             self.classes = cfg.DATA["CLASSES_1"]
+            self.all_classes = self.classes     
         elif num_classes == 2:
             self.classes = cfg.DATA["CLASSES_2"]
         elif num_classes == 8:

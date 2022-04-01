@@ -40,7 +40,11 @@ for dataset_name in (
     "person_detection",
     "car_detection",
     "voc07",
-    "coco_eight_class"
+    "coco_eight_class", 
+    "coco_three_class",
+    "surveillance_person_class" 
+
+
 ):
     DATASET_TO_HP_CONFIG_MAP[dataset_name] = hyp_cfg_scratch
 
@@ -406,7 +410,7 @@ def parse_opt():
         default="voc",
         choices=["coco", "voc", "lisa", "lisa_full",
             "lisa_subset11", "wider_face", "person_detection", "voc07",
-            "car_detection", "person_pet_vehicle_detection", "coco_eight_class", "surveillance_person_class"],
+            "car_detection", "person_pet_vehicle_detection", "coco_eight_class", "coco_three_class","surveillance_person_class"],
         help="Name of the dataset to train/validate on",
     )
     parser.add_argument(
