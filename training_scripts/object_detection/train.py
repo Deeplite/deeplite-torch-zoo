@@ -6,6 +6,9 @@ import math
 import datetime
 from pathlib import Path
 
+import functools
+import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -27,7 +30,6 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
 )
 from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import YoloV5Loss
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.scheduler import CosineDecayLR
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
 
@@ -69,24 +71,24 @@ class Trainer(object):
         self.best_mAP = 0.0
         self.epochs = self.hyp_config.TRAIN["epochs"] if not opt.epochs else opt.epochs
 
-        self.multi_scale_train = self.hyp_config.TRAIN["multi_scale_train"]
-
-        train_img_size = self.hyp_config.TRAIN["train_img_size"] if not opt.train_img_res \
-            else opt.train_img_res
+        dataset_kwargs = {}
+        if opt.train_img_res:
+            dataset_kwargs.update({'img_size': opt.train_img_res})
 
         dataset_splits = get_data_splits_by_name(
             data_root=opt.img_dir,
             dataset_name=opt.dataset_type,
             model_name=self.model_name,
-            img_size=train_img_size,
             batch_size=opt.batch_size,
             num_workers=opt.n_cpu,
+            **dataset_kwargs
         )
 
         self.train_dataloader = dataset_splits["train"]
         self.train_dataset = self.train_dataloader.dataset
         self.val_dataloader = dataset_splits["val"]
         self.num_classes = self.train_dataset.num_classes
+        self.imgsz = self.train_dataset._img_size
 
         d = datetime.datetime.now()
         run_id = '{:%Y-%m-%d__%H-%M-%S}'.format(d)
@@ -117,13 +119,12 @@ class Trainer(object):
         if resume:
             self.__load_model_weights(weight_path, resume)
 
-        self.optimizer, self.scheduler = make_od_optimizer(
-            self.model,
-            num_iters_per_epoch=len(self.train_dataloader),
-            epochs=self.epochs,
-            hyp_config=self.hyp_config,
-            tb_writer=self.tb_writer
-        )
+        (
+            self.optimizer,
+            self.scheduler,
+            self.warmup_training_callback,
+        ) = make_od_optimizer(self.model, self.epochs, hyp_config=self.hyp_config)
+
         self.scaler = amp.GradScaler()
 
     def __load_model_weights(self, weight_path, resume):
@@ -207,6 +208,8 @@ class Trainer(object):
             )
         )
 
+        num_batches = len(self.train_dataloader)
+
         if opt.generate_checkpoint_name:
             sd = torch.load(opt.generate_checkpoint_name)
             self.model.load_state_dict(sd, strict=True)
@@ -223,18 +226,19 @@ class Trainer(object):
             Aps = self.evaluate()
             print(f"Initial mAP values: {Aps}")
 
+        loss_giou_mean = AverageMeter()
+        loss_conf_mean = AverageMeter()
+        loss_cls_mean = AverageMeter()
+        loss_mean = AverageMeter()
+
         for epoch in range(self.start_epoch, self.epochs):
             self.model.train()
-
-            loss_giou_mean = AverageMeter()
-            loss_conf_mean = AverageMeter()
-            loss_cls_mean = AverageMeter()
-            loss_mean = AverageMeter()
 
             mloss = torch.zeros(4)
             self.optimizer.zero_grad()
             for i, (imgs, targets, labels_length, _) in enumerate(self.train_dataloader):
-                self.scheduler.step()
+                num_iter = i + epoch * num_batches
+                self.warmup_training_callback(self.train_dataloader, epoch, num_iter)
                 with amp.autocast():
                     imgs = imgs.to(self.device)
                     p, p_d = self.model(imgs)
@@ -268,10 +272,11 @@ class Trainer(object):
                     end="",
                 )
 
-                # multi-scale training (320-608 pixel resolution)
-                if self.multi_scale_train:
-                    self.train_dataset._img_size = random.choice(range(10, 20)) * 32
+                # multi-scale training
+                if opt.multi_scale_train:
+                    self.train_dataset._img_size = random.randrange(self.imgsz * 0.5, self.imgsz * 1.5)
 
+            self.scheduler.step()
             mAP = 0
             if epoch % opt.eval_freq == 0:
                 Aps = self.evaluate()
@@ -282,8 +287,7 @@ class Trainer(object):
 
 
 def make_od_optimizer(
-    model, num_iters_per_epoch, epochs,
-    hyp_config=None, hyp_config_name=None, tb_writer=None
+    model, epochs, hyp_config=None, hyp_config_name=None, linear_lr=False
 ):
     if hyp_config is None:
         hyp_config = HP_CONFIG_MAP.get(hyp_config_name, hyp_cfg_scratch)
@@ -310,17 +314,49 @@ def make_od_optimizer(
     optimizer.add_param_group({"params": g2})  # add g2 (biases)
 
     # Scheduler
-    tb_write_fn = lambda lr, t: tb_writer.add_scalar("train/learning_rate", lr, t)
-    scheduler = CosineDecayLR(
-        optimizer,
-        T_max=epochs * num_iters_per_epoch,
-        lr_init=hyp_config.TRAIN["lr0"],
-        lr_min=hyp_config.TRAIN["lr0"] * hyp_config.TRAIN["lrf"],
-        warmup=hyp_config.TRAIN["warmup_epochs"] * num_iters_per_epoch,
-        writer_step_fn=tb_write_fn,
-    )
+    if linear_lr:
+        lf = (
+            lambda x: (1 - x / (epochs - 1)) * (1.0 - hyp_config.TRAIN["lrf"])
+            + hyp_config.TRAIN["lrf"]
+        )  # linear
+    else:
+        lf = one_cycle(1, hyp_config.TRAIN["lrf"], epochs)  # cosine 1->hyp['lrf']
 
-    return optimizer, scheduler
+    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
+    warmup_training_fn = functools.partial(
+        warmup_training, optimizer=optimizer, scheduler=scheduler, hyp_config=hyp_config
+    )
+    return optimizer, scheduler, warmup_training_fn
+
+
+def one_cycle(y1=0.0, y2=1.0, steps=100):
+    # lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf
+    return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
+
+
+def warmup_training(
+    train_dataloder, epoch, iter_number, optimizer=None, scheduler=None, hyp_config=None
+):
+    num_batches_per_epoch = len(train_dataloder)
+    warmup_iters_number = hyp_config.TRAIN["warmup_epochs"] * num_batches_per_epoch
+    if iter_number < warmup_iters_number:
+        xi = [0, warmup_iters_number]  # x interp
+        for j, x in enumerate(optimizer.param_groups):
+            # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
+            x["lr"] = np.interp(
+                iter_number,
+                xi,
+                [
+                    hyp_config.TRAIN["warmup_bias_lr"] if j == 2 else 0.0,
+                    x["initial_lr"] * scheduler.lr_lambdas[0](epoch),
+                ],
+            )
+            if "momentum" in x:
+                x["momentum"] = np.interp(
+                    iter_number,
+                    xi,
+                    [hyp_config.TRAIN["warmup_momentum"], hyp_config.TRAIN["momentum"]],
+                )
 
 
 class AverageMeter:
@@ -477,6 +513,13 @@ def parse_opt():
         type=str,
         default=False,
         help="Path to the checkpoint file to generate the DL torch zoo name for",
+    )
+    parser.add_argument(
+        "--multi_scale_train",
+        dest="multi_scale_train",
+        action="store_true",
+        default=False,
+        help="Enable multi-scale training",
     )
     opt = parser.parse_args()
     return opt
