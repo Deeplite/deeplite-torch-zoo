@@ -110,21 +110,25 @@ class Trainer(object):
             device=self.device,
         )
 
+        nl = self.model.model[-1].nl  # number of detection layers (to scale hyps)
+        self.hyp_config.TRAIN['box'] *= 3 / nl  # scale to layers
+        self.hyp_config.TRAIN['cls'] *= self.num_classes / 80 * 3 / nl  # scale to classes and layers
+        self.hyp_config.TRAIN['obj'] *= (self.imgsz / 640) ** 2 * 3 / nl  # scale to image size and layers
+
         self.criterion = YoloV5Loss(
             model=self.model,
             num_classes=self.num_classes,
             device=self.device,
             hyp_cfg=self.hyp_config,
         )
-        if resume:
-            self.__load_model_weights(weight_path, resume)
-
         (
             self.optimizer,
             self.scheduler,
             self.warmup_training_callback,
         ) = make_od_optimizer(self.model, self.epochs, hyp_config=self.hyp_config)
 
+        if resume:
+            self.__load_model_weights(weight_path, resume)
         self.scaler = amp.GradScaler()
 
     def __load_model_weights(self, weight_path, resume):
@@ -259,6 +263,7 @@ class Trainer(object):
                     self.tb_writer.add_scalar('train/conf_loss', loss_conf_mean.avg, global_step)
                     self.tb_writer.add_scalar('train/cls_loss', loss_cls_mean.avg, global_step)
                     self.tb_writer.add_scalar('train/loss', loss_mean.avg, global_step)
+                    self.tb_writer.add_scalar('train/learning_rate', self.optimizer.param_groups[0]['lr'], global_step)
 
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optimizer)  # optimizer.step
