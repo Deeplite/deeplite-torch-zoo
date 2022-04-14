@@ -3,21 +3,25 @@ import os
 import hashlib
 import random
 import math
-import functools
+import datetime
 from pathlib import Path
+
+import functools
+import numpy as np
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.cuda import amp
+from torch.utils.tensorboard import SummaryWriter
 
-import numpy as np
 from pycocotools.coco import COCO
 
 from deeplite_torch_zoo import get_data_splits_by_name, create_model
 
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as hyp_cfg_voc
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
@@ -31,15 +35,15 @@ from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
 DATASET_TO_HP_CONFIG_MAP = {
     "lisa": hyp_cfg_lisa,
+    "voc": hyp_cfg_voc,
+    "voc07": hyp_cfg_voc,
 }
 
 for dataset_name in (
-    "voc",
     "coco",
     "wider_face",
     "person_detection",
     "car_detection",
-    "voc07",
 ):
     DATASET_TO_HP_CONFIG_MAP[dataset_name] = hyp_cfg_scratch
 
@@ -67,30 +71,35 @@ class Trainer(object):
         self.best_mAP = 0.0
         self.epochs = self.hyp_config.TRAIN["epochs"] if not opt.epochs else opt.epochs
 
-        self.multi_scale_train = self.hyp_config.TRAIN["multi_scale_train"]
-
-        train_img_size = self.hyp_config.TRAIN["train_img_size"] if not opt.train_img_res \
-            else opt.train_img_res
+        dataset_kwargs = {}
+        if opt.train_img_res:
+            dataset_kwargs.update({'img_size': opt.train_img_res})
 
         dataset_splits = get_data_splits_by_name(
             data_root=opt.img_dir,
             dataset_name=opt.dataset_type,
             model_name=self.model_name,
-            img_size=train_img_size,
             batch_size=opt.batch_size,
             num_workers=opt.n_cpu,
+            **dataset_kwargs
         )
 
         self.train_dataloader = dataset_splits["train"]
         self.train_dataset = self.train_dataloader.dataset
         self.val_dataloader = dataset_splits["val"]
         self.num_classes = self.train_dataset.num_classes
+        self.imgsz = self.train_dataset._img_size
+
+        d = datetime.datetime.now()
+        run_id = '{:%Y-%m-%d__%H-%M-%S}'.format(d)
         self.weight_path = (
             weight_path
             / self.model_name
             / "{}_{}_cls".format(opt.dataset_type, self.num_classes)
+            / run_id
         )
         Path(self.weight_path).mkdir(parents=True, exist_ok=True)
+        self.tb_writer = SummaryWriter(self.weight_path)
 
         self.model = create_model(
             model_name=self.model_name,
@@ -101,26 +110,26 @@ class Trainer(object):
             device=self.device,
         )
 
-        self.criterion = self._get_loss()
-        if resume:
-            self.__load_model_weights(weight_path, resume)
+        nl = self.model.model[-1].nl  # number of detection layers (to scale hyps)
+        self.hyp_config.TRAIN['box'] *= 3 / nl  # scale to layers
+        self.hyp_config.TRAIN['cls'] *= self.num_classes / 80 * 3 / nl  # scale to classes and layers
+        self.hyp_config.TRAIN['obj'] *= (self.imgsz / 640) ** 2 * 3 / nl  # scale to image size and layers
 
+        self.criterion = YoloV5Loss(
+            model=self.model,
+            num_classes=self.num_classes,
+            device=self.device,
+            hyp_cfg=self.hyp_config,
+        )
         (
             self.optimizer,
             self.scheduler,
             self.warmup_training_callback,
         ) = make_od_optimizer(self.model, self.epochs, hyp_config=self.hyp_config)
 
+        if resume:
+            self.__load_model_weights(weight_path, resume)
         self.scaler = amp.GradScaler()
-
-    def _get_loss(self):
-        loss_kwargs = {
-            "model": self.model,
-            "num_classes": self.num_classes,
-            "device": self.device,
-            "hyp_cfg": self.hyp_config,
-        }
-        return YoloV5Loss(**loss_kwargs)
 
     def __load_model_weights(self, weight_path, resume):
         if resume:
@@ -221,17 +230,19 @@ class Trainer(object):
             Aps = self.evaluate()
             print(f"Initial mAP values: {Aps}")
 
+        loss_giou_mean = AverageMeter()
+        loss_conf_mean = AverageMeter()
+        loss_cls_mean = AverageMeter()
+        loss_mean = AverageMeter()
+
         for epoch in range(self.start_epoch, self.epochs):
             self.model.train()
 
             mloss = torch.zeros(4)
             self.optimizer.zero_grad()
-            for i, (imgs, targets, labels_length, _) in enumerate(
-                self.train_dataloader
-            ):
+            for i, (imgs, targets, labels_length, _) in enumerate(self.train_dataloader):
                 num_iter = i + epoch * num_batches
                 self.warmup_training_callback(self.train_dataloader, epoch, num_iter)
-
                 with amp.autocast():
                     imgs = imgs.to(self.device)
                     p, p_d = self.model(imgs)
@@ -241,6 +252,18 @@ class Trainer(object):
                     # Update running mean of tracked metrics
                     loss_items = torch.tensor([loss_giou, loss_conf, loss_cls, loss])
                     mloss = (mloss * i + loss_items) / (i + 1)
+
+                    loss_giou_mean.update(loss_giou, imgs.size(0))
+                    loss_conf_mean.update(loss_conf, imgs.size(0))
+                    loss_cls_mean.update(loss_cls, imgs.size(0))
+                    loss_mean.update(loss, imgs.size(0))
+
+                    global_step = i + len(self.train_dataloader) * epoch
+                    self.tb_writer.add_scalar('train/giou_loss', loss_giou_mean.avg, global_step)
+                    self.tb_writer.add_scalar('train/conf_loss', loss_conf_mean.avg, global_step)
+                    self.tb_writer.add_scalar('train/cls_loss', loss_cls_mean.avg, global_step)
+                    self.tb_writer.add_scalar('train/loss', loss_mean.avg, global_step)
+                    self.tb_writer.add_scalar('train/learning_rate', self.optimizer.param_groups[0]['lr'], global_step)
 
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optimizer)  # optimizer.step
@@ -254,16 +277,16 @@ class Trainer(object):
                     end="",
                 )
 
-                # multi-scale training (320-608 pixel resolution)
-                if self.multi_scale_train:
-                    self.train_dataset._img_size = random.choice(range(10, 20)) * 32
+                # multi-scale training
+                if opt.multi_scale_train:
+                    self.train_dataset._img_size = random.randrange(self.imgsz * 0.5, self.imgsz * 1.5)
 
             self.scheduler.step()
-
             mAP = 0
             if epoch % opt.eval_freq == 0:
                 Aps = self.evaluate()
                 mAP = Aps["mAP"]
+                self.tb_writer.add_scalar('eval/mAP', mAP, epoch)
                 self.__save_model_weights(epoch, mAP)
                 print("best mAP : %g" % (self.best_mAP))
 
@@ -341,6 +364,29 @@ def warmup_training(
                 )
 
 
+class AverageMeter:
+    """Computes and stores the average and current value"""
+
+    def __init__(self):
+        self.val = None
+        self.avg = None
+        self.sum = None
+        self.count = None
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
 def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -373,7 +419,7 @@ def parse_opt():
     parser.add_argument(
         "--weight_path",
         type=Path,
-        default="models/",
+        default="models",
         help="where weights should be stored",
     )
     parser.add_argument(
@@ -472,6 +518,13 @@ def parse_opt():
         type=str,
         default=False,
         help="Path to the checkpoint file to generate the DL torch zoo name for",
+    )
+    parser.add_argument(
+        "--multi_scale_train",
+        dest="multi_scale_train",
+        action="store_true",
+        default=False,
+        help="Enable multi-scale training",
     )
     opt = parser.parse_args()
     return opt

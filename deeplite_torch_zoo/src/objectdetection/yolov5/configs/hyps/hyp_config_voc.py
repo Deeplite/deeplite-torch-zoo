@@ -61,28 +61,25 @@ TEST = {
 }
 
 TRAIN = {
-    # general:
-    "train_img_size": 448,
-    "multi_scale_train": False,
     # optimization:
     "epochs": 50,
-    "lr0": 1e-4,  # 0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)
-    "lrf": 1e-2,  # 0.2,  # final OneCycleLR learning rate (lr0 * lrf)
-    "momentum": 0.937,  # SGD momentum/Adam beta1
-    "weight_decay": 0.0005,  # optimizer weight decay 5e-4
+    "lr0": 0.0032,  # initial learning rate (SGD=1E-2, Adam=1E-3)
+    "lrf": 0.12,  # final OneCycleLR learning rate (lr0 * lrf)
+    "momentum": 0.843,  # SGD momentum/Adam beta1
+    "weight_decay": 0.00036,  # optimizer weight decay 5e-4
     "warmup_epochs": 2,  # warmup epochs (fractions ok)
     "warmup_momentum": 0.8,  # warmup initial momentum
     "warmup_bias_lr": 0.1,  # warmup initial bias lr
     # loss:
-    "giou": 0.05,  # box loss gain
-    "cls": 0.5,  # cls loss gain
-    "cls_pw": 1.0,  # cls BCELoss positive_weight
-    "obj": 1.0,  # obj loss gain (scale with pixels)
+    "giou": 0.0296,  # box loss gain
+    "cls": 0.243,  # cls loss gain
+    "cls_pw": 0.911,  # cls BCELoss positive_weight
+    "obj": 0.301,  # obj loss gain (scale with pixels)
     "obj_pw": 1.0,  # obj BCELoss positive_weight
-    "iou_t": 0.20,  # IoU training threshold
-    "anchor_t": 4.0,  # anchor-multiple threshold
+    "iou_t": 0.2,  # IoU training threshold
+    "anchor_t": 2.91,  # anchor-multiple threshold
     # anchors: 0  # anchors per output grid (0 to ignore)
-    "fl_gamma": 1.5,  # focal loss gamma (efficientDet default gamma=1.5)
+    "fl_gamma": 0.0,  # focal loss gamma (efficientDet default gamma=1.5)
     "giou_loss_ratio": 1.0,
     # augmentations:
     "hsv_h": 0.015,  # image HSV-Hue augmentation (fraction)

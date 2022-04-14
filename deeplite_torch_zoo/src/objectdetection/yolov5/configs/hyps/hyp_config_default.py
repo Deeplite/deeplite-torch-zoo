@@ -8,9 +8,6 @@ TEST = {
 }
 
 TRAIN = {
-    # general:
-    "train_img_size": 448,
-    "multi_scale_train": False,
     # optimization:
     "epochs": 100,
     "lr0": 0.01,  # 0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)

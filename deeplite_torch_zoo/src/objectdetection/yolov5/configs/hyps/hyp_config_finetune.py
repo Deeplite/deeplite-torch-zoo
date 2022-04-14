@@ -8,10 +8,8 @@ TEST = {
 }
 
 TRAIN = {
-    "train_img_size": 448,
-    "multi_scale_train": False,
     # optimization:
-    "epochs": 50,
+    "epochs": 100,
     "lr0": 0.0032,  # initial learning rate (SGD=1E-2, Adam=1E-3)
     "lrf": 0.12,  # final OneCycleLR learning rate (lr0 * lrf)
     "momentum": 0.843,  # SGD momentum/Adam beta1
