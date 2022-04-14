@@ -17,7 +17,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from pycocotools.coco import COCO
 
-from deeplite_torch_zoo import get_data_splits_by_name, create_model
+from deeplite_torch_zoo import get_data_splits_by_name, create_model, get_eval_function
 
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
@@ -28,7 +28,6 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
     select_device,
     init_seeds,
 )
-from deeplite_torch_zoo.wrappers.eval import get_eval_func
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import YoloV5Loss
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
@@ -178,7 +177,7 @@ class Trainer(object):
 
     def evaluate(self):
         self.model.eval()
-        eval_func = get_eval_func(opt.dataset_type)
+        eval_func = get_eval_function(dataset_name=opt.dataset_type, model_name=self.model_name)
         test_set = opt.img_dir
         gt = None
         if opt.dataset_type in ("voc", "voc07"):

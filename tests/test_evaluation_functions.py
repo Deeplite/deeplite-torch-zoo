@@ -11,6 +11,7 @@ from deeplite_torch_zoo.src.objectdetection.eval.voc.voc_evaluator import (
 )
 from deeplite_torch_zoo.wrappers.eval import mb2_ssd_coco_eval_func
 
+
 classification_eval_list = [classification_eval]
 
 objectdetection_eval_list = [
@@ -27,7 +28,6 @@ objectdetection_eval_list = [
     yolo_eval_coco,
     yolo_eval_wider_face,
 ]
-
 
 segmentation_eval_list = [evaluate_fcn, eval_net, eval_net_miou, evaluate_deeplab]
 

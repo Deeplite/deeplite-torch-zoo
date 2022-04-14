@@ -10,7 +10,7 @@ from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 __all__ = ["get_cifar100", "get_cifar10"]
 
 
-@DATA_WRAPPER_REGISTRY.register("cifar100")
+@DATA_WRAPPER_REGISTRY.register(dataset_name="cifar100")
 def get_cifar100(
     data_root="", batch_size=128, num_workers=4, fp16=False, download=True, device="cuda", distributed=False, **kwargs,
 ):

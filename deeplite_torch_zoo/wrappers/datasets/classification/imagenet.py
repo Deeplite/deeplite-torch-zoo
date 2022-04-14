@@ -8,7 +8,7 @@ from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 __all__ = ["get_imagenet", "get_imagenet10", "get_imagenet16"]
 
 
-@DATA_WRAPPER_REGISTRY.register("imagenet10")
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet10")
 def get_imagenet10(data_root="", batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
     return get_imagenet(
             data_root=data_root,
@@ -20,7 +20,7 @@ def get_imagenet10(data_root="", batch_size=128, num_workers=4, fp16=False, dist
         )
 
 
-@DATA_WRAPPER_REGISTRY.register("imagenet16")
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet16")
 def get_imagenet16(data_root="", batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
     return get_imagenet(
             data_root=data_root,
@@ -32,7 +32,7 @@ def get_imagenet16(data_root="", batch_size=128, num_workers=4, fp16=False, dist
         )
 
 
-@DATA_WRAPPER_REGISTRY.register("imagenet")
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet")
 def get_imagenet(data_root="", batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
 
     if len(kwargs):

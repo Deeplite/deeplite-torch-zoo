@@ -156,7 +156,7 @@ class VOCEvaluator(Evaluator):
 
 
 
-@EVAL_WRAPPER_REGISTRY.register('object_detection_yolo_voc')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='voc')
 def yolo_eval_voc(
     model, data_root, num_classes=20, device="cuda", net="yolo3",
     img_size=448, is_07_subset=False, progressbar=False, **kwargs
@@ -181,7 +181,7 @@ def yolo_eval_voc(
     return result
 
 
-@EVAL_WRAPPER_REGISTRY.register('object_detection_yolo_voc07')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='voc07')
 def yolo_voc07_eval(
     model, data_root, num_classes=20, device="cuda", net="yolo3",
     img_size=448, is_07_subset=True, progressbar=False, **kwargs

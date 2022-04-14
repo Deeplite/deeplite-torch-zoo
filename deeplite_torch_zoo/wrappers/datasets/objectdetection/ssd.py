@@ -105,7 +105,7 @@ for dataset_name_key, wrapper_fn in DATASET_WRAPPER_FNS.items():
     wrapper_fn_name = f'get_{dataset_name_key}_for_ssd'
     func = make_dataset_wrapper(wrapper_fn_name, dataset_create_fn=wrapper_fn)
     globals()[wrapper_fn_name] = func
-    DATA_WRAPPER_REGISTRY.register(dataset_name_key, 'ssd')(func)
+    DATA_WRAPPER_REGISTRY.register(dataset_name=dataset_name_key, model_type='ssd')(func)
     __all__.append(wrapper_fn_name)
 
 
@@ -123,7 +123,7 @@ for model_name_key, model_config in VOC_DATASET_MODEL_WRAPPERS.items():
     wrapper_fn = partial(globals()['get_voc_for_ssd'],
         config=model_config, num_classes=21)
     globals()[wrapper_fn_name] = wrapper_fn
-    DATA_WRAPPER_REGISTRY.register('voc', model_name_key)(wrapper_fn)
+    DATA_WRAPPER_REGISTRY.register(dataset_name='voc', model_type=model_name_key)(wrapper_fn)
     __all__.append(wrapper_fn_name)
 
 
@@ -136,12 +136,12 @@ for model_name_key, model_config in WIDERFACE_DATASET_MODEL_WRAPPERS.items():
     wrapper_fn = partial(globals()['get_wider_face_for_ssd'],
         config=model_config, num_classes=21)
     globals()[wrapper_fn_name] = wrapper_fn
-    DATA_WRAPPER_REGISTRY.register('wider_face', model_name_key)(wrapper_fn)
+    DATA_WRAPPER_REGISTRY.register(dataset_name='wider_face', model_type=model_name_key)(wrapper_fn)
     __all__.append(wrapper_fn_name)
 
 
 COCO_DATASET_MODEL_WRAPPERS = {
-    ('coco','mb2_ssd'): {
+    ('coco', 'mb2_ssd'): {
         'config': MOBILENET_CONFIG(),
         'train_ann_file': "annotations/instances_train2017.json",
         'train_dir': "train2017",
@@ -150,7 +150,7 @@ COCO_DATASET_MODEL_WRAPPERS = {
         'classes': COCO_DATA_CATEGORIES["CLASSES"],
         'missing_ids': COCO_MISSING_IDS,
     },
-    ('coco_gm','mb2_ssd'): {
+    ('coco_gm', 'mb2_ssd'): {
         'config': MOBILENET_CONFIG(),
         'train_ann_file': "train_data_COCO.json",
         'train_dir': "images/train",
@@ -164,5 +164,5 @@ for (data_key, model_name_key), wrapper_kwargs in COCO_DATASET_MODEL_WRAPPERS.it
     wrapper_fn_name = f'get_{data_key}_for_{model_name_key}'
     wrapper_fn = partial(globals()['get_coco_for_ssd'], **wrapper_kwargs)
     globals()[wrapper_fn_name] = wrapper_fn
-    DATA_WRAPPER_REGISTRY.register(data_key, model_name_key)(wrapper_fn)
+    DATA_WRAPPER_REGISTRY.register(dataset_name=data_key, model_type=model_name_key)(wrapper_fn)
     __all__.append(wrapper_fn_name)

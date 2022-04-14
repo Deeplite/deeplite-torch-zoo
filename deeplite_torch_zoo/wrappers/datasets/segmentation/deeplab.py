@@ -11,7 +11,7 @@ from deeplite_torch_zoo.src.segmentation.deeplab.dataloaders.datasets import (
 __all__ = ["get_voc_for_deeplab_mobilenet"]
 
 
-@DATA_WRAPPER_REGISTRY.register('voc', 'deeplab_mobilenet')
+@DATA_WRAPPER_REGISTRY.register(dataset_name='voc', model_type='deeplab')
 def get_voc_for_deeplab_mobilenet(
     data_root, sbd_root=None, batch_size=4, num_workers=4, img_size=512, **kwargs
 ):
