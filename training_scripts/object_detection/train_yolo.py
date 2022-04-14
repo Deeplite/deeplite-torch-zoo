@@ -5,6 +5,8 @@ import os
 import random
 import sys
 import time
+import yaml
+import datetime
 from copy import deepcopy
 from pathlib import Path
 
@@ -12,7 +14,7 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-import yaml
+from torch.utils.tensorboard import SummaryWriter
 from torch.cuda import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import Adam, SGD, lr_scheduler
@@ -26,7 +28,8 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
-from utils.general import init_seeds, print_args, set_logging, one_cycle, colorstr, methods, strip_optimizer
+from utils.general import init_seeds, print_args, set_logging, one_cycle, \
+    colorstr, strip_optimizer, AverageMeter
 from utils.torch_utils import EarlyStopping, ModelEMA, de_parallel, select_device
 
 from deeplite_torch_zoo import get_data_splits_by_name, get_eval_function, create_model
@@ -38,7 +41,7 @@ import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lis
 
 
 LOGGER = logging.getLogger(__name__)
-LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytxorch.org/docs/stable/elastic/run.html
+LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
 WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
@@ -73,9 +76,12 @@ def get_hyperparameter_dict(dataset_type, hp_config=None):
 
 
 def train(opt, device):
-    save_dir, epochs, batch_size, resume, noval, nosave, workers, freeze, = \
-        Path(opt.save_dir), opt.epochs, opt.batch_size, \
-        opt.resume, opt.noval, opt.nosave, opt.workers, opt.freeze
+    epochs, batch_size, noval, nosave, workers, freeze, = \
+        opt.epochs, opt.batch_size, opt.noval, opt.nosave, opt.workers, opt.freeze
+
+    d = datetime.datetime.now()
+    run_id = '{:%Y-%m-%d__%H-%M-%S}'.format(d)
+    save_dir = Path(opt.save_dir) / run_id
 
     # Directories
     w = save_dir / 'weights'  # weights dir
@@ -90,6 +96,7 @@ def train(opt, device):
         yaml.safe_dump(hyp, f, sort_keys=False)
     with open(save_dir / 'opt.yaml', 'w') as f:
         yaml.safe_dump(vars(opt), f, sort_keys=False)
+    tb_writer = SummaryWriter(save_dir)
     opt.img_dir = Path(opt.img_dir)
 
     # Config
@@ -192,9 +199,8 @@ def train(opt, device):
 
     # Process 0
     if RANK in [-1, 0]:
-        if not resume:
-            # Anchors
-            model.half().float()  # pre-reduce anchor precision
+        # Anchors
+        model.half().float()  # pre-reduce anchor precision
 
     # DDP mode
     if cuda and RANK != -1:
@@ -222,10 +228,14 @@ def train(opt, device):
     t0 = time.time()
     nw = max(round(hyp['warmup_epochs'] * nb), 1000)  # number of warmup iterations, max(3 epochs, 1k iterations)
     last_opt_step = -1
-    maps = np.zeros(nc)  # mAP per class
     scheduler.last_epoch = start_epoch - 1  # do not move
     scaler = amp.GradScaler(enabled=cuda)
     stopper = EarlyStopping(patience=opt.patience)
+
+    loss_giou_mean = AverageMeter()
+    loss_conf_mean = AverageMeter()
+    loss_cls_mean = AverageMeter()
+    loss_mean = AverageMeter()
 
     LOGGER.info(f'Image sizes {train_img_size} train, {test_img_size} val\n'
                 f'Using {train_loader.num_workers} dataloader workers\n'
@@ -243,14 +253,12 @@ def train(opt, device):
             pbar = tqdm(pbar, total=nb)  # progress bar
         optimizer.zero_grad()
         for i, (imgs, targets, labels_length, _) in pbar:  # batch
-            paths = None
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float()
 
             # Warmup
             if ni <= nw:
                 xi = [0, nw]  # x interp
-                # compute_loss.gr = np.interp(ni, xi, [0.0, 1.0])  # iou loss ratio (obj_loss = 1.0 or iou)
                 accumulate = max(1, np.interp(ni, xi, [1, nbs / batch_size]).round())
                 for j, x in enumerate(optimizer.param_groups):
                     # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
@@ -278,6 +286,17 @@ def train(opt, device):
                 if RANK != -1:
                     loss *= WORLD_SIZE  # gradient averaged between devices in DDP mode
 
+                loss_giou_mean.update(loss_giou, imgs.size(0))
+                loss_conf_mean.update(loss_conf, imgs.size(0))
+                loss_cls_mean.update(loss_cls, imgs.size(0))
+                loss_mean.update(loss, imgs.size(0))
+
+                global_step = i + len(train_loader) * epoch
+                tb_writer.add_scalar('train/giou_loss', loss_giou_mean.avg, global_step)
+                tb_writer.add_scalar('train/conf_loss', loss_conf_mean.avg, global_step)
+                tb_writer.add_scalar('train/cls_loss', loss_cls_mean.avg, global_step)
+                tb_writer.add_scalar('train/loss', loss_mean.avg, global_step)
+
             # Backward
             scaler.scale(loss).backward()
 
@@ -299,7 +318,8 @@ def train(opt, device):
             # end batch
 
         # Scheduler
-        lr = [x['lr'] for x in optimizer.param_groups]  # for loggers
+        for idx, param_group in enumerate(optimizer.param_groups):
+            tb_writer.add_scalar(f'learning_rate/gr{idx}', param_group['lr'], global_step)
         scheduler.step()
 
         if RANK in [-1, 0]:
@@ -319,7 +339,7 @@ def train(opt, device):
                         subsample_categories=["car"],
                     )
 
-                Aps = eval_function(
+                ap_dict = eval_function(
                     ema.ema,
                     test_set,
                     gt=gt,
@@ -329,13 +349,16 @@ def train(opt, device):
                     img_size=test_img_size,
                     progressbar=True,
                 )
-                LOGGER.info(f'Eval metrics: {Aps}')
+                LOGGER.info(f'Eval metrics: {ap_dict}')
+                tb_writer.add_scalar('eval/mAP', ap_dict['mAP'], epoch)
+                for eval_key, eval_value in ap_dict.items():
+                    if eval_key != 'mAP':
+                        tb_writer.add_scalar(f'ap_per_class/{eval_key}', eval_value, epoch)
 
             # Update best mAP
-            fi = Aps['mAP']
+            fi = ap_dict['mAP']
             if fi > best_fitness:
                 best_fitness = fi
-            log_vals = list(mloss) + lr
 
             # Save model
             if (not nosave) or final_epoch:  # if save
@@ -457,13 +480,12 @@ def parse_opt(known=False):
         "--eval-freq",
         dest="eval_freq",
         type=int,
-        default=10,
+        default=5,
         help="Evaluation run frequency (in training epochs)",
     )
 
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs')
-    parser.add_argument('--resume', nargs='?', const=True, default=False, help='resume most recent training')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--noval', action='store_true', help='only validate final epoch')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
@@ -471,7 +493,6 @@ def parse_opt(known=False):
     parser.add_argument('--adam', action='store_true', help='use torch.optim.Adam() optimizer')
     parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
     parser.add_argument('--workers', type=int, default=8, help='maximum number of dataloader workers')
-    parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--linear-lr', action='store_true', help='linear LR')
     parser.add_argument('--label-smoothing', type=float, default=0.0, help='Label smoothing epsilon')
     parser.add_argument('--patience', type=int, default=100, help='EarlyStopping patience (epochs without improvement)')
@@ -488,15 +509,6 @@ def main(opt):
     set_logging(RANK)
     if RANK in [-1, 0]:
         print_args(FILE.stem, opt)
-
-    # Resume
-    if opt.resume:  # resume an interrupted run
-        ckpt = opt.resume
-        assert os.path.isfile(ckpt), 'ERROR: --resume checkpoint does not exist'
-        with open(Path(ckpt).parent.parent / 'opt.yaml', errors='ignore') as f:
-            opt = argparse.Namespace(**yaml.safe_load(f))  # replace
-        opt.cfg, opt.weights, opt.resume = '', ckpt, True  # reinstate
-        LOGGER.info(f'Resuming training from {ckpt}')
 
     # DDP mode
     device = select_device(opt.device, batch_size=opt.batch_size)
