@@ -28,12 +28,10 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 from utils.general import init_seeds, print_args, set_logging, one_cycle, colorstr, methods, strip_optimizer
 from utils.torch_utils import EarlyStopping, ModelEMA, de_parallel, select_device
-from utils.loggers import Loggers
-from utils.callbacks import Callbacks
 
-from deeplite_torch_zoo import get_data_splits_by_name, create_model
-from deeplite_torch_zoo.wrappers.eval import get_eval_func
+from deeplite_torch_zoo import get_data_splits_by_name, get_eval_function, create_model
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import YoloV5Loss
+
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
@@ -74,7 +72,7 @@ def get_hyperparameter_dict(dataset_type, hp_config=None):
     return hyp_config.TRAIN, hyp_config
 
 
-def train(opt, device, callbacks):
+def train(opt, device):
     save_dir, epochs, batch_size, resume, noval, nosave, workers, freeze, = \
         Path(opt.save_dir), opt.epochs, opt.batch_size, \
         opt.resume, opt.noval, opt.nosave, opt.workers, opt.freeze
@@ -94,29 +92,26 @@ def train(opt, device, callbacks):
         yaml.safe_dump(vars(opt), f, sort_keys=False)
     opt.img_dir = Path(opt.img_dir)
 
-    # Loggers
-    if RANK in [-1, 0]:
-        loggers = Loggers(save_dir, None, opt, hyp, LOGGER)  # loggers instance
-        # Register actions
-        for k in methods(loggers):
-            callbacks.register_action(k, callback=getattr(loggers, k))
-
     # Config
     cuda = device.type != 'cpu'
     init_seeds(1 + RANK)
 
     # Dataloaders
-    train_img_size = hyp["train_img_size"] if not opt.train_img_res \
-        else opt.train_img_res
-    test_img_size = train_img_size if not opt.test_img_res else opt.test_img_res
+    dataset_kwargs = {}
+    if opt.train_img_res:
+        dataset_kwargs = {'train_img_size': opt.train_img_res}
     dataset_splits = get_data_splits_by_name(
         data_root=opt.img_dir,
         dataset_name=opt.dataset_type,
         model_name=opt.model_name,
         batch_size=batch_size,
         num_workers=workers,
-        img_size=train_img_size,
+        **dataset_kwargs
     )
+    test_img_size = dataset_splits["test"].dataset._img_size
+    train_img_size = dataset_splits["train"].dataset._img_size
+    if opt.test_img_res:
+        test_img_size = opt.test_img_res
 
     train_loader = dataset_splits["train"]
     dataset = train_loader.dataset
@@ -201,8 +196,6 @@ def train(opt, device, callbacks):
             # Anchors
             model.half().float()  # pre-reduce anchor precision
 
-        callbacks.run('on_pretrain_routine_end')
-
     # DDP mode
     if cuda and RANK != -1:
         model = DDP(model, device_ids=[LOCAL_RANK], output_device=LOCAL_RANK)
@@ -216,7 +209,8 @@ def train(opt, device, callbacks):
     model.nc = nc  # attach number of classes to model
     model.hyp = hyp  # attach hyperparameters to model
 
-    eval_function = get_eval_func(opt.dataset_type)
+    eval_function = get_eval_function(dataset_name='_'.join((opt.dataset_type, str(nc))),
+        model_name=opt.model_name)
     criterion = YoloV5Loss(
         model=model,
         num_classes=nc,
@@ -302,7 +296,6 @@ def train(opt, device, callbacks):
                 mem = f'{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G'  # (GB)
                 pbar.set_description(('%10s' * 2 + '%10.4g' * 5) % (
                     f'{epoch}/{epochs - 1}', mem, *mloss, targets.shape[0], imgs.shape[-1]))
-                callbacks.run('on_train_batch_end', ni, model, imgs, targets, paths, False, opt.sync_bn)
             # end batch
 
         # Scheduler
@@ -311,7 +304,6 @@ def train(opt, device, callbacks):
 
         if RANK in [-1, 0]:
             # mAP
-            callbacks.run('on_train_epoch_end', epoch=epoch)
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if (not noval or final_epoch) and epoch % opt.eval_freq == 0:  # Calculate mAP
@@ -344,7 +336,6 @@ def train(opt, device, callbacks):
             if fi > best_fitness:
                 best_fitness = fi
             log_vals = list(mloss) + lr
-            callbacks.run('on_fit_epoch_end', log_vals, epoch, best_fitness, fi)
 
             # Save model
             if (not nosave) or final_epoch:  # if save
@@ -362,7 +353,6 @@ def train(opt, device, callbacks):
                 if (epoch > 0) and (opt.save_period > 0) and (epoch % opt.save_period == 0):
                     torch.save(ckpt, w / f'epoch{epoch}.pt')
                 del ckpt
-                callbacks.run('on_model_save', last, epoch, final_epoch, best_fitness, fi)
 
             # Stop Single-GPU
             if RANK == -1 and stopper(epoch=epoch, fitness=fi):
@@ -405,7 +395,6 @@ def train(opt, device, callbacks):
                     )
                     LOGGER.info(f'Eval metrics: {Aps}')
 
-        callbacks.run('on_train_end', last, best, False, epoch, None)
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}")
 
     torch.cuda.empty_cache()
@@ -494,7 +483,7 @@ def parse_opt(known=False):
     return opt
 
 
-def main(opt, callbacks=Callbacks()):
+def main(opt):
     # Checks
     set_logging(RANK)
     if RANK in [-1, 0]:
@@ -519,7 +508,7 @@ def main(opt, callbacks=Callbacks()):
         device = torch.device('cuda', LOCAL_RANK)
         dist.init_process_group(backend="nccl" if dist.is_nccl_available() else "gloo")
 
-    train(opt, device, callbacks)
+    train(opt, device)
     if WORLD_SIZE > 1 and RANK == 0:
         LOGGER.info('Destroying process group... ')
         dist.destroy_process_group()
