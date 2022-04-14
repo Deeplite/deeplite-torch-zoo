@@ -3,7 +3,6 @@ import fnmatch
 import subprocess
 import collections
 
-from collections import namedtuple
 import texttable
 
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
