@@ -1,4 +1,5 @@
 import torch
+from torchmetrics import Accuracy
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
@@ -7,11 +8,17 @@ __all__ = ["classification_eval"]
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='classification')
 def classification_eval(model, dataloader, device="cuda"):
-    size = len(dataloader.dataset)
+    metrics = {
+        'acc': Accuracy(),
+        'acc_top5': Accuracy(top_k=5),
+    }
+
     if device == "cuda":
         model = model.cuda()
+        for metric_name in metrics:
+            metrics[metric_name] = metrics[metric_name].cuda()
+
     model.eval()
-    running_corrects = 0
     with torch.set_grad_enabled(False):
         for X, y in dataloader:
             if device == "cuda":
@@ -20,9 +27,11 @@ def classification_eval(model, dataloader, device="cuda"):
             else:
                 X = X.cpu()
                 y = y.cpu()
-            preds = model(X.cuda())
-            _, preds = torch.max(preds, 1)
-            running_corrects += torch.sum(preds == y.data)
-    correct = running_corrects.double() / size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%\n")
-    return {"acc": correct}
+
+            pred = model(X)
+            for metric_name, metric_fn in metrics.items():
+                metric_fn.update(pred, y.data)
+
+    for metric_name in metrics:
+        metrics[metric_name] = metrics[metric_name].compute()
+    return metrics

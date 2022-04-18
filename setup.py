@@ -36,6 +36,7 @@ INSTALL_REQUIRES = [
     "timm==0.5.4",
     "texttable==1.6.4",
     "pytz",
+    "torchmetrics==0.8.0",
 ]
 
 
