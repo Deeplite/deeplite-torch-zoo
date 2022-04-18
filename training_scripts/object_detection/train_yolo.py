@@ -113,6 +113,7 @@ def train(opt, device):
         model_name=opt.model_name,
         batch_size=batch_size,
         num_workers=workers,
+        distributed=(cuda and RANK != -1),
         **dataset_kwargs
     )
     test_img_size = dataset_splits["test"].dataset._img_size
@@ -283,19 +284,14 @@ def train(opt, device):
                 # Update running mean of tracked metrics
                 loss_items = torch.tensor([loss_giou, loss_conf, loss_cls]).to(device)
 
+                if RANK in (-1, 0):
+                    loss_giou_mean.update(loss_giou, imgs.size(0))
+                    loss_conf_mean.update(loss_conf, imgs.size(0))
+                    loss_cls_mean.update(loss_cls, imgs.size(0))
+                    loss_mean.update(loss, imgs.size(0))
+
                 if RANK != -1:
                     loss *= WORLD_SIZE  # gradient averaged between devices in DDP mode
-
-                loss_giou_mean.update(loss_giou, imgs.size(0))
-                loss_conf_mean.update(loss_conf, imgs.size(0))
-                loss_cls_mean.update(loss_cls, imgs.size(0))
-                loss_mean.update(loss, imgs.size(0))
-
-                global_step = i + len(train_loader) * epoch
-                tb_writer.add_scalar('train/giou_loss', loss_giou_mean.avg, global_step)
-                tb_writer.add_scalar('train/conf_loss', loss_conf_mean.avg, global_step)
-                tb_writer.add_scalar('train/cls_loss', loss_cls_mean.avg, global_step)
-                tb_writer.add_scalar('train/loss', loss_mean.avg, global_step)
 
             # Backward
             scaler.scale(loss).backward()
@@ -318,11 +314,16 @@ def train(opt, device):
             # end batch
 
         # Scheduler
-        for idx, param_group in enumerate(optimizer.param_groups):
-            tb_writer.add_scalar(f'learning_rate/gr{idx}', param_group['lr'], global_step)
         scheduler.step()
 
         if RANK in [-1, 0]:
+            for idx, param_group in enumerate(optimizer.param_groups):
+                tb_writer.add_scalar(f'learning_rate/gr{idx}', param_group['lr'], epoch)
+            tb_writer.add_scalar('train/giou_loss', loss_giou_mean.avg, epoch)
+            tb_writer.add_scalar('train/conf_loss', loss_conf_mean.avg, epoch)
+            tb_writer.add_scalar('train/cls_loss', loss_cls_mean.avg, epoch)
+            tb_writer.add_scalar('train/loss', loss_mean.avg, epoch)
+
             # mAP
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
@@ -515,7 +516,6 @@ def main(opt):
     if LOCAL_RANK != -1:
         assert torch.cuda.device_count() > LOCAL_RANK, 'insufficient CUDA devices for DDP command'
         assert opt.batch_size % WORLD_SIZE == 0, '--batch-size must be multiple of CUDA device count'
-        assert not opt.image_weights, '--image-weights argument is not compatible with DDP training'
         torch.cuda.set_device(LOCAL_RANK)
         device = torch.device('cuda', LOCAL_RANK)
         dist.init_process_group(backend="nccl" if dist.is_nccl_available() else "gloo")
