@@ -106,7 +106,7 @@ def train(opt, device):
     # Dataloaders
     dataset_kwargs = {}
     if opt.train_img_res:
-        dataset_kwargs = {'train_img_size': opt.train_img_res}
+        dataset_kwargs = {'img_size': opt.train_img_res}
     dataset_splits = get_data_splits_by_name(
         data_root=opt.img_dir,
         dataset_name=opt.dataset_type,

@@ -4,10 +4,18 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from utils.torch_utils import de_parallel
-
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_default
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import xyxy2cxcywh
+
+
+def is_parallel(model):
+    # Returns True if model is of type DP or DDP
+    return type(model) in (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel)
+
+
+def de_parallel(model):
+    # De-parallelize a model: returns single-GPU model if model is of type DP or DDP
+    return model.module if is_parallel(model) else model
 
 
 class FocalLoss(nn.Module):
