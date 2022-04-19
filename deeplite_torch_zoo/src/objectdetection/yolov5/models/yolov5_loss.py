@@ -8,6 +8,16 @@ import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_default as
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import xyxy2cxcywh
 
 
+def is_parallel(model):
+    # Returns True if model is of type DP or DDP
+    return type(model) in (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel)
+
+
+def de_parallel(model):
+    # De-parallelize a model: returns single-GPU model if model is of type DP or DDP
+    return model.module if is_parallel(model) else model
+
+
 class FocalLoss(nn.Module):
     # Wraps focal loss around existing loss_fcn(), i.e. criteria = FocalLoss(nn.BCEWithLogitsLoss(), gamma=1.5)
     def __init__(self, loss_fcn, gamma=1.5, alpha=0.25):
@@ -86,7 +96,11 @@ class YoloV5Loss(nn.Module):
         if g > 0:
             BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
 
-        det = model.model[-1]  # Detect() module
+        det = de_parallel(model).model[-1]  # Detect() module
+        self.na = det.na
+        self.nl = det.nl
+        self.anchors = det.anchors
+
         self.balance = {3: [4.0, 1.0, 0.4]}.get(det.nl, [4.0, 1.0, 0.25, 0.06, .02])  # P3-P7
         self.ssi = list(det.stride).index(16) if autobalance else 0  # stride 16 index
         self.BCEcls, self.BCEobj, self.gr, self.autobalance = BCEcls, BCEobj, 1.0, autobalance
@@ -176,13 +190,11 @@ class YoloV5Loss(nn.Module):
     def build_targets(self, p, targets):
         """
         na is number of anchors - > 3
-
         """
         # targets = targets[]
         # Build targets for compute_loss(), input targets(image,class,x,y,w,h)
-        det = self.model.model[-1].to(targets.device)
-        na, nt = det.na, targets.shape[0]  # number of anchors, targets
-        nl = det.nl
+        na, nt = self.na, targets.shape[0]  # number of anchors, targets
+        nl = self.nl
         tcls, tbox, indices, anch = [], [], [], []
         gain = torch.ones(7, device=self.device)  # normalized to gridspace gain
         ai = (
@@ -209,7 +221,7 @@ class YoloV5Loss(nn.Module):
         )  # offsets
 
         for i in range(nl):
-            anchors = det.anchors[i]
+            anchors = self.anchors[i]
             gain[2:6] = torch.tensor(p[i].shape)[[3, 2, 3, 2]]  # xyxy gain
 
             # Match targets to anchors
