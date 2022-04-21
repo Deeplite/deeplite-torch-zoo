@@ -59,6 +59,6 @@ TRAIN = {
     "flipud": 0.0,  # image flip up-down (probability)
     "fliplr": 0.5,  # image flip left-right (probability)
     "mosaic": 0.0,  # image mosaic (probability)
-    "mixup": 0.5,  # image mixup (probability)
+    "mixup": 0.0,  # image mixup (probability)
     "copy_paste": 0.0,  # segment copy-paste (probability)
 }

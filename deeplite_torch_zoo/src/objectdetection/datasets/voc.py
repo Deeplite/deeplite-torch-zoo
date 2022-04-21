@@ -8,7 +8,8 @@ import torch
 
 from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
 import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
-from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
+from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize, RandomHorizontalFlip, \
+    RandomVerticalFlip, AugmentHSV, random_perspective
 
 
 class VocDataset(DLZooDataset):
@@ -18,15 +19,15 @@ class VocDataset(DLZooDataset):
         self.all_classes = cfg.DATA["ALLCLASSES"]
         if num_classes == 1:
             self.classes = cfg.DATA["CLASSES_1"]
-            self.all_classes = self.classes     
+            self.all_classes = self.classes
         elif num_classes == 2:
             self.classes = cfg.DATA["CLASSES_2"]
         elif num_classes == 3:
             self.classes = cfg.DATA["CLASSES_3"]
-            self.all_classes = self.classes       
+            self.all_classes = self.classes
         elif num_classes == 8:
             self.classes = cfg.DATA["CLASSES_8"]
-            self.all_classes = self.classes          
+            self.all_classes = self.classes
 
 
         self.annotation_path = annotation_path
@@ -65,12 +66,17 @@ class VocDataset(DLZooDataset):
         """
 
         get_img_fn = lambda img_index: self.__parse_annotation(self.__annotations[img_index])
+
         if random.random() < cfg.TRAIN['mosaic']:
             img, bboxes, img_id = self._load_mosaic(item, get_img_fn,
                 len(self.__annotations))
-        img, bboxes, img_id = self._load_mixup(item, get_img_fn,
-            len(self.__annotations), p=cfg.TRAIN['mixup'])
+        else:
+            img, bboxes, img_id = get_img_fn(item)
 
+        # img, bboxes, img_id = self._load_mixup(item, get_img_fn,
+        #     len(self.__annotations), p=cfg.TRAIN['mixup'])
+
+        img = img.transpose(2, 0, 1)
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()
 
@@ -145,9 +151,8 @@ class VocDataset(DLZooDataset):
 
         if len(bboxes) == 0:
             bboxes = np.array(np.zeros((0, 5)))
-        else:
-            img, bboxes = self._augment(img, bboxes)
 
+        img, bboxes = self._augment(img, bboxes)
         img, bboxes = Resize((self._img_size, self._img_size), True)(
             np.copy(img), np.copy(bboxes)
         )
