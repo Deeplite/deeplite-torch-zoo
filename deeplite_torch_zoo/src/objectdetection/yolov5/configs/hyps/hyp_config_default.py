@@ -9,12 +9,11 @@ TEST = {
 
 TRAIN = {
     # optimization:
-    "epochs": 100,
     "lr0": 0.01,  # 0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)
     "lrf": 0.1,  # 0.2,  # final OneCycleLR learning rate (lr0 * lrf)
     "momentum": 0.937,  # SGD momentum/Adam beta1
     "weight_decay": 0.0005,  # optimizer weight decay 5e-4
-    "warmup_epochs": 2,  # warmup epochs (fractions ok)
+    "warmup_epochs": 3.0,  # warmup epochs (fractions ok)
     "warmup_momentum": 0.8,  # warmup initial momentum
     "warmup_bias_lr": 0.1,  # warmup initial bias lr
     # loss:
@@ -25,9 +24,7 @@ TRAIN = {
     "obj_pw": 1.0,  # obj BCELoss positive_weight
     "iou_t": 0.20,  # IoU training threshold
     "anchor_t": 4.0,  # anchor-multiple threshold
-    # anchors: 0  # anchors per output grid (0 to ignore)
     "fl_gamma": 0.0,  # focal loss gamma (efficientDet default gamma=1.5)
-    "giou_loss_ratio": 1.0,
     # augmentations:
     "hsv_h": 0.015,  # image HSV-Hue augmentation (fraction)
     "hsv_s": 0.7,  # image HSV-Saturation augmentation (fraction)
@@ -40,6 +37,5 @@ TRAIN = {
     "flipud": 0.0,  # image flip up-down (probability)
     "fliplr": 0.5,  # image flip left-right (probability)
     "mosaic": 0.0,  # image mosaic (probability)
-    "mixup": 0.5,  # image mixup (probability)
-    "copy_paste": 0.0,  # segment copy-paste (probability)
+    "mixup": 0.0,  # image mixup (probability)
 }

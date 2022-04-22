@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import \
     Mixup, RandomAffine, RandomCrop, RandomHorizontalFlip, \
-    Resize, AugmentHSV, RandomVerticalFlip
+    Resize, AugmentHSV, RandomVerticalFlip, random_perspective
 
 
 class DLZooDataset(Dataset):
@@ -14,14 +14,18 @@ class DLZooDataset(Dataset):
         self._img_size = img_size
 
     def _augment(self, img, bboxes):
+        img, bboxes = random_perspective(img, bboxes,
+            degrees=self._hyp_cfg['degrees'],
+            translate=self._hyp_cfg['translate'],
+            scale=self._hyp_cfg['scale'],
+            shear=self._hyp_cfg['shear'],
+            perspective=self._hyp_cfg['perspective'])
         transforms = [
             RandomHorizontalFlip(p=self._hyp_cfg['fliplr']),
             RandomVerticalFlip(p=self._hyp_cfg['flipud']),
             AugmentHSV(hgain=self._hyp_cfg['hsv_h'],
                        sgain=self._hyp_cfg['hsv_s'],
                        vgain=self._hyp_cfg['hsv_v']),
-            RandomCrop(),
-            RandomAffine()
         ]
         for transform in transforms:
             img, bboxes = transform(np.copy(img), np.copy(bboxes))
