@@ -5,11 +5,9 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
+def parse_voc_annotation(data_path, file_type, anno_path,
+    use_difficult_bbox=False, classes=None):
 
-
-def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=False):
-    classes = cfg.DATA["CLASSES_8"]
     img_inds_file = os.path.join(data_path, "ImageSets", "Main", file_type + ".txt")
     with open(img_inds_file, "r") as f:
         lines = f.readlines()
@@ -20,9 +18,9 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
         for image_id in tqdm(image_ids):
             image_path = os.path.join(data_path, "JPEGImages", image_id + ".jpg")
 
-            if not os.path.exists(image_path): 
+            if not os.path.exists(image_path):
                 image_path = os.path.join(data_path, "JPEGImages", image_id + ".jpeg")
-        
+
             annotation = image_path
             label_path = os.path.join(data_path, "Annotations", image_id + ".xml")
             root = ET.parse(label_path).getroot()
@@ -56,7 +54,8 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
     return len(image_ids) - excluded
 
 
-def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, train_test_split):
+def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation,
+    train_test_split, classes=None):
     print("Preparing VOC dataset for YOLO. Onetime process...")
     train_annotation_path = os.path.join(
         str(data_root_annotation), "train_annotation.txt"
@@ -79,6 +78,7 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, tr
             train_file_tag,
             train_annotation_path,
             use_difficult_bbox=False,
+            classes=classes,
         )
 
     len_test = 0
@@ -88,6 +88,7 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, tr
             test_file_tag,
             test_annotation_path,
             use_difficult_bbox=False,
+            classes=classes,
         )
 
     print(
@@ -97,7 +98,8 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, tr
     )
 
 
-def prepare_yolo_voc_data(vockit_data_root, annotation_path, standard_voc_format=True, is_07_subset=False):
+def prepare_yolo_voc_data(vockit_data_root, annotation_path, standard_voc_format=True,
+    is_07_subset=False, classes=None):
 
     Path(annotation_path).mkdir(parents=True, exist_ok=True)
 
@@ -115,7 +117,8 @@ def prepare_yolo_voc_data(vockit_data_root, annotation_path, standard_voc_format
     train_test_split = ('trainval', 'test') if not is_07_subset else ('train', 'val')
 
     if not (os.path.exists(train_anno_path) and os.path.exists(test_anno_path)):
-        prepare_voc_data(train_data_paths, test_data_paths, annotation_path, train_test_split)
+        prepare_voc_data(train_data_paths, test_data_paths, annotation_path,
+            train_test_split, classes=classes)
 
 
 if __name__ == "__main__":

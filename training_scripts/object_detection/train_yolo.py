@@ -367,13 +367,7 @@ def train(opt, device):
 
             # Save model
             if (not nosave) or final_epoch:  # if save
-                ckpt = {'epoch': epoch,
-                        'best_fitness': best_fitness,
-                        'model': deepcopy(de_parallel(model)).half(),
-                        'ema': deepcopy(ema.ema).half(),
-                        'updates': ema.updates,
-                        'optimizer': optimizer.state_dict()}
-
+                ckpt = deepcopy(ema.ema).float().state_dict()
                 # Save last, best and delete
                 torch.save(ckpt, last)
                 if best_fitness == fi:
@@ -392,7 +386,6 @@ def train(opt, device):
         LOGGER.info(f'\n{epoch - start_epoch + 1} epochs completed in {(time.time() - t0) / 3600:.3f} hours.')
         for f in last, best:
             if f.exists():
-                strip_optimizer(f)  # strip optimizers
                 if f is best:
                     LOGGER.info(f'\nValidating {f}...')
                     test_set = opt.img_dir
@@ -408,11 +401,11 @@ def train(opt, device):
                         )
 
                     ckpt = torch.load(f, map_location=device)
-                    model = ckpt['ema' if ckpt.get('ema') else 'model']
-                    model.float().eval()
+                    ema.ema.load_state_dict(ckpt, strict=True)
+                    ema.ema.float().eval()
 
                     Aps = eval_function(
-                        model,
+                        ema.ema,
                         test_set,
                         gt=gt,
                         num_classes=nc,

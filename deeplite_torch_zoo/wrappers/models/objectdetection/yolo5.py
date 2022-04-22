@@ -163,7 +163,7 @@ wrapper_funcs = {
     'voc07_20': ModelSet(20, ['yolov5_6n', 'yolov5_6s']),
     'coco_eight_class': ModelSet(8, ['yolov5_6n', 'yolov5_6n_relu', 'yolov5_6n_hswish']),
     'surveillance_person_class': ModelSet(1, ['yolov5_6n', 'yolov5_6n_relu', 'yolov5_6n_hswish']),
-    'coco_three_class': ModelSet(1, ['yolov5_6n', 'yolov5_6n_relu', 'yolov5_6n_hswish']),
+    'coco_three_class': ModelSet(3, ['yolov5_6n', 'yolov5_6n_relu', 'yolov5_6n_hswish']),
 }
 
 for dataset, model_set in wrapper_funcs.items():

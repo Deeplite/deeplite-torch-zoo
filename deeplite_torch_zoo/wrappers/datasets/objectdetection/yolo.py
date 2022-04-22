@@ -11,6 +11,7 @@ from deeplite_torch_zoo.src.objectdetection.datasets.transforms import random_tr
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
 from deeplite_torch_zoo.src.objectdetection.configs.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+import deeplite_torch_zoo.src.objectdetection.configs.hyps.hyp_config_voc as cfg
 
 
 __all__ = []
@@ -73,10 +74,24 @@ def create_lisa_datasets(data_root, num_classes, img_size):
     return LISA(data_root, _set="train", img_size=img_size), LISA(data_root, _set="valid", img_size=img_size)
 
 
-def create_voc_datasets(data_root, num_classes, img_size, is_07_subset=False, standard_voc_format=True):
+def create_voc_datasets(data_root, num_classes, img_size, is_07_subset=False,
+    standard_voc_format=True):
     annotation_path = os.path.join(data_root, "yolo_data")
+
+    classes = cfg.DATA["CLASSES"]
+    if num_classes == 1:
+        classes = cfg.DATA["CLASSES_1"]
+    elif num_classes == 2:
+        classes = cfg.DATA["CLASSES_2"]
+    elif num_classes == 3:
+        classes = cfg.DATA["CLASSES_3"]
+    elif num_classes == 8:
+        classes = cfg.DATA["CLASSES_8"]
+
     prepare_yolo_voc_data(data_root, annotation_path,
-        is_07_subset=is_07_subset, standard_voc_format=standard_voc_format)
+        is_07_subset=is_07_subset,
+        standard_voc_format=standard_voc_format,
+        classes=classes)
     train_dataset = VocDataset(
         num_classes=num_classes,
         annotation_path=annotation_path,
@@ -141,7 +156,7 @@ DATASET_WRAPPER_FNS = {
     'car_detection': DatasetParameters(1, 320, create_car_detection_datasets),
     'person_pet_vehicle_detection': DatasetParameters(3, 320, create_person_pet_vehice_datasets),
     'coco_three_class': DatasetParameters(3, 352, create_person_pet_vehice_datasets),
-    'coco_eight_class': DatasetParameters(8, 352, create_person_pet_vehice_datasets), 
+    'coco_eight_class': DatasetParameters(8, 352, create_person_pet_vehice_datasets),
     'surveillance_person_class': DatasetParameters(1, 352, create_person_pet_vehice_datasets)
 }
 
