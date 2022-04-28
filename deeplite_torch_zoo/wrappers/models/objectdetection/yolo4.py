@@ -19,13 +19,13 @@ CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
-    "yolo4s_voc_20": "yolov4s-voc-20classes_849_58041e8852a4b2e2.pt",
-    "yolo4m_voc_20": "yolov4m-voc-20classes_874_e0c8e179992b5da2.pt",
-    "yolo4l_voc_20": "yolo4l-voc-20classes_872-9f54132ce2934fbf.pth",
-    "yolo4x_voc_20": "yolo4x-voc-20classes_882-187f352b9d0d29c6.pth",
-    "yolo4l_leaky_voc_20": "yolo4l-leaky-voc-20classes_891-2c0f78ee3938ade3.pt",
-    "yolo4s_coco_80": "yolov4_6s-coco-80classes-288_b112910223d6c56d.pt",
-    "yolo4m_coco_80": "yolov4_6m-coco-80classes-309_02b2013002a4724b.pt",
+    "yolo4s_voc": "yolov4s-voc-20classes_849_58041e8852a4b2e2.pt",
+    "yolo4m_voc": "yolov4m-voc-20classes_874_e0c8e179992b5da2.pt",
+    "yolo4l_voc": "yolo4l-voc-20classes_872-9f54132ce2934fbf.pth",
+    "yolo4x_voc": "yolo4x-voc-20classes_882-187f352b9d0d29c6.pth",
+    "yolo4l_leaky_voc": "yolo4l-leaky-voc-20classes_891-2c0f78ee3938ade3.pt",
+    "yolo4s_coco": "yolov4_6s-coco-80classes-288_b112910223d6c56d.pt",
+    "yolo4m_coco": "yolov4_6m-coco-80classes-309_02b2013002a4724b.pt",
 }
 
 yolov4_cfg = {
@@ -38,7 +38,7 @@ yolov4_cfg = {
 
 
 def yolo4(
-    net="yolo4s", dataset_name="voc_20", num_classes=20, pretrained=False,
+    net="yolo4s", dataset_name="voc", num_classes=20, pretrained=False,
     progress=True, device="cuda",
 ):
     config_path = get_project_root() / CFG_PATH / yolov4_cfg[net]
@@ -55,18 +55,16 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
 }
 
 
-def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
+def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
-        if re.match(net_name, net):
+        if re.match(net_name, model_name):
             model_wrapper_fn = model_fn
-
-    model_name = net.replace('v', '')
 
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection')
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return model_wrapper_fn(
-            net=net,
+            net=model_name,
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
@@ -79,8 +77,8 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
 
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
-    'voc_20': ModelSet(20, ['yolo4s', 'yolo4m', 'yolo4l', 'yolo4x', 'yolo4l_leaky']),
-    'coco_80': ModelSet(80, ['yolo4s', 'yolo4m']),
+    'voc': ModelSet(20, ['yolo4s', 'yolo4m', 'yolo4l', 'yolo4x', 'yolo4l_leaky']),
+    'coco': ModelSet(80, ['yolo4s', 'yolo4m']),
 }
 
 for dataset, model_set in wrapper_funcs.items():

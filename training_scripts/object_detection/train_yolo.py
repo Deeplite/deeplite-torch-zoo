@@ -46,7 +46,7 @@ RANK = int(os.getenv('RANK', -1))
 WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 
-def get_hyperparameter_dict(dataset_type, hp_config=None):
+def get_hyperparameter_dict(dataset_name, hp_config=None):
     DATASET_TO_HP_CONFIG_MAP = {
         "lisa": hyp_cfg_lisa,
     }
@@ -68,7 +68,7 @@ def get_hyperparameter_dict(dataset_type, hp_config=None):
 
     if hp_config is None:
         for dataset_name in DATASET_TO_HP_CONFIG_MAP:
-            if dataset_name in dataset_type:
+            if dataset_name in dataset_name:
                 hyp_config = DATASET_TO_HP_CONFIG_MAP[dataset_name]
     else:
         hyp_config = HP_CONFIG_MAP[hp_config]
@@ -89,7 +89,7 @@ def train(opt, device):
     last, best = w / 'last.pt', w / 'best.pt'
 
     # Get hyperparameter dict
-    hyp, hyp_loss = get_hyperparameter_dict(opt.dataset_type, opt.hp_config)
+    hyp, hyp_loss = get_hyperparameter_dict(opt.dataset_name, opt.hp_config)
 
     # Save run settings
     with open(save_dir / 'hyp.yaml', 'w') as f:
@@ -109,7 +109,7 @@ def train(opt, device):
         dataset_kwargs = {'img_size': opt.train_img_res}
     dataset_splits = get_data_splits_by_name(
         data_root=opt.img_dir,
-        dataset_name=opt.dataset_type,
+        dataset_name=opt.dataset_name,
         model_name=opt.model_name,
         batch_size=batch_size,
         num_workers=workers,
@@ -216,7 +216,7 @@ def train(opt, device):
     model.nc = nc  # attach number of classes to model
     model.hyp = hyp  # attach hyperparameters to model
 
-    eval_function = get_eval_function(dataset_name='_'.join((opt.dataset_type, str(nc))),
+    eval_function = get_eval_function(dataset_name=opt.dataset_name,
         model_name=opt.model_name)
     criterion = YoloV5Loss(
         model=model,
@@ -330,11 +330,11 @@ def train(opt, device):
             if (not noval or final_epoch) and epoch % opt.eval_freq == 0:  # Calculate mAP
                 test_set = opt.img_dir
                 gt = None
-                if opt.dataset_type in ("voc", "voc07"):
+                if opt.dataset_name in ("voc", "voc07"):
                     test_set = opt.img_dir / "VOC2007"
-                elif opt.dataset_type == "coco":
+                elif opt.dataset_name == "coco":
                     gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
-                elif opt.dataset_type == "car_detection":
+                elif opt.dataset_name == "car_detection":
                     gt = SubsampledCOCO(
                         opt.img_dir / "annotations/instances_val2017.json",
                         subsample_categories=["car"],
@@ -393,11 +393,11 @@ def train(opt, device):
                     LOGGER.info(f'\nValidating {f}...')
                     test_set = opt.img_dir
                     gt = None
-                    if opt.dataset_type in ("voc", "voc07"):
+                    if opt.dataset_name in ("voc", "voc07"):
                         test_set = opt.img_dir / "VOC2007"
-                    elif opt.dataset_type == "coco":
+                    elif opt.dataset_name == "coco":
                         gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
-                    elif opt.dataset_type == "car_detection":
+                    elif opt.dataset_name == "car_detection":
                         gt = SubsampledCOCO(
                             opt.img_dir / "annotations/instances_val2017.json",
                             subsample_categories=["car"],
@@ -432,11 +432,11 @@ def parse_opt(known=False):
     parser.add_argument('--pretrained', action='store_true', default=False,
         help='train the model from scratch if false')
     parser.add_argument(
-        "--pretraining_source_dataset", type=str, default="voc_20",
-        help="Load pretrained weights fine-tuned on the specified dataset ('voc_20' or 'coco_80')",
+        "--pretraining_source_dataset", type=str, default="voc",
+        help="Load pretrained weights fine-tuned on the specified dataset ('voc' or 'coco')",
     )
     parser.add_argument(
-        "--dataset", dest="dataset_type", type=str, default="voc",
+        "--dataset", dest="dataset_name", type=str, default="voc",
         choices=[
             "coco",
             "voc",
