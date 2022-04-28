@@ -60,8 +60,12 @@ class VocDataset(DLZooDataset):
         if random.random() < cfg.TRAIN['mosaic']:
             img, bboxes, img_id = self._load_mosaic(item, get_img_fn,
                 len(self.__annotations))
-        img, bboxes, img_id = self._load_mixup(item, get_img_fn,
-            len(self.__annotations), p=cfg.TRAIN['mixup'])
+        elif cfg.TRAIN['mixup'] > 0:
+            img, bboxes, img_id = self._load_mixup(item, get_img_fn,
+                len(self.__annotations), p=cfg.TRAIN['mixup'])
+        else:
+            img, bboxes, img_id = get_img_fn(item)
+            img = img.transpose(2, 0, 1)
 
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()
