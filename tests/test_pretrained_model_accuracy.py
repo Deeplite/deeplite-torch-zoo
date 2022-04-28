@@ -1,7 +1,5 @@
 import unittest
-
 import pytest
-import torch
 
 from pycocotools.coco import COCO
 
@@ -10,7 +8,6 @@ from deeplite_torch_zoo import (
     get_data_splits_by_name,
     get_eval_function,
 )
-from deeplite_torch_zoo.wrappers.eval import *
 
 
 class TestModels(unittest.TestCase):
@@ -484,87 +481,6 @@ class TestModels(unittest.TestCase):
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.893) < 0.001, True)
 
-    @pytest.mark.test_yolov5s_voc
-    def test_yolov5s_voc(self):
-        model = get_model_by_name(
-            model_name="yolo5s",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo5s", "voc_20")
-        APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.837) < 0.001, True)
-
-    @pytest.mark.test_yolov5m_voc
-    def test_yolov5m_voc(self):
-        model = get_model_by_name(
-            model_name="yolo5m",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo5m", "voc_20")
-        APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
-
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.882) < 0.001, True)
-
-    @pytest.mark.test_yolov5m_voc_24
-    def test_yolov5m_voc_24(self):
-        model = get_model_by_name(
-            model_name="yolo5m",
-            dataset_name="voc_24",
-            pretrained=True,
-            progress=False,
-        )
-
-        eval_fn = get_eval_function("yolo5m", "voc_24")
-        APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.871) < 0.001, True)
-
-    @pytest.mark.test_yolov5l_voc
-    def test_yolov5l_voc(self):
-        model = get_model_by_name(
-            model_name="yolo5l",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo5l", "voc_20")
-        APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.899) < 0.001, True)
-
-    @pytest.mark.test_yolov5l_voc_24
-    def test_yolov5l_voc_24(self):
-        model = get_model_by_name(
-            model_name="yolo5l",
-            dataset_name="voc_24",
-            pretrained=True,
-            progress=False,
-        )
-
-        eval_fn = get_eval_function("yolo5m", "voc_24")
-        APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.885) < 0.001, True)
-
-    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
-    def test_yolov5x_voc(self):
-        model = get_model_by_name(
-            model_name="yolo5x",
-            dataset_name="voc_20",
-            pretrained=True,
-            progress=False,
-        )
-        eval_fn = get_eval_function("yolo5x", "voc_20")
-        APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
-
     @pytest.mark.test_yolov5_6s_voc
     def test_yolov5_6s_voc(self):
         model = get_model_by_name(
@@ -577,62 +493,6 @@ class TestModels(unittest.TestCase):
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.821) < 0.001, True)
-
-    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
-    def test_yolov5s_coco(self):
-        model = get_model_by_name(
-            model_name="yolo5s",
-            dataset_name="coco_80",
-            pretrained=True,
-            progress=False,
-        )
-        gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("yolo5s", "coco_80")
-        APs = eval_fn(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
-
-    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
-    def test_yolov5m_coco(self):
-        model = get_model_by_name(
-            model_name="yolo5m",
-            dataset_name="coco_80",
-            pretrained=True,
-            progress=False,
-        )
-        gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("yolo5m", "coco_80")
-        APs = eval_fn(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
-
-    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
-    def test_yolov5l_coco(self):
-        model = get_model_by_name(
-            model_name="yolo5l",
-            dataset_name="coco_80",
-            pretrained=True,
-            progress=False,
-        )
-        gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("yolo5l", "coco_80")
-        APs = eval_fn(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
-
-    @pytest.mark.skip(reason="Needs retraining (anchor_grid size mismatch)")
-    def test_yolov5x_coco(self):
-        model = get_model_by_name(
-            model_name="yolo5x",
-            dataset_name="coco_80",
-            pretrained=True,
-            progress=False,
-        )
-        gt = COCO("/neutrino/datasets/coco2017/annotations/instances_val2017.json")
-        eval_fn = get_eval_function("yolo5x", "coco_80")
-        APs = eval_fn(model, "/neutrino/datasets/coco2017", gt=gt, _set="coco")
-        print(APs)
-        self.assertEqual(abs(APs["mAP"] - 0.905) < 0.001, True)
 
     @pytest.mark.test_fasterrcnn_resnet50_fpn_coco
     def test_fasterrcnn_resnet50_fpn_coco(self):

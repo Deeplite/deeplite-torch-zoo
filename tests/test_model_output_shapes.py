@@ -94,12 +94,6 @@ DETECTION_MODEL_TESTS = [
     ('resnet50_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
 ]
 
-YOLO_MODELS = ['yolo5s', 'yolo5m', 'yolo5l', 'yolo5x']
-
-for model_name in YOLO_MODELS:
-    DETECTION_MODEL_TESTS.append((model_name, 'voc_20', {'num_classes': 21, 'img_size': 416},
-            [(52, 52, 3, 25), (26, 26, 3, 25), (13, 13, 3, 25)]))
-
 YOLO5_6_VOC_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4l_leaky', 'yolo4x',
     'yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
     'yolo5_6s_relu', 'yolo5_6m_relu']
