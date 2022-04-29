@@ -138,7 +138,7 @@ class VOCEvaluator(Evaluator):
         imagesetfile = os.path.join(self.val_data_path, "ImageSets", "Main", self.test_file)
         APs = {}
         for i, cls in enumerate(self.classes):
-            R, P, AP = voc_eval.voc_eval(
+            AP = voc_eval.voc_eval(
                 filename,
                 annopath,
                 imagesetfile,
