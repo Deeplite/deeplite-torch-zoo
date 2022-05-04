@@ -1,7 +1,7 @@
-from setuptools import find_packages, setup
 import os
-import sys
 import pathlib
+
+from setuptools import find_packages, setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.sdist import sdist
@@ -37,7 +37,8 @@ INSTALL_REQUIRES = [
     "texttable==1.6.4",
     "pytz",
     "torchmetrics==0.8.0",
-    "mean_average_precision",
+    "mean_average_precision==2021.4.26.0",
+    "ptflops==0.6.8",
 ]
 
 
@@ -47,7 +48,6 @@ def create_init_files_in_submodules():
         "deeplite_torch_zoo/src/segmentation/deeplab/repo/__init__.py",
         "deeplite_torch_zoo/src/segmentation/unet_scse/repo/__init__.py",
         "deeplite_torch_zoo/src/segmentation/unet_scse/repo/src/losses/__init__.py"
-
     ]
     for _f in submodules_init:
         if not os.path.exists(_f):
