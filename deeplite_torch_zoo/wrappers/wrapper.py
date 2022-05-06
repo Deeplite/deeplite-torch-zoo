@@ -4,6 +4,7 @@ import subprocess
 import collections
 
 import texttable
+from ptflops import get_model_complexity_info
 
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
@@ -20,6 +21,7 @@ __all__ = [
     "list_models",
     "create_model",
     "dump_json_model_list",
+    "get_flops",
 ]
 
 
@@ -184,3 +186,15 @@ def dump_json_model_list(filepath=None, indent=4):
 
     with open(filepath, 'w', encoding='utf-8') as outfile:
         json.dump(models_dict, outfile, indent=indent)
+
+
+def get_flops(model, img_size=224, ch=3, verbose=False):
+    if not isinstance(img_size) == tuple:
+        img_size = (ch, img_size, img_size)
+    macs, params = get_model_complexity_info(
+        model,
+        img_size,
+        as_strings=False,
+        print_per_layer_stat=verbose,
+        verbose=verbose)
+    return {'GMACs': macs / 1e9, 'Mparams': params / 1e6}

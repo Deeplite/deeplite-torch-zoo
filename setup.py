@@ -37,6 +37,7 @@ INSTALL_REQUIRES = [
     "texttable==1.6.4",
     "pytz",
     "torchmetrics==0.8.0",
+    "ptflops",
 ]
 
 

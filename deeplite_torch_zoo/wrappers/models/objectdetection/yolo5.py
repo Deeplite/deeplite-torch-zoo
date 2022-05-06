@@ -5,7 +5,6 @@ from functools import partial
 from collections import namedtuple
 
 import deeplite_torch_zoo
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5 import YoloV5
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
@@ -31,10 +30,6 @@ model_urls = {
 }
 
 voc_model_urls = {
-    "yolo5s_voc": "yolov5s_voc-0_837-1e922891b803a8b7.pt",
-    "yolo5m_voc": "yolo5m-voc-20classes_882-1d8265513714a3f6.pt",
-    "yolo5l_voc": "yolo5l-voc-20classes_899-411aefb761eafaa3.pt",
-    "yolo5x_voc": "yolo5x-voc-20classes_905-e8ddd018ae29751f.pt",
     "yolo5_6n_voc": "yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
     "yolo5_6s_voc": "yolo5_6s-voc-20classes_871-4ceb1b22b227c05c.pt",
     "yolo5_6m_voc": "yolo5_6m-voc-20classes_902-50c151baffbf896e.pt",
@@ -60,10 +55,6 @@ model_urls.update(person_detection_model_urls)
 
 
 yolov5_cfg = {
-    "yolo5s": "yolov5s.yaml",
-    "yolo5m": "yolov5m.yaml",
-    "yolo5l": "yolov5l.yaml",
-    "yolo5x": "yolov5x.yaml",
     "yolo5_6s": "yolov5_6s.yaml",
     "yolo5_6m": "yolov5_6m.yaml",
     "yolo5_6l": "yolov5_6l.yaml",
@@ -75,19 +66,6 @@ yolov5_cfg = {
 
 
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
-
-
-def yolo5(
-    net="yolo5s", dataset_name="voc", num_classes=20,
-    pretrained=False, progress=True, device="cuda"
-):
-    config_key = net
-    config_path = get_project_root() / CFG_PATH / yolov5_cfg[config_key]
-    model = YoloV5(config_path, ch=3, nc=num_classes)
-    if pretrained:
-        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{net}_{dataset_name}"])
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
-    return model.to(device)
 
 
 def yolo5_6(
@@ -106,7 +84,6 @@ def yolo5_6(
 
 
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
-    "^yolo5[smlx]$": yolo5,
     "^yolo5_6[nsmlx]$": yolo5_6,
     "^yolo5_6[nsmlx]a$": yolo5_6,
     "^yolo5_6[nsmlx]_relu$": partial(yolo5_6, activation_type="relu"),
@@ -138,11 +115,9 @@ ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
     'person_detection': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
         'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa']),
-    'voc': ModelSet(20, ['yolo5s', 'yolo5m', 'yolo5l', 'yolo5x',
-        'yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
+    'voc': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
         'yolo5_6m_relu', 'yolo5_6s_relu']),
-    'coco': ModelSet(80, ['yolo5s', 'yolo5m', 'yolo5l', 'yolo5x',
-        'yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
+    'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
         'yolo5_6n_hswish', 'yolo5_6n_relu']),
     'voc07': ModelSet(20, ['yolo5_6n', 'yolo5_6s']),
 }
