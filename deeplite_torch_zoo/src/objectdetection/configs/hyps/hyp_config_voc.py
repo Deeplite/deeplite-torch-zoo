@@ -67,8 +67,8 @@ TEST = {
     "TEST_IMG_SIZE": 544,
     "BATCH_SIZE": 1,
     "NUMBER_WORKERS": 0,
-    "CONF_THRESH": 0.01,
-    "NMS_THRESH": 0.5,
+    "CONF_THRESH": 0.001,
+    "NMS_THRESH": 0.6,
     "MULTI_SCALE_TEST": False,
     "FLIP_TEST": False,
 }
