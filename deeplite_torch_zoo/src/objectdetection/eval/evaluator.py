@@ -45,18 +45,12 @@ class Evaluator(object):
 
         return bboxes
 
-    def _apply_model_for_yolo(self, img):
+    def apply_model(self, imgs):
         with torch.no_grad():
-            _, pred_bbox = self.model(img)
+            pred_bbox, _ = self.model(imgs)
 
         pred_bbox = post_process(pred_bbox)
         return pred_bbox.squeeze()
-
-    def apply_model(self, imgs):
-        if "yolo" in self._net:
-            return self._apply_model_for_yolo(imgs)
-        else:
-            raise ValueError
 
     def __predict(self, img, test_shape, valid_scale):
         org_img = np.copy(img)
