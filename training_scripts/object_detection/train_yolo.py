@@ -225,6 +225,11 @@ def train(opt, device):
         hyp_cfg=hyp_loss,
     )
 
+    if opt.eval_before_train:
+        ap_dict = evaluate(model, eval_function, opt.dataset_type, opt.img_dir,
+            nc, test_img_size, device)
+        LOGGER.info(f'Eval metrics: {ap_dict}')
+
     # Start training
     t0 = time.time()
     nw = max(round(hyp['warmup_epochs'] * nb), 1000)  # number of warmup iterations, max(3 epochs, 1k iterations)
@@ -328,28 +333,8 @@ def train(opt, device):
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if (not noval or final_epoch) and epoch % opt.eval_freq == 0:  # Calculate mAP
-                test_set = opt.img_dir
-                gt = None
-                if opt.dataset_name in ("voc", "voc07"):
-                    test_set = opt.img_dir / "VOC2007"
-                elif opt.dataset_name == "coco":
-                    gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
-                elif opt.dataset_name == "car_detection":
-                    gt = SubsampledCOCO(
-                        opt.img_dir / "annotations/instances_val2017.json",
-                        subsample_categories=["car"],
-                    )
-
-                ap_dict = eval_function(
-                    ema.ema,
-                    test_set,
-                    gt=gt,
-                    num_classes=nc,
-                    device=device,
-                    net=opt.model_name,
-                    img_size=test_img_size,
-                    progressbar=True,
-                )
+                ap_dict = evaluate(ema.ema, eval_function, opt.dataset_type, opt.img_dir,
+                    nc, test_img_size, device)
                 LOGGER.info(f'Eval metrics: {ap_dict}')
                 tb_writer.add_scalar('eval/mAP', ap_dict['mAP'], epoch)
                 for eval_key, eval_value in ap_dict.items():
@@ -391,37 +376,40 @@ def train(opt, device):
                 strip_optimizer(f)  # strip optimizers
                 if f is best:
                     LOGGER.info(f'\nValidating {f}...')
-                    test_set = opt.img_dir
-                    gt = None
-                    if opt.dataset_name in ("voc", "voc07"):
-                        test_set = opt.img_dir / "VOC2007"
-                    elif opt.dataset_name == "coco":
-                        gt = COCO(opt.img_dir / "annotations/instances_val2017.json")
-                    elif opt.dataset_name == "car_detection":
-                        gt = SubsampledCOCO(
-                            opt.img_dir / "annotations/instances_val2017.json",
-                            subsample_categories=["car"],
-                        )
-
                     ckpt = torch.load(f, map_location=device)
                     model = ckpt['ema' if ckpt.get('ema') else 'model']
                     model.float().eval()
 
-                    Aps = eval_function(
-                        model,
-                        test_set,
-                        gt=gt,
-                        num_classes=nc,
-                        device=device,
-                        net=opt.model_name,
-                        img_size=test_img_size,
-                        progressbar=True,
-                    )
-                    LOGGER.info(f'Eval metrics: {Aps}')
+                    ap_dict = evaluate(model, eval_function, opt.dataset_type, opt.img_dir,
+                        nc, test_img_size, device)
+                    LOGGER.info(f'Eval metrics: {ap_dict}')
 
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}")
 
     torch.cuda.empty_cache()
+
+
+def evaluate(model, eval_function, dataset_type, test_set,
+    num_classes, test_img_size, device, gt=None):
+    if dataset_type in ("voc", "voc07"):
+        test_set = test_set / "VOC2007"
+    elif dataset_type == "coco":
+        gt = COCO(test_set / "annotations/instances_val2017.json")
+    elif dataset_type == "car_detection":
+        gt = SubsampledCOCO(
+            test_set / "annotations/instances_val2017.json",
+            subsample_categories=["car"],
+        )
+    ap_dict = eval_function(
+        model,
+        test_set,
+        gt=gt,
+        num_classes=num_classes,
+        device=device,
+        img_size=test_img_size,
+        progressbar=True,
+    )
+    return ap_dict
 
 
 def parse_opt(known=False):
@@ -485,6 +473,7 @@ def parse_opt(known=False):
         help="Evaluation run frequency (in training epochs)",
     )
 
+    parser.add_argument('--eval_before_train', action='store_true', help='run eval before training starts')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')

@@ -13,16 +13,13 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import nms, pos
 
 
 class Evaluator(object):
-    def __init__(self, model, data_path=None, img_size=448, net="yolov3"):
-
-        Path(data_path).mkdir(parents=True, exist_ok=True)
-        self.pred_result_path = data_path
-        self.conf_thresh = hyp_cfg.TEST["conf_thresh"]
-        self.nms_thresh = hyp_cfg.TEST["nms_thresh"]
+    def __init__(self, model, img_size=448,
+        conf_thresh=hyp_cfg.TEST["conf_thresh"], nms_thresh=hyp_cfg.TEST["nms_thresh"]):
+        self.conf_thresh = conf_thresh
+        self.nms_thresh = nms_thresh
         self.val_shape = img_size
         self.model = model
         self.device = next(model.parameters()).device
-        self._net = net
 
     def get_bbox(self, img, multi_test=False, flip_test=False):
         if multi_test:
@@ -45,18 +42,12 @@ class Evaluator(object):
 
         return bboxes
 
-    def _apply_model_for_yolo(self, img):
+    def apply_model(self, img):
         with torch.no_grad():
             _, pred_bbox = self.model(img)
 
         pred_bbox = post_process(pred_bbox)
         return pred_bbox.squeeze()
-
-    def apply_model(self, imgs):
-        if "yolo" in self._net:
-            return self._apply_model_for_yolo(imgs)
-        else:
-            raise ValueError
 
     def __predict(self, img, test_shape, valid_scale):
         org_img = np.copy(img)
@@ -68,13 +59,9 @@ class Evaluator(object):
         if len(pred_bbox) == 0:
             return np.zeros((0, 6))
 
-        # pred_bbox = post_process(pred_bbox)
-
-        # bboxes = self._scale_predictions(pred_bbox.squeeze(), test_shape, (org_h, org_w), valid_scale)
         bboxes = self._scale_predictions(
             pred_bbox, test_shape, (org_h, org_w), valid_scale
         )
-
         return bboxes
 
     def __get_img_tensor(self, img, test_shape):
