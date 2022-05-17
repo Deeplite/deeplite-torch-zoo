@@ -1,20 +1,12 @@
-import os
-import shutil
-from os.path import expanduser
-from pathlib import Path
-
-import cv2
 import numpy as np
 import torch
 
-import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import nms, post_process
 
 
 class Evaluator(object):
-    def __init__(self, model, img_size=448,
-        conf_thresh=hyp_cfg.TEST["conf_thresh"], nms_thresh=hyp_cfg.TEST["nms_thresh"]):
+    def __init__(self, model, img_size=448, conf_thresh=0.001, nms_thresh=0.5):
         self.conf_thresh = conf_thresh
         self.nms_thresh = nms_thresh
         self.val_shape = img_size

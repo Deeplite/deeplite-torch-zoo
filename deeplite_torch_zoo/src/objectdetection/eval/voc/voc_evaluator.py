@@ -20,10 +20,11 @@ class VOCEvaluator(Evaluator):
         data_root,
         num_classes=20,
         img_size=448,
-        conf_thresh=cfg.TEST["conf_thresh"],
-        nms_thresh=cfg.TEST["nms_thresh"],
+        conf_thresh=0.001,
+        nms_thresh=0.5,
         is_07_subset=False,
         progressbar=False,
+        class_names=None,
     ):
 
         super(VOCEvaluator, self).__init__(
@@ -43,13 +44,10 @@ class VOCEvaluator(Evaluator):
 
         self.progressbar = progressbar
 
-        self.classes = cfg.DATA["CLASSES"]
-        if num_classes == 1:
-            self.classes = cfg.DATA["CLASSES_1"]
-        elif num_classes == 2:
-            self.classes = cfg.DATA["CLASSES_2"]
-        elif num_classes == 3:
-            self.classes = cfg.DATA["CLASSES_3"]
+        if class_names is None:
+            self.classes = cfg.DATA["CLASSES"]
+        else:
+            self.classes = class_names
 
         self.predictions = {}
         self.ground_truth_boxes = {}
@@ -117,8 +115,8 @@ class VOCEvaluator(Evaluator):
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='voc')
 def yolo_eval_voc(
     model, data_root, num_classes=20, device="cuda", img_size=448,
-    is_07_subset=False, progressbar=False, iou_thresh=0.5, conf_thresh=cfg.TEST["conf_thresh"],
-    nms_thresh=cfg.TEST["nms_thresh"], **kwargs
+    is_07_subset=False, progressbar=False, iou_thresh=0.5, conf_thresh=0.001,
+    nms_thresh=0.5, **kwargs
 ):
 
     model.to(device)
@@ -134,8 +132,8 @@ def yolo_eval_voc(
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='voc07')
 def yolo_voc07_eval(
     model, data_root, num_classes=20, device="cuda",
-    img_size=448, progressbar=True, conf_thresh=cfg.TEST["conf_thresh"],
-    nms_thresh=cfg.TEST["nms_thresh"], iou_thresh=0.5, **kwargs
+    img_size=448, progressbar=True, conf_thresh=0.001,
+    nms_thresh=0.5, iou_thresh=0.5, **kwargs
 ):
     return yolo_eval_voc(model, data_root, num_classes=num_classes, device=device,
         img_size=img_size, is_07_subset=True, progressbar=progressbar, conf_thresh=conf_thresh,

@@ -12,15 +12,16 @@ from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 
 
 class VocDataset(DLZooDataset):
-    def __init__(self, annotation_path, anno_file_type, num_classes=None, img_size=416):
+    def __init__(self, annotation_path, anno_file_type, num_classes=None,
+        class_names=None, img_size=416, subsample_original_classes=False):
         super().__init__(cfg.TRAIN, img_size)
-        self.classes = cfg.DATA["CLASSES"]
-        if num_classes == 1:
-            self.classes = cfg.DATA["CLASSES_1"]
-        elif num_classes == 2:
-            self.classes = cfg.DATA["CLASSES_2"]
 
-        self.all_classes = cfg.DATA["ALLCLASSES"]
+        if class_names is None:
+            self.classes = cfg.DATA["CLASSES"]
+            self.voc_classes = self.classes
+        if subsample_original_classes:
+            self.voc_classes = cfg.DATA["ALLCLASSES"]
+
         self.annotation_path = annotation_path
         self.num_classes = len(self.classes)
 
@@ -29,8 +30,7 @@ class VocDataset(DLZooDataset):
 
         self.class_to_id = dict(zip(self.classes, range(self.num_classes)))
         self.id_to_class = {v: k for k, v in self.class_to_id.items()}
-
-        self.class_to_id_all = dict(zip(self.all_classes, range(len(self.all_classes))))
+        self.class_to_id_all = dict(zip(self.voc_classes, range(len(self.voc_classes))))
 
         self.map_selected_ids_to_all = {
             k: self.class_to_id_all[v] for k, v in self.id_to_class.items()

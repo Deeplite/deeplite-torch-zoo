@@ -73,7 +73,7 @@ def create_lisa_datasets(data_root, num_classes, img_size):
     return LISA(data_root, _set="train", img_size=img_size), LISA(data_root, _set="valid", img_size=img_size)
 
 
-def create_voc_datasets(data_root, num_classes, img_size, is_07_subset=False, standard_voc_format=True):
+def create_voc_datasets(data_root, num_classes, img_size, is_07_subset=False, standard_voc_format=True, class_names=None):
     annotation_path = os.path.join(data_root, "yolo_data")
     prepare_yolo_voc_data(data_root, annotation_path,
         is_07_subset=is_07_subset, standard_voc_format=standard_voc_format)
@@ -82,12 +82,14 @@ def create_voc_datasets(data_root, num_classes, img_size, is_07_subset=False, st
         annotation_path=annotation_path,
         anno_file_type="train",
         img_size=img_size,
+        class_names=class_names,
     )
     test_dataset = VocDataset(
         num_classes=num_classes,
         annotation_path=annotation_path,
         anno_file_type="test",
         img_size=img_size,
+        class_names=class_names,
     )
     return train_dataset, test_dataset
 
@@ -115,7 +117,7 @@ def create_voc07_datasets(data_root, num_classes, img_size):
 
 def create_person_detection_datasets(data_root, num_classes, img_size):
     """Person detection (1 class) dataset in VOC format"""
-    return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False)
+    return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False, class_names=['person'])
 
 
 def create_car_detection_datasets(data_root, num_classes, img_size):
@@ -127,7 +129,16 @@ def create_person_pet_vehice_datasets(data_root, num_classes, img_size):
     """Dataset with 3 classes: person, vehicle (car + bike + bus + truck) and pet
         based on (merged) COCO classes in VOC format
     """
-    return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False)
+    return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False,
+        class_names=['person', 'vehicle', 'pet'])
+
+
+def create_coco_eight_classes_datasets(data_root, num_classes, img_size):
+    """Dataset with 3 classes: person, vehicle (car + bike + bus + truck) and pet
+        based on (merged) COCO classes in VOC format
+    """
+    return create_voc_datasets(data_root, num_classes, img_size, standard_voc_format=False,
+        class_names=['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck', 'cat', 'dog'])
 
 
 DatasetParameters = namedtuple('DatasetParameters', ['num_classes', 'img_size', 'dataset_create_fn'])
@@ -140,6 +151,7 @@ DATASET_WRAPPER_FNS = {
     'person_detection': DatasetParameters(1, 320, create_person_detection_datasets),
     'car_detection': DatasetParameters(1, 320, create_car_detection_datasets),
     'person_pet_vehicle_detection': DatasetParameters(3, 320, create_person_pet_vehice_datasets),
+    'coco_eight_classes': DatasetParameters(3, 320, create_coco_eight_classes_datasets),
 }
 
 for dataset_name_key, dataset_parameters in DATASET_WRAPPER_FNS.items():

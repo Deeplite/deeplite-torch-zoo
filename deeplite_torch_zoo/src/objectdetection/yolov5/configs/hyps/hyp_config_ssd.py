@@ -1,9 +1,3 @@
-TEST = {
-    "conf_thresh": 0.01,
-    "nms_thresh": 0.5,
-}
-
-
 TRAIN = {
     # optimization:
     "epochs": 50,

@@ -23,6 +23,7 @@ def extract_dataset_type(dataset_name):
         'person_detection': 'voc',
         'person_pet_vehicle_detection': 'voc',
         'car_detection': 'coco',
+        'coco_eight_classes': 'voc',
     }
     for substring in DATASET_NAME_SUBSTRINGS:
         if re.search(substring, dataset_name):
