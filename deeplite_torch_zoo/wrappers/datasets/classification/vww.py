@@ -9,7 +9,7 @@ __all__ = ["get_vww"]
 
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name='vww')
-def get_vww(data_root="", batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
+def get_vww(data_root, batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
 
     if len(kwargs):
         import sys

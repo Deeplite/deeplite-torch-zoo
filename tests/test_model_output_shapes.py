@@ -1,11 +1,8 @@
+import torch
+import pytest
 from pathlib import Path
 
-import pytest
-
-import torch
-
 from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name, create_model
-from tests.mock_datasets import VocYoloFake
 
 
 MOCK_DATASETS_PATH = Path('tests/fixture/datasets')
@@ -23,14 +20,6 @@ MODEL_NAME_DATASPLIT_FN_ARG_MAP = {
     'yolo4l_leaky': 'yolo',
     'yolo4x': 'yolo',
     'unet_scse_resnet18': 'unet',
-}
-
-DATASET_NAME_DATASPLIT_FN_ARG_MAP = {
-    'voc_20': 'voc',
-    'voc_1': 'voc',
-    'voc_2': 'voc',
-    'carvana': 'carvana',
-    'person_detection_1': 'person_detection',
 }
 
 CLASSIFICATION_MODEL_TESTS = [
@@ -84,14 +73,12 @@ def test_classification_model_output_shape(model_name, dataset_name, input_resol
 
 
 DETECTION_MODEL_TESTS = [
-    ('mb1_ssd', 'voc_20', {}, [(3000, 21), (3000, 4)]),
-    ('mb2_ssd_lite', 'voc_20', {}, [(3000, 21), (3000, 4)]),
-    ('mb2_ssd_lite', 'voc_1', {'num_classes': 1}, [(3000, 2), (3000, 4)]),
-    ('mb2_ssd_lite', 'voc_2', {'num_classes': 2}, [(3000, 3), (3000, 4)]),
-    ('mb2_ssd', 'voc_20', {'num_classes': 2}, [(3000, 21), (3000, 4)]),
-    ('resnet18_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
-    ('resnet34_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
-    ('resnet50_ssd', 'voc_20', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
+    ('mb1_ssd', 'voc', {}, [(3000, 21), (3000, 4)]),
+    ('mb2_ssd_lite', 'voc', {}, [(3000, 21), (3000, 4)]),
+    ('mb2_ssd', 'voc', {'num_classes': 2}, [(3000, 21), (3000, 4)]),
+    ('resnet18_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
+    ('resnet34_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
+    ('resnet50_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
 ]
 
 YOLO5_6_VOC_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4l_leaky', 'yolo4x',
@@ -102,11 +89,11 @@ YOLO5_6_PERSON_MODELS = ['yolo5_6n', 'yolo5_6s', 'yolo5_6n_relu',
     'yolo5_6s_relu', 'yolo5_6m_relu']
 
 for model_name in YOLO5_6_VOC_MODELS:
-    DETECTION_MODEL_TESTS.append((model_name, 'voc_20', {'num_classes': 21, 'img_size': 416},
+    DETECTION_MODEL_TESTS.append((model_name, 'voc', {'num_classes': 21, 'img_size': 416},
             [(3, 52, 52, 25), (3, 26, 26, 25), (3, 13, 13, 25)]))
 
 for model_name in YOLO5_6_PERSON_MODELS:
-    DETECTION_MODEL_TESTS.append((model_name, 'person_detection_1', {'num_classes': 1, 'img_size': 320},
+    DETECTION_MODEL_TESTS.append((model_name, 'person_detection', {'num_classes': 1, 'img_size': 320},
             [(3, 40, 40, 6), (3, 20, 20, 6), (3, 10, 10, 6)]))
 
 
@@ -126,7 +113,7 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
         model_name = MODEL_NAME_DATASPLIT_FN_ARG_MAP[model_name]
     train_loader = get_data_splits_by_name(
         data_root=MOCK_VOC_PATH,
-        dataset_name=DATASET_NAME_DATASPLIT_FN_ARG_MAP[dataset_name],
+        dataset_name=dataset_name,
         model_name=model_name,
         batch_size=TEST_BATCH_SIZE,
         num_workers=0,
@@ -156,12 +143,10 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
 @pytest.mark.parametrize(
     ('model_name', 'dataset_name', 'datasplit_kwargs', 'output_shape'),
     [
-        ('deeplab_mobilenet', 'voc_20', {'backbone': 'vgg'}, (1, 21)),
-        ('fcn32', 'voc_20', {'backbone': 'vgg'}, (1, 21)),
+        ('deeplab_mobilenet', 'voc', {'backbone': 'vgg'}, (1, 21)),
+        ('fcn32', 'voc', {'backbone': 'vgg'}, (1, 21)),
         ('unet_scse_resnet18', 'carvana', {}, (1, )),
-        ('unet_scse_resnet18', 'voc_2', {'num_classes': 3}, (1, 3)),
-        ('unet_scse_resnet18', 'voc_1', {'num_classes': 2}, (1, 1)),
-        ('unet_scse_resnet18', 'voc_20', {}, (1, 21)),
+        ('unet_scse_resnet18', 'voc', {}, (1, 21)),
         ('unet', 'carvana', {}, (1, )),
     ],
 )
@@ -177,7 +162,7 @@ def test_segmentation_model_output_shape(model_name, dataset_name, datasplit_kwa
         model_name = MODEL_NAME_DATASPLIT_FN_ARG_MAP[model_name]
     test_loader = get_data_splits_by_name(
         data_root=MOCK_DATASETS_PATH if 'voc' in dataset_name else MOCK_CARVANA_PATH,
-        dataset_name=DATASET_NAME_DATASPLIT_FN_ARG_MAP[dataset_name],
+        dataset_name=dataset_name,
         model_name=model_name,
         num_workers=0,
         device="cpu",
@@ -221,12 +206,12 @@ def test_create_classification_model_output_shape(model_name, dataset_name, inpu
 
 
 DETECTION_CREATE_MODEL_TESTS = [
-    ('mb1_ssd', 'voc_20', {}, [(3000, CUSTOM_NUM_CLASSES+1), (3000, 4)]),
-    ('yolo4s', 'voc_20', {'num_classes': 21, 'img_size': 416},
+    ('mb1_ssd', 'voc', {}, [(3000, CUSTOM_NUM_CLASSES+1), (3000, 4)]),
+    ('yolo4s', 'voc', {'num_classes': 21, 'img_size': 416},
             [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
              (3, 26, 26, CUSTOM_NUM_CLASSES+5),
              (3, 13, 13, CUSTOM_NUM_CLASSES+5)]),
-    ('yolo5_6n', 'voc_20', {'num_classes': 21, 'img_size': 416},
+    ('yolo5_6n', 'voc', {'num_classes': 21, 'img_size': 416},
             [(3, 52, 52, CUSTOM_NUM_CLASSES+5),
              (3, 26, 26, CUSTOM_NUM_CLASSES+5),
              (3, 13, 13, CUSTOM_NUM_CLASSES+5)])
@@ -247,7 +232,7 @@ def test_create_detection_model_output_shape(model_name, dataset_name, datasplit
         model_name = MODEL_NAME_DATASPLIT_FN_ARG_MAP[model_name]
     train_loader = get_data_splits_by_name(
         data_root=MOCK_VOC_PATH,
-        dataset_name=DATASET_NAME_DATASPLIT_FN_ARG_MAP[dataset_name],
+        dataset_name=dataset_name,
         model_name=model_name,
         batch_size=TEST_BATCH_SIZE,
         num_workers=0,
@@ -277,9 +262,8 @@ def test_create_detection_model_output_shape(model_name, dataset_name, datasplit
 @pytest.mark.parametrize(
     ('model_name', 'dataset_name', 'datasplit_kwargs', 'output_shape'),
     [
-        ('deeplab_mobilenet', 'voc_20', {'backbone': 'vgg'}, (1, CUSTOM_NUM_CLASSES)),
-        ('fcn32', 'voc_20', {'backbone': 'vgg'}, (1, CUSTOM_NUM_CLASSES)),
-        ('unet_scse_resnet18', 'voc_2', {'num_classes': 3}, (1, CUSTOM_NUM_CLASSES+1)),
+        ('deeplab_mobilenet', 'voc', {'backbone': 'vgg'}, (1, CUSTOM_NUM_CLASSES)),
+        ('fcn32', 'voc', {'backbone': 'vgg'}, (1, CUSTOM_NUM_CLASSES)),
     ],
 )
 def test_create_segmentation_model_output_shape(model_name, dataset_name, datasplit_kwargs, output_shape):
@@ -294,7 +278,7 @@ def test_create_segmentation_model_output_shape(model_name, dataset_name, datasp
         model_name = MODEL_NAME_DATASPLIT_FN_ARG_MAP[model_name]
     test_loader = get_data_splits_by_name(
         data_root=MOCK_DATASETS_PATH if 'voc' in dataset_name else MOCK_CARVANA_PATH,
-        dataset_name=DATASET_NAME_DATASPLIT_FN_ARG_MAP[dataset_name],
+        dataset_name=dataset_name,
         model_name=model_name,
         num_workers=0,
         device="cpu",
