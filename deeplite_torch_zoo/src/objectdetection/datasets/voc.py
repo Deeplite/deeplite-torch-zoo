@@ -12,32 +12,16 @@ from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 
 
 class VocDataset(DLZooDataset):
-    def __init__(self, annotation_path, anno_file_type, num_classes=None,
-        class_names=None, img_size=416, subsample_original_classes=False):
+    def __init__(self, annotation_path, anno_file_type, img_size=416, class_names=None):
         super().__init__(cfg.TRAIN, img_size)
 
-        if class_names is None:
-            self.classes = cfg.DATA["CLASSES"]
-            self.voc_classes = self.classes
-        if subsample_original_classes:
-            self.voc_classes = cfg.DATA["ALLCLASSES"]
-
         self.annotation_path = annotation_path
+        with open(os.path.join(annotation_path, 'class_names.txt'), 'r') as f:
+            self.classes = f.read().split()
         self.num_classes = len(self.classes)
 
-        if num_classes is not None:
-            self.num_classes = num_classes
-
-        self.class_to_id = dict(zip(self.classes, range(self.num_classes)))
-        self.id_to_class = {v: k for k, v in self.class_to_id.items()}
-        self.class_to_id_all = dict(zip(self.voc_classes, range(len(self.voc_classes))))
-
-        self.map_selected_ids_to_all = {
-            k: self.class_to_id_all[v] for k, v in self.id_to_class.items()
-        }
-        self.map_all_ids_to_selected = {
-            v: k for k, v in self.map_selected_ids_to_all.items()
-        }
+        if class_names is not None:
+            assert class_names == self.classes
 
         self.__annotations = self.__load_annotations(anno_file_type)
         if anno_file_type == "train":
@@ -110,18 +94,9 @@ class VocDataset(DLZooDataset):
 
         return annotations
 
-    def filter_out_extra_classes(self, bboxes_):
-        bboxes = []
-        for bbox in bboxes_:
-            if bbox[4] in self.map_all_ids_to_selected:
-                bbox[4] = self.map_all_ids_to_selected[bbox[4]]
-                bboxes.append(list(bbox))
-        return np.array(bboxes)
-
     def __not_empty(self, annotation):
         anno = annotation.strip().split(" ")
-        bboxes = np.array([list(map(float, box.split(","))) for box in anno[1:]])
-        bboxes = self.filter_out_extra_classes(bboxes)
+        bboxes = np.array([list(map(str, box.split(","))) for box in anno[1:]])
         return len(bboxes)
 
     def __parse_annotation(self, annotation):
@@ -134,10 +109,15 @@ class VocDataset(DLZooDataset):
         anno = annotation.strip().split(" ")
 
         img_path = anno[0]
+
         img = cv2.imread(img_path)  # H*W*C and C=BGR
         assert img is not None, "File Not Found " + img_path
-        bboxes = np.array([list(map(float, box.split(","))) for box in anno[1:]])
-        bboxes = self.filter_out_extra_classes(bboxes)
+
+        def map_box_data(box_data):
+            class_id = self.classes.index(box_data[4])
+            return [float(value) for value in box_data[:4]] + [class_id]
+
+        bboxes = np.array([map_box_data(box.split(',')) for box in anno[1:]])
 
         if len(bboxes) == 0:
             bboxes = np.array(np.zeros((0, 5)))

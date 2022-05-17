@@ -17,13 +17,13 @@ def extract_model_type(model_name):
 
 
 def extract_dataset_type(dataset_name):
-    DATASET_NAME_SUBSTRINGS = ['voc07', 'voc', 'coco', 'wider_face', 'lisa',
+    DATASET_NAME_SUBSTRINGS = ['voc_format_dataset', 'voc07', 'voc', 'coco', 'wider_face', 'lisa',
         'person_detection', 'car_detection', 'person_pet_vehicle_detection']
     DATASET_TYPE_MAP = {
+        'car_detection': 'coco',
         'person_detection': 'voc',
         'person_pet_vehicle_detection': 'voc',
-        'car_detection': 'coco',
-        'coco_eight_classes': 'voc',
+        'voc_format_dataset': 'voc',
     }
     for substring in DATASET_NAME_SUBSTRINGS:
         if re.search(substring, dataset_name):
@@ -106,6 +106,7 @@ class ModelWrapperRegistry(Registry):
         return self._registry_dict[key]
 
     def get_task_type(self, model_name, dataset_name):
+        dataset_name = extract_dataset_type(dataset_name)
         key = self._registry_key(model_name=model_name, dataset_name=dataset_name)
         if key not in self._registry_dict:
             raise KeyError(f'Model {model_name} on dataset {dataset_name} was not found '

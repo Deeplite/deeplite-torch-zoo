@@ -226,7 +226,7 @@ def train(opt, device):
     )
 
     if opt.eval_before_train:
-        ap_dict = evaluate(model, eval_function, opt.dataset_type, opt.img_dir,
+        ap_dict = evaluate(model, eval_function, opt.dataset_name, opt.img_dir,
             nc, test_img_size, device)
         LOGGER.info(f'Eval metrics: {ap_dict}')
 
@@ -333,7 +333,7 @@ def train(opt, device):
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if (not noval or final_epoch) and epoch % opt.eval_freq == 0:  # Calculate mAP
-                ap_dict = evaluate(ema.ema, eval_function, opt.dataset_type, opt.img_dir,
+                ap_dict = evaluate(ema.ema, eval_function, opt.dataset_name, opt.img_dir,
                     nc, test_img_size, device)
                 LOGGER.info(f'Eval metrics: {ap_dict}')
                 tb_writer.add_scalar('eval/mAP', ap_dict['mAP'], epoch)
@@ -380,7 +380,7 @@ def train(opt, device):
                     model = ckpt['ema' if ckpt.get('ema') else 'model']
                     model.float().eval()
 
-                    ap_dict = evaluate(model, eval_function, opt.dataset_type, opt.img_dir,
+                    ap_dict = evaluate(model, eval_function, opt.dataset_name, opt.img_dir,
                         nc, test_img_size, device)
                     LOGGER.info(f'Eval metrics: {ap_dict}')
 
@@ -389,13 +389,13 @@ def train(opt, device):
     torch.cuda.empty_cache()
 
 
-def evaluate(model, eval_function, dataset_type, test_set,
+def evaluate(model, eval_function, dataset_name, test_set,
     num_classes, test_img_size, device, gt=None):
-    if dataset_type in ("voc", "voc07"):
+    if dataset_name in ("voc", "voc07"):
         test_set = test_set / "VOC2007"
-    elif dataset_type == "coco":
+    elif dataset_name == "coco":
         gt = COCO(test_set / "annotations/instances_val2017.json")
-    elif dataset_type == "car_detection":
+    elif dataset_name == "car_detection":
         gt = SubsampledCOCO(
             test_set / "annotations/instances_val2017.json",
             subsample_categories=["car"],
@@ -432,10 +432,9 @@ def parse_opt(known=False):
             "lisa_full",
             "lisa_subset11",
             "wider_face",
-            "person_detection",
             "voc07",
             "car_detection",
-            "person_pet_vehicle_detection",
+            "voc_format_dataset",
         ],
         help="Name of the dataset to train/validate on",
     )
