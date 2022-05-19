@@ -7,6 +7,7 @@ from deeplite_torch_zoo import get_model_by_name, get_data_splits_by_name, creat
 
 MOCK_DATASETS_PATH = Path('tests/fixture/datasets')
 MOCK_VOC_PATH = MOCK_DATASETS_PATH / 'VOCdevkit'
+MOCK_PERSONDET_PATH = MOCK_DATASETS_PATH / 'person_detection'
 MOCK_CARVANA_PATH = MOCK_DATASETS_PATH / 'carvana'
 
 TEST_BATCH_SIZE = 2
@@ -73,12 +74,12 @@ def test_classification_model_output_shape(model_name, dataset_name, input_resol
 
 
 DETECTION_MODEL_TESTS = [
-    ('mb1_ssd', 'voc', {}, [(3000, 21), (3000, 4)]),
-    ('mb2_ssd_lite', 'voc', {}, [(3000, 21), (3000, 4)]),
-    ('mb2_ssd', 'voc', {'num_classes': 2}, [(3000, 21), (3000, 4)]),
-    ('resnet18_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
-    ('resnet34_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
-    ('resnet50_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)]),
+    ('mb1_ssd', 'voc', {}, [(3000, 21), (3000, 4)], MOCK_VOC_PATH),
+    ('mb2_ssd_lite', 'voc', {}, [(3000, 21), (3000, 4)], MOCK_VOC_PATH),
+    ('mb2_ssd', 'voc', {'num_classes': 2}, [(3000, 21), (3000, 4)], MOCK_VOC_PATH),
+    ('resnet18_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)], MOCK_VOC_PATH),
+    ('resnet34_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)], MOCK_VOC_PATH),
+    ('resnet50_ssd', 'voc', {'num_classes': 21}, [(8732, 21), (8732, 4)], MOCK_VOC_PATH),
 ]
 
 YOLO5_6_VOC_MODELS = ['yolo3', 'yolo4s', 'yolo4m', 'yolo4l', 'yolo4l_leaky', 'yolo4x',
@@ -90,18 +91,19 @@ YOLO5_6_PERSON_MODELS = ['yolo5_6n', 'yolo5_6s', 'yolo5_6n_relu',
 
 for model_name in YOLO5_6_VOC_MODELS:
     DETECTION_MODEL_TESTS.append((model_name, 'voc', {'num_classes': 21, 'img_size': 416},
-            [(3, 52, 52, 25), (3, 26, 26, 25), (3, 13, 13, 25)]))
+            [(3, 52, 52, 25), (3, 26, 26, 25), (3, 13, 13, 25)], MOCK_VOC_PATH))
 
 for model_name in YOLO5_6_PERSON_MODELS:
     DETECTION_MODEL_TESTS.append((model_name, 'person_detection', {'num_classes': 1, 'img_size': 320},
-            [(3, 40, 40, 6), (3, 20, 20, 6), (3, 10, 10, 6)]))
+            [(3, 40, 40, 6), (3, 20, 20, 6), (3, 10, 10, 6)], MOCK_PERSONDET_PATH))
 
 
 @pytest.mark.parametrize(
-    ('model_name', 'dataset_name', 'datasplit_kwargs', 'output_shapes'),
+    ('model_name', 'dataset_name', 'datasplit_kwargs', 'output_shapes', 'mock_dataset_path'),
     DETECTION_MODEL_TESTS
 )
-def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs, output_shapes):
+def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs,
+    output_shapes, mock_dataset_path):
     model = get_model_by_name(
         model_name=model_name,
         dataset_name=dataset_name,
@@ -112,7 +114,7 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
     if model_name in MODEL_NAME_DATASPLIT_FN_ARG_MAP:
         model_name = MODEL_NAME_DATASPLIT_FN_ARG_MAP[model_name]
     train_loader = get_data_splits_by_name(
-        data_root=MOCK_VOC_PATH,
+        data_root=mock_dataset_path,
         dataset_name=dataset_name,
         model_name=model_name,
         batch_size=TEST_BATCH_SIZE,

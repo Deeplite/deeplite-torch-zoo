@@ -21,7 +21,9 @@ class VocDataset(DLZooDataset):
         self.num_classes = len(self.classes)
 
         if class_names is not None:
-            assert class_names == self.classes
+            # assert class_names == self.classes
+            if class_names != self.classes:
+                raise RuntimeError(f'Classes not same {class_names} {self.classes}')
 
         self.__annotations = self.__load_annotations(anno_file_type)
         if anno_file_type == "train":
