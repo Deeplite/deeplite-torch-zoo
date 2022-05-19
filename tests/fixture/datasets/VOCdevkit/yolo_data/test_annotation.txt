@@ -1,2 +1,2 @@
-tests/fixture/datasets/VOCdevkit/VOC2007/JPEGImages/000002.jpg 139,200,207,301,18
-tests/fixture/datasets/VOCdevkit/VOC2007/JPEGImages/000003.jpg 123,155,215,195,17 239,156,307,205,8
+tests/fixture/datasets/VOCdevkit/VOC2007/JPEGImages/000002.jpg 139,200,207,301,train
+tests/fixture/datasets/VOCdevkit/VOC2007/JPEGImages/000003.jpg 123,155,215,195,sofa 239,156,307,205,chair

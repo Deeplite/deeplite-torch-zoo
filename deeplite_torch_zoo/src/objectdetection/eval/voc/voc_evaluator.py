@@ -18,12 +18,12 @@ class VOCEvaluator(Evaluator):
         self,
         model,
         data_root,
-        num_classes=20,
         img_size=448,
-        conf_thresh=cfg.TEST["conf_thresh"],
-        nms_thresh=cfg.TEST["nms_thresh"],
+        conf_thresh=0.001,
+        nms_thresh=0.5,
         is_07_subset=False,
         progressbar=False,
+        eval_style='voc',
     ):
 
         super(VOCEvaluator, self).__init__(
@@ -42,21 +42,13 @@ class VOCEvaluator(Evaluator):
             self.img_inds = [line.strip() for line in lines]
 
         self.progressbar = progressbar
-
-        self.classes = cfg.DATA["CLASSES"]
-        if num_classes == 1:
-            self.classes = cfg.DATA["CLASSES_1"]
-        elif num_classes == 2:
-            self.classes = cfg.DATA["CLASSES_2"]
-        elif num_classes == 3:
-            self.classes = cfg.DATA["CLASSES_3"]
-
+        self.eval_style = eval_style
         self.predictions = {}
         self.ground_truth_boxes = {}
 
-        self._parse_gt_boxes()
+        self.class_names = self._parse_gt_boxes()
         self.metric_fn = MetricBuilder.build_evaluation_metric("map_2d",
-            async_mode=True, num_classes=num_classes)
+            async_mode=True, num_classes=len(self.class_names))
 
     def evaluate(self, multi_test=False, flip_test=False, iou_thresh=0.5):
         for img_ind in tqdm(self.img_inds, disable=not self.progressbar):
@@ -68,10 +60,13 @@ class VOCEvaluator(Evaluator):
             self.metric_fn.add(np.array(self.predictions[img_ind]),
                 np.array(self.ground_truth_boxes[img_ind]))
 
-        metrics = self.metric_fn.value(iou_thresholds=iou_thresh)
+        if self.eval_style == 'voc':
+            metrics = self.metric_fn.value(iou_thresholds=iou_thresh)
+        elif self.eval_style == 'coco':
+            metrics = self.metric_fn.value(iou_thresholds=iou_thresh, mpolicy='soft')
         APs = {'mAP': metrics['mAP']}
         for cls_id, ap_dict in metrics[iou_thresh].items():
-            APs[self.classes[cls_id]] = ap_dict['ap']
+            APs[self.class_names[cls_id]] = ap_dict['ap']
         return APs
 
     def process_image(self, img, img_ind, multi_test=False, flip_test=False):
@@ -82,15 +77,22 @@ class VOCEvaluator(Evaluator):
                 int(bbox[5]), bbox[4]])
 
     def _parse_gt_boxes(self):
+        class_names = []
         annopath = os.path.join(self.val_data_path, "Annotations", "{:s}.xml")
         for imagename in self.img_inds:
             parsed_boxes = self.parse_rec(annopath.format(imagename))
             for obj in parsed_boxes:
+                if obj["name"] not in class_names:
+                    class_names.append(obj["name"])
                 if not obj['difficult']:
                     if imagename not in self.ground_truth_boxes:
                         self.ground_truth_boxes[imagename] = []
-                    self.ground_truth_boxes[imagename].append([*obj["bbox"],
-                        self.classes.index(obj["name"]), 0, 0])
+                    self.ground_truth_boxes[imagename].append([*obj["bbox"], obj["name"], 0, 0])
+        class_names.sort()
+        for imagename in self.ground_truth_boxes:
+            for box_data in self.ground_truth_boxes[imagename]:
+                box_data[4] = class_names.index(box_data[4])
+        return class_names
 
     def parse_rec(self, filename):
         """ Parse a PASCAL VOC xml file """
@@ -116,27 +118,27 @@ class VOCEvaluator(Evaluator):
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='voc')
 def yolo_eval_voc(
-    model, data_root, num_classes=20, device="cuda", img_size=448,
-    is_07_subset=False, progressbar=False, iou_thresh=0.5, conf_thresh=cfg.TEST["conf_thresh"],
-    nms_thresh=cfg.TEST["nms_thresh"], **kwargs
+    model, data_root, device="cuda", img_size=448,
+    is_07_subset=False, progressbar=False, iou_thresh=0.5, conf_thresh=0.001,
+    nms_thresh=0.5, eval_style='voc', **kwargs
 ):
 
     model.to(device)
     with torch.no_grad():
         ap_dict = VOCEvaluator(
-            model, data_root, num_classes=num_classes, img_size=img_size,
+            model, data_root, img_size=img_size,
             is_07_subset=is_07_subset, progressbar=progressbar, conf_thresh=conf_thresh,
-            nms_thresh=nms_thresh).evaluate(iou_thresh=iou_thresh)
+            nms_thresh=nms_thresh, eval_style=eval_style).evaluate(iou_thresh=iou_thresh)
 
     return ap_dict
 
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='voc07')
 def yolo_voc07_eval(
-    model, data_root, num_classes=20, device="cuda",
-    img_size=448, progressbar=True, conf_thresh=cfg.TEST["conf_thresh"],
-    nms_thresh=cfg.TEST["nms_thresh"], iou_thresh=0.5, **kwargs
+    model, data_root, device="cuda",
+    img_size=448, progressbar=True, conf_thresh=0.001,
+    nms_thresh=0.5, iou_thresh=0.5, eval_style='voc', **kwargs
 ):
-    return yolo_eval_voc(model, data_root, num_classes=num_classes, device=device,
+    return yolo_eval_voc(model, data_root, device=device,
         img_size=img_size, is_07_subset=True, progressbar=progressbar, conf_thresh=conf_thresh,
-        nms_thresh=nms_thresh, iou_thresh=iou_thresh, **kwargs)
+        nms_thresh=nms_thresh, iou_thresh=iou_thresh, eval_style=eval_style, **kwargs)

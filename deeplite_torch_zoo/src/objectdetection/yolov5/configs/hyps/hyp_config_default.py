@@ -2,11 +2,6 @@ MODEL = {
     "strides": [8, 16, 32],
 }
 
-TEST = {
-    "conf_thresh": 0.01,
-    "nms_thresh": 0.5,
-}
-
 TRAIN = {
     # optimization:
     "lr0": 0.01,  # 0.01,  # initial learning rate (SGD=1E-2, Adam=1E-3)
