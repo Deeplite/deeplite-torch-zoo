@@ -23,7 +23,7 @@ class VOCEvaluator(Evaluator):
         nms_thresh=0.5,
         is_07_subset=False,
         progressbar=False,
-        eval_style='voc',
+        eval_style='coco',
     ):
 
         super(VOCEvaluator, self).__init__(
@@ -52,8 +52,12 @@ class VOCEvaluator(Evaluator):
 
     def evaluate(self, multi_test=False, flip_test=False, iou_thresh=0.5):
         for img_ind in tqdm(self.img_inds, disable=not self.progressbar):
-            img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpg")
-            img = cv2.imread(img_path)
+            try:
+                img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpg")
+                img = cv2.imread(img_path)
+            except:
+                img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpeg")
+                img = cv2.imread(img_path)
             self.process_image(
                 img, img_ind=img_ind, multi_test=multi_test, flip_test=flip_test
             )
@@ -63,7 +67,8 @@ class VOCEvaluator(Evaluator):
         if self.eval_style == 'voc':
             metrics = self.metric_fn.value(iou_thresholds=iou_thresh)
         elif self.eval_style == 'coco':
-            metrics = self.metric_fn.value(iou_thresholds=iou_thresh, mpolicy='soft')
+            metrics = self.metric_fn.value(iou_thresholds=iou_thresh,
+                recall_thresholds=np.arange(0., 1.01, 0.01), mpolicy='soft')
         APs = {'mAP': metrics['mAP']}
         for cls_id, ap_dict in metrics[iou_thresh].items():
             APs[self.class_names[cls_id]] = ap_dict['ap']
@@ -120,7 +125,7 @@ class VOCEvaluator(Evaluator):
 def yolo_eval_voc(
     model, data_root, device="cuda", img_size=448,
     is_07_subset=False, progressbar=False, iou_thresh=0.5, conf_thresh=0.001,
-    nms_thresh=0.5, eval_style='voc', **kwargs
+    nms_thresh=0.5, eval_style='coco', **kwargs
 ):
 
     model.to(device)
@@ -137,7 +142,7 @@ def yolo_eval_voc(
 def yolo_voc07_eval(
     model, data_root, device="cuda",
     img_size=448, progressbar=True, conf_thresh=0.001,
-    nms_thresh=0.5, iou_thresh=0.5, eval_style='voc', **kwargs
+    nms_thresh=0.5, iou_thresh=0.5, eval_style='coco', **kwargs
 ):
     return yolo_eval_voc(model, data_root, device=device,
         img_size=img_size, is_07_subset=True, progressbar=progressbar, conf_thresh=conf_thresh,

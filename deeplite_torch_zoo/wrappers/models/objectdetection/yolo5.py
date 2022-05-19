@@ -116,7 +116,7 @@ wrapper_funcs = {
     'person_detection': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
         'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa']),
     'voc': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
-        'yolo5_6m_relu', 'yolo5_6s_relu']),
+        'yolo5_6m_relu', 'yolo5_6s_relu', 'yolo5_6n_relu']),
     'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
         'yolo5_6n_hswish', 'yolo5_6n_relu']),
     'voc07': ModelSet(20, ['yolo5_6n', 'yolo5_6s']),
