@@ -18,7 +18,7 @@ CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
-    "yolo3_voc_20": "yolov3-voc-20classes-912_c94dc14873207830.pt",
+    "yolo3_voc": "yolov3-voc-20classes-912_c94dc14873207830.pt",
 }
 
 yolov3_cfg = {
@@ -29,7 +29,7 @@ yolov3_cfg = {
 
 
 def yolo3(
-    net="yolo3", dataset_name="voc_20", num_classes=20, pretrained=False,
+    net="yolo3", dataset_name="voc", num_classes=20, pretrained=False,
     progress=True, device="cuda", **kwargs
 ):
     config_path = get_project_root() / CFG_PATH / yolov3_cfg[net]
@@ -41,14 +41,12 @@ def yolo3(
     return model.to(device)
 
 
-def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
-    model_name = net.replace('v', '')
-
+def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection')
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return yolo3(
-            net=net,
+            net=model_name,
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
@@ -61,7 +59,7 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
 
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
-    'voc_20': ModelSet(20, ['yolo3']),
+    'voc': ModelSet(20, ['yolo3']),
 }
 
 for dataset, model_set in wrapper_funcs.items():

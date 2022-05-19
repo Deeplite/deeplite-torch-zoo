@@ -20,34 +20,34 @@ CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
-    "yolo5_6s_coco_80": "yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",
-    "yolo5_6m_coco_80": "yolov5_6m-coco-80classes_374-f93fa94b629c45ab.pt",
-    "yolo5_6n_coco_80": "yolov5_6n-coco-80classes_211-e9e44a7de1f08ea2.pt",
-    "yolo5_6sa_coco_80": "yolov5_6sa-coco-80classes_297-6c1972b5f7ae6ab6.pt",
-    "yolo5_6ma_coco_80": "yolov5_6ma-coco-80classes_365-4756729c4f6a834f.pt",
-    "yolo5_6n_hswish_coco_80": "yolov5_6n_hswish-coco-80classes-183-a2fed163ec98352a.pt",
-    "yolo5_6n_relu_coco_80": "yolov5_6n_relu-coco-80classes-167-7b6609497c63df79.pt",
+    "yolo5_6s_coco": "yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",
+    "yolo5_6m_coco": "yolov5_6m-coco-80classes_374-f93fa94b629c45ab.pt",
+    "yolo5_6n_coco": "yolov5_6n-coco-80classes_211-e9e44a7de1f08ea2.pt",
+    "yolo5_6sa_coco": "yolov5_6sa-coco-80classes_297-6c1972b5f7ae6ab6.pt",
+    "yolo5_6ma_coco": "yolov5_6ma-coco-80classes_365-4756729c4f6a834f.pt",
+    "yolo5_6n_hswish_coco": "yolov5_6n_hswish-coco-80classes-183-a2fed163ec98352a.pt",
+    "yolo5_6n_relu_coco": "yolov5_6n_relu-coco-80classes-167-7b6609497c63df79.pt",
 }
 
 voc_model_urls = {
-    "yolo5_6n_voc_20": "yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
-    "yolo5_6s_voc_20": "yolo5_6s-voc-20classes_871-4ceb1b22b227c05c.pt",
-    "yolo5_6m_voc_20": "yolo5_6m-voc-20classes_902-50c151baffbf896e.pt",
-    "yolo5_6l_voc_20": "yolov5_6l-voc-20classes_875_3fb90f0c405f170c.pt",
-    "yolo5_6x_voc_20": "yolov5_6x-voc-20classes_884_a2b6fb7234218cf6.pt",
-    "yolo5_6n_voc07_20": "yolov5_6n-voc07-20classes-620_037230667eff7b12.pt",
-    "yolo5_6s_voc07_20": "yolov5_6s-voc07-20classes-687_4d221fd4edc09ce1.pt",
-    "yolo5_6s_relu_voc_20": "yolov5_6s_relu-voc-20classes-819_a35dff53b174e383.pt",
-    "yolo5_6m_relu_voc_20": "yolov5_6m_relu-voc-20classes-856_c5c23135e6d5012f.pt",
+    "yolo5_6n_voc": "yolo5_6n-voc-20classes_762-a6b8573a32ebb4c8.pt",
+    "yolo5_6s_voc": "yolo5_6s-voc-20classes_871-4ceb1b22b227c05c.pt",
+    "yolo5_6m_voc": "yolo5_6m-voc-20classes_902-50c151baffbf896e.pt",
+    "yolo5_6l_voc": "yolov5_6l-voc-20classes_875_3fb90f0c405f170c.pt",
+    "yolo5_6x_voc": "yolov5_6x-voc-20classes_884_a2b6fb7234218cf6.pt",
+    "yolo5_6n_voc07": "yolov5_6n-voc07-20classes-620_037230667eff7b12.pt",
+    "yolo5_6s_voc07": "yolov5_6s-voc07-20classes-687_4d221fd4edc09ce1.pt",
+    "yolo5_6s_relu_voc": "yolov5_6s_relu-voc-20classes-819_a35dff53b174e383.pt",
+    "yolo5_6m_relu_voc": "yolov5_6m_relu-voc-20classes-856_c5c23135e6d5012f.pt",
 }
 
 person_detection_model_urls = {
-    "yolo5_6n_person_detection_1": "yolov5_6n-person-detection-1class_696-fff2a2c720e20752.pt",
-    "yolo5_6s_person_detection_1": "yolov5_6s-person-detection-1class_738-9e9ac9dae14b0dcd.pt",
-    "yolo5_6n_relu_person_detection_1": "yolov5_6n_relu-person-detection-1class_621-6794298f12d33ba8.pt",
-    "yolo5_6s_relu_person_detection_1": "yolov5_6s_relu-person-detection-1class_682-45ae979a06b80767.pt",
-    "yolo5_6m_relu_person_detection_1": "yolov5_6m_relu-person-detection-1class_709-3f59321c540d2d1c.pt",
-    "yolo5_6sa_person_detection_1": "yolov5_6sa-person-detection-1class_659_015807ae6899af0f.pt",
+    "yolo5_6n_person_detection": "yolov5_6n-person-detection-1class_696-fff2a2c720e20752.pt",
+    "yolo5_6s_person_detection": "yolov5_6s-person-detection-1class_738-9e9ac9dae14b0dcd.pt",
+    "yolo5_6n_relu_person_detection": "yolov5_6n_relu-person-detection-1class_621-6794298f12d33ba8.pt",
+    "yolo5_6s_relu_person_detection": "yolov5_6s_relu-person-detection-1class_682-45ae979a06b80767.pt",
+    "yolo5_6m_relu_person_detection": "yolov5_6m_relu-person-detection-1class_709-3f59321c540d2d1c.pt",
+    "yolo5_6sa_person_detection": "yolov5_6sa-person-detection-1class_659_015807ae6899af0f.pt",
 }
 
 model_urls.update(voc_model_urls)
@@ -69,7 +69,7 @@ MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 
 def yolo5_6(
-    net="yolo5_6s", dataset_name="voc_20", num_classes=20, activation_type=None,
+    net="yolo5_6s", dataset_name="voc", num_classes=20, activation_type=None,
     pretrained=False, progress=True, device="cuda"
 ):
     config_key = net
@@ -90,18 +90,17 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo5_6[nsmlx]_hswish$": partial(yolo5_6, activation_type="hardswish"),
 }
 
-def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
+def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
-        if re.match(net_name, net):
+        if re.match(net_name, model_name):
             model_wrapper_fn = model_fn
 
-    model_name = net.replace('v', '')
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection')
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return model_wrapper_fn(
-            net=net,
+            net=model_name,
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
@@ -114,13 +113,13 @@ def make_wrapper_func(wrapper_name, net, dataset_name, num_classes):
 
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
-    'person_detection_1': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
+    'person_detection': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
         'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa']),
-    'voc_20': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
-        'yolo5_6m_relu', 'yolo5_6s_relu']),
-    'coco_80': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
+    'voc': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
+        'yolo5_6m_relu', 'yolo5_6s_relu', 'yolo5_6n_relu']),
+    'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
         'yolo5_6n_hswish', 'yolo5_6n_relu']),
-    'voc07_20': ModelSet(20, ['yolo5_6n', 'yolo5_6s']),
+    'voc07': ModelSet(20, ['yolo5_6n', 'yolo5_6s']),
 }
 
 for dataset, model_set in wrapper_funcs.items():

@@ -19,11 +19,6 @@ MODEL = {
     "strides": [8, 16, 32],
 }
 
-TEST = {
-    "conf_thresh": 0.01,
-    "nms_thresh": 0.5,
-}
-
 TRAIN = {
     # optimization:
     "epochs": 50,
