@@ -34,9 +34,9 @@ class Evaluator(object):
 
         return bboxes
 
-    def apply_model(self, img):
+    def apply_model(self, imgs):
         with torch.no_grad():
-            _, pred_bbox = self.model(img)
+            pred_bbox, _ = self.model(imgs)
 
         pred_bbox = post_process(pred_bbox)
         return pred_bbox.squeeze()

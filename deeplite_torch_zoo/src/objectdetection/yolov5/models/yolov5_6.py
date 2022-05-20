@@ -66,7 +66,7 @@ class Detect(nn.Module):
                     y = torch.cat((xy, wh, y[..., 4:]), -1)
                 z.append(y.view(bs, -1, self.no))
 
-        return x if self.training else (x, torch.cat(z, 1))
+        return x if self.training else (torch.cat(z, 1), x)
 
     def _make_grid(self, nx=20, ny=20, i=0):
         d = self.anchors[i].device
@@ -106,8 +106,7 @@ class YoloV5_6(nn.Module):
             s = 256  # 2x min stride
             m.inplace = self.inplace
 
-            xs, _ = self.forward(torch.zeros(1, ch, s, s))
-            m.stride = torch.tensor([s / x.shape[-2] for x in xs])
+            m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])
             m.anchors /= m.stride.view(-1, 1, 1)
 
             self.stride = m.stride
@@ -146,7 +145,7 @@ class YoloV5_6(nn.Module):
                 self._profile_one_layer(m, x, dt)
             x = m(x)  # run
             y.append(x if m.i in self.save else None)  # save output
-        return (x, None) if self.training else x
+        return x
 
     def _descale_pred(self, p, flips, scale, img_size):
         # de-scale predictions following augmented inference (inverse operation)

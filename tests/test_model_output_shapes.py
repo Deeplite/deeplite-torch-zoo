@@ -127,13 +127,9 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
         dataset = train_loader.dataset
         img, _, _, _ = dataset[0]
         y = model(torch.unsqueeze(img, dim=0))
-        assert y[0][0].shape == (1, *output_shapes[0])
-        assert y[0][1].shape == (1, *output_shapes[1])
-        assert y[0][2].shape == (1, *output_shapes[2])
-        if y[1] is not None:
-            assert y[1][0].shape == (1, *output_shapes[0])
-            assert y[1][1].shape == (1, *output_shapes[1])
-            assert y[1][2].shape == (1, *output_shapes[2])
+        assert y[0].shape == (1, *output_shapes[0])
+        assert y[1].shape == (1, *output_shapes[1])
+        assert y[2].shape == (1, *output_shapes[2])
     else:
         img, _, _ = next(iter(train_loader))
         model.eval()
@@ -246,13 +242,9 @@ def test_create_detection_model_output_shape(model_name, dataset_name, datasplit
         dataset = train_loader.dataset
         img, _, _, _ = dataset[0]
         y = model(torch.unsqueeze(img, dim=0))
-        assert y[0][0].shape == (1, *output_shapes[0])
-        assert y[0][1].shape == (1, *output_shapes[1])
-        assert y[0][2].shape == (1, *output_shapes[2])
-        if y[1] is not None:
-            assert y[1][0].shape == (1, *output_shapes[0])
-            assert y[1][1].shape == (1, *output_shapes[1])
-            assert y[1][2].shape == (1, *output_shapes[2])
+        assert y[0].shape == (1, *output_shapes[0])
+        assert y[1].shape == (1, *output_shapes[1])
+        assert y[2].shape == (1, *output_shapes[2])
     else:
         img, _, _ = next(iter(train_loader))
         model.eval()

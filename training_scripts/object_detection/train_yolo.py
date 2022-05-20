@@ -282,9 +282,9 @@ def train(opt, device):
 
             # Forward
             with amp.autocast(enabled=cuda):
-                pred, p_d = model(imgs)  # forward
+                pred = model(imgs)  # forward
                 loss, loss_giou, loss_conf, loss_cls = criterion(
-                       pred, p_d, targets, labels_length, imgs.shape[-1]
+                       pred, targets, labels_length, imgs.shape[-1]
                 )
                 # Update running mean of tracked metrics
                 loss_items = torch.tensor([loss_giou, loss_conf, loss_cls]).to(device)
