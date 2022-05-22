@@ -6,7 +6,7 @@
 
 # Deeplite Torch Zoo
 
-The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and benchmark datasets for PyTorch framework. The models are grouped under different datasets and different task types such as classification, object detection, and segmentation. The primary aim of this ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
+The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and benchmark datasets for PyTorch. The models are grouped under different datasets and different task types such as classification, object detection, and semantic segmentation. The primary aim of ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models for a given task. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
 
 * [Installation](#Installation)
     * [Install using pip](#Install-using-pip)
@@ -27,7 +27,7 @@ The ``deeplite-torch-zoo`` package is a collection of popular CNN model architec
 
 # Installation
 
-## Install using pip
+## Install using pip (release version)
 
 
 Use following command to install the package from our internal PyPI repository.
@@ -37,14 +37,14 @@ Use following command to install the package from our internal PyPI repository.
     $ pip install deeplite-torch-zoo
 ```
 
-## Install from source
+## Install from source (development version)
 
 ```
     $ git clone https://github.com/Deeplite/deeplite-torch-zoo.git
     $ pip install .
 ```
 
-## Install in Dev mode
+## Install in dev mode
 
 ```
     $ git clone https://github.com/Deeplite/deeplite-torch-zoo.git
@@ -54,31 +54,11 @@ Use following command to install the package from our internal PyPI repository.
 
 To test the installation, one can run the basic tests using `pytest` command in the root folder.
 
-**Minimal Dependencies**
-
-- numpy==1.19.5
-- torch==1.4.0
-- torchvision==0.5.0
-- opencv-python
-- scipy>=1.4.1
-- pycocotools==2.0.4
-- Cython==0.28.4
-- scikit-image==0.15.0
-- tqdm==4.46.0
-- albumentations==1.0.3
-- pretrainedmodels==0.7.4
-- torchfcn==1.9.7
-- tensorboardX====2.4.1
-- pyvww==0.1.1
-- timm==0.5.4
-- texttable==1.6.4
-
-
 # How to Use
 
-The ``deeplite-torch-zoo`` is collection of benchmark computer vision datasets and pretrained models. There are two primary wrapper functions to load datasets and models, ``get_data_splits_by_name``, ``get_model_by_name`` which can be imported as
+The ``deeplite-torch-zoo`` is collection of benchmark computer vision datasets and pretrained models. There are three primary wrapper functions to load datasets, models and evaluation functions: ``get_data_splits_by_name``, ``get_model_by_name``, ``get_eval_function`` which can be imported as
 ```{.python}
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name, get_eval_function
 ```
 
 ## Loading Datasets
@@ -207,8 +187,6 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 ### Object Detection
 - The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of resnet-ssd: [Nvidia-SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
-- The implementation of yolov3: [ultralytics/yolov3](https://github.com/ultralytics/yolov3)
-- The implementation of yolov4: [WongKinYiu/PyTorch_YOLOv4](https://github.com/WongKinYiu/PyTorch_YOLOv4)
 - The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
 
 ### Segmentation
