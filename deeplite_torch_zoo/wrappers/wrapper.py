@@ -189,7 +189,7 @@ def dump_json_model_list(filepath=None, indent=4):
 
 
 def get_flops(model, img_size=224, ch=3, verbose=False):
-    if not isinstance(img_size) == tuple:
+    if not isinstance(img_size, tuple):
         img_size = (ch, img_size, img_size)
     macs, params = get_model_complexity_info(
         model,
