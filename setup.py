@@ -38,7 +38,7 @@ INSTALL_REQUIRES = [
     "pytz",
     "torchmetrics==0.8.0",
     "mean_average_precision==2021.4.26.0",
-    "ptflops==0.6.8",
+    "ptflops==0.6.2",
 ]
 
 
