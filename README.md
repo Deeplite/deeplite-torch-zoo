@@ -73,13 +73,13 @@ The loaded datasets are available as a dictionary of the following format: ``{'t
 
 ```{.python}
     data_splits = get_data_splits_by_name(
-        dataset_name="cifar100", model_name="resnet18" batch_size=128
+        dataset_name="cifar100", model_name="resnet18", batch_size=128
     )
 ```
 
 ### Object Detection Datasets
 
-The following sample code loads `PASCAL VOC <http://host.robots.ox.ac.uk/pascal/VOC/>`_ dataset. ``train`` contains data loader for train sets for `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for test set based on `VOC2007`. You also need to provide the model name as well.
+The following sample code loads the [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) dataset. ``train`` contains the data loader for train sets for `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for test set based on `VOC2007`. You also need to provide the model name as well.
 
 ```{.python}
 data_splits = get_data_splits_by_name(
