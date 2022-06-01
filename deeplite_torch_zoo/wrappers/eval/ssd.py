@@ -25,6 +25,8 @@ __all__ = [
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='ssd', dataset_type='wider_face')
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='ssd', dataset_type='voc')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='vgg16_ssd', dataset_type='voc')
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='vgg16_ssd', dataset_type='wider_face')
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='resnet18_ssd', dataset_type='voc')
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='resnet34_ssd', dataset_type='voc')
 @EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='resnet50_ssd', dataset_type='voc')

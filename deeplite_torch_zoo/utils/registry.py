@@ -6,10 +6,10 @@ import re
 
 
 def extract_model_type(model_name):
-    MODEL_NAME_SUBSTRINGS = ['unet_scse', 'unet', 'ssd300', 'deeplab',
+    MODEL_NAME_SUBSTRINGS = ['unet', 'ssd300', 'deeplab',
                              'resnet18_ssd', 'resnet34_ssd', 'resnet50_ssd',
-                             'fcn', 'mb2_ssd_lite','mb2_ssd', 'mb1_ssd',
-                             'ssd', 'unet', 'rcnn', 'yolo']
+                             'fcn', 'mb2_ssd_lite','mb2_ssd', 'mb1_ssd', 'vgg16_ssd',
+                             'ssd', 'rcnn', 'yolo']
     for substring in MODEL_NAME_SUBSTRINGS:
         if re.search(substring, model_name):
             return substring
