@@ -69,26 +69,25 @@ The loaded datasets are available as a dictionary of the following format: ``{'t
 
 
 ```{.python}
-    # Example: DATASET_NAME = "cifar100", BATCH_SIZE = 128
     data_splits = get_data_splits_by_name(
-        dataset_name=DATASET_NAME, batch_size=BATCH_SIZE
+        dataset_name="cifar100", model_name="resnet18" batch_size=128
     )
 ```
 
 ### Object Detection Datasets
 
-The following sample code loads `PASCAL VOC <http://host.robots.ox.ac.uk/pascal/VOC/>`_ dataset. ``train`` contains data loader for train sets for `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for test set based on `VOC2007`. You also need to provide the model type as well.
+The following sample code loads `PASCAL VOC <http://host.robots.ox.ac.uk/pascal/VOC/>`_ dataset. ``train`` contains data loader for train sets for `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for test set based on `VOC2007`. You also need to provide the model name as well.
 
 ```{.python}
 data_splits = get_data_splits_by_name(
         data_root=PATH_TO_VOCdevkit,
         dataset_name="voc",
-        model_name="vgg16_ssd",
+        model_name="yolo3",
         batch_size=BATCH_SIZE,
     )
 ```
 
-> **_NOTE:_**  As it can be observed the data_loaders are provided based on the corresponding model (`model_name`). Different object detection models consider inputs/outputs in different formats, and thus the our `data_splits` are formatted according to the needs of the model.
+> **_NOTE:_**  As it can be observed the data_loaders are provided based on the corresponding model (`model_name`). Different object detection models consider inputs/outputs in different formats, and thus the our `data_splits` are formatted according to the needs of the model (e.g. for SSD or YOLO detection models).
 
 ## Loading Models
 
@@ -98,8 +97,8 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
 
 ```{.python}
     model = get_model_by_name(
-        model_name=MODEL_NAME, # example: "resnet18"
-        dataset_name=DATASET_NAME, # example: "cifar100"
+        model_name="resnet18",
+        dataset_name="cifar100",
         pretrained=True, # or False, if pretrained weights are not required
         progress=False, # or True, if a progressbar is required
         device="cpu", # or "gpu"
@@ -110,8 +109,8 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
 
 ```{.python}
     model = get_model_by_name(
-        model_name=MODEL_NAME, # example: "vgg16_ssd"
-        dataset_name=DATASET_NAME, # example: "voc_20"
+        model_name="vgg16_ssd",
+        dataset_name="voc",
         pretrained=True, # or False, if pretrained weights are not required
         progress=False, # or True, if a progressbar is required
     )
@@ -121,11 +120,25 @@ To evaluate a model, the following style of code could be used,
 
 ```{.python}
     test_loader = data_splits["test"]
-    APs = vgg16_ssd_eval_func(model, test_loader)
+    eval_function = get_eval_function(dataset_name="voc", model_name="vgg16_ssd")
+    APs = eval_function(model, test_loader)
 ```
 
+### Creating a custom model based on existing architecture
 
+One could create a model with a custom number of classes, while loading the pretrained weights from one of the pretrained models available in the zoo for the modules where weight reusage is possible. An example below creates a ``yolo5_6m`` model with 8 output classes, with weights loaded from a COCO checkpoint (except for the layers whise shape depends on the number of classes):
 
+```{.python}
+    from deeplite_torch_zoo import create_model
+
+    model = create_model(
+        model_name="yolo5_6m",
+        pretraining_dataset="coco",
+        num_classes=8,
+        pretrained=True, # or False, if pretrained weights are not required
+        progress=False, # or True, if a progressbar is required
+    )
+```
 
 # Available Models
 
@@ -133,35 +146,44 @@ There is an important utility function ``list_models`` which can be imported as
 ```{.python}
 from deeplite_torch_zoo import list_models
 ```
- This utility will help in listing all available pretrained models or datasets.
+This utility will help in listing all available pretrained models or datasets.
 
-For instance ``list_models("yolo3")`` will provide the following result. Similar results can be obtained using ``list_models("yo")``.
+For instance ``list_models("yolo5")`` will provide the following result. Similar results can be obtained using ``list_models("yo")``.
 
 ```
-    yolo3
-    yolo3_voc_1
-    yolo3_voc_2
-    yolo3_voc_6
-    yolo3_voc_20
-    yolo3_lisa_11
+    +------------------+------------------------------------+
+    | Available models |          Source datasets           |
+    +==================+====================================+
+    | yolo5_6l         | voc                                |
+    +------------------+------------------------------------+
+    | yolo5_6m         | coco, voc                          |
+    +------------------+------------------------------------+
+    | yolo5_6m_relu    | person_detection, voc              |
+    +------------------+------------------------------------+
+    | yolo5_6ma        | coco                               |
+    +------------------+------------------------------------+
+    | yolo5_6n         | coco, person_detection, voc, voc07 |
+    +------------------+------------------------------------+
+    | yolo5_6n_hswish  | coco                               |
+    +------------------+------------------------------------+
+    | yolo5_6n_relu    | coco, person_detection, voc        |
+    +------------------+------------------------------------+
+    | yolo5_6s         | coco, person_detection, voc, voc07 |
+    +------------------+------------------------------------+
+    | yolo5_6s_relu    | person_detection, voc              |
+    +------------------+------------------------------------+
+    | yolo5_6sa        | coco, person_detection             |
+    +------------------+------------------------------------+
+    | yolo5_6x         | voc                                |
+    +------------------+------------------------------------+
 ```
-
 
 
 # Available Datasets
 
-| # | Dataset (dataset_name) | Training Instances | Test Instances       | Resolution | Comments                               |
-| --|------------------------| -------------------|----------------------|----------- |----------------------------------------|
-| 1 | MNIST                  | 60,000             | 10,000               | 28x28      | Downloadable through torchvision API   |
-| 2 | CIFAR100               | 50,000             | 10,000               | 32x32      | Downloadable through torchvision API   |
-| 3 | VWW                    | 40,775             | 8,059                | 224x224    | Based on COCO dataset                  |
-| 4 | Imagenet10             | 385,244            | 15,011               | 224x224    | Subset of Imagenet2012 with 10 classes |
-| 5 | Imagenet16             | 180,119            | 42,437               | 224x224    | Subset of Imagenet2012 with 16 classes |
-| 6 | Imagenet               | 1,282,168          | 50,000               | 224x224    | Imagenet2012                           |
-| 7 | VOC2007 (Detection)    | 5,011              | 4,952                | 500xH/Wx500| 20 classes, 24,640 annotated objects   |
-| 8 | VOC2012 (Detection)    | 11,530 (train/val) | N/A                  | 500xH/Wx500| 20 classes, 27,450 annotated objects   |
-| 9 | COCO2017 (Detection)   | 117,266, 5,000(val)| 40,670               | 300x300    | 80 Classes, 1.5M object instances      |
-
+ - Classification datasets: CIFAR100, ImageNet, TinyImageNet, ImageNet10, ImageNet16, MNIST, Visual Wake Words
+ - Object detection: VOC, COCO, WiderFace, Person Detection (subsampled COCO)
+ - Semantic Segmentation: Carvana, VOC
 
 # Benchmark Results
 
@@ -199,4 +221,3 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - The implementation of models on CIFAR100 dataset: [kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
 - The implementation of Mobilenetv1 model on VWW dataset: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of Mobilenetv3 model on VWW dataset: [d-li14/mobilenetv3.pytorch](https://github.com/d-li14/mobilenetv3.pytorch)
-- The implementation of models on Imagenet dataset: [pytorch/vision](https://github.com/pytorch/vision)
