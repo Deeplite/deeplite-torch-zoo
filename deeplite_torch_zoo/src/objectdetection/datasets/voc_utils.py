@@ -88,8 +88,6 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, tr
         class_names_test += class_names
     class_names_test = set(class_names_test)
 
-    assert class_names_train == class_names_test
-
     with open(class_names_file_path, 'w') as f:
         f.write(' '.join(sorted(list(class_names_train))))
 
