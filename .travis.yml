@@ -11,6 +11,9 @@ jobs:
     - python: 3.8
       env: PYTAG="py38"
 
+    - python: 3.9
+      env: PYTAG="py39"
+
 env:
   global:
     - TWINE_USERNAME="__token__"
