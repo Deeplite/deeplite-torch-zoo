@@ -25,7 +25,7 @@ INSTALL_REQUIRES = [
     "scipy>=1.4.1",
     "numpy==1.19.5",
     "pycocotools==2.0.4",
-    "Cython==0.28.4",
+    "Cython==0.29.30",
     "scikit-image==0.16.2",
     "tqdm==4.46.0",
     "albumentations==1.0.3",
