@@ -4,6 +4,7 @@ from .mobilenetv1 import *
 from .mobilenetv2 import *
 from .preact_resnet import *
 from .resnet import *
+from .resnet_hardtanh import *
 from .resnext import *
 from .shufflenetv2 import *
 from .vgg import *
