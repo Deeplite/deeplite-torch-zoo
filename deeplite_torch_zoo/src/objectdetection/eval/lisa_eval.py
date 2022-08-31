@@ -41,8 +41,7 @@ class Demo(Evaluator):
     ):
         # data_path = "deeplite_torch_zoo/results/lisa/{net}".format(net=net)
         super(Demo, self).__init__(
-            model=model, img_size=img_size, net=net
-        )
+            model=model, img_size=img_size)
 
         self.data_root = data_root
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
