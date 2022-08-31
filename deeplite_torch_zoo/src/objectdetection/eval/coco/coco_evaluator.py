@@ -22,9 +22,9 @@ class COCOEvaluator(Evaluator):
         gt=None,
         progressbar=False,
     ):
-        data_path = "results/coco/{net}/".format(net=net)
+        # data_path = "results/coco/{net}/".format(net=net)
         super(COCOEvaluator, self).__init__(
-            model=model, data_path=data_path, net=net, img_size=img_size
+            model=model, net=net, img_size=img_size
         )
         self.dataset = dataset
         self.progressbar = progressbar
