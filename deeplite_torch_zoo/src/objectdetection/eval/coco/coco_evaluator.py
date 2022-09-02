@@ -22,7 +22,6 @@ class COCOEvaluator(Evaluator):
         gt=None,
         progressbar=False,
     ):
-        # data_path = "results/coco/{net}/".format(net=net)
         super(COCOEvaluator, self).__init__(
             model=model, img_size=img_size
         )

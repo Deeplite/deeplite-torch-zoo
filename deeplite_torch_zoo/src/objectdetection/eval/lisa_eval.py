@@ -39,7 +39,6 @@ class Demo(Evaluator):
         net="yolov3",
         img_size=448,
     ):
-        # data_path = "deeplite_torch_zoo/results/lisa/{net}".format(net=net)
         super(Demo, self).__init__(
             model=model, img_size=img_size)
 
@@ -82,9 +81,8 @@ class LISAEval(Evaluator):
     """docstring for LISAEval"""
 
     def __init__(self, model, data_root, visiual=False, net="yolov3", img_size=448):
-        data_path = "deeplite_torch_zoo/results/lisa/{net}".format(net=net)
         super(LISAEval, self).__init__(
-            model=model, data_path=data_path, img_size=img_size, net=net
+            model=model, img_size=img_size, net=net
         )
 
         self.dataset = val_dataset = LISA(data_root, _set="valid")

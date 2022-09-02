@@ -30,7 +30,6 @@ class WiderFaceEval(Evaluator):
     """docstring for WiderFaceEval"""
 
     def __init__(self, model, data_root, net="yolov3", img_size=448):
-        # data_path = "deeplite_torch_zoo/results/wider_face/{net}".format(net=net)
         super(WiderFaceEval, self).__init__(
             model=model, img_size=img_size)
 
