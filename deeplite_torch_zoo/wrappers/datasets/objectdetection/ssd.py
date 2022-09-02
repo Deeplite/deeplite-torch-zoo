@@ -111,6 +111,7 @@ for dataset_name_key, wrapper_fn in DATASET_WRAPPER_FNS.items():
 
 VOC_DATASET_MODEL_WRAPPERS = {
     'mb1_ssd': MOBILENET_CONFIG(),
+    'mb2_ssd': MOBILENET_CONFIG(),
     'mb2_ssd_lite': MOBILENET_CONFIG(),
     'resnet18_ssd': VGG_CONFIG(),
     'resnet34_ssd': VGG_CONFIG(),
