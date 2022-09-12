@@ -1,10 +1,11 @@
 import torch.nn as nn
 
 class MobileNetV1(nn.Module):
-    def __init__(self, num_classes=2):
+    def __init__(self, num_classes=2, width_mult=1.):
         super(MobileNetV1, self).__init__()
 
         def conv_bn(inp, oup, stride):
+            oup = int(oup*width_mult)
             return nn.Sequential(
                 nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
                 nn.BatchNorm2d(oup),
@@ -12,6 +13,7 @@ class MobileNetV1(nn.Module):
             )
 
         def conv_dw(inp, oup, stride):
+            inp, oup = int(inp*width_mult), int(oup*width_mult)
             return nn.Sequential(
                 nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
                 nn.BatchNorm2d(inp),
@@ -38,7 +40,7 @@ class MobileNetV1(nn.Module):
             conv_dw(1024, 1024, 1),
             nn.AvgPool2d(7),
         )
-        self.fc = nn.Linear(1024, num_classes)
+        self.fc = nn.Linear(int(1024*width_mult), num_classes)
 
     def forward(self, x):
         x = self.model(x)
