@@ -124,6 +124,7 @@ def main():
 
     data_splits = get_data_splits_by_name(
         dataset_name=args.dataset,
+        model_name=args.arch,
         data_root=args.data_root,
         batch_size=args.batch_size,
         num_torch_workers=args.workers,
