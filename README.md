@@ -186,7 +186,7 @@ For instance ``list_models("yolo5")`` will provide the following result. Similar
     +------------------+------------------------------------+
 ```
 # Train on Custom Dataset
-- [Training a Classification Model](https://github.com/Deeplite/deeplite-torch-zoo/blob/667d6683545a49962872cb58b746378c576859f7/docs/classification.md#L51)
+- [Training a Classification Model](./docs/classification.md/#training-on-custom-dataset)
 - Training an Object Detection Model
 
 
