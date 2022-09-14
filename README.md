@@ -9,9 +9,10 @@
 The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and benchmark datasets for PyTorch. The models are grouped under different datasets and different task types such as classification, object detection, and semantic segmentation. The primary aim of ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models for a given task. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
 
 * [Installation](#Installation)
-    * [Install using pip](#Install-using-pip)
-    * [Install from source](#Install-from-source)
+    * [Install using pip](#Install-using-pip-release-version)
+    * [Install from source](##install-from-source-development-version)
     * [Install in Dev mode](#Install-in-dev-mode)
+
 * [How to Use](#How-to-Use)
     * [Loading Datasets](#Loading-Datasets)
         * [Classification Datasets](#Classification-Datasets)
@@ -19,6 +20,7 @@ The ``deeplite-torch-zoo`` package is a collection of popular CNN model architec
     * [Loading Models](#Loading-Models)
         * [Classification Models](#Classification-Models)
         * [Object Detection Models](#Object-Detection-Models)
+
 * [Available Models](#Available-Models)
 * [Available Datasets](#Available-Datasets)
 * [Benchmark Results](#Benchmark-Results)
@@ -76,6 +78,7 @@ The loaded datasets are available as a dictionary of the following format: ``{'t
         dataset_name="cifar100", model_name="resnet18", batch_size=128
     )
 ```
+The list of all available classification datasets can be found [here].
 
 ### Object Detection Datasets
 
@@ -107,6 +110,7 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
         device="cpu", # or "gpu"
     )
 ```
+The list of all available classification models can be found [here].
 
 ### Object Detection Models
 
@@ -181,10 +185,7 @@ For instance ``list_models("yolo5")`` will provide the following result. Similar
     +------------------+------------------------------------+
 ```
 
-
 # Available Datasets
-
- - Classification datasets: CIFAR100, ImageNet, TinyImageNet, ImageNet10, ImageNet16, MNIST, Visual Wake Words
  - Object detection: VOC, COCO, WiderFace, Person Detection (subsampled COCO)
  - Semantic Segmentation: Carvana, VOC
 
