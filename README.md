@@ -79,7 +79,7 @@ The loaded datasets are available as a dictionary of the following format: ``{'t
         dataset_name="cifar100", model_name="resnet18", batch_size=128
     )
 ```
-The list of all available classification datasets can be found [here](https://github.com/Deeplite/deeplite-torch-zoo/blob/667d6683545a49962872cb58b746378c576859f7/docs/classification.md#L3).
+The list of all available classification datasets can be found [here](./docs/classification.md/#datasets).
 
 ### Object Detection Datasets
 
@@ -111,7 +111,7 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
         device="cpu", # or "gpu"
     )
 ```
-The list of all available classification models can be found [here](https://github.com/Deeplite/deeplite-torch-zoo/blob/667d6683545a49962872cb58b746378c576859f7/docs/classification.md#L67).
+The list of all available classification models can be found [here](./docs/classification.md/#complete-list-of-models-and-datasets).
 
 ### Object Detection Models
 
