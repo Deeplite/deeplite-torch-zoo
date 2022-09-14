@@ -10,7 +10,7 @@ The ``deeplite-torch-zoo`` package is a collection of popular CNN model architec
 
 * [Installation](#Installation)
     * [Install using pip](#Install-using-pip-release-version)
-    * [Install from source](##install-from-source-development-version)
+    * [Install from source](#install-from-source-development-version)
     * [Install in Dev mode](#Install-in-dev-mode)
 
 * [How to Use](#How-to-Use)
