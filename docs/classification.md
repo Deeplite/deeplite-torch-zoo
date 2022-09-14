@@ -64,7 +64,7 @@ One can train a full fledged model with resume functionalities using train.py. C
     $ python train.py --dataset-name DATA_FORMAT --data_dir DATA_ROOT_PATH --model MODEL_ARCHITECTURE --num-classes NUM_CLASSES --img-size 3 224 224 -b BATCH_SIZE --epochs NUM_EPOCHS 
 ```
 
-## Complete List
+## Complete List Of Models and Datasets
 
 List of all models with their names and corresponding datasets used to train it.
 
