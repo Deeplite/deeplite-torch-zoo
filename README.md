@@ -23,6 +23,7 @@ The ``deeplite-torch-zoo`` package is a collection of popular CNN model architec
 
 * [Available Models](#Available-Models)
 * [Available Datasets](#Available-Datasets)
+* [Training on cutom Data](#train-on-custom-dataset)
 * [Benchmark Results](#Benchmark-Results)
 * [Contribute a Model/Dataset to the Zoo](#Contribute-a-Model/Dataset-to-the-Zoo)
 
@@ -78,7 +79,7 @@ The loaded datasets are available as a dictionary of the following format: ``{'t
         dataset_name="cifar100", model_name="resnet18", batch_size=128
     )
 ```
-The list of all available classification datasets can be found [here].
+The list of all available classification datasets can be found [here](https://github.com/Deeplite/deeplite-torch-zoo/blob/667d6683545a49962872cb58b746378c576859f7/docs/classification.md#L3).
 
 ### Object Detection Datasets
 
@@ -110,7 +111,7 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
         device="cpu", # or "gpu"
     )
 ```
-The list of all available classification models can be found [here].
+The list of all available classification models can be found [here](https://github.com/Deeplite/deeplite-torch-zoo/blob/667d6683545a49962872cb58b746378c576859f7/docs/classification.md#L67).
 
 ### Object Detection Models
 
@@ -184,6 +185,10 @@ For instance ``list_models("yolo5")`` will provide the following result. Similar
     | yolo5_6x         | voc                                |
     +------------------+------------------------------------+
 ```
+# Train on Custom Dataset
+- [Training a Classification Model](https://github.com/Deeplite/deeplite-torch-zoo/blob/667d6683545a49962872cb58b746378c576859f7/docs/classification.md#L51)
+- Training an Object Detection Model
+
 
 # Available Datasets
  - Object detection: VOC, COCO, WiderFace, Person Detection (subsampled COCO)
