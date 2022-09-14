@@ -2,17 +2,15 @@
 
 ## Datasets
 
-* CIFAR100: 32*32 Resolution Images with 100 classes
-
-* ImageNet
-
-   * TinyImageNet :
-   * ImageNet10 :
-   * ImageNet16 : Subset of ImageNet dataset containing these 16 classes 1. plant 2. cat 3. dog 4. car 5. building 6. person 7. chair 8. pen 9. shoes 10. bag 11. hill 12. bed 13. wine 14. fish 15. boat 16. plane
-
-* MNIST: Modified Natiopnal Institute of Standards and Technology database which contains handwritten images of resolution 28*28
-
-* Visual Wake Words: Binary Classification dataset.
+|Dataset Name    | Traininng Instances | Testing Instances| Resolution | Remarks |
+|   ---          |        ---          |        ---       |    ---     |   ---   |
+|  MNSIT         |         60000       |        10000     |     28*28  | Downloadable through torchvision API|
+|  CIFAR100      |         50000       |        10000     |     32*32  | Downloadable through torchvision API|
+|  VWW           |         40,775      |        8,059     |    224*224 | Based on COCO dataset |
+|  TinyImageNet  |    1,00,000         |        10000     |     64*64  | Subset of Imagenet with 100 classes |
+|  Imagenet10    |      385,244        |        15,011    |    224*224 | Subset of Imagenet2012 with 10 classes|
+|  Imagenet16    |      180,119        |        42,437    |    224*224 | Subset of Imagenet2012 with 16 classes (1. plant 2. cat 3. dog 4. car 5. building 6. person 7. chair 8. pen 9. shoes 10. bag 11. hill 12. bed 13. wine 14. fish 15. boat 16. plane)|
+|  Imagenet    |      1,282,168       |        50,000    |    224*224 | Imagenet2012 |
 
 
 ## Wrapper Functions
