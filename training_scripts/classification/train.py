@@ -318,8 +318,11 @@ def main():
 
     data_splits = get_data_splits_by_name(
         dataset_name=args.dataset_name,
+        model_name=args.model,
         data_root=args.data_dir,
         batch_size=args.batch_size,
+        img_size=args.img_size,
+        num_workers=args.workers,
     )
     loader_train, loader_eval = data_splits['train'], data_splits['test']
 

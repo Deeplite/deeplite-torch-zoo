@@ -1,13 +1,11 @@
 import os
 import pathlib
+from subprocess import check_call
 
 from setuptools import find_packages, setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.sdist import sdist
-from setuptools import setup, find_packages
-from subprocess import check_call
-
 
 with open('LICENSE.md') as f:
     license = f.read()
@@ -26,7 +24,7 @@ INSTALL_REQUIRES = [
     "numpy==1.19.5",
     "pycocotools==2.0.4",
     "Cython==0.29.30",
-    #"scikit-image==0.16.2",
+    # "scikit-image==0.16.2",
     "tqdm==4.46.0",
     "albumentations",
     "pretrainedmodels==0.7.4",
@@ -37,7 +35,7 @@ INSTALL_REQUIRES = [
     "texttable==1.6.4",
     "pytz",
     "torchmetrics==0.8.0",
-    "mean_average_precision==2021.4.26.0",
+    "mean_average_precision@git+https://github.com/bes-dev/mean_average_precision.git#c30ea439680416f600781022eb6f1f8032d88647",
     "ptflops==0.6.2",
 ]
 
