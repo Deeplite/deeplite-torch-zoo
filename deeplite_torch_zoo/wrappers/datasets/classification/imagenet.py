@@ -5,33 +5,10 @@ from torchvision import datasets, transforms
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 
-__all__ = ["get_imagenet", "get_imagenet10", "get_imagenet16"]
-
-
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet10")
-def get_imagenet10(data_root, batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
-    return get_imagenet(
-            data_root=data_root,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            fp16=fp16,
-            distributed=False,
-            device=device
-        )
-
+__all__ = ["get_imagenet"]
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet16")
-def get_imagenet16(data_root, batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
-    return get_imagenet(
-            data_root=data_root,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            fp16=fp16,
-            distributed=distributed,
-            device=device
-        )
-
-
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet10")
 @DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet")
 def get_imagenet(data_root, batch_size=128, num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
 
