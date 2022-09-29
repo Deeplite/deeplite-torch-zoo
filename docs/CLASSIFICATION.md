@@ -2,17 +2,15 @@
 
 ## Datasets
 
-* CIFAR100: 32*32 Resolution Images with 100 classes
-
-* ImageNet
-
-   * TinyImageNet :
-   * ImageNet10 :
-   * ImageNet16 : Subset of ImageNet dataset containing these 16 classes 1. plant 2. cat 3. dog 4. car 5. building 6. person 7. chair 8. pen 9. shoes 10. bag 11. hill 12. bed 13. wine 14. fish 15. boat 16. plane
-
-* MNIST: Modified Natiopnal Institute of Standards and Technology database which contains handwritten images of resolution 28*28
-
-* Visual Wake Words: Binary Classification dataset.
+|Dataset Name    | Traininng Instances | Testing Instances| Resolution | Remarks |
+|   ---          |        ---          |        ---       |    ---     |   ---   |
+|  MNSIT         |         60000       |        10000     |     28*28  | Downloadable through torchvision API|
+|  CIFAR100      |         50000       |        10000     |     32*32  | Downloadable through torchvision API|
+|  VWW           |         40,775      |        8,059     |    224*224 | Based on COCO dataset |
+|  TinyImageNet  |    1,00,000         |        10000     |     64*64  | Subset of Imagenet with 100 classes |
+|  Imagenet10    |      385,244        |        15,011    |    224*224 | Subset of Imagenet2012 with 10 classes|
+|  Imagenet16    |      180,119        |        42,437    |    224*224 | Subset of Imagenet2012 with 16 classes (1. plant 2. cat 3. dog 4. car 5. building 6. person 7. chair 8. pen 9. shoes 10. bag 11. hill 12. bed 13. wine 14. fish 15. boat 16. plane)|
+|  Imagenet    |      1,282,168       |        50,000    |    224*224 | Imagenet2012 |
 
 
 ## Wrapper Functions
@@ -46,19 +44,19 @@
     APs = eval_function(model, test_loader)
 ```
 
-List of models and corresponding datasets used to train it can be found [here].
+List of models and corresponding datasets used to train it can be found [here](#complete-list-of-models-and-datasets).
 
 ## Training on Custom Dataset
 
 ### Basic Training Example
-One can get an idea of complete working pipeline of the deeplite_torch_zoo classification using train_classifier.py. It needs to be ensured that the data format should follow either of the formats present in the available datasets.
+One can get an idea of complete working pipeline of the deeplite_torch_zoo classification using [train_classifier.py](../examples/train_classifier.py). It needs to be ensured that the data format should follow either of the formats present in the available datasets.
 
 ```
     $ python train_classifier.py --dataset DATA_FORMAT --data_root DATA_ROOT_PATH -a MODEL_ARCHITECTURE
 ```
 
 ### Advanced Training Example
-One can train a full fledged model with resume functionalities using train.py. Command to run this script, 
+One can train a full fledged model with resume functionalities using [train.py](../training_scripts/classification/train.py). Command to run this script, 
 
 ```
     $ python train.py --dataset-name DATA_FORMAT --data_dir DATA_ROOT_PATH --model MODEL_ARCHITECTURE --num-classes NUM_CLASSES --img-size 3 224 224 -b BATCH_SIZE --epochs NUM_EPOCHS 

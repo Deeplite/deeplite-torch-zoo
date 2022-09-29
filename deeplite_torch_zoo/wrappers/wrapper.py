@@ -198,3 +198,13 @@ def get_flops(model, img_size=224, ch=3, verbose=False):
         print_per_layer_stat=verbose,
         verbose=verbose)
     return {'GMACs': macs / 1e9, 'Mparams': params / 1e6}
+
+# if __name__ == '__main__':
+    
+#     # print(MODEL_WRAPPER_REGISTRY.registry_dict.keys())
+#     #print(list_models('yo'))
+#     all_models = list_models('ssd',return_list=True)
+
+#     for i in all_models:
+#         print(i.model_name)
+#         break

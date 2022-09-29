@@ -9,9 +9,10 @@
 The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and benchmark datasets for PyTorch. The models are grouped under different datasets and different task types such as classification, object detection, and semantic segmentation. The primary aim of ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models for a given task. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
 
 * [Installation](#Installation)
-    * [Install using pip](#Install-using-pip)
-    * [Install from source](#Install-from-source)
+    * [Install using pip](#Install-using-pip-release-version)
+    * [Install from source](#install-from-source-development-version)
     * [Install in Dev mode](#Install-in-dev-mode)
+
 * [How to Use](#How-to-Use)
     * [Loading Datasets](#Loading-Datasets)
         * [Classification Datasets](#Classification-Datasets)
@@ -19,8 +20,10 @@ The ``deeplite-torch-zoo`` package is a collection of popular CNN model architec
     * [Loading Models](#Loading-Models)
         * [Classification Models](#Classification-Models)
         * [Object Detection Models](#Object-Detection-Models)
+
 * [Available Models](#Available-Models)
 * [Available Datasets](#Available-Datasets)
+* [Training on cutom Data](#train-on-custom-dataset)
 * [Benchmark Results](#Benchmark-Results)
 * [Contribute a Model/Dataset to the Zoo](#Contribute-a-Model/Dataset-to-the-Zoo)
 
@@ -76,6 +79,7 @@ The loaded datasets are available as a dictionary of the following format: ``{'t
         dataset_name="cifar100", model_name="resnet18", batch_size=128
     )
 ```
+The list of all available classification datasets can be found [here](docs/CLASSIFICATION.md/#datasets).
 
 ### Object Detection Datasets
 
@@ -89,6 +93,7 @@ data_splits = get_data_splits_by_name(
         batch_size=BATCH_SIZE,
     )
 ```
+The list of all available object detection datasets can be found [here](docs/OBJECT_DETECTION.md/#datasets).
 
 > **_NOTE:_**  As it can be observed the data_loaders are provided based on the corresponding model (`model_name`). Different object detection models consider inputs/outputs in different formats, and thus the our `data_splits` are formatted according to the needs of the model (e.g. for SSD or YOLO detection models).
 
@@ -107,6 +112,7 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
         device="cpu", # or "gpu"
     )
 ```
+The list of all available classification models can be found [here](docs/CLASSIFICATION.md/#complete-list-of-models-and-datasets).
 
 ### Object Detection Models
 
@@ -118,30 +124,7 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
         progress=False, # or True, if a progressbar is required
     )
 ```
-
-To evaluate a model, the following style of code could be used,
-
-```{.python}
-    test_loader = data_splits["test"]
-    eval_function = get_eval_function(dataset_name="voc", model_name="vgg16_ssd")
-    APs = eval_function(model, test_loader)
-```
-
-### Creating a custom model based on existing architecture
-
-One could create a model with a custom number of classes, while loading the pretrained weights from one of the pretrained models available in the zoo for the modules where weight reusage is possible. An example below creates a ``yolo5_6m`` model with 8 output classes, with weights loaded from a COCO checkpoint (except for the layers whise shape depends on the number of classes):
-
-```{.python}
-    from deeplite_torch_zoo import create_model
-
-    model = create_model(
-        model_name="yolo5_6m",
-        pretraining_dataset="coco",
-        num_classes=8,
-        pretrained=True, # or False, if pretrained weights are not required
-        progress=False, # or True, if a progressbar is required
-    )
-```
+The list of all available Object Detection models can be found [here](docs/OBJECT_DETECTION.md/#complete-list-of-models-and-datasets). One can also create a custom model based on existing architecture using [this](docs/OBJECT_DETECTION.md/#creating-a-custom-model-based-on-existing-architecture).
 
 # Available Models
 
@@ -182,11 +165,10 @@ For instance ``list_models("yolo5")`` will provide the following result. Similar
 ```
 
 
-# Available Datasets
+# Train on Custom Dataset
+- [Training a Classification Model](docs/CLASSIFICATION.md/#training-on-custom-dataset)
+- [Training an Object Detection Model](docs/OBJECT_DETECTION.md/#training-on-custom-dataset)
 
- - Classification datasets: CIFAR100, ImageNet, TinyImageNet, ImageNet10, ImageNet16, MNIST, Visual Wake Words
- - Object detection: VOC, COCO, WiderFace, Person Detection (subsampled COCO)
- - Semantic Segmentation: Carvana, VOC
 
 # Benchmark Results
 
