@@ -1,3 +1,4 @@
+
 <p align="center">
   <img src="https://docs.deeplite.ai/neutrino/_static/content/deeplite-logo-color.png" />
 </p>
@@ -93,6 +94,7 @@ data_splits = get_data_splits_by_name(
         batch_size=BATCH_SIZE,
     )
 ```
+The list of all available object detection datasets can be found [here](docs/OBJECT_DETECTION.md/#datasets).
 
 > **_NOTE:_**  As it can be observed the data_loaders are provided based on the corresponding model (`model_name`). Different object detection models consider inputs/outputs in different formats, and thus the our `data_splits` are formatted according to the needs of the model (e.g. for SSD or YOLO detection models).
 
@@ -123,30 +125,7 @@ The list of all available classification models can be found [here](docs/CLASSIF
         progress=False, # or True, if a progressbar is required
     )
 ```
-
-To evaluate a model, the following style of code could be used,
-
-```{.python}
-    test_loader = data_splits["test"]
-    eval_function = get_eval_function(dataset_name="voc", model_name="vgg16_ssd")
-    APs = eval_function(model, test_loader)
-```
-
-### Creating a custom model based on existing architecture
-
-One could create a model with a custom number of classes, while loading the pretrained weights from one of the pretrained models available in the zoo for the modules where weight reusage is possible. An example below creates a ``yolo5_6m`` model with 8 output classes, with weights loaded from a COCO checkpoint (except for the layers whise shape depends on the number of classes):
-
-```{.python}
-    from deeplite_torch_zoo import create_model
-
-    model = create_model(
-        model_name="yolo5_6m",
-        pretraining_dataset="coco",
-        num_classes=8,
-        pretrained=True, # or False, if pretrained weights are not required
-        progress=False, # or True, if a progressbar is required
-    )
-```
+The list of all available Object Detection models can be found [here](docs/OBJECT_DETECTION.md/#complete-list-of-models-and-datasets). One can also create a custom model based on existing architecture using [this](docs/OBJECT_DETECTION.md/#creating-a-custom-model-based-on-existing-architecture).
 
 # Available Models
 
@@ -185,14 +164,12 @@ For instance ``list_models("yolo5")`` will provide the following result. Similar
     | yolo5_6x         | voc                                |
     +------------------+------------------------------------+
 ```
+
+
 # Train on Custom Dataset
 - [Training a Classification Model](docs/CLASSIFICATION.md/#training-on-custom-dataset)
-- Training an Object Detection Model
+- [Training an Object Detection Model](docs/OBJECT_DETECTION.md/#training-on-custom-dataset)
 
-
-# Available Datasets
- - Object detection: VOC, COCO, WiderFace, Person Detection (subsampled COCO)
- - Semantic Segmentation: Carvana, VOC
 
 # Benchmark Results
 
