@@ -35,7 +35,7 @@ INSTALL_REQUIRES = [
     "texttable==1.6.4",
     "pytz",
     "torchmetrics==0.8.0",
-    "mean_average_precision@git+https://github.com/bes-dev/mean_average_precision.git#c30ea439680416f600781022eb6f1f8032d88647",
+    "mean_average_precision==2021.4.26.0",
     "ptflops==0.6.2",
 ]
 
