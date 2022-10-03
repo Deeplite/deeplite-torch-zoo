@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Welcome to Deeplite Torch Zoo’s documentation! &#8212; Deeplite Torch Zoo 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-deeplite_torch_zoo.wrappers.wrapper">
+<span id="welcome-to-deeplite-torch-zoo-s-documentation"></span><h1>Welcome to Deeplite Torch Zoo’s documentation!<a class="headerlink" href="#module-deeplite_torch_zoo.wrappers.wrapper" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="deeplite_torch_zoo.wrappers.wrapper.create_model">
+<span class="sig-prename descclassname"><span class="pre">deeplite_torch_zoo.wrappers.wrapper.</span></span><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretraining_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeplite_torch_zoo.wrappers.wrapper.create_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to find a matching model creation wrapper function in the registry (for the corresponding model name
+and pretraining dataset name) and uses it to create a new model object, optionally with a custom number
+of output classes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> – Name of the model to create</p></li>
+<li><p><strong>pretraining_dataset</strong> – Name of pretraining dataset to (partially) load the weights from</p></li>
+<li><p><strong>num_classes</strong> – Number of output classes in the new model</p></li>
+<li><p><strong>progress</strong> – Whether to enable the progressbar</p></li>
+<li><p><strong>fp16</strong> – Whether to convert the model to fp16 precision</p></li>
+<li><p><strong>device</strong> – Loads the model either on a gpu (<cite>cuda</cite>, <cite>cuda:device_id</cite>) or cpu.</p></li>
+</ul>
+</dd>
+</dl>
+<p>returns a corresponding model object (optionally with a custom number of classes)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deeplite_torch_zoo.wrappers.wrapper.get_data_splits_by_name">
+<span class="sig-prename descclassname"><span class="pre">deeplite_torch_zoo.wrappers.wrapper.</span></span><span class="sig-name descname"><span class="pre">get_data_splits_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeplite_torch_zoo.wrappers.wrapper.get_data_splits_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The datasets function calls in the format of (get_`dataset_name`_for_`model_name`).
+Except for classification since the datasets format for classification models is the same.
+The function calls for classification models are in the format (get_`dataset_name`)</p>
+<p>returns datasplits in the following format:
+{</p>
+<blockquote>
+<div><p>‘train’: train_data_loader,
+‘test’ : test_data_loader</p>
+</div></blockquote>
+<p>}</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deeplite_torch_zoo.wrappers.wrapper.get_model_by_name">
+<span class="sig-prename descclassname"><span class="pre">deeplite_torch_zoo.wrappers.wrapper.</span></span><span class="sig-name descname"><span class="pre">get_model_by_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeplite_torch_zoo.wrappers.wrapper.get_model_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to find a matching model creation wrapper function in the registry and uses it to create a new model object
+:param model_name: Name of the model to create
+:param dataset_name: Name of dataset the model was trained / is to be trained on
+:param pretrained: Whether to load pretrained weights
+:param progress: Whether to enable the progressbar
+:param fp16: Whether to convert the model to fp16 precision
+:param device: Loads the model either on a gpu (<cite>cuda</cite>, <cite>cuda:device_id</cite>) or cpu.</p>
+<p>returns a corresponding model object (optionally with pretrained weights)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deeplite_torch_zoo.wrappers.wrapper.list_models">
+<span class="sig-prename descclassname"><span class="pre">deeplite_torch_zoo.wrappers.wrapper.</span></span><span class="sig-name descname"><span class="pre">list_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type_filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deeplite_torch_zoo.wrappers.wrapper.list_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>A helper function to list all existing models or dataset calls
+It takes a <cite>model_name</cite> or a <cite>dataset_name</cite> as a filter and
+prints a table of corresponding available models</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filter</strong> – a string or list of strings containing model name, dataset name or “model_name_dataset_name”</p>
+</dd>
+</dl>
+<p>to use as a filter
+:param print_table: Whether to print a table with matched models to the console
+:param return_list: Whether to return a list with model names and corresponding datasets</p>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Deeplite Torch Zoo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Deeplite.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
