@@ -31,6 +31,7 @@ model_urls = {
     "vgg16_ssd_wider_face": "vgg16-ssd-wider_face-0_707-8c76d36acb083648.pth",
     "mb1_ssd_voc": "mb1-ssd-voc-mp-0_675-58694caf.pth",
     "mb2_ssd_lite_voc": "mb2-ssd-lite-voc-mp-0_686-b0d1ac2c.pth",
+    "mb2_ssd_lite_person_detection": "mb2-ssd-lite-coco_person_0_441_300.pth",
 }
 
 
@@ -85,6 +86,8 @@ MODEL_WRAPPERS = {
         config=MOBILENET_CONFIG(), model_name='mb1_ssd', dataset='voc', num_classes=20),
     'mb2_ssd_lite_voc': WrapperParams(create_model_fn=create_mobilenetv2_ssd_lite,
         config=MOBILENET_CONFIG(), model_name='mb2_ssd_lite', dataset='voc', num_classes=20),
+    'mb2_ssd_lite_person_detection': WrapperParams(create_model_fn=create_mobilenetv2_ssd_lite,
+        config=MOBILENET_CONFIG(), model_name='mb2_ssd_lite', dataset='person_detection', num_classes=1),
 }
 
 
