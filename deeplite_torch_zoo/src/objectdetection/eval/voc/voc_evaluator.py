@@ -1,16 +1,14 @@
 import os
-from tqdm import tqdm
+import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import cv2
 import numpy as np
 import torch
-import xml.etree.ElementTree as ET
-
-import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
-
 from mean_average_precision import MetricBuilder
+from tqdm import tqdm
 
 
 class VOCEvaluator(Evaluator):
@@ -52,12 +50,11 @@ class VOCEvaluator(Evaluator):
 
     def evaluate(self, multi_test=False, flip_test=False, iou_thresh=0.5):
         for img_ind in tqdm(self.img_inds, disable=not self.progressbar):
-            try:
-                img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpg")
-                img = cv2.imread(img_path)
-            except:
-                img_path = os.path.join(self.val_data_path, "JPEGImages", img_ind + ".jpeg")
-                img = cv2.imread(img_path)
+            img_paths = [file for file in Path(os.path.join(self.val_data_path, "JPEGImages")).glob(f'*{img_ind}*')]
+            if len(img_paths) > 1:
+                raise RuntimeError(f'More than one file matched with image id {img_ind}')
+            img = cv2.imread(str(img_paths[0]))
+
             self.process_image(
                 img, img_ind=img_ind, multi_test=multi_test, flip_test=flip_test
             )
