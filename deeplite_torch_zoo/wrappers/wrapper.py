@@ -1,18 +1,16 @@
-import json
-import fnmatch
-import subprocess
 import collections
-
-import texttable
-from ptflops import get_model_complexity_info
+import fnmatch
+import json
+import subprocess
 
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
-import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.eval  # pylint: disable=unused-import
-from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
-from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
-
+import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
+import texttable
+from deeplite_torch_zoo.wrappers.registries import (DATA_WRAPPER_REGISTRY,
+                                                    EVAL_WRAPPER_REGISTRY,
+                                                    MODEL_WRAPPER_REGISTRY)
+from ptflops import get_model_complexity_info
 
 __all__ = [
     "get_data_splits_by_name",
@@ -25,7 +23,7 @@ __all__ = [
 ]
 
 
-def get_data_splits_by_name(data_root, dataset_name, model_name=None, **kwargs):
+def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
     """
     The datasets function calls in the format of (get_`dataset_name`_for_`model_name`).
     Except for classification since the datasets format for classification models is the same.
