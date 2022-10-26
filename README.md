@@ -157,7 +157,7 @@ Likewise, to create a object detection model with an arbitrary number of classes
     )
 ```
 
-The list of all available Object Detection models can be found [here](docs/OBJECT_DETECTION.md/#complete-list-of-models-and-datasets). One can also create a custom model based on existing architecture using [this](docs/OBJECT_DETECTION.md/#creating-a-custom-model-based-on-existing-architecture).
+The list of all available Object Detection models can be found [here](docs/OBJECT_DETECTION.md/#complete-list-of-models-and-datasets).
 
 ## Creating an evaluation function
 
