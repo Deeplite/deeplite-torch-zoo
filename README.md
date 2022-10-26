@@ -24,7 +24,7 @@ The ``deeplite-torch-zoo`` package is a collection of popular (pretrained) CNN m
 
 * [Available Models](#Available-Models)
 * [Available Datasets](#Available-Datasets)
-* [Training on cutom Data](#train-on-custom-dataset)
+* [Training on Custom Data](#train-on-custom-dataset)
 * [Benchmark Results](#Benchmark-Results)
 * [Contribute a Model/Dataset to the Zoo](#Contribute-a-Model/Dataset-to-the-Zoo)
 
