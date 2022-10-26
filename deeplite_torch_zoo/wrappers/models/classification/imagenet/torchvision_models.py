@@ -1,8 +1,6 @@
 import timm
 import torchvision
-
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
-
 
 MODEL_NAMES = [
     "alexnet",
@@ -44,6 +42,8 @@ MODEL_NAMES = [
     "shufflenet_v2_x2_0",
 ]
 
+# Preference is given to timm models, i.e. a torchvision model is included
+# only if a model with the same name does not exist in timm
 tv_models = set(MODEL_NAMES) - set(timm.list_models())
 
 

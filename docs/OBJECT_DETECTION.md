@@ -63,20 +63,19 @@ One could create a model with a custom number of classes, while loading the pret
 
 ## Training on Custom Dataset
 
-It needs to be ensured that the data format should follow either of the formats present in the available datasets with proper names: voc, coco, coco_person. One can train any yolo model with resume functionalities using [train_yolo.py](../training_scripts/object_detection/train_yolo.py). Command to run this script, 
+It needs to be ensured that the data format should follow either of the formats present in the available datasets with proper names: voc, coco, coco_person. One can train any yolo model with resume functionalities using [train_yolo.py](../training_scripts/object_detection/train_yolo.py). Command to run this script,
 
 ```
-    $ python train_yolo.py 
-            --dataset DATA_FORMAT
+    $ python train_yolo.py
+            --dataset ZOO_DATASET_NAME
             --img-dir DATA_IMG_ROOT_PATH
-            --net MODEL_ARCHITECTURE
+            --net ZOO_MODEL_NAME
             --hp_config scratch                 # Options: 'scratch', 'finetune'
             --test_img_res 224
             --train_img_res 224
             --num-classes NUM_CLASSES
-            --img-size 3 224 224
-            --weight_path WIGHT_PATH
-            --batch-size BATCH_SIZE 
+            --weight_path WEIGHT_PATH
+            --batch-size BATCH_SIZE
             --epochs NUM_EPOCHS
             --device 0
 
