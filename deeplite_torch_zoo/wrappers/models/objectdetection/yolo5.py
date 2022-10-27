@@ -127,3 +127,4 @@ for dataset, model_set in wrapper_funcs.items():
         name = '_'.join([model_tag, dataset])
         globals()[name] = make_wrapper_func(name, model_tag, dataset, model_set.num_classes)
         __all__.append(name)
+ 
