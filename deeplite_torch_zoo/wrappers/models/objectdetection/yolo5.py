@@ -62,6 +62,7 @@ yolov5_cfg = {
     "yolo5_6n": "yolov5_6n.yaml",
     "yolo5_6sa": "yolov5_6sa.yaml",
     "yolo5_6ma": "yolov5_6ma.yaml",
+    "yolov5_6nlrs": "yolov5_6nlrs.yaml",
 }
 
 
@@ -114,7 +115,7 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
     'person_detection': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
-        'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa']),
+        'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa', "yolo5_6nlrs"]),
     'voc': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
         'yolo5_6m_relu', 'yolo5_6s_relu', 'yolo5_6n_relu', 'yolo5_6n_hswish', 'yolo5_6s_hswish']),
     'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
