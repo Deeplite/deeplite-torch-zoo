@@ -11,10 +11,8 @@ from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 __all__ = []
 
-
 def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
-
 
 CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
@@ -56,7 +54,6 @@ person_detection_model_urls = {
 model_urls.update(voc_model_urls)
 model_urls.update(person_detection_model_urls)
 
-
 yolov5_cfg = {
     "yolo5_6s": "yolov5_6s.yaml",
     "yolo5_6m": "yolov5_6m.yaml",
@@ -69,7 +66,6 @@ yolov5_cfg = {
 }
 
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
-
 
 def yolo5_6(
     net="yolo5_6s", dataset_name="voc", num_classes=20, activation_type=None,
@@ -84,7 +80,6 @@ def yolo5_6(
         checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{net}_{dataset_name}"])
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
-
 
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo5_6[nsmlx]$": yolo5_6,
@@ -115,13 +110,11 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     wrapper_func.__name__ = wrapper_name
     return wrapper_func
 
-
 ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
     'person_detection': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
         'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa']),
-    'custom_person_detection': ModelSet(1, ['yolov5_6n_relu', 'tiny_yolov5_6n_relu', 
-        'tiny_yolov5_6n_hswish']),
+    'custom_person_detection': ModelSet(1, ['yolov5_6n_relu', 'tiny_yolov5_6n_relu', 'tiny_yolov5_6n_hswish']),
     'voc': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
         'yolo5_6m_relu', 'yolo5_6s_relu', 'yolo5_6n_relu', 'yolo5_6n_hswish', 'yolo5_6s_hswish']),
     'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
