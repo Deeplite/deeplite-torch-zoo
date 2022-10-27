@@ -47,9 +47,9 @@ person_detection_model_urls = {
     "yolo5_6s_relu_person_detection": "yolov5_6s_relu-person-detection-1class_682-45ae979a06b80767.pt",
     "yolo5_6m_relu_person_detection": "yolov5_6m_relu-person-detection-1class_709-3f59321c540d2d1c.pt",
     "yolo5_6sa_person_detection": "yolov5_6sa-person-detection-1class_659_015807ae6899af0f.pt",
-    "yolov5_6n_relu_custom_person_detection": "yolov5_6n_relu-person-detection-640x-1class_889-b375d9ccd68b17cd.pt",
-    "yolov5_6n_tiny_relu_custom_person_detection": "yolov5_6n_tiny_relu-person-detection-640x-1class_875-b7e124b09186a499.pt",
-    "yolov5_6n_tiny_hswish_custom_person_detection": "yolov5_6n_tiny_hs-person-detection-640x-1class_891-050a724dcb22e3a8.pt",
+    "yolo5_6n_relu_custom_person_detection": "yolov5_6n_relu-person-detection-640x-1class_889-b375d9ccd68b17cd.pt",
+    "yolo5_6n_tiny_relu_custom_person_detection": "yolov5_6n_tiny_relu-person-detection-640x-1class_875-b7e124b09186a499.pt",
+    "yolo5_6n_tiny_hswish_custom_person_detection": "yolov5_6n_tiny_hs-person-detection-640x-1class_891-050a724dcb22e3a8.pt",
 }
 
 model_urls.update(voc_model_urls)
