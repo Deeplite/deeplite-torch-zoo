@@ -2,16 +2,20 @@ import os
 import sys
 from collections import namedtuple
 
-from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
-from deeplite_torch_zoo.src.objectdetection.datasets.voc import VocDataset
-from deeplite_torch_zoo.src.objectdetection.datasets.voc_utils import prepare_yolo_voc_data
+from deeplite_torch_zoo.src.objectdetection.datasets.coco import \
+    CocoDetectionBoundingBox
+from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import (
+    COCO_DATA_CATEGORIES, COCO_MISSING_IDS)
 from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
-from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
-from deeplite_torch_zoo.src.objectdetection.datasets.transforms import random_transform_fn
-from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
-from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
+from deeplite_torch_zoo.src.objectdetection.datasets.transforms import \
+    random_transform_fn
+from deeplite_torch_zoo.src.objectdetection.datasets.voc import VocDataset
+from deeplite_torch_zoo.src.objectdetection.datasets.voc_utils import \
+    prepare_yolo_voc_data
+from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import \
+    WiderFace
+from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-
 
 __all__ = []
 
@@ -136,6 +140,7 @@ DATASET_WRAPPER_FNS = {
     'voc07': DatasetParameters(20, 448, create_voc07_datasets),
     'voc_format_dataset': DatasetParameters(1, 320, create_voc_format_datasets),
     'person_detection': DatasetParameters(1, 320, create_person_detection_datasets),
+    'custom_person_detection': DatasetParameters(1, 640, create_person_detection_datasets),
     'wider_face': DatasetParameters(1, 448, create_widerface_datasets),
     'car_detection': DatasetParameters(1, 320, create_car_detection_datasets),
 }

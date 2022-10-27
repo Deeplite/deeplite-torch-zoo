@@ -1,11 +1,12 @@
 import re
 import urllib.parse as urlparse
-from pathlib import Path
-from functools import partial
 from collections import namedtuple
+from functools import partial
+from pathlib import Path
 
 import deeplite_torch_zoo
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import \
+    YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
@@ -47,8 +48,8 @@ person_detection_model_urls = {
     "yolo5_6m_relu_person_detection": "yolov5_6m_relu-person-detection-1class_709-3f59321c540d2d1c.pt",
     "yolo5_6sa_person_detection": "yolov5_6sa-person-detection-1class_659_015807ae6899af0f.pt",
     "yolov5_6n_relu_custom_person_detection": "yolov5_6n_relu-person-detection-640x-1class_889-b375d9ccd68b17cd.pt",
-    "tiny_yolov5_6n_relu_custom_person_detection": "yolov5_6n_tiny_relu-person-detection-640x-1class_875-b7e124b09186a499.pt",
-    "tiny_yolov5_6n_hswish_custom_person_detection": "yolov5_6n_tiny_hs-person-detection-640x-1class_891-050a724dcb22e3a8.pt",
+    "yolov5_6n_tiny_relu_custom_person_detection": "yolov5_6n_tiny_relu-person-detection-640x-1class_875-b7e124b09186a499.pt",
+    "yolov5_6n_tiny_hswish_custom_person_detection": "yolov5_6n_tiny_hs-person-detection-640x-1class_891-050a724dcb22e3a8.pt",
 }
 
 model_urls.update(voc_model_urls)
@@ -62,7 +63,7 @@ yolov5_cfg = {
     "yolo5_6n": "yolov5_6n.yaml",
     "yolo5_6sa": "yolov5_6sa.yaml",
     "yolo5_6ma": "yolov5_6ma.yaml",
-    "tiny_yolov5_6n": "tiny_yolov5_6n.yaml"
+    "yolo5_6n_tiny": "yolov5_6n_tiny.yaml"
 }
 
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
@@ -86,8 +87,8 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo5_6[nsmlx]a$": yolo5_6,
     "^yolo5_6[nsmlx]_relu$": partial(yolo5_6, activation_type="relu"),
     "^yolo5_6[nsmlx]_hswish$": partial(yolo5_6, activation_type="hardswish"),
-    "tiny_yolov5_6n_relu": partial(yolo5_6, activation_type="relu"),
-    "tiny_yolov5_6n_hswish": partial(yolo5_6, activation_type="hardswish"),
+    "^yolo5_6[nsmlx]_tiny_relu$": partial(yolo5_6, activation_type="relu"),
+    "^yolo5_6[nsmlx]_tiny_hswish$": partial(yolo5_6, activation_type="hardswish"),
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
@@ -114,7 +115,7 @@ ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
 wrapper_funcs = {
     'person_detection': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
         'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa']),
-    'custom_person_detection': ModelSet(1, ['yolov5_6n_relu', 'tiny_yolov5_6n_relu', 'tiny_yolov5_6n_hswish']),
+    'custom_person_detection': ModelSet(1, ['yolo5_6n_relu', 'yolo5_6n_tiny_relu', 'yolo5_6n_tiny_hswish']),
     'voc': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
         'yolo5_6m_relu', 'yolo5_6s_relu', 'yolo5_6n_relu', 'yolo5_6n_hswish', 'yolo5_6s_hswish']),
     'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
@@ -127,4 +128,3 @@ for dataset, model_set in wrapper_funcs.items():
         name = '_'.join([model_tag, dataset])
         globals()[name] = make_wrapper_func(name, model_tag, dataset, model_set.num_classes)
         __all__.append(name)
- 
