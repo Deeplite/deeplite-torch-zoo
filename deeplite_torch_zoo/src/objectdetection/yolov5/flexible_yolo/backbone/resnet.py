@@ -2,7 +2,7 @@ import math
 
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.custom_yolo.modules import (
+from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.modules import (
     CBAM, DropBlock2D, LinearScheduler)
 
 model_urls = {
@@ -140,14 +140,14 @@ class Bottleneck(nn.Module):
 
 class Resnet(nn.Module):
 
-    def __init__(self, block, layers, cbam=False, dcn=False, drop_prob=0):
+    def __init__(self, block, layers, cbam=False, dcn=False, drop_prob=0, base_channels=64, width=0.25):
         super(Resnet, self).__init__()
-        self.inplanes = 64
+        self.inplanes = int(base_channels * width)
         self.dcn = dcn
         self.cbam = cbam
         self.drop = drop_prob != 0
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
+        self.conv1 = nn.Conv2d(3, int(base_channels * width), kernel_size=7, stride=2, padding=3, bias=False)
+        self.bn1 = nn.BatchNorm2d(int(base_channels * width))
         self.relu = nn.ReLU(inplace=True)
         self.out_channels = []
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -158,10 +158,11 @@ class Resnet(nn.Module):
                 stop_value=drop_prob,
                 nr_steps=5e3
             )
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2, cbam=self.cbam)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2, cbam=self.cbam, dcn=dcn)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2, cbam=self.cbam, dcn=dcn)
+        ch = int(base_channels * width)
+        self.layer1 = self._make_layer(block, ch, layers[0])
+        self.layer2 = self._make_layer(block, ch * 2, layers[1], stride=2, cbam=self.cbam)
+        self.layer3 = self._make_layer(block, ch * 4, layers[2], stride=2, cbam=self.cbam, dcn=dcn)
+        self.layer4 = self._make_layer(block, ch * 8, layers[3], stride=2, cbam=self.cbam, dcn=dcn)
 
         if self.dcn is not None:
             for m in self.modules():

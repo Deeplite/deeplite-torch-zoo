@@ -211,7 +211,7 @@ def shufflenetv2(pretrained=False, progress=True, **kwargs):
     version = kwargs.get('version', 'x1_0')
     if version == 'x0_5':
         return _shufflenetv2('shufflenetv2_x0.5', pretrained, progress,
-                             [4, 8, 4], [24, 48, 96, 192, 1024], **kwargs)
+                              [4, 8, 4], [24, 48, 96, 192, 1024], **kwargs)
     if version == 'x1_0':
         return _shufflenetv2('shufflenetv2_x1.0', pretrained, progress,
                              [4, 8, 4], [24, 116, 232, 464, 1024], **kwargs)

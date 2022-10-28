@@ -1,8 +1,6 @@
 backbone:
-  type: resnet
-  version: '18'  # 18, 34, 50, 101, 152
-  dcn: False
-  cbam: False
+  type: shufflenetv2
+  version: x0_5 # x1_0  # x0_5, x1_0, x1_5, x2_0
 neck:
   FPN:
     channel_outs: [512, 256, 256]

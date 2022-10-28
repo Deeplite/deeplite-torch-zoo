@@ -1,12 +1,12 @@
 import math
 from copy import copy
 
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_default
 import numpy as np
 import torch
 import torch.nn as nn
-
-import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_default
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import xyxy2cxcywh
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
+    xyxy2cxcywh
 
 
 def is_parallel(model):
@@ -97,7 +97,10 @@ class YoloV5Loss(nn.Module):
         if g > 0:
             BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
 
-        det = de_parallel(model).model[-1]  # Detect() module
+        if hasattr(model, 'model'):
+            det = de_parallel(model).model[-1]  # Detect() module
+        if hasattr(model, 'detection'):
+            det = de_parallel(model).detection
         self.na = copy(det.na)
         self.nl = copy(det.nl)
         self.nc = copy(det.nc)
