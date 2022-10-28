@@ -37,6 +37,7 @@ INSTALL_REQUIRES = [
     "torchmetrics==0.8.0",
     "mean_average_precision==2021.4.26.0",
     "ptflops==0.6.2",
+    "addict",
 ]
 
 
