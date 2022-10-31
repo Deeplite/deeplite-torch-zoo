@@ -58,9 +58,12 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
 
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
+    model_wrapper_fn = None
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
         if re.match(net_name, model_name):
             model_wrapper_fn = model_fn
+    if model_wrapper_fn is None:
+        raise ValueError(f'Could not find a wrapper function for model name {model_name}')
 
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection')

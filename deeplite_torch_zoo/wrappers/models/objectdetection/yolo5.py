@@ -78,7 +78,8 @@ def yolo5_6(
     model = YoloV5_6(config_path, ch=ch, nc=num_classes, activation_type=activation_type)
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
-            raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}')
+            raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
+                              'Use pretrained=False if you want to create a untrained model.')
         checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{model_name}_{dataset_name}"])
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
@@ -86,18 +87,24 @@ def yolo5_6(
 
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo5_6[nsmlx]$": yolo5_6,
-    "^yolo5_6[nsmlx]a$": yolo5_6,
     "^yolo5_6[nsmlx]_relu$": partial(yolo5_6, activation_type="relu"),
     "^yolo5_6[nsmlx]_hswish$": partial(yolo5_6, activation_type="hardswish"),
+    "^yolo5_6[nsmlx]a$": yolo5_6,
+    "^yolo5_6[nsmlx]a_relu$": partial(yolo5_6, activation_type="relu"),
+    "^yolo5_6[nsmlx]a_hswish$": partial(yolo5_6, activation_type="hardswish"),
+    "^yolo5_6[nsmlx]_tiny$": yolo5_6,
     "^yolo5_6[nsmlx]_tiny_relu$": partial(yolo5_6, activation_type="relu"),
     "^yolo5_6[nsmlx]_tiny_hswish$": partial(yolo5_6, activation_type="hardswish"),
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 
+    model_wrapper_fn = None
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
         if re.match(net_name, model_name):
             model_wrapper_fn = model_fn
+    if model_wrapper_fn is None:
+        raise ValueError(f'Could not find a wrapper function for model name {model_name}')
 
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection')
