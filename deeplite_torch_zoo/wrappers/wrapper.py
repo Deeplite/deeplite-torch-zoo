@@ -44,7 +44,7 @@ def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
 def get_model_by_name(
     model_name,
     dataset_name,
-    pretrained=False,
+    pretrained=True,
     progress=False,
     fp16=False,
     device="cuda",

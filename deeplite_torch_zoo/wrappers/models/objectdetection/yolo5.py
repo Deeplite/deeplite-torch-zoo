@@ -1,6 +1,5 @@
 import re
 import urllib.parse as urlparse
-from collections import namedtuple
 from functools import partial
 from pathlib import Path
 
@@ -69,18 +68,21 @@ yolov5_cfg = {
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 def yolo5_6(
-    net="yolo5_6s", dataset_name="voc", num_classes=20, activation_type=None,
-    pretrained=False, progress=True, device="cuda"
+    model_name="yolo5_6s", dataset_name="voc", num_classes=20, activation_type=None,
+    pretrained=False, progress=True, device="cuda", ch=3,
 ):
-    config_key = net
+    config_key = model_name
     for suffix in MODEL_NAME_SUFFICES:
         config_key = re.sub(f'\_{suffix}$', '', config_key) # pylint: disable=W1401
     config_path = get_project_root() / CFG_PATH / yolov5_cfg[config_key]
-    model = YoloV5_6(config_path, ch=3, nc=num_classes, activation_type=activation_type)
+    model = YoloV5_6(config_path, ch=ch, nc=num_classes, activation_type=activation_type)
     if pretrained:
-        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{net}_{dataset_name}"])
+        if f"{model_name}_{dataset_name}" not in model_urls:
+            raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}')
+        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{model_name}_{dataset_name}"])
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)
+
 
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo5_6[nsmlx]$": yolo5_6,
@@ -101,7 +103,7 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
         task_type='object_detection')
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return model_wrapper_fn(
-            net=model_name,
+            model_name=model_name,
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
@@ -111,20 +113,14 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     wrapper_func.__name__ = wrapper_name
     return wrapper_func
 
-ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
-wrapper_funcs = {
-    'person_detection': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
-        'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa']),
-    'custom_person_detection': ModelSet(1, ['yolo5_6n_relu', 'yolo5_6n_tiny_relu', 'yolo5_6n_tiny_hswish']),
-    'voc': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
-        'yolo5_6m_relu', 'yolo5_6s_relu', 'yolo5_6n_relu', 'yolo5_6n_hswish', 'yolo5_6s_hswish']),
-    'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
-        'yolo5_6n_hswish', 'yolo5_6s_hswish', 'yolo5_6n_relu']),
-    'voc07': ModelSet(20, ['yolo5_6n', 'yolo5_6s']),
-}
 
-for dataset, model_set in wrapper_funcs.items():
-    for model_tag in model_set.model_list:
-        name = '_'.join([model_tag, dataset])
-        globals()[name] = make_wrapper_func(name, model_tag, dataset, model_set.num_classes)
+model_list = list(yolov5_cfg.keys())
+for model_name_suffix in MODEL_NAME_SUFFICES:
+    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov5_cfg.keys()]
+datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
+
+for dataset_name, num_classes in datasets:
+    for model_tag in model_list:
+        name = '_'.join([model_list, dataset_name])
+        globals()[name] = make_wrapper_func(name, model_tag, dataset_name, num_classes)
         __all__.append(name)
