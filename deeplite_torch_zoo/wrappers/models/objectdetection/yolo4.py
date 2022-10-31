@@ -80,8 +80,8 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 model_list = list(yolov4_cfg.keys())
 datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20)]
 
-for dataset_name, num_classes in datasets:
+for dataset_tag, n_classes in datasets:
     for model_tag in model_list:
-        name = '_'.join([model_list, dataset_name])
-        globals()[name] = make_wrapper_func(name, model_tag, dataset_name, num_classes)
+        name = '_'.join([model_tag, dataset_tag])
+        globals()[name] = make_wrapper_func(name, model_tag, dataset_tag, n_classes)
         __all__.append(name)

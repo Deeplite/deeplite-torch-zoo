@@ -116,11 +116,11 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 
 model_list = list(yolov5_cfg.keys())
 for model_name_suffix in MODEL_NAME_SUFFICES:
-    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov5_cfg.keys()]
+    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov5_cfg]
 datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
 
-for dataset_name, num_classes in datasets:
+for dataset_tag, n_classes in datasets:
     for model_tag in model_list:
-        name = '_'.join([model_list, dataset_name])
-        globals()[name] = make_wrapper_func(name, model_tag, dataset_name, num_classes)
+        name = '_'.join([model_tag, dataset_tag])
+        globals()[name] = make_wrapper_func(name, model_tag, dataset_tag, n_classes)
         __all__.append(name)
