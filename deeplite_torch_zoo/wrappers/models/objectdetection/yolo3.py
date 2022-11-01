@@ -44,8 +44,11 @@ def yolo3(
 
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
+    has_checkpoint = True
+    if f"{model_name}_{dataset_name}" not in model_urls:
+        has_checkpoint = False
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
-        task_type='object_detection')
+        task_type='object_detection', has_checkpoint=has_checkpoint)
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return yolo3(
             model_name=model_name,
