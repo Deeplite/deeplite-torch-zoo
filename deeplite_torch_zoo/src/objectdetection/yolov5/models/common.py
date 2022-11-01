@@ -28,6 +28,7 @@ ACTIVATION_FN_NAME_MAP = {
     'hardswish': Hardswish,
     'mish': Mish,
     'leakyrelu': nn.LeakyReLU,
+    'leakyrelu_0.1': functools.partial(nn.LeakyReLU, negative_slope=0.1),
 }
 
 
@@ -53,6 +54,9 @@ class Conv(nn.Module):
         super(Conv, self).__init__()
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
+        if activation_type not in ACTIVATION_FN_NAME_MAP:
+            raise ValueError(f'Activation type {activation_type} not available.'
+                             f'Available activation types: {list(ACTIVATION_FN_NAME_MAP.keys())}')
         activation_function = ACTIVATION_FN_NAME_MAP[activation_type]
         self.act = activation_function() if act else nn.Identity()
 
@@ -427,7 +431,7 @@ class RepConv(nn.Module):
     # Represented convolution
     # https://arxiv.org/abs/2101.03697
 
-    def __init__(self, c1, c2, k=3, s=1, p=None, g=1, activation_type='hardswish', deploy=False):
+    def __init__(self, c1, c2, k=3, s=1, p=None, g=1, act=True, activation_type='hardswish', deploy=False):
         super(RepConv, self).__init__()
 
         self.deploy = deploy
@@ -440,8 +444,11 @@ class RepConv(nn.Module):
 
         padding_11 = autopad(k, p) - k // 2
 
+        if activation_type not in ACTIVATION_FN_NAME_MAP:
+            raise ValueError(f'Activation type {activation_type} not available.'
+                             f'Available activation types: {list(ACTIVATION_FN_NAME_MAP.keys())}')
         activation_function = ACTIVATION_FN_NAME_MAP[activation_type]
-        self.act = activation_function if activation_function else nn.Identity()
+        self.act = activation_function() if act else nn.Identity()
 
         if deploy:
             self.rbr_reparam = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=True)

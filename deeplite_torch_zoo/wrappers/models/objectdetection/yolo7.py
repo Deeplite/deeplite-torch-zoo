@@ -24,8 +24,8 @@ model_urls = {
 yolov7_cfg = {
     "yolo7": "yolov7.yaml",
     "yolo7x": "yolov7x.yaml",
-    "yolo7_tiny": "yolov7_tiny.yaml",
-    "yolo7_tinier": "yolov7_tinier.yaml",
+    "yolo7_tiny": "yolov7-tiny.yaml",
+    "yolo7_tinier": "yolov7-tinier.yaml",
 }
 
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
