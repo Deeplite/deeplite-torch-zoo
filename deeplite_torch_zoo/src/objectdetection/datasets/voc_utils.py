@@ -23,11 +23,12 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
             root = ET.parse(label_path).getroot()
             objects = root.findall("object")
             for obj in objects:
-                difficult = obj.find("difficult").text.strip()
-                if (not use_difficult_bbox) and (
-                    int(difficult) == 1
-                ):  # difficult
-                    continue
+                if obj.find("difficult"):
+                    difficult = obj.find("difficult").text.strip()
+                    if (not use_difficult_bbox) and (
+                        int(difficult) == 1
+                    ):  # difficult
+                        continue
                 bbox = obj.find("bndbox")
                 name = obj.find("name").text.lower().strip()
                 if name not in class_names:
