@@ -62,7 +62,7 @@ yolov5_cfg = {
     "yolo5_6n": "yolov5_6n.yaml",
     "yolo5_6sa": "yolov5_6sa.yaml",
     "yolo5_6ma": "yolov5_6ma.yaml",
-    "yolov5_6nlrs": "yolov5_6nlrs.yaml",
+    "yolo5_6nlrs": "yolov5_6nlrs.yaml",
 }
 
 
@@ -89,6 +89,7 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo5_6[nsmlx]a$": yolo5_6,
     "^yolo5_6[nsmlx]_relu$": partial(yolo5_6, activation_type="relu"),
     "^yolo5_6[nsmlx]_hswish$": partial(yolo5_6, activation_type="hardswish"),
+    "^yolo5_6[nsmlx]lrs$": partial(yolo5_6, activation_type="leakyrelu"),
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
