@@ -98,12 +98,12 @@ class StitchedYoloTflite(nn.Module):
             index = index + 1
 
             y.append(x.reshape(bs, na * nx * ny, no))
-
+        y = np.concatenate(y, axis=1)
 
         if isinstance(y, (list, tuple)):
-            return self.from_numpy(y[0]) if len(y) == 1 else [self.from_numpy(x) for x in y]
+            return self.from_numpy(y[0]) if len(y) == 1 else [self.from_numpy(x) for x in y], None
         else:
-            return self.from_numpy(y)
+            return self.from_numpy(y), None
 
     def from_numpy(self, x):
         return torch.from_numpy(x).to(self.device) if isinstance(x, np.ndarray) else x

@@ -156,7 +156,7 @@ def yolo_eval_coco(model, data_root, gt=None, device="cuda",
 
     model.to(device)
     with torch.no_grad():
-        return YoloCOCOEvaluator(model, dataset, gt=gt, net=net,
+        return YoloCOCOEvaluator(model, dataset, gt=dataset.coco, net=net,
             img_size=img_size, progressbar=progressbar).evaluate()
 
 

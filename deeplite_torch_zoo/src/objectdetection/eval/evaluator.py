@@ -11,7 +11,7 @@ class Evaluator(object):
         self.nms_thresh = nms_thresh
         self.val_shape = img_size
         self.model = model
-        self.device = next(model.parameters()).device
+        self.device = torch.device("cuda") # next(model.parameters()).device
 
     def get_bbox(self, img, multi_test=False, flip_test=False):
         if multi_test:
