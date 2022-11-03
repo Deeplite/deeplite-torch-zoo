@@ -44,7 +44,7 @@ def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
 def get_model_by_name(
     model_name,
     dataset_name,
-    pretrained=False,
+    pretrained=True,
     progress=False,
     fp16=False,
     device="cuda",
@@ -80,7 +80,7 @@ def create_model(
     model_name,
     pretraining_dataset,
     num_classes=None,
-    pretrained=True,
+    pretrained=False,
     progress=False,
     fp16=False,
     device="cuda",
