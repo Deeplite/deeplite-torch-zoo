@@ -10,7 +10,7 @@ from collections import OrderedDict, namedtuple
 from copy import copy
 from pathlib import Path
 from urllib.parse import urlparse
-
+import tensorflow as tf
 import numpy as np
 import torch
 import torch.nn as nn
@@ -71,16 +71,16 @@ class StitchedYoloTflite(nn.Module):
         self.interpreter.set_tensor(input['index'], im)
         self.interpreter.invoke()
         y = []
-        anchors = np.array([
-             [(1.62500, 1.25000), (3.75000, 2.00000), ( 2.87500, 4.12500 )],
-            [( 3.81250, 1.87500), (2.81250, 3.87500), ( 7.43750, 3.68750 )],
-            [ (2.81250, 3.62500), (6.18750, 4.87500), (10.18750, 11.65625)],
-            ])
-        anchors[:, :, 1] = anchors[:, :, 1] + 2.5
-        
-        stride = np.array([16., 16., 16.])
-        index = 0; nc = 1; no = nc + 5; na = 3;
 
+        anchors = np.array([
+            [(1.87500,3.81250), (3.87500,2.81250), (3.68750,7.43750)],
+            [(1.25000,1.62500), (2.00000,3.75000), (4.12500,2.87500)],
+            [ (3.62500,2.81250), (4.87500,6.18750), (11.65625,10.18750)],
+
+        ])
+
+        stride = np.array([16, 8, 32])
+        index = 0; nc = 1; no = nc + 5; na = 3;
         for output in self.output_details:
             x = self.interpreter.get_tensor(output['index'])
             if int8:
@@ -92,13 +92,14 @@ class StitchedYoloTflite(nn.Module):
             x = sigmoid(x)
             xy, wh, conf, _ = np.split(x, (2, 2 + 2, 4 + 1 + nc), 4) # 1 + nc 1 is for conf
             grid, anchor_grid = self._make_grid(anchors[index], stride[index], na, ny, nx)
-            xy = (xy * 2 + grid) * stride[index]  # xy
-            wh = (wh * 2) ** 2 * anchor_grid  # wh
+            xy = ((xy * 2 + grid) * stride[index]) / (w, h) # xy
+            wh = ((wh * 2) ** 2 * anchor_grid) / (w, h)  # wh
             x = np.concatenate((xy, wh, conf), axis=4)
             index = index + 1
 
             y.append(x.reshape(bs, na * nx * ny, no))
         y = np.concatenate(y, axis=1)
+        y[0][..., :4] *= [w, h, w, h]
 
         if isinstance(y, (list, tuple)):
             return self.from_numpy(y[0]) if len(y) == 1 else [self.from_numpy(x) for x in y], None
@@ -116,5 +117,4 @@ class StitchedYoloTflite(nn.Module):
         grid = np.broadcast_to(np.stack((xv, yv), axis=2), shape) - 0.5
         anchor_grid = np.broadcast_to((anchors * stride).reshape(1, 3, 1, 1, 2), shape)
         return grid, anchor_grid
-
 
