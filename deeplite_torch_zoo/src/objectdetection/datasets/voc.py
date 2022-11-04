@@ -1,19 +1,19 @@
 import os
+import random
 from pathlib import Path
 
-import random
 import cv2
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as cfg
 import numpy as np
 import torch
-
-from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
-import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
+from deeplite_torch_zoo.src.objectdetection.datasets.dataset import \
+    DLZooDataset
 
 
 class VocDataset(DLZooDataset):
-    def __init__(self, annotation_path, anno_file_type, img_size=416, class_names=None):
-        super().__init__(cfg.TRAIN, img_size)
+    def __init__(self, annotation_path, anno_file_type, augment=False, img_size=416, class_names=None):
+        super().__init__(cfg.TRAIN, img_size, augment)
 
         self.annotation_path = annotation_path
         with open(os.path.join(annotation_path, 'class_names.txt'), 'r') as f:
@@ -43,31 +43,34 @@ class VocDataset(DLZooDataset):
         """
 
         get_img_fn = lambda img_index: self.__parse_annotation(self.__annotations[img_index])
-        if random.random() < cfg.TRAIN['mosaic']:
+        if self._augment and random.random() < cfg.TRAIN['mosaic']:
+            shape = None
             img, bboxes, img_id = self._load_mosaic(item, get_img_fn,
                 len(self.__annotations))
-        elif cfg.TRAIN['mixup'] > 0:
-            img, bboxes, img_id = self._load_mixup(item, get_img_fn,
+        elif self._augment and cfg.TRAIN['mixup'] > 0:
+            img, bboxes, img_id, shape = self._load_mixup(item, get_img_fn,
                 len(self.__annotations), p=cfg.TRAIN['mixup'])
         else:
-            img, bboxes, img_id = get_img_fn(item)
+            img, bboxes, img_id, shape = get_img_fn(item)
             img = img.transpose(2, 0, 1)
 
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()
 
-        return img, bboxes, bboxes.shape[0], img_id
+        return img, bboxes, bboxes.shape[0], img_id, shape
 
     def collate_img_label_fn(self, sample):
         images = []
         labels = []
         lengths = []
+        shapes = []
         labels_with_tail = []
         max_num_obj = 0
-        for image, label, length, img_id in sample:
+        for image, label, length, _, shape in sample:
             images.append(image)
             labels.append(label)
             lengths.append(length)
+            shapes.append(shape)
             max_num_obj = max(max_num_obj, length)
         for label in labels:
             num_obj = label.size(0)
@@ -81,7 +84,8 @@ class VocDataset(DLZooDataset):
         image_tensor = torch.stack(images)
         label_tensor = torch.stack(labels_with_tail)
         length_tensor = torch.tensor(lengths)
-        return image_tensor, label_tensor, length_tensor, None
+        shape_tensor = torch.tensor(shapes)
+        return image_tensor, label_tensor, length_tensor, shape_tensor
 
     def __load_annotations(self, anno_type):
 
@@ -115,6 +119,8 @@ class VocDataset(DLZooDataset):
         img = cv2.imread(img_path)  # H*W*C and C=BGR
         assert img is not None, "File Not Found " + img_path
 
+        original_shape = (img.shape[0], img.shape[1])
+
         def map_box_data(box_data):
             class_id = self.classes.index(box_data[4])
             return [float(value) for value in box_data[:4]] + [class_id]
@@ -123,10 +129,11 @@ class VocDataset(DLZooDataset):
 
         if len(bboxes) == 0:
             bboxes = np.array(np.zeros((0, 5)))
-        else:
+
+        if self._augment:
             img, bboxes = self._augment(img, bboxes)
 
         img, bboxes = Resize((self._img_size, self._img_size), True)(
             np.copy(img), np.copy(bboxes)
         )
-        return img, bboxes, str(Path(img_path).stem)
+        return img, bboxes, str(Path(img_path).stem), original_shape

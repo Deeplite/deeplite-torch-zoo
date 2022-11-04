@@ -1,17 +1,18 @@
 import random
-import numpy as np
-from torch.utils.data import Dataset
 
-from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import \
-    Mixup, RandomAffine, RandomCrop, RandomHorizontalFlip, \
-    Resize, AugmentHSV, RandomVerticalFlip, random_perspective
+import numpy as np
+from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import (
+    AugmentHSV, Mixup, RandomHorizontalFlip, RandomVerticalFlip, Resize,
+    random_perspective)
+from torch.utils.data import Dataset
 
 
 class DLZooDataset(Dataset):
-    def __init__(self, hyp_cfg, img_size, *args, **kwargs):
+    def __init__(self, hyp_cfg, img_size, augment=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._hyp_cfg = hyp_cfg
         self._img_size = img_size
+        self._augment = augment
 
     def _augment(self, img, bboxes):
         img, bboxes = random_perspective(img, bboxes,
@@ -32,15 +33,15 @@ class DLZooDataset(Dataset):
         return img, bboxes
 
     def _load_mixup(self, item, get_img_fn, num_images, p=0.5):
-        img_org, bboxes_org, img_id = get_img_fn(item)
+        img_org, bboxes_org, img_id, shape = get_img_fn(item)
         img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
 
         item_mix = random.randint(0, num_images - 1)
-        img_mix, bboxes_mix, _ = get_img_fn(item_mix)
+        img_mix, bboxes_mix, _, _ = get_img_fn(item_mix)
         img_mix = img_mix.transpose(2, 0, 1)
 
         img, bboxes = Mixup(p=p)(img_org, bboxes_org, img_mix, bboxes_mix)
-        return img, bboxes, img_id
+        return img, bboxes, img_id, shape
 
     def _load_mosaic(self, item, get_img_fn, num_images, resize_to_original_size=True):
         # YOLOv5 4-mosaic loader. Loads 1 image + 3 random images into a 4-image mosaic

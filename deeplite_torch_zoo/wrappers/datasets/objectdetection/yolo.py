@@ -87,12 +87,14 @@ def create_voc_datasets(data_root, num_classes, img_size, is_07_subset=False, st
         anno_file_type="train",
         img_size=img_size,
         class_names=class_names,
+        augment=True,
     )
     test_dataset = VocDataset(
         annotation_path=annotation_path,
         anno_file_type="test",
         img_size=img_size,
-        class_names=class_names
+        class_names=class_names,
+        augment=False,
     )
     return train_dataset, test_dataset
 
