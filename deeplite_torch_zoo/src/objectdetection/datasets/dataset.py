@@ -12,7 +12,7 @@ class DLZooDataset(Dataset):
         super().__init__(*args, **kwargs)
         self._hyp_cfg = hyp_cfg
         self._img_size = img_size
-        self._augment = augment
+        self._do_augment = augment
 
     def _augment(self, img, bboxes):
         img, bboxes = random_perspective(img, bboxes,

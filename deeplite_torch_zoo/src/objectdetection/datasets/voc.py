@@ -43,11 +43,11 @@ class VocDataset(DLZooDataset):
         """
 
         get_img_fn = lambda img_index: self.__parse_annotation(self.__annotations[img_index])
-        if self._augment and random.random() < cfg.TRAIN['mosaic']:
+        if self._do_augment and random.random() < cfg.TRAIN['mosaic']:
             shape = None
             img, bboxes, img_id = self._load_mosaic(item, get_img_fn,
                 len(self.__annotations))
-        elif self._augment and cfg.TRAIN['mixup'] > 0:
+        elif self._do_augment and cfg.TRAIN['mixup'] > 0:
             img, bboxes, img_id, shape = self._load_mixup(item, get_img_fn,
                 len(self.__annotations), p=cfg.TRAIN['mixup'])
         else:
@@ -130,7 +130,7 @@ class VocDataset(DLZooDataset):
         if len(bboxes) == 0:
             bboxes = np.array(np.zeros((0, 5)))
 
-        if self._augment:
+        if self._do_augment:
             img, bboxes = self._augment(img, bboxes)
 
         img, bboxes = Resize((self._img_size, self._img_size), True)(
