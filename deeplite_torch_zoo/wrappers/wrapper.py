@@ -127,7 +127,7 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
     :param return_list: Whether to return a list with model names and corresponding datasets
     """
     filter = '*' + filter + '*'
-    all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
+    all_model_keys = MODEL_WRAPPER_REGISTRY.pretrained_models.keys()
     if task_type_filter is not None:
         allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
         if task_type_filter not in allowed_task_types:
