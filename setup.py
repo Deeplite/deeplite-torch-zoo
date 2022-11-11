@@ -24,7 +24,6 @@ INSTALL_REQUIRES = [
     "numpy==1.19.5",
     "pycocotools==2.0.4",
     "Cython==0.29.30",
-    # "scikit-image==0.16.2",
     "tqdm==4.46.0",
     "albumentations",
     "pretrainedmodels==0.7.4",
@@ -35,8 +34,8 @@ INSTALL_REQUIRES = [
     "texttable==1.6.4",
     "pytz",
     "torchmetrics==0.8.0",
-    "mean_average_precision==2021.4.26.0",
     "ptflops==0.6.2",
+    "pandas",
 ]
 
 
