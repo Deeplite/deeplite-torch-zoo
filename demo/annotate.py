@@ -27,7 +27,7 @@ def run(
         dataset_type='voc', # Either 'voc' or coco formats are supported
         conf_thres=0.25,  # confidence threshold
         iou_thres=0.45,  # NMS IOU threshold
-        project=ROOT / 'runs/detect',  # save results to project/name
+        project=ROOT / 'results',  # save results to project/name
         name=Path('exp'),
         line_width=10,
 ):
