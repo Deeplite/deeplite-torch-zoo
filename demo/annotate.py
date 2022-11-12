@@ -75,18 +75,18 @@ def run(
             s += '%gx%g ' % im.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             annotator = Annotator(im0, line_width=line_width)
-            if len(det):
-                # Rescale boxes from img_size to im0 size
-                det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
+            with open(f'{txt_path}.txt', 'w') as f:
+                if len(det):
+                    # Rescale boxes from img_size to im0 size
+                    det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
 
-                # Write results
-                for *xyxy, conf, cls in reversed(det):
-                    xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                    line = (0, conf, *xywh)
-                    with open(f'{txt_path}.txt', 'a') as f:
+                    # Write results
+                    for *xyxy, conf, cls in reversed(det):
+                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                        line = (0, conf, *xywh)
                         f.write(('%g ' * len(line)).rstrip() % line + '\n')
-                    label = f'{conf:.2f}'
-                    annotator.box_label(xyxy, label)
+                        label = f'{conf:.2f}'
+                        annotator.box_label(xyxy, label)
             im0 = annotator.result()
             cv2.imwrite(save_path, im0)
         # Print time (inference-only)
