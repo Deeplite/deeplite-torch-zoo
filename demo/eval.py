@@ -30,7 +30,7 @@ def run(
         mAP = yolo_eval_voc(model, source, img_size=imgsz)
     elif dataset_type == 'coco':
         mAP = yolo_eval_coco(
-            model, source, img_size=224,
+            model, source, img_size=imgsz,
             subsample_categories=["person"], device="cuda"
         )
     else:
@@ -42,7 +42,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'weights/opt_model_st_int8_224px_ch_3.tflite', help='model path or triton URL')
     parser.add_argument('--source', type=str, default='/neutrino/datasets/st_voc/voc/', help='path to dataset root')
-    parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=224, help='inference size')
+    parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=224, help='inference size')
     parser.add_argument('--dataset_type', type=str, default='voc', help='voc or coco')
     opt = parser.parse_args()
     return opt

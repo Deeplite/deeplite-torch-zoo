@@ -103,7 +103,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'weights/opt_model_st_int8_224px_ch_3.tflite', help='model path or triton URL')
     parser.add_argument('--source', type=str, default=ROOT / 'images', help='path to folder of images')
-    parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=224, help='inference size')
+    parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=224, help='inference size')
     parser.add_argument('--line-width', type=int, default=10, help='bounding box thickness')
     parser.add_argument('--conf-thres', type=float, default=0.01, help='confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')
