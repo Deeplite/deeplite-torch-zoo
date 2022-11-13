@@ -1,6 +1,3 @@
-DEMO
-
-
 # Installation
 
 ## Install from source (development version)
@@ -32,3 +29,7 @@ The models can be evaluated on either `coco` format or `voc` format.
 
 ## Visualization and detections generation
 `python demo/annotate.py --weights path/to/tflite/model.tflite --imgsz xxx --conf-thres 0.2 --line-width 3`
+
+The output of the script can be found in `results/exp/labels` Visualization can be found in `results/epx`
+
+In `labels` folder, a text file for each image containing person detections. `class_id, conf, cx, cy, w, h` all coordinates are normalized
