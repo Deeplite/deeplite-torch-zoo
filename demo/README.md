@@ -13,6 +13,7 @@
 
 ```
     $ git clone https://github.com/Deeplite/deeplite-torch-zoo.git
+    $ git checkout tflite-stitched
     $ pip install -e .
     $ pip install -r requirements-demo.txt
 
