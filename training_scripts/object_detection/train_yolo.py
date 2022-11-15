@@ -1,12 +1,11 @@
 import argparse
+import datetime
 import logging
 import math
 import os
 import random
 import sys
 import time
-import yaml
-import datetime
 from copy import deepcopy
 from pathlib import Path
 
@@ -14,13 +13,14 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
+import yaml
+from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
+from pycocotools.coco import COCO
 from torch.cuda import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.optim import Adam, SGD, lr_scheduler
+from torch.optim import SGD, Adam, lr_scheduler
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-from pycocotools.coco import COCO
-from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -28,17 +28,19 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
-from utils.general import init_seeds, print_args, set_logging, one_cycle, \
-    colorstr, strip_optimizer, AverageMeter
-from utils.torch_utils import EarlyStopping, ModelEMA, de_parallel, select_device
-
-from deeplite_torch_zoo import get_data_splits_by_name, get_eval_function, create_model
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import YoloV5Loss
 
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
+from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
+                                get_eval_function)
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
+    YoloV5Loss
 
+from utils.general import (AverageMeter, colorstr, init_seeds, one_cycle,
+                           print_args, set_logging, strip_optimizer)
+from utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel,
+                               select_device)
 
 LOGGER = logging.getLogger(__name__)
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
@@ -116,14 +118,15 @@ def train(opt, device):
         distributed=(cuda and RANK != -1),
         **dataset_kwargs
     )
-    test_img_size = dataset_splits["test"].dataset._img_size
     train_img_size = dataset_splits["train"].dataset._img_size
+    test_img_size = dataset_splits["test"].dataset._img_size
     if opt.test_img_res:
         test_img_size = opt.test_img_res
 
     train_loader = dataset_splits["train"]
     dataset = train_loader.dataset
     nc = dataset.num_classes
+    print("Number of classes = ", nc)
 
     nb = len(train_loader)  # number of batches
 
@@ -474,7 +477,7 @@ def parse_opt(known=False):
 
     parser.add_argument('--eval_before_train', action='store_true', help='run eval before training starts')
     parser.add_argument('--epochs', type=int, default=300)
-    parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs')
+    parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--noval', action='store_true', help='only validate final epoch')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
