@@ -3,14 +3,12 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
-
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
-
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import make_divisible, check_anchor_order
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import fuse_conv_and_bn, initialize_weights, \
-    model_info, scale_img
-
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
+    make_divisible
+from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
+    fuse_conv_and_bn, initialize_weights, model_info, scale_img)
 
 logger = logging.getLogger(__name__)
 
@@ -199,6 +197,9 @@ class YoloV5_6(nn.Module):
                 m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
                 delattr(m, 'bn')  # remove batchnorm
                 m.forward = m.forward_fuse  # update forward
+            if isinstance(m, RepConv):
+                #print(f" fuse_repvgg_block")
+                m.fuse_repvgg_block()
         self.info()
         return self
 
@@ -235,13 +236,14 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                 BottleneckCSP, C3, C3v6, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP, BottleneckCSP2Leaky, SPPCSPLeaky]:
+                 BottleneckCSP, C3, C3v6, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP, BottleneckCSP2Leaky,
+                 SPPCSPLeaky, RepConv, SPPCSPC]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3, C3v6, C3TR, C3Ghost, BottleneckCSP2, BottleneckCSP2Leaky]:
+            if m in [BottleneckCSP, C3, C3v6, C3TR, C3Ghost, BottleneckCSP2, BottleneckCSP2Leaky, SPPCSPC]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:

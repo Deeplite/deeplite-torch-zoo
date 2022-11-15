@@ -1,10 +1,10 @@
 
-from pathlib import Path
 import urllib.parse as urlparse
-from collections import namedtuple
+from pathlib import Path
 
 import deeplite_torch_zoo
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import YoloV5_6
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import \
+    YoloV5_6
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
@@ -29,24 +29,30 @@ yolov3_cfg = {
 
 
 def yolo3(
-    net="yolo3", dataset_name="voc", num_classes=20, pretrained=False,
-    progress=True, device="cuda", **kwargs
+    model_name="yolo3", dataset_name="voc", num_classes=20, pretrained=False,
+    progress=True, device="cuda", ch=3,
 ):
-    config_path = get_project_root() / CFG_PATH / yolov3_cfg[net]
-    model = YoloV5_6(config_path, ch=3, nc=num_classes)
+    config_path = get_project_root() / CFG_PATH / yolov3_cfg[model_name]
+    model = YoloV5_6(config_path, ch=ch, nc=num_classes)
     if pretrained:
-        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{net}_{dataset_name}"])
+        if f"{model_name}_{dataset_name}" not in model_urls:
+            raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
+                              'Use pretrained=False if you want to create a untrained model.')
+        checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{model_name}_{dataset_name}"])
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
 
     return model.to(device)
 
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
+    has_checkpoint = True
+    if f"{model_name}_{dataset_name}" not in model_urls:
+        has_checkpoint = False
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
-        task_type='object_detection')
+        task_type='object_detection', has_checkpoint=has_checkpoint)
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
         return yolo3(
-            net=model_name,
+            model_name=model_name,
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
@@ -57,13 +63,11 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     return wrapper_func
 
 
-ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
-wrapper_funcs = {
-    'voc': ModelSet(20, ['yolo3']),
-}
+model_list = list(yolov3_cfg.keys())
+datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20)]
 
-for dataset, model_set in wrapper_funcs.items():
-    for model_tag in model_set.model_list:
-        name = '_'.join([model_tag, dataset])
-        globals()[name] = make_wrapper_func(name, model_tag, dataset, model_set.num_classes)
+for dataset_tag, n_classes in datasets:
+    for model_tag in model_list:
+        name = '_'.join([model_tag, dataset_tag])
+        globals()[name] = make_wrapper_func(name, model_tag, dataset_tag, n_classes)
         __all__.append(name)

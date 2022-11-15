@@ -24,7 +24,6 @@ INSTALL_REQUIRES = [
     "numpy==1.19.5",
     "pycocotools==2.0.4",
     "Cython==0.29.30",
-    # "scikit-image==0.16.2",
     "tqdm==4.46.0",
     "albumentations",
     "pretrainedmodels==0.7.4",
@@ -33,10 +32,11 @@ INSTALL_REQUIRES = [
     "pyvww==0.1.1",
     "timm==0.5.4",
     "texttable==1.6.4",
-    "pytz",
     "torchmetrics==0.8.0",
-    "mean_average_precision@git+https://github.com/bes-dev/mean_average_precision.git#c30ea439680416f600781022eb6f1f8032d88647",
     "ptflops==0.6.2",
+    "pytz",
+    "addict",
+    "pandas",
 ]
 
 
@@ -100,7 +100,7 @@ setup(
         'sdist': gitcmd_sdist,
     },
     name="deeplite-torch-zoo",
-    version="1.2.6",
+    version="1.2.7",
     description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
     long_description=long_description,
     long_description_content_type="text/markdown",

@@ -1,8 +1,8 @@
-import os
 import argparse
+import os
 import xml.etree.ElementTree as ET
-
 from pathlib import Path
+
 from tqdm import tqdm
 
 
@@ -15,17 +15,20 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
 
     with open(anno_path, "a") as f:
         for image_id in tqdm(image_ids):
-            image_path = os.path.join(data_path, "JPEGImages", image_id + ".jpg")
-            annotation = image_path
+            image_paths = [file for file in Path(os.path.join(data_path, "JPEGImages")).glob(f'*{image_id}*')]
+            if len(image_paths) > 1:
+                raise RuntimeError(f'More than one file matched with image id {image_id}')
+            annotation = str(image_paths[0])
             label_path = os.path.join(data_path, "Annotations", image_id + ".xml")
             root = ET.parse(label_path).getroot()
             objects = root.findall("object")
             for obj in objects:
-                difficult = obj.find("difficult").text.strip()
-                if (not use_difficult_bbox) and (
-                    int(difficult) == 1
-                ):  # difficult
-                    continue
+                if obj.find("difficult"):
+                    difficult = obj.find("difficult").text.strip()
+                    if (not use_difficult_bbox) and (
+                        int(difficult) == 1
+                    ):  # difficult
+                        continue
                 bbox = obj.find("bndbox")
                 name = obj.find("name").text.lower().strip()
                 if name not in class_names:

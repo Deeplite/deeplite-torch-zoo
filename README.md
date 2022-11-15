@@ -7,7 +7,7 @@
 
 # Deeplite Torch Zoo
 
-The ``deeplite-torch-zoo`` package is a collection of popular CNN model architectures and benchmark datasets for PyTorch. The models are grouped under different datasets and different task types such as classification, object detection, and semantic segmentation. The primary aim of ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models for a given task. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
+The ``deeplite-torch-zoo`` package is a collection of popular (pretrained) CNN model architectures and benchmark datasets for PyTorch. The models are grouped under different datasets and different task types such as classification, object detection, and semantic segmentation. The primary aim of ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models for a given task. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
 
 * [Installation](#Installation)
     * [Install using pip](#Install-using-pip-release-version)
@@ -24,7 +24,7 @@ The ``deeplite-torch-zoo`` package is a collection of popular CNN model architec
 
 * [Available Models](#Available-Models)
 * [Available Datasets](#Available-Datasets)
-* [Training on cutom Data](#train-on-custom-dataset)
+* [Training on Custom Data](#train-on-custom-dataset)
 * [Benchmark Results](#Benchmark-Results)
 * [Contribute a Model/Dataset to the Zoo](#Contribute-a-Model/Dataset-to-the-Zoo)
 
@@ -60,31 +60,32 @@ To test the installation, one can run the basic tests using `pytest` command in 
 
 # How to Use
 
-The ``deeplite-torch-zoo`` is collection of benchmark computer vision datasets and pretrained models. There are three primary wrapper functions to load datasets, models and evaluation functions: ``get_data_splits_by_name``, ``get_model_by_name``, ``get_eval_function`` which can be imported as
+The ``deeplite-torch-zoo`` is collection of benchmark computer vision datasets and pretrained models. There are four primary wrapper functions to load datasets, models and evaluation functions: ``get_data_splits_by_name``, ``get_model_by_name``, ``get_eval_function`` and ``create_model`` which can be imported as
 
 ```{.python}
 from deeplite_torch_zoo import get_data_splits_by_name
 from deeplite_torch_zoo import get_model_by_name
 from deeplite_torch_zoo import get_eval_function
+from deeplite_torch_zoo import create_model
 ```
 
 ## Loading Datasets
 
-The loaded datasets are available as a dictionary of the following format: ``{'train': train_dataloder, 'test': test_dataloader}``. The `train_dataloder` and `test_dataloader` are objects of ``torch.utils.data.DataLoader``.
+The loaded datasets are available as a dictionary of the following format: ``{'train': train_dataloder, 'test': test_dataloader}``. The `train_dataloder` and `test_dataloader` are objects of type ``torch.utils.data.DataLoader``.
 
 ### Classification Datasets
 
 
 ```{.python}
     data_splits = get_data_splits_by_name(
-        dataset_name="cifar100", model_name="resnet18", batch_size=128
+        data_root="./", dataset_name="cifar100", model_name="resnet18", batch_size=128
     )
 ```
-The list of all available classification datasets can be found [here](docs/CLASSIFICATION.md/#datasets).
+The list of all available classification datasets can be found [here](docs/CLASSIFICATION.md/#datasets). Please note that it is always necessary to pass the model name upon the creation of dataloader because the dataset class logic might depend on the model type.
 
 ### Object Detection Datasets
 
-The following sample code loads the [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) dataset. ``train`` contains the data loader for train sets for `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for test set based on `VOC2007`. You also need to provide the model name as well.
+The following sample code loads the [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) dataset. ``train`` contains the data loader for the trainval data splits of the `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for the test split of `VOC2007`. You also need to provide the model name to instantiate the dataloaders.
 
 ```{.python}
 data_splits = get_data_splits_by_name(
@@ -98,11 +99,13 @@ The list of all available object detection datasets can be found [here](docs/OBJ
 
 > **_NOTE:_**  As it can be observed the data_loaders are provided based on the corresponding model (`model_name`). Different object detection models consider inputs/outputs in different formats, and thus the our `data_splits` are formatted according to the needs of the model (e.g. for SSD or YOLO detection models).
 
-## Loading Models
+## Loading and Creating Models
 
-Models are provided with weights pretrained on specific datasets. Thus, one could load a model ``X`` pretrained on dataset ``Y``, for getting the appropriate weights.
+Models are generally provided with weights pretrained on specific datasets. One would load a model ``X`` pretrained on a dataset ``Y`` to get the appropriate weights for the task ``Y``. The ``get_model_by_name`` could used for this purpose. There is also an option to create a new model with an arbitrary number of categories for the downstream tasl and load the weights from another dataset for transfer learning (e.g. to load ``COCO`` weights to train a model on the ``VOC`` dataset). The ``create_model`` method should be generally used for that. Note that ``get_model_by_name`` always returns a fully-trained model for the specified task, this method thus does not allow specifying a custom number of classes.
 
 ### Classification Models
+
+To get a pretrained classification model one could use
 
 ```{.python}
     model = get_model_by_name(
@@ -110,32 +113,79 @@ Models are provided with weights pretrained on specific datasets. Thus, one coul
         dataset_name="cifar100",
         pretrained=True, # or False, if pretrained weights are not required
         progress=False, # or True, if a progressbar is required
-        device="cpu", # or "gpu"
+        device="cpu", # or "cuda"
     )
 ```
+
+To create a new model with ImageNet weights and a custom number of classes one could use
+
+```{.python}
+    model = create_model(
+        model_name="resnet18",
+        pretraining_dataset="imagenet",
+        num_classes=42,
+        pretrained=True, # or False, if pretrained weights are not required
+        progress=False, # or True, if a progressbar is required
+        device="cpu", # or "cuda"
+    )
+```
+
+This method would load the ImageNet-pretrained weights to all the modules of the model where one could match the shape of the weight tensors (i.e. all the layers except the last fully-connected one in the above case).
+
 The list of all available classification models can be found [here](docs/CLASSIFICATION.md/#complete-list-of-models-and-datasets).
 
 ### Object Detection Models
 
 ```{.python}
     model = get_model_by_name(
-        model_name="vgg16_ssd",
+        model_name="yolo4s",
         dataset_name="voc",
         pretrained=True, # or False, if pretrained weights are not required
         progress=False, # or True, if a progressbar is required
     )
 ```
+<<<<<<< HEAD
 The list of all available Object Detection models can be found [here](docs/OBJECT_DETECTION.md/#complete-list-of-models-and-datasets). One can also create a custom model based on existing architecture using [this](docs/OBJECT_DETECTION.md/#creating-a-custom-model-based-on-existing-architecture).
+=======
+
+Likewise, to create a object detection model with an arbitrary number of classes
+
+```{.python}
+    model = get_model_by_name(
+        model_name="yolo4s",
+        num_classes=5,
+        dataset_name="coco",
+        pretrained=True, # or False, if pretrained weights are not required
+        progress=False, # or True, if a progressbar is required
+    )
+```
+
+The list of all available Object Detection models can be found [here](docs/OBJECT_DETECTION.md/#complete-list-of-models-and-datasets).
+
+## Creating an evaluation function
+
+To create an evaluation fuction for the given model and dataset one could call ``get_eval_function`` passing the ``model_name`` and ``dataset_name`` arguments:
+
+```{.python}
+    eval_fn = get_eval_function(
+        model_name="resnet50",
+        dataset_name="imagenet",
+    )
+```
+>>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2
+
+The returned evaluation function is a Python callable that takes two arguments: a PyTorch model object and a PyTorch dataloader object (logically corresponding to the test split dataloader) and returns a dictionary with metric names as keys and their corresponding values.
+
 
 # Available Models
 
-There is an important utility function ``list_models`` which can be imported as
+There is an useful utility function ``list_models`` which can be imported as
 ```{.python}
 from deeplite_torch_zoo import list_models
 ```
-This utility will help in listing all available pretrained models or datasets.
+This utility will help in listing available pretrained models or datasets.
 
-For instance ``list_models("yolo5")`` will provide the following result. Similar results can be obtained using ``list_models("yo")``.
+For instance ``list_models("yolo5")`` will provide the list of available pretrained models that contain ``yolo5`` in their model names. Similar results e.g. can be obtained using ``list_models("yo")``. Filtering models by the corresponding task type is also possible by passing the string of the task type with the ``task_type_filter`` argument (the following task types are available: ``classification``, ``object_detection``, ``semantic_segmentation``).
 
 ```
     +------------------+------------------------------------+
@@ -167,6 +217,12 @@ For instance ``list_models("yolo5")`` will provide the following result. Similar
 
 
 # Train on Custom Dataset
+<<<<<<< HEAD
+=======
+
+One could refer to the example [training scripts](../training_scripts/) to see how the zoo could be integrated into differen training pipelines. For more details please see
+
+>>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2
 - [Training a Classification Model](docs/CLASSIFICATION.md/#training-on-custom-dataset)
 - [Training an Object Detection Model](docs/OBJECT_DETECTION.md/#training-on-custom-dataset)
 
@@ -196,6 +252,8 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of resnet-ssd: [Nvidia-SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
 - The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
+- The implementation of flexible-yolov5: [Bobo-y/flexible-yolov5](https://github.com/Bobo-y/flexible-yolov5)
+- The implementation of yolov7: [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
 
 ### Segmentation
 - The implementation of deeplab: [pytorch-deeplab-xception](https://github.com/jfzhang95/pytorch-deeplab-xception)
@@ -206,4 +264,11 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 ### Classification
 - The implementation of models on CIFAR100 dataset: [kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
 - The implementation of Mobilenetv1 model on VWW dataset: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
+<<<<<<< HEAD
 - The implementation of Mobilenetv3 model on VWW dataset: [d-li14/mobilenetv3.pytorch](https://github.com/d-li14/mobilenetv3.pytorch)
+=======
+- The implementation of Mobilenetv3 model on VWW dataset: [d-li14/mobilenetv3.pytorch](https://github.com/d-li14/mobilenetv3.pytorch)
+
+### Misc
+- mAP metric calculation code: [bes-dev/mean_average_precision](https://github.com/bes-dev/mean_average_precision)
+>>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2

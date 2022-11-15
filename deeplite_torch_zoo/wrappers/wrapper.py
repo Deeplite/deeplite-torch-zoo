@@ -1,18 +1,16 @@
-import json
-import fnmatch
-import subprocess
 import collections
-
-import texttable
-from ptflops import get_model_complexity_info
+import fnmatch
+import json
+import subprocess
 
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
-import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.eval  # pylint: disable=unused-import
-from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
-from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
-
+import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
+import texttable
+from deeplite_torch_zoo.wrappers.registries import (DATA_WRAPPER_REGISTRY,
+                                                    EVAL_WRAPPER_REGISTRY,
+                                                    MODEL_WRAPPER_REGISTRY)
+from ptflops import get_model_complexity_info
 
 __all__ = [
     "get_data_splits_by_name",
@@ -25,7 +23,7 @@ __all__ = [
 ]
 
 
-def get_data_splits_by_name(data_root, dataset_name, model_name=None, **kwargs):
+def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
     """
     The datasets function calls in the format of (get_`dataset_name`_for_`model_name`).
     Except for classification since the datasets format for classification models is the same.
@@ -46,7 +44,7 @@ def get_data_splits_by_name(data_root, dataset_name, model_name=None, **kwargs):
 def get_model_by_name(
     model_name,
     dataset_name,
-    pretrained=False,
+    pretrained=True,
     progress=False,
     fp16=False,
     device="cuda",
@@ -82,7 +80,7 @@ def create_model(
     model_name,
     pretraining_dataset,
     num_classes=None,
-    pretrained=True,
+    pretrained=False,
     progress=False,
     fp16=False,
     device="cuda",
@@ -129,7 +127,7 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
     :param return_list: Whether to return a list with model names and corresponding datasets
     """
     filter = '*' + filter + '*'
-    all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
+    all_model_keys = MODEL_WRAPPER_REGISTRY.pretrained_models.keys()
     if task_type_filter is not None:
         allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
         if task_type_filter not in allowed_task_types:

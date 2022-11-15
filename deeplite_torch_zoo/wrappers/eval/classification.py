@@ -1,13 +1,13 @@
 import torch
-from torchmetrics import Accuracy
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
-
+from torchmetrics import Accuracy
+from tqdm import tqdm
 
 __all__ = ["classification_eval"]
 
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='classification')
-def classification_eval(model, dataloader, device="cuda"):
+def classification_eval(model, dataloader, progress=False, device="cuda"):
     metrics = {
         'acc': Accuracy(),
         'acc_top5': Accuracy(top_k=5),
@@ -20,7 +20,7 @@ def classification_eval(model, dataloader, device="cuda"):
 
     model.eval()
     with torch.set_grad_enabled(False):
-        for X, y in dataloader:
+        for X, y in tqdm(dataloader, disable=not progress):
             if device == "cuda":
                 X = X.cuda()
                 y = y.cuda()
