@@ -144,9 +144,6 @@ The list of all available classification models can be found [here](docs/CLASSIF
         progress=False, # or True, if a progressbar is required
     )
 ```
-<<<<<<< HEAD
-The list of all available Object Detection models can be found [here](docs/OBJECT_DETECTION.md/#complete-list-of-models-and-datasets). One can also create a custom model based on existing architecture using [this](docs/OBJECT_DETECTION.md/#creating-a-custom-model-based-on-existing-architecture).
-=======
 
 Likewise, to create a object detection model with an arbitrary number of classes
 
@@ -172,7 +169,6 @@ To create an evaluation fuction for the given model and dataset one could call `
         dataset_name="imagenet",
     )
 ```
->>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2
 
 The returned evaluation function is a Python callable that takes two arguments: a PyTorch model object and a PyTorch dataloader object (logically corresponding to the test split dataloader) and returns a dictionary with metric names as keys and their corresponding values.
 
@@ -217,12 +213,9 @@ For instance ``list_models("yolo5")`` will provide the list of available pretrai
 
 
 # Train on Custom Dataset
-<<<<<<< HEAD
-=======
 
 One could refer to the example [training scripts](../training_scripts/) to see how the zoo could be integrated into differen training pipelines. For more details please see
 
->>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2
 - [Training a Classification Model](docs/CLASSIFICATION.md/#training-on-custom-dataset)
 - [Training an Object Detection Model](docs/OBJECT_DETECTION.md/#training-on-custom-dataset)
 
@@ -264,11 +257,7 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 ### Classification
 - The implementation of models on CIFAR100 dataset: [kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
 - The implementation of Mobilenetv1 model on VWW dataset: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
-<<<<<<< HEAD
-- The implementation of Mobilenetv3 model on VWW dataset: [d-li14/mobilenetv3.pytorch](https://github.com/d-li14/mobilenetv3.pytorch)
-=======
 - The implementation of Mobilenetv3 model on VWW dataset: [d-li14/mobilenetv3.pytorch](https://github.com/d-li14/mobilenetv3.pytorch)
 
 ### Misc
 - mAP metric calculation code: [bes-dev/mean_average_precision](https://github.com/bes-dev/mean_average_precision)
->>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2

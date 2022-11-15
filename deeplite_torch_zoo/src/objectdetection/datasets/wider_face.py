@@ -1,16 +1,15 @@
 import os
+from os.path import abspath, expanduser
 from pathlib import Path
+from typing import Dict, List, Union
 
 import cv2
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as cfg
 import numpy as np
 import torch
-from os.path import abspath, expanduser
-from typing import List, Dict, Union
-
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
-from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
-import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as cfg
-
+from deeplite_torch_zoo.src.objectdetection.datasets.dataset import \
+    DLZooDataset
 
 WF_CLASS_NAMES = {
     "BACKGROUND",
@@ -127,16 +126,11 @@ class WiderFace(DLZooDataset):
         return img_path
 
     def parse_train_val_annotations_file(self) -> None:
-
-        if self.split == "train":
-            filename = "wider_face_train_bbx_gt.txt" 
-        elif self.split == "val":
-            filename = "wider_face_val_bbx_gt.txt"
+        filename = "wider_face_train_bbx_gt.txt" if self.split == "train" else "wider_face_val_bbx_gt.txt"
         filepath = os.path.join(self.root, "wider_face_split", filename)
 
         with open(filepath, "r") as f:
             lines = f.readlines()
-            #print("lines_train : ",lines[0])
             i = 0
             while i < len(lines):
                 labels = []
@@ -177,54 +171,12 @@ class WiderFace(DLZooDataset):
                 })
 
     def parse_test_annotations_file(self) -> None:
-        filepath = os.path.join(self.root, "wider_face_split", "wider_face_val_bbx_gt.txt")
-        # filepath = abspath(expanduser(filepath))
-        # with open(filepath, "r") as f:
-        #     lines = f.readlines()
-        #     for line in lines:
-        #         line = line.rstrip()
-        #         img_path = os.path.join(self.root, "WIDER_test", "images", line)
-        #         img_path = abspath(expanduser(img_path))
-        #         self.img_info.append({"img_path": img_path})
+        filepath = os.path.join(self.root, "wider_face_split", "wider_face_test_filelist.txt")
+        filepath = abspath(expanduser(filepath))
         with open(filepath, "r") as f:
             lines = f.readlines()
-            #print("lines_test : ",lines[1])
-            i = 0
-            while i < len(lines):
-                labels = []
-                img_path = self._parse_file_name(lines[i])
-                _num_boxes = int(lines[i+1].rstrip())
-                num_boxes = max(1, _num_boxes)
-                i = i + 2
-                bboxes_lines = lines[i: i+num_boxes]
-                i = i + num_boxes
-                for bbox_line in bboxes_lines:
-                    line_split = bbox_line.rstrip().split(" ")
-                    bbox_values = np.array([float(x) for x in line_split])
-
-                    # Tiny faces cause inf loss for bboxes regression loss
-                    if bbox_values[2] < 20 or bbox_values[3] < 20:
-                        continue
-                    bbox_values[2:4] += bbox_values[0:2]
-                    labels.append(bbox_values)
-
-                if len(labels) == 0:
-                    continue
-
-                labels = np.array(labels)
-                _invalid = labels[:, 7]
-                valid_boxes = num_boxes - sum(_invalid)
-                if _num_boxes == 0 or valid_boxes <= 0:
-                    continue
-
-                self.img_info.append({
-                    "img_path": img_path,
-                    "annotations": {"bbox": labels[:, 0:4],  # xmin, ymin, xmax, ymax
-                                    "blur": labels[:, 4],
-                                    "expression": labels[:, 5],
-                                    "illumination": labels[:, 6],
-                                    "invalid": _invalid,
-                                    "occlusion": labels[:, 8],
-                                    "pose": labels[:, 9]}
-                })
-
+            for line in lines:
+                line = line.rstrip()
+                img_path = os.path.join(self.root, "WIDER_test", "images", line)
+                img_path = abspath(expanduser(img_path))
+                self.img_info.append({"img_path": img_path})

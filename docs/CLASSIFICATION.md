@@ -43,28 +43,14 @@
     APs = eval_function(model, test_loader)
 ```
 
-<<<<<<< HEAD
-List of models and corresponding datasets used to train it can be found [here](#complete-list-of-models-and-datasets).
-
-## Training on Custom Dataset
-
-### Basic Training Example
-One can get an idea of complete working pipeline of the deeplite_torch_zoo classification using [train_classifier.py](../examples/train_classifier.py). It needs to be ensured that the data format should follow either of the formats present in the available datasets.
-=======
 ## Training on Custom Dataset
 
 ### Basic Training Example
 One can get an idea of complete working pipeline of the Deeplite Torch Zoo classification by looking at the [CIFAR training script](../training_scripts/classification/cifar/train_cifar.py).
->>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2
 
 ### ImageNet Training Example
 
-<<<<<<< HEAD
-### Advanced Training Example
-One can train a full fledged model with resume functionalities using [train.py](../training_scripts/classification/train.py). Command to run this script, 
-=======
 One can train a full fledged model by using the ImageNet training script [train.py](../training_scripts/classification/imagenet/train.py). The following command could be used to run this script,
->>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2
 
 ```
     $ python train.py --dataset-name ZOO_DATASET_NAME --data_dir DATA_ROOT_PATH --model MODEL_NAME --num-classes NUM_CLASSES -b BATCH_SIZE --epochs NUM_EPOCHS --pretrained --pretraining-dataset PRETRAINING_DATASET
@@ -98,14 +84,3 @@ The zoo enables to load any ImageNet-pretrained model from the [timm repo](https
 | resnext29_2x64d                  | cifar100                                  |
 | shufflenet_v2_1_0                | cifar100                                  |
 | vgg19                            | cifar100, imagenet, tinyimagenet          |
-<<<<<<< HEAD
-| vovnet39a                        | imagenet                                  |
-| vovnet57a                        | imagenet                                  |
-| wide_resnet101_2                 | imagenet                                  |
-| wide_resnet50_2                  | imagenet                                  |
-| xception41                       | imagenet                                  |
-| xception65                       | imagenet                                  |
-| xception71                       | imagenet                                  |
-| xception                         | imagenet                                  |
-=======
->>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2

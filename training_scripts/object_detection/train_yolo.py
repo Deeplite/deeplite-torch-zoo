@@ -28,10 +28,6 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
-import os
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="6"
 
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
@@ -40,6 +36,7 @@ from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_eval_function)
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
     YoloV5Loss
+
 from utils.general import (AverageMeter, colorstr, init_seeds, one_cycle,
                            print_args, set_logging, strip_optimizer)
 from utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel,
@@ -121,7 +118,6 @@ def train(opt, device):
         distributed=(cuda and RANK != -1),
         **dataset_kwargs
     )
-    #print("#######",dataset_splits.keys())
     train_img_size = dataset_splits["train"].dataset._img_size
     test_img_size = dataset_splits["test"].dataset._img_size
     if opt.test_img_res:
@@ -130,7 +126,7 @@ def train(opt, device):
     train_loader = dataset_splits["train"]
     dataset = train_loader.dataset
     nc = dataset.num_classes
-    print("number of classes = ", nc)
+    print("Number of classes = ", nc)
 
     nb = len(train_loader)  # number of batches
 
