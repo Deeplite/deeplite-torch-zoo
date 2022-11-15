@@ -124,24 +124,10 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     return wrapper_func
 
 
-<<<<<<< HEAD
-ModelSet = namedtuple('ModelSet', ['num_classes', 'model_list'])
-wrapper_funcs = {
-    'person_detection': ModelSet(1, ['yolo5_6n', 'yolo5_6s',
-        'yolo5_6n_relu', 'yolo5_6s_relu', 'yolo5_6m_relu', 'yolo5_6sa']),
-    'voc': ModelSet(20, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6l', 'yolo5_6x',
-        'yolo5_6m_relu', 'yolo5_6s_relu', 'yolo5_6n_relu', 'yolo5_6n_hswish', 'yolo5_6s_hswish']),
-    'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
-        'yolo5_6n_hswish', 'yolo5_6s_hswish', 'yolo5_6n_relu']),
-    'voc07': ModelSet(20, ['yolo5_6n', 'yolo5_6s']),
-    'wider_face': ModelSet(1, ['yolo5_6n_relu'])
-}
-=======
 model_list = list(yolov5_cfg.keys())
 for model_name_suffix in MODEL_NAME_SUFFICES:
     model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov5_cfg]
 datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
->>>>>>> 22e9ef80b5547e60f6287f1f42ae8af475d78bf2
 
 for dataset_tag, n_classes in datasets:
     for model_tag in model_list:
