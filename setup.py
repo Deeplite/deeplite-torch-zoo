@@ -32,9 +32,10 @@ INSTALL_REQUIRES = [
     "pyvww==0.1.1",
     "timm==0.5.4",
     "texttable==1.6.4",
-    "pytz",
     "torchmetrics==0.8.0",
     "ptflops==0.6.2",
+    "pytz",
+    "addict",
     "pandas",
 ]
 
