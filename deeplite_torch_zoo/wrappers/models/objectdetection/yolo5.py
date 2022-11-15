@@ -120,6 +120,7 @@ wrapper_funcs = {
     'coco': ModelSet(80, ['yolo5_6n', 'yolo5_6s', 'yolo5_6m', 'yolo5_6sa', 'yolo5_6ma',
         'yolo5_6n_hswish', 'yolo5_6s_hswish', 'yolo5_6n_relu']),
     'voc07': ModelSet(20, ['yolo5_6n', 'yolo5_6s']),
+    'wider_face': ModelSet(1, ['yolo5_6n_relu'])
 }
 
 for dataset, model_set in wrapper_funcs.items():
