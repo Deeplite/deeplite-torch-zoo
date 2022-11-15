@@ -45,7 +45,8 @@ def yolo4(
     model = YoloV5_6(config_path, ch=ch, nc=num_classes)
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
-            raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}')
+            raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
+                              'Use pretrained=False if you want to create a untrained model.')
         checkpoint_url = urlparse.urljoin(CHECKPOINT_STORAGE_URL, model_urls[f"{model_name}_{dataset_name}"])
         model = load_pretrained_weights(model, checkpoint_url, progress, device)
     return model.to(device)

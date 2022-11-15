@@ -1,6 +1,6 @@
 backbone:
   type: efficientnet
-  version: b1 # b1 to b8 and l2
+  version: b1  # choices: b1 to b8 and l2
 neck:
   FPN:
     channel_outs: [512, 256, 256]

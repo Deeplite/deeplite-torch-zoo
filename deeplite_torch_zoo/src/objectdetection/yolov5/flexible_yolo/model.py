@@ -15,6 +15,8 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.neck import \
     build_neck
 from torch import nn
 
+DEFAULT_ANCHORS = [[10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]]
+
 
 class YOLOHead(nn.Module):
     stride = None
@@ -22,10 +24,7 @@ class YOLOHead(nn.Module):
     onnx_dynamic = False
     def __init__(self, nc, anchors=None, ch=(256, 512, 1024), stride=[8., 16., 32.], inplace=True):  # detection layer
         super(YOLOHead, self).__init__()
-        if anchors is None:
-            anchors = [[10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]]
-        else:
-            anchors = anchors
+        anchors = DEFAULT_ANCHORS if anchors is None else anchors
 
         self.nc = nc  # number of classes
         self.no = nc + 5  # number of outputs per anchor
