@@ -6,8 +6,9 @@ import cv2
 import numpy as np
 import torch
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
+from deeplite_torch_zoo.src.objectdetection.eval.mean_average_precision import \
+    MetricBuilder
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
-from mean_average_precision import MetricBuilder
 from tqdm import tqdm
 
 
@@ -103,9 +104,13 @@ class VOCEvaluator(Evaluator):
         for obj in tree.findall("object"):
             obj_struct = {}
             obj_struct["name"] = obj.find("name").text
-            obj_struct["pose"] = obj.find("pose").text
-            obj_struct["truncated"] = int(obj.find("truncated").text)
-            obj_struct["difficult"] = int(obj.find("difficult").text)
+            obj_struct["difficult"] = 0
+            if obj.find("pose"):
+                obj_struct["pose"] = obj.find("pose").text
+            if obj.find("truncated"):
+                obj_struct["truncated"] = int(obj.find("truncated").text)
+            if obj.find("difficult"):
+                obj_struct["difficult"] = int(obj.find("difficult").text)
             bbox = obj.find("bndbox")
             obj_struct["bbox"] = [
                 int(float(bbox.find("xmin").text)),

@@ -622,7 +622,7 @@ def main():
                     writer.add_scalar('train/' + key, value, epoch)
                 for key, value in eval_metrics.items():
                     writer.add_scalar('eval/' + key, value, epoch)
-                writer.add_scalar('lr', lr_scheduler.get_lr(), epoch)
+                writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
                 utils.update_summary(
                     epoch, train_metrics, eval_metrics, os.path.join(output_dir, 'summary.csv'),
                     write_header=best_metric is None, log_wandb=False)
