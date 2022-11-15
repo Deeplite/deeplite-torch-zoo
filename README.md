@@ -245,6 +245,8 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of resnet-ssd: [Nvidia-SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
 - The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
+- The implementation of flexible-yolov5: [Bobo-y/flexible-yolov5](https://github.com/Bobo-y/flexible-yolov5)
+- The implementation of yolov7: [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
 
 ### Segmentation
 - The implementation of deeplab: [pytorch-deeplab-xception](https://github.com/jfzhang95/pytorch-deeplab-xception)
@@ -256,3 +258,6 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - The implementation of models on CIFAR100 dataset: [kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
 - The implementation of Mobilenetv1 model on VWW dataset: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of Mobilenetv3 model on VWW dataset: [d-li14/mobilenetv3.pytorch](https://github.com/d-li14/mobilenetv3.pytorch)
+
+### Misc
+- mAP metric calculation code: [bes-dev/mean_average_precision](https://github.com/bes-dev/mean_average_precision)
