@@ -25,7 +25,7 @@ INSTALL_REQUIRES = [
     "pycocotools==2.0.4",
     "Cython==0.29.30",
     "tqdm==4.46.0",
-    "albumentations",
+    "albumentations==1.0.3",
     "pretrainedmodels==0.7.4",
     "torchfcn==1.9.7",
     "tensorboardX==2.4.1",

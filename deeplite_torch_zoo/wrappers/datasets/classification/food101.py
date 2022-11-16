@@ -24,7 +24,7 @@ def get_food101(
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
-        raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla","imagenet"')
+        raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
 
     if augmentation_mode == 'imagenet':
         train_transforms, test_transforms = get_imagenet_transforms(img_size)
