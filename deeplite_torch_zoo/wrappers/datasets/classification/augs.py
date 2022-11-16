@@ -56,18 +56,18 @@ def get_vanilla_transforms(
     mean=IMAGENET_DEFAULT_MEAN,
     std=IMAGENET_DEFAULT_STD,
     crop_pct=DEFAULT_CROP_PCT,
-    auto_aug=False,
+    autoaugment_policy=None,
 ):
-    if auto_aug:
-        raise NotImplementedError
-
     train_transforms = [
         transforms.RandomResizedCrop(img_size),
         transforms.RandomHorizontalFlip(hflip),
         transforms.ColorJitter(brightness=jitter, contrast=jitter, saturation=jitter, hue=0),
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std),
+
     ]
+    if autoaugment_policy is not None:
+        train_transforms.append(autoaugment_policy)
+
+    train_transforms += [transforms.ToTensor(), transforms.Normalize(mean, std)]
 
     test_transforms = [
         transforms.Resize(int(img_size / crop_pct)),
