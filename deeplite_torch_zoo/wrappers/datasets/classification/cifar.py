@@ -11,7 +11,8 @@ __all__ = ["get_cifar100", "get_cifar10"]
 
 
 def _get_cifar(
-    cifar_cls, data_root="", batch_size=128, img_size=32, num_workers=4, fp16=False, download=True, device="cuda", distributed=False,
+    cifar_cls, data_root="", batch_size=128, img_size=32, num_workers=4, fp16=False,
+    download=True, device="cuda", distributed=False,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")

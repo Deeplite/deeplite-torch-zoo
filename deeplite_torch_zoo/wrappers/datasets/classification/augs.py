@@ -1,7 +1,6 @@
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
 from timm.data.transforms_factory import (transforms_imagenet_eval,
                                           transforms_imagenet_train)
+from torchvision import transforms
 
 DEFAULT_CROP_PCT = 0.875
 IMAGENET_DEFAULT_MEAN = (0.485, 0.456, 0.406)
@@ -52,33 +51,29 @@ def get_imagenet_transforms(
 
 def get_vanilla_transforms(
     img_size,
-    scale=(0.08, 1.0),
-    ratio=(0.75, 1.0 / 0.75),  # 0.75, 1.33
     hflip=0.5,
-    vflip=0.0,
     jitter=0.4,
     mean=IMAGENET_DEFAULT_MEAN,
     std=IMAGENET_DEFAULT_STD,
     crop_pct=DEFAULT_CROP_PCT,
     auto_aug=False,
 ):
-    T_train = [A.RandomResizedCrop(height=img_size, width=img_size, scale=scale, ratio=ratio)]
     if auto_aug:
-        pass
-        # TODO: implement AugMix, AutoAug & RandAug in albumentation
-    else:
-        if hflip > 0:
-            T_train += [A.HorizontalFlip(p=hflip)]
-        if vflip > 0:
-            T_train += [A.VerticalFlip(p=vflip)]
-        if jitter > 0:
-            color_jitter = (float(jitter),) * 3  # repeat value for brightness, contrast, satuaration, 0 hue
-            T_train += [A.ColorJitter(*color_jitter, 0)]
+        raise NotImplementedError
 
-    # Use fixed crop for eval set (reproducibility)
-    T_test = [A.SmallestMaxSize(max_size=int(img_size / crop_pct)), A.CenterCrop(height=img_size, width=img_size)]
+    train_transforms = [
+        transforms.RandomResizedCrop(img_size),
+        transforms.RandomHorizontalFlip(hflip),
+        transforms.ColorJitter(brightness=jitter, contrast=jitter, saturation=jitter, hue=0),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+    ]
 
-    T_train += [A.Normalize(mean=mean, std=std), ToTensorV2()]  # Normalize and convert to Tensor
-    T_test += [A.Normalize(mean=mean, std=std), ToTensorV2()]  # Normalize and convert to Tensor
+    test_transforms = [
+        transforms.Resize(int(img_size / crop_pct)),
+        transforms.CenterCrop(img_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+    ]
 
-    return A.Compose(T_train), A.Compose(T_test)
+    return transforms.Compose(train_transforms), transforms.Compose(test_transforms)
