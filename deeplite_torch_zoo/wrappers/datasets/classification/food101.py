@@ -4,13 +4,13 @@ from os.path import expanduser
 from pathlib import Path
 
 import PIL.Image
+from deeplite_torch_zoo.wrappers.datasets.classification.augs import \
+    get_vanilla_transforms
+from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-from torchvision import transforms
 from torchvision.datasets.utils import (download_and_extract_archive,
                                         verify_str_arg)
 from torchvision.datasets.vision import VisionDataset
-
-from ..utils import get_dataloader
 
 __all__ = ["get_food101"]
 
@@ -89,18 +89,7 @@ def get_food101(
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
-    train_transforms = transforms.Compose([transforms.RandomRotation(30),
-                                          transforms.RandomResizedCrop(img_size),
-                                          transforms.RandomHorizontalFlip(),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize([0.485, 0.456, 0.406],
-                                                                [0.229, 0.224, 0.225])])
-
-    test_transforms = transforms.Compose([transforms.Resize(int(0.875 * img_size)),
-                                          transforms.CenterCrop(img_size),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize([0.485, 0.456, 0.406],
-                                                                [0.229, 0.224, 0.225])])
+    train_transforms, test_transforms = get_vanilla_transforms(img_size)
 
     train_dataset = Food101(
         root=data_root,
