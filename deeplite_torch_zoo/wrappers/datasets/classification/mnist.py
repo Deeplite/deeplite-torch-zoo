@@ -1,11 +1,10 @@
 import os
-import torchvision
-
-from ..utils import get_dataloader
 from os.path import expanduser
-from torchvision import transforms
-from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
+import torchvision
+from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+from torchvision import transforms
 
 __all__ = ["get_mnist"]
 
