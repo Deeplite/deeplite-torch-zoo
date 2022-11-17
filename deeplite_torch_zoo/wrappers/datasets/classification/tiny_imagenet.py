@@ -1,16 +1,16 @@
 import os
-from torchvision import datasets
-from torchvision import transforms
+
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
+from torchvision import datasets, transforms
 
 from ..utils import get_dataloader
-from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-
 
 __all__ = ["get_tinyimagenet"]
 
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name='tinyimagenet')
-def get_tinyimagenet(data_root, batch_size=128, num_workers=4, fp16=False, device="cuda", distributed=False, **kwargs):
+def get_tinyimagenet(data_root, batch_size=128, test_batch_size=None, num_workers=4,
+    fp16=False, device="cuda", distributed=False, **kwargs):
 
     if len(kwargs):
         import sys
@@ -34,7 +34,8 @@ def get_tinyimagenet(data_root, batch_size=128, num_workers=4, fp16=False, devic
     train_loader = get_dataloader(image_datasets["train"], batch_size=batch_size, num_workers=num_workers,
         fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
 
-    test_loader = get_dataloader(image_datasets["val"], batch_size=batch_size, num_workers=num_workers,
+    test_batch_size = batch_size if test_batch_size is None else test_batch_size
+    test_loader = get_dataloader(image_datasets["val"], batch_size=test_batch_size, num_workers=num_workers,
         fp16=fp16, distributed=distributed, shuffle=False, device=device)
 
     return {"train": train_loader, "val": test_loader, "test": test_loader}

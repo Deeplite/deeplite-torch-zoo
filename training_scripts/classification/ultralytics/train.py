@@ -53,6 +53,7 @@ def train(opt, device):
         dataset_name=opt.dataset,
         model_name=opt.model,
         batch_size=bs,
+        test_batch_size=opt.test_batch_size,
         image_size=imgsz,
         num_workers=nw,
     )
@@ -204,6 +205,7 @@ def parse_opt(known=False):
     parser.add_argument('--pretraining-dataset', type=str, default='imagenet')
     parser.add_argument('--epochs', type=int, default=200, help='total training epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs')
+    parser.add_argument('--test-batch-size', type=int, default=256, help='testing batch size')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=224, help='train, val image size (pixels)')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
