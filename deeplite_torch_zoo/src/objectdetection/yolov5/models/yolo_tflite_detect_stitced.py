@@ -21,7 +21,16 @@ def yaml_load(file='data.yaml'):
     # Single-line safe yaml loading
     with open(file, errors='ignore') as f:
         return yaml.safe_load(f)
-
+anchors_h = np.array([
+    [[1.23242, 1.89746], [1.45117, 3.74414], [2.90625, 3.59180]],
+    [[0.41968, 0.77734], [0.84277, 1.62207], [1.28711, 3.05664]],
+    [[1.34473, 3.41016], [2.56445, 4.22266], [4.73828, 5.64062]],
+])
+anchors_l = np.array([
+    [[0.75830, 1.14453], [0.91357, 2.38672], [1.65723, 2.09766]],
+    [[0.27100, 0.52832], [0.49390, 0.90430], [0.74121, 1.80078]],
+    [[0.82861, 1.96387], [1.50195, 2.25000], [2.67383, 3.15625]],
+])
 class StitchedYoloTflite(nn.Module):
     # YOLOv5 MultiBackend class for python inference on various backends
     def __init__(self, weights='yolov5s.pt', device=torch.device('cpu'), dnn=False, data=None, fp16=False, fuse=True):
@@ -52,6 +61,7 @@ class StitchedYoloTflite(nn.Module):
         # class names
         if 'names' not in locals():
             names = yaml_load(data)['names'] if data else {i: f'class{i}' for i in range(999)}
+        self.anchors = anchors_h if '224px' in weights or '192px' in weights or '160' in weights else anchors_l
    
         self.__dict__.update(locals())  # assign all variables to self
 
@@ -71,12 +81,8 @@ class StitchedYoloTflite(nn.Module):
         self.interpreter.set_tensor(input['index'], im)
         self.interpreter.invoke()
         y = []
+        anchors = self.anchors
 
-        anchors = np.array([
-            [[1.23242, 1.89746], [1.45117, 3.74414], [2.90625, 3.59180]],
-            [[0.41968, 0.77734], [0.84277, 1.62207], [1.28711, 3.05664]],
-            [[1.34473, 3.41016], [2.56445, 4.22266], [4.73828, 5.64062]],
-        ])
 
         stride = np.array([16, 8, 32])
         index = 0; nc = 1; no = nc + 5; na = 3;

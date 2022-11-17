@@ -27,15 +27,17 @@ def run(
         dataset_type='voc', # Either 'voc' or coco formats are supported
         conf_thres=0.25,  # confidence threshold
         iou_thres=0.45,  # NMS IOU threshold
-        project=ROOT / 'results',  # save results to project/name
+        project=ROOT / 'results_visual',  # save results to project/name
         name=Path('exp'),
         line_width=10,
+        save_imgs=True,
 ):
     source = str(source) 
+    name = Path(weights).stem
     # Directories
-    save_dir = Path(project) / name
+    save_dir = Path(project) / Path(source).stem / name
     (save_dir / 'labels').mkdir(parents=True, exist_ok=True)  # make dir
-
+    (save_dir / 'images').mkdir(parents=True, exist_ok=True)  # make dir
     # Load model
     model = StitchedYoloTflite(weights, device=torch.device('cuda'))
 
@@ -70,11 +72,12 @@ def run(
             p, im0 = path, im0s.copy()
 
             p = Path(p)  # to Path
-            save_path = str(save_dir / p.name)  # im.jpg
+            save_path = str(save_dir / 'images' / p.name)  # im.jpg
             txt_path = str(save_dir / 'labels' / p.stem)  # im.txt
             s += '%gx%g ' % im.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-            annotator = Annotator(im0, line_width=line_width)
+            if save_imgs:
+                annotator = Annotator(im0, line_width=line_width)
             with open(f'{txt_path}.txt', 'w') as f:
                 if len(det):
                     # Rescale boxes from img_size to im0 size
@@ -82,13 +85,17 @@ def run(
 
                     # Write results
                     for *xyxy, conf, cls in reversed(det):
+                        if conf < conf_thres:
+                            continue
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         line = (0, conf, *xywh)
                         f.write(('%g ' * len(line)).rstrip() % line + '\n')
                         label = f'{conf:.2f}'
-                        annotator.box_label(xyxy, label)
-            im0 = annotator.result()
-            cv2.imwrite(save_path, im0)
+                        if save_imgs:
+                            annotator.box_label(xyxy, label)
+            if save_imgs:
+                im0 = annotator.result()
+                cv2.imwrite(save_path, im0)
         # Print time (inference-only)
         print(f"{s}{'' if len(det) else '(no detections), '}{dt[1].dt * 1E3:.1f}ms")
 
@@ -101,7 +108,7 @@ def run(
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'weights/opt_model_st_int8_224px_ch_3.tflite', help='model path or triton URL')
+    parser.add_argument('--weights', type=str, default=ROOT / 'weights/opt_model_st_int8_224px_ch_3.tflite', help='model path or triton URL')
     parser.add_argument('--source', type=str, default=ROOT / 'images', help='path to folder of images')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=224, help='inference size')
     parser.add_argument('--line-width', type=int, default=10, help='bounding box thickness')
