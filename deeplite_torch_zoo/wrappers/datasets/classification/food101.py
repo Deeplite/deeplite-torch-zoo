@@ -4,15 +4,55 @@ from os.path import expanduser
 from pathlib import Path
 
 import PIL.Image
+from deeplite_torch_zoo.wrappers.datasets.classification.augs import (
+    get_imagenet_transforms, get_vanilla_transforms)
+from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-from torchvision import transforms
 from torchvision.datasets.utils import (download_and_extract_archive,
                                         verify_str_arg)
 from torchvision.datasets.vision import VisionDataset
 
-from ..utils import get_dataloader
-
 __all__ = ["get_food101"]
+
+
+@DATA_WRAPPER_REGISTRY.register(dataset_name="food101")
+def get_food101(
+    data_root="", batch_size=64, test_batch_size=None, img_size=224, augmentation_mode='imagenet', num_workers=4,
+    fp16=False, download=True, device="cuda", distributed=False, **kwargs,
+):
+    if data_root == "":
+        data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
+
+    if augmentation_mode not in ('vanilla', 'imagenet'):
+        raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla","imagenet"')
+
+    if augmentation_mode == 'imagenet':
+        train_transforms, test_transforms = get_imagenet_transforms(img_size)
+    else:
+        train_transforms, test_transforms = get_vanilla_transforms(img_size)
+
+    train_dataset = Food101(
+        root=data_root,
+        split='train',
+        download=download,
+        transform=train_transforms
+    )
+
+    test_dataset = Food101(
+        root=data_root,
+        split='test',
+        download=download,
+        transform=test_transforms,
+    )
+
+    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
+
+    test_batch_size = batch_size if test_batch_size is None else test_batch_size
+    test_loader = get_dataloader(test_dataset, batch_size=test_batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=False, device=device)
+
+    return {"train": train_loader, "test": test_loader}
 
 
 class Food101(VisionDataset):
@@ -79,48 +119,3 @@ class Food101(VisionDataset):
         if self._check_exists():
             return
         download_and_extract_archive(self._URL, download_root=self.root, md5=self._MD5)
-
-
-@DATA_WRAPPER_REGISTRY.register(dataset_name="food101")
-def get_food101(
-    data_root="", batch_size=64, test_batch_size=None, img_size=224, num_workers=4,
-    fp16=False, download=True, device="cuda", distributed=False, **kwargs,
-):
-    if data_root == "":
-        data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
-
-    train_transforms = transforms.Compose([transforms.RandomRotation(30),
-                                          transforms.RandomResizedCrop(img_size),
-                                          transforms.RandomHorizontalFlip(),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize([0.485, 0.456, 0.406],
-                                                                [0.229, 0.224, 0.225])])
-
-    test_transforms = transforms.Compose([transforms.Resize(int(0.875 * img_size)),
-                                          transforms.CenterCrop(img_size),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize([0.485, 0.456, 0.406],
-                                                                [0.229, 0.224, 0.225])])
-
-    train_dataset = Food101(
-        root=data_root,
-        split='train',
-        download=download,
-        transform=train_transforms
-    )
-
-    test_dataset = Food101(
-        root=data_root,
-        split='test',
-        download=download,
-        transform=test_transforms,
-    )
-
-    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
-        fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
-
-    test_batch_size = batch_size if test_batch_size is None else test_batch_size
-    test_loader = get_dataloader(test_dataset, batch_size=test_batch_size, num_workers=num_workers,
-        fp16=fp16, distributed=distributed, shuffle=False, device=device)
-
-    return {"train": train_loader, "test": test_loader}

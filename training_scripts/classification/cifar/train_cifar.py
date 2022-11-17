@@ -83,7 +83,7 @@ class CIFARConfig:
 def train(args: CIFARConfig, model=None, data_splits=None):
     torch.manual_seed(args.seed)
 
-    writer = SummaryWriter(comment=f'{args.arch_name}')
+    writer = SummaryWriter(comment=f'{args.model}')
 
     data_splits = get_data_splits_by_name(
         data_root=args.data_root,
