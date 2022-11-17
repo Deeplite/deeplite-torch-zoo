@@ -7,7 +7,7 @@ __all__ = ["classification_eval"]
 
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='classification')
-def classification_eval(model, dataloader, progress=False, device="cuda"):
+def classification_eval(model, dataloader, progressbar=False, device="cuda"):
     metrics = {
         'acc': Accuracy(),
         'acc_top5': Accuracy(top_k=5),
@@ -20,7 +20,7 @@ def classification_eval(model, dataloader, progress=False, device="cuda"):
 
     model.eval()
     with torch.set_grad_enabled(False):
-        for X, y in tqdm(dataloader, disable=not progress):
+        for X, y in tqdm(dataloader, disable=not progressbar):
             if device == "cuda":
                 X = X.cuda()
                 y = y.cuda()
