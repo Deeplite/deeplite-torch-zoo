@@ -61,7 +61,7 @@ class StitchedYoloTflite(nn.Module):
         # class names
         if 'names' not in locals():
             names = yaml_load(data)['names'] if data else {i: f'class{i}' for i in range(999)}
-        self.anchors = anchors_h if '224px' in weights or '192px' in weights or '160' in weights else anchors_l
+        self.anchors = anchors_h if '224px' in w or '192px' in w or '160' in w else anchors_l
    
         self.__dict__.update(locals())  # assign all variables to self
 

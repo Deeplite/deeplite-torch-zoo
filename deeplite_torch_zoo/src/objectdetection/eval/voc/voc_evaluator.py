@@ -22,6 +22,7 @@ class VOCEvaluator(Evaluator):
         is_07_subset=False,
         progressbar=False,
         eval_style='coco',
+        subclasses=None,
     ):
 
         super(VOCEvaluator, self).__init__(
@@ -44,7 +45,7 @@ class VOCEvaluator(Evaluator):
         self.predictions = {}
         self.ground_truth_boxes = {}
 
-        self.class_names = self._parse_gt_boxes()
+        self.class_names = self._parse_gt_boxes(subclasses=subclasses)
         self.metric_fn = MetricBuilder.build_evaluation_metric("map_2d",
             async_mode=True, num_classes=len(self.class_names))
 
@@ -60,7 +61,6 @@ class VOCEvaluator(Evaluator):
             )
             self.metric_fn.add(np.array(self.predictions[img_ind]),
                 np.array(self.ground_truth_boxes[img_ind]))
-
         if self.eval_style == 'voc':
             metrics = self.metric_fn.value(iou_thresholds=iou_thresh)
         elif self.eval_style == 'coco':
@@ -78,18 +78,26 @@ class VOCEvaluator(Evaluator):
             self.predictions[img_ind].append([*np.array(bbox[:4], dtype=np.int32),
                 int(bbox[5]), bbox[4]])
 
-    def _parse_gt_boxes(self):
+    def _parse_gt_boxes(self, subclasses=None):
         class_names = []
+        _img_inds = []
         annopath = os.path.join(self.val_data_path, "Annotations", "{:s}.xml")
         for imagename in self.img_inds:
             parsed_boxes = self.parse_rec(annopath.format(imagename))
+            include_image = False
             for obj in parsed_boxes:
+                if subclasses and obj["name"] not in subclasses:
+                    continue
+                include_image = True
                 if obj["name"] not in class_names:
                     class_names.append(obj["name"])
                 if not obj['difficult']:
                     if imagename not in self.ground_truth_boxes:
                         self.ground_truth_boxes[imagename] = []
                     self.ground_truth_boxes[imagename].append([*obj["bbox"], obj["name"], 0, 0])
+            if include_image:
+                _img_inds.append(imagename)
+        self.img_inds = _img_inds
         class_names.sort()
         for imagename in self.ground_truth_boxes:
             for box_data in self.ground_truth_boxes[imagename]:
@@ -126,7 +134,7 @@ class VOCEvaluator(Evaluator):
 def yolo_eval_voc(
     model, data_root, device="cuda", img_size=448,
     is_07_subset=False, progressbar=False, iou_thresh=0.5, conf_thresh=0.001,
-    nms_thresh=0.5, eval_style='coco', **kwargs
+    nms_thresh=0.5, eval_style='coco', subclasses=None, **kwargs
 ):
 
     model.to(device)
@@ -134,7 +142,7 @@ def yolo_eval_voc(
         ap_dict = VOCEvaluator(
             model, data_root, img_size=img_size,
             is_07_subset=is_07_subset, progressbar=progressbar, conf_thresh=conf_thresh,
-            nms_thresh=nms_thresh, eval_style=eval_style).evaluate(iou_thresh=iou_thresh)
+            nms_thresh=nms_thresh, eval_style=eval_style, subclasses=subclasses).evaluate(iou_thresh=iou_thresh)
 
     return ap_dict
 

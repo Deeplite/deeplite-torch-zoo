@@ -27,7 +27,7 @@ def run(
 ):
     model = StitchedYoloTflite(weights, device=torch.device("cuda"))
     if dataset_type == 'voc':
-        mAP = yolo_eval_voc(model, source, img_size=imgsz)
+        mAP = yolo_eval_voc(model, source, img_size=imgsz, subclasses=["person"])
     elif dataset_type == 'coco':
         mAP = yolo_eval_coco(
             model, source, img_size=imgsz,
