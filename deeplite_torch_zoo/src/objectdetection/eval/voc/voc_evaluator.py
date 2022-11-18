@@ -6,8 +6,9 @@ import cv2
 import numpy as np
 import torch
 from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
+from deeplite_torch_zoo.src.objectdetection.eval.mean_average_precision import \
+    MetricBuilder
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
-from mean_average_precision import MetricBuilder
 from tqdm import tqdm
 
 
