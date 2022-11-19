@@ -58,7 +58,15 @@ def get_cifar100(
         print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
 
     cifar_cls = torchvision.datasets.CIFAR100
-    return _get_cifar(cifar_cls, data_root, batch_size, test_batch_size, num_workers, fp16, download, device, distributed)
+    return _get_cifar(cifar_cls,
+        data_root=data_root,
+        batch_size=batch_size,
+        test_batch_size=test_batch_size,
+        num_workers=num_workers,
+        fp16=fp16,
+        download=download,
+        device=device,
+        distributed=distributed)
 
 
 @DATA_WRAPPER_REGISTRY.register("cifar10")
@@ -71,4 +79,12 @@ def get_cifar10(
         print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
 
     cifar_cls = torchvision.datasets.CIFAR10
-    return _get_cifar(cifar_cls, data_root, batch_size, test_batch_size, num_workers, fp16, download, device, distributed)
+    return _get_cifar(cifar_cls,
+        data_root=data_root,
+        batch_size=batch_size,
+        test_batch_size=test_batch_size,
+        num_workers=num_workers,
+        fp16=fp16,
+        download=download,
+        device=device,
+        distributed=distributed)
