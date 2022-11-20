@@ -37,6 +37,7 @@ INSTALL_REQUIRES = [
     "pytz",
     "addict",
     "pandas",
+    "pytorchcv==0.0.67",
 ]
 
 
