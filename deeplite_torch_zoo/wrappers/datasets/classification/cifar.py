@@ -58,10 +58,19 @@ def get_cifar100(
         print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
 
     cifar_cls = torchvision.datasets.CIFAR100
-    return _get_cifar(cifar_cls, data_root, batch_size, test_batch_size, img_size, num_workers, fp16, download, device, distributed)
+    return _get_cifar(cifar_cls,
+        data_root=data_root,
+        batch_size=batch_size,
+        test_batch_size=test_batch_size,
+        img_size=img_size,
+        num_workers=num_workers,
+        fp16=fp16,
+        download=download,
+        device=device,
+        distributed=distributed)
 
 
-@DATA_WRAPPER_REGISTRY.register("cifar10")
+@DATA_WRAPPER_REGISTRY.register(dataset_name="cifar10")
 def get_cifar10(
     data_root="", batch_size=128, test_batch_size=None,  img_size=32, num_workers=4,
     fp16=False, download=True, device="cuda", distributed=False, **kwargs,
@@ -71,4 +80,13 @@ def get_cifar10(
         print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
 
     cifar_cls = torchvision.datasets.CIFAR10
-    return _get_cifar(cifar_cls, data_root, batch_size, test_batch_size, img_size, num_workers, fp16, download, device, distributed)
+    return _get_cifar(cifar_cls,
+        data_root=data_root,
+        batch_size=batch_size,
+        test_batch_size=test_batch_size,
+        img_size=img_size,
+        num_workers=num_workers,
+        fp16=fp16,
+        download=download,
+        device=device,
+        distributed=distributed)

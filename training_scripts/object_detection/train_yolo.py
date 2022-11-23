@@ -188,7 +188,11 @@ def train(opt, device):
 
     # Image sizes
     gs = max(int(model.stride.max()), 32)  # grid size (max stride)
-    nl = model.model[-1].nl  # number of detection layers (used for scaling hyp['obj'])
+
+    if hasattr(model, 'detection'):
+        nl = model.detection.nl
+    else:
+        nl = model.model[-1].nl  # number of detection layers (used for scaling hyp['obj'])
 
     # DP mode
     if cuda and RANK == -1 and torch.cuda.device_count() > 1:

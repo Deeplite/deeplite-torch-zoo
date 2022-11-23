@@ -88,7 +88,7 @@ class FlexibleYOLO(nn.Module):
             model_config = yaml.load(open(model_config, 'r'), Loader=yaml.SafeLoader)
         model_config = Dict(model_config)
         if nc is not None:
-            model_config.nc = nc
+            model_config.head.nc = nc
 
         if backbone_kwargs is not None:
             model_config.backbone.update(Dict(backbone_kwargs))
@@ -111,8 +111,13 @@ class FlexibleYOLO(nn.Module):
         model_config.head['ch'] = ch_in
 
         self.detection = YOLOHead(**model_config.head)
-        self.stride = self.detection.stride
-        self._initialize_biases()
+        if isinstance(self.detection, YOLOHead):
+            s = 256  # 2x min stride
+            self.detection.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, 3, s, s))])
+            self.detection.anchors /= self.detection.stride.view(-1, 1, 1)
+
+            self.stride = self.detection.stride
+            self._initialize_biases()  # only run once
 
         initialize_weights(self)
 
