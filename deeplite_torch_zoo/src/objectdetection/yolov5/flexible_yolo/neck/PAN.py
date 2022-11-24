@@ -27,12 +27,12 @@ class PAN(nn.Module):
         self.version = str(version)
         self.channels_outs = channel_outs
         gains = {
-                'n': {'gd': 0.33, 'gw': 0.25},
-                's': {'gd': 0.33, 'gw': 0.5},
-                'm': {'gd': 0.67, 'gw': 0.75},
-                'l': {'gd': 1, 'gw': 1},
-                'x': {'gd': 1.33, 'gw': 1.25}
-                }
+            'n': {'gd': 0.33, 'gw': 0.25},
+            's': {'gd': 0.33, 'gw': 0.5},
+            'm': {'gd': 0.67, 'gw': 0.75},
+            'l': {'gd': 1, 'gw': 1},
+            'x': {'gd': 1.33, 'gw': 1.25}
+        }
 
         if self.version.lower() in gains:
             # only for yolov5
