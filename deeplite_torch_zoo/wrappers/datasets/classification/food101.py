@@ -17,14 +17,14 @@ __all__ = ["get_food101"]
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name="food101")
 def get_food101(
-    data_root="", batch_size=64, test_batch_size=None, img_size=224, augmentation_mode='imagenet', num_workers=4,
-    fp16=False, download=True, device="cuda", distributed=False, **kwargs,
+    data_root="", batch_size=64, test_batch_size=None, img_size=224, num_workers=4,
+    fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
-        raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla","imagenet"')
+        raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
 
     if augmentation_mode == 'imagenet':
         train_transforms, test_transforms = get_imagenet_transforms(img_size)
@@ -56,6 +56,7 @@ def get_food101(
 
 
 class Food101(VisionDataset):
+    # Added for compatibility with old torchvision versions
 
     _URL = "http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz"
     _MD5 = "85eeb15f3717b99a5da872d97d918f87"
