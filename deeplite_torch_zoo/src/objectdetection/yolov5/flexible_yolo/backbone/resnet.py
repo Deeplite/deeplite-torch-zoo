@@ -139,8 +139,8 @@ class Bottleneck(nn.Module):
 
 
 class Resnet(nn.Module):
-
-    def __init__(self, block, layers, cbam=False, dcn=False, drop_prob=0, base_channels=64, width=0.25):
+    def __init__(self, block, layers, cbam=False, dcn=False, drop_prob=0,
+        base_channels=64, width=0.25, first_block_downsampling=False):
         super(Resnet, self).__init__()
         self.inplanes = int(base_channels * width)
         self.dcn = dcn
@@ -159,7 +159,7 @@ class Resnet(nn.Module):
                 nr_steps=5e3
             )
         ch = int(base_channels * width)
-        self.layer1 = self._make_layer(block, ch, layers[0])
+        self.layer1 = self._make_layer(block, ch, layers[0], stride=1 if not first_block_downsampling else 2)
         self.layer2 = self._make_layer(block, ch * 2, layers[1], stride=2, cbam=self.cbam)
         self.layer3 = self._make_layer(block, ch * 4, layers[2], stride=2, cbam=self.cbam, dcn=dcn)
         self.layer4 = self._make_layer(block, ch * 8, layers[3], stride=2, cbam=self.cbam, dcn=dcn)
@@ -170,9 +170,9 @@ class Resnet(nn.Module):
                     if hasattr(m, 'conv2_offset'):
                         constant_init(m.conv2_offset, 0)
 
-        self.out_shape = [self.out_channels[0] * 2,
+        self.out_shape = (self.out_channels[0] * 2,
                           self.out_channels[1] * 2,
-                          self.out_channels[2] * 2]
+                          self.out_channels[2] * 2)
 
         print("backbone output channel: C3 {}, C4 {}, C5 {}".format(self.out_channels[0] * 2, self.out_channels[1] * 2, self.out_channels[2] * 2))
 
@@ -282,14 +282,12 @@ def resnet152(pretrained=False, **kwargs):
 
 
 def resnet(pretrained=False, **kwargs):
+    VERSION_FN_MAP = {
+        '18': resnet18,
+        '34': resnet34,
+        '50': resnet50,
+        '101': resnet101,
+        '152': resnet152,
+    }
     version = str(kwargs.pop('version'))
-    if version == '18':
-        return resnet18(pretrained, **kwargs)
-    if version == '34':
-        return resnet34(pretrained, **kwargs)
-    if version == '50':
-        return resnet50(pretrained, **kwargs)
-    if version == '101':
-        return resnet101(pretrained, **kwargs)
-    if version == '152':
-        return resnet152(pretrained, **kwargs)
+    return VERSION_FN_MAP[version](pretrained, **kwargs)

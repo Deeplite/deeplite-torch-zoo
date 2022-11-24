@@ -65,7 +65,6 @@ def get_vanilla_transforms(
         transforms.RandomResizedCrop(img_size),
         transforms.RandomHorizontalFlip(hflip),
         transforms.ColorJitter(brightness=jitter, contrast=jitter, saturation=jitter, hue=0),
-
     ]
     if autoaugment_policy is not None:
         train_transforms.append(autoaugment_policy)

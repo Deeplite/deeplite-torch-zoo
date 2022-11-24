@@ -144,7 +144,7 @@ class TestModels(unittest.TestCase):
     def test_resnet18_ssd_voc(self):
         model = get_model_by_name(
             model_name="resnet18_ssd",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -154,7 +154,7 @@ class TestModels(unittest.TestCase):
             model_name="resnet18_ssd",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("resnet18_ssd", "voc_20")
+        eval_fn = get_eval_function("resnet18_ssd", "voc")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.728) < 0.001, True)
 
@@ -162,7 +162,7 @@ class TestModels(unittest.TestCase):
     def test_resnet34_ssd_voc(self):
         model = get_model_by_name(
             model_name="resnet34_ssd",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -172,7 +172,7 @@ class TestModels(unittest.TestCase):
             model_name="resnet34_ssd",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("resnet34_ssd", "voc_20")
+        eval_fn = get_eval_function("resnet34_ssd", "voc")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.760) < 0.001, True)
 
@@ -180,7 +180,7 @@ class TestModels(unittest.TestCase):
     def test_resnet50_ssd_voc(self):
         model = get_model_by_name(
             model_name="resnet50_ssd",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -190,7 +190,7 @@ class TestModels(unittest.TestCase):
             model_name="resnet50_ssd",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("resnet50_ssd", "voc_20")
+        eval_fn = get_eval_function("resnet50_ssd", "voc")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.766) < 0.001, True)
 
@@ -198,7 +198,7 @@ class TestModels(unittest.TestCase):
     def test_vgg16_ssd_voc(self):
         model = get_model_by_name(
             model_name="vgg16_ssd",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -208,7 +208,7 @@ class TestModels(unittest.TestCase):
             model_name="vgg16_ssd",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("vgg16_ssd", "voc_20")
+        eval_fn = get_eval_function("vgg16_ssd", "voc")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.7731) < 0.001, True)
 
@@ -235,7 +235,7 @@ class TestModels(unittest.TestCase):
     def test_mb1_ssd_voc(self):
         model = get_model_by_name(
             model_name="mb1_ssd",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -245,15 +245,15 @@ class TestModels(unittest.TestCase):
             model_name="mb1_ssd",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("mb1_ssd", "voc_20")
+        eval_fn = get_eval_function("mb1_ssd", "voc")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.6755) < 0.001, True)
 
-    @pytest.mark.test_mb2_ssd_lite_voc_20
-    def test_mb2_ssd_lite_voc_20(self):
+    @pytest.mark.test_mb2_ssd_lite_voc
+    def test_mb2_ssd_lite_voc(self):
         model = get_model_by_name(
             model_name="mb2_ssd_lite",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -263,15 +263,15 @@ class TestModels(unittest.TestCase):
             model_name="mb2_ssd_lite",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("mb2_ssd_lite", "voc_20")
+        eval_fn = get_eval_function("mb2_ssd_lite", "voc")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.687) < 0.001, True)
 
-    @pytest.mark.test_mb2_ssd_voc_20
-    def test_mb2_ssd_voc_20(self):
+    @pytest.mark.test_mb2_ssd_voc
+    def test_mb2_ssd_voc(self):
         model = get_model_by_name(
             model_name="mb2_ssd",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -281,7 +281,7 @@ class TestModels(unittest.TestCase):
             model_name="mb2_ssd_lite",
             batch_size=32,
         )["test"]
-        eval_fn = get_eval_function("mb2_ssd", "voc_20")
+        eval_fn = get_eval_function("mb2_ssd", "voc")
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.443) < 0.001, True)
 
@@ -387,15 +387,15 @@ class TestModels(unittest.TestCase):
         APs = eval_fn(model, test_loader)
         self.assertEqual(abs(APs["mAP"] - 0.716) < 0.001, True)
 
-    @pytest.mark.test_yolov3_voc_20
-    def test_yolov3_voc_20(self):
+    @pytest.mark.test_yolov3_voc
+    def test_yolov3_voc(self):
         model = get_model_by_name(
             model_name="yolo3",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo3", "voc_20")
+        eval_fn = get_eval_function("yolo3", "voc")
         APs = eval_fn(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov3"
         )
@@ -407,11 +407,11 @@ class TestModels(unittest.TestCase):
     def test_yolov4s_voc(self):
         model = get_model_by_name(
             model_name="yolo4s",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4s", "voc_20")
+        eval_fn = get_eval_function("yolo4s", "voc")
         APs = eval_fn(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4s"
         )
@@ -422,11 +422,11 @@ class TestModels(unittest.TestCase):
     def test_yolov4m_voc(self):
         model = get_model_by_name(
             model_name="yolo4m",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4m", "voc_20")
+        eval_fn = get_eval_function("yolo4m", "voc")
         APs = eval_fn(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4m"
         )
@@ -437,11 +437,11 @@ class TestModels(unittest.TestCase):
     def test_yolov4l_voc(self):
         model = get_model_by_name(
             model_name="yolo4l",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4l", "voc_20")
+        eval_fn = get_eval_function("yolo4l", "voc")
         APs = eval_fn(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolo4l"
         )
@@ -452,11 +452,11 @@ class TestModels(unittest.TestCase):
     def test_yolov4l_leaky_voc(self):
         model = get_model_by_name(
             model_name="yolo4l_leaky",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4l_leaky", "voc_20")
+        eval_fn = get_eval_function("yolo4l_leaky", "voc")
         APs = eval_fn(
             model,
             "/neutrino/datasets/VOCdevkit/VOC2007/",
@@ -470,11 +470,11 @@ class TestModels(unittest.TestCase):
     def test_yolov4x_voc(self):
         model = get_model_by_name(
             model_name="yolo4x",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo4x", "voc_20")
+        eval_fn = get_eval_function("yolo4x", "voc")
         APs = eval_fn(
             model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc", net="yolov4x"
         )
@@ -485,11 +485,11 @@ class TestModels(unittest.TestCase):
     def test_yolov5_6s_voc(self):
         model = get_model_by_name(
             model_name="yolo5_6s",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
-        eval_fn = get_eval_function("yolo5_6s", "voc_20")
+        eval_fn = get_eval_function("yolo5_6s", "voc")
         APs = eval_fn(model, "/neutrino/datasets//VOCdevkit/VOC2007/", _set="voc")
         print(APs)
         self.assertEqual(abs(APs["mAP"] - 0.821) < 0.001, True)
@@ -533,11 +533,11 @@ class TestModels(unittest.TestCase):
         print(dc)
         self.assertEqual(abs(dc - 0.983) < 0.001, True)
 
-    @pytest.mark.test_unet_scse_resnet18_voc_20
-    def test_unet_scse_resnet18_voc_20(self):
+    @pytest.mark.test_unet_scse_resnet18_voc
+    def test_unet_scse_resnet18_voc(self):
         model = get_model_by_name(
             model_name="unet_scse_resnet18",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -547,7 +547,7 @@ class TestModels(unittest.TestCase):
             model_name="unet",
             num_workers=1,
         )["test"]
-        eval_fn = get_eval_function("unet_scse_resnet18", "voc_20")
+        eval_fn = get_eval_function("unet_scse_resnet18", "voc")
         acc = eval_fn(model, test_loader, net="unet_scse_resnet18")
         miou = acc["miou"]
         print(miou)
@@ -615,11 +615,11 @@ class TestModels(unittest.TestCase):
         print(miou)
         self.assertEqual(abs(miou - 0.989) < 0.001, True)
 
-    @pytest.mark.test_fcn32_voc_20
-    def test_fcn32_voc_20(self):
+    @pytest.mark.test_fcn32_voc
+    def test_fcn32_voc(self):
         model = get_model_by_name(
             model_name="fcn32",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -631,17 +631,17 @@ class TestModels(unittest.TestCase):
             batch_size=1,
             backbone="vgg",
         )["test"]
-        eval_fn = get_eval_function("fcn32", "voc_20")
+        eval_fn = get_eval_function("fcn32", "voc")
         acc = eval_fn(model, test_loader, net="fcn32")
         miou = acc["miou"]
         print(miou)
         self.assertEqual(abs(miou - 0.713) < 0.001, True)
 
-    @pytest.mark.test_deeplab_mobilenet_voc_20
-    def test_deeplab_mobilenet_voc_20(self):
+    @pytest.mark.test_deeplab_mobilenet_voc
+    def test_deeplab_mobilenet_voc(self):
         model = get_model_by_name(
             model_name="deeplab_mobilenet",
-            dataset_name="voc_20",
+            dataset_name="voc",
             pretrained=True,
             progress=False,
         )
@@ -653,7 +653,7 @@ class TestModels(unittest.TestCase):
             num_workers=2,
             backbone="vgg",
         )["test"]
-        eval_fn = get_eval_function("deeplab_mobilenet", "voc_20")
+        eval_fn = get_eval_function("deeplab_mobilenet", "voc")
         acc = eval_fn(model, test_loader, net="deeplab")
         miou = acc["miou"]
         print(miou)

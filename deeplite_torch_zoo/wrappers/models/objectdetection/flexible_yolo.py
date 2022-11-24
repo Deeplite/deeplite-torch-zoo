@@ -24,7 +24,9 @@ model_configs = {
     'yolo_mobilenetv3': 'model_mobilenet.yaml',
     'yolo_resnet18': 'model_resnet.yaml',
     'yolo_resnet18x0.5': 'model_resnet.yaml',
+    'yolo_fdresnet18x0.5': 'model_resnet.yaml',
     'yolo_resnet18x0.25': 'model_resnet.yaml',
+    'yolo_fdresnet18x0.25': 'model_resnet.yaml',
     'yolo_resnet34': 'model_resnet.yaml',
     'yolo_resnet34x0.5': 'model_resnet.yaml',
     'yolo_resnet34x0.25': 'model_resnet.yaml',
@@ -36,6 +38,8 @@ model_configs = {
 model_kwargs = {
     'yolo_resnet18x0.25': {'backbone': {'version': 18, 'width': 0.25}, 'neck': None},
     'yolo_resnet18x0.5': {'backbone': {'version': 18, 'width': 0.5}, 'neck': None},
+    'yolo_fdresnet18x0.25': {'backbone': {'version': 18, 'width': 0.25, 'first_block_downsampling': True}, 'neck': None},
+    'yolo_fdresnet18x0.5': {'backbone': {'version': 18, 'width': 0.5, 'first_block_downsampling': True}, 'neck': None},
     'yolo_resnet18': {'backbone': {'version': 18}, 'neck': None},
     'yolo_resnet34': {'backbone': {'version': 34}, 'neck': None},
     'yolo_resnet34x0.25': {'backbone': {'version': 34, 'width': 0.25}, 'neck': None},

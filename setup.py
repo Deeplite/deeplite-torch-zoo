@@ -18,6 +18,7 @@ with open('README.md') as f:
 HERE = pathlib.Path(__file__).parent
 
 INSTALL_REQUIRES = [
+    "setuptools<65.6.0",
     "torch>=1.4, <=1.8.1",
     "opencv-python",
     "scipy>=1.4.1",
@@ -37,6 +38,7 @@ INSTALL_REQUIRES = [
     "pytz",
     "addict",
     "pandas",
+    "pytorchcv==0.0.67",
 ]
 
 
@@ -100,7 +102,7 @@ setup(
         'sdist': gitcmd_sdist,
     },
     name="deeplite-torch-zoo",
-    version="1.2.7",
+    version="1.2.8",
     description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
     long_description=long_description,
     long_description_content_type="text/markdown",

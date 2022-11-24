@@ -37,7 +37,7 @@ from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
-from kd import build_kd_model
+from kd import KDTeacher
 
 try:
     from apex import amp
@@ -328,6 +328,7 @@ group.add_argument('--log-wandb', action='store_true', default=False,
                     help='log training and validation metrics to wandb')
 # KD parameters:
 group.add_argument('--kd_model_name', default=None, type=str)
+group.add_argument('--kd_model_checkpoint', default=None, type=str)
 group.add_argument('--alpha_kd', default=5, type=float)
 group.add_argument('--use_kd_only_loss', action='store_true', default=False)
 
@@ -399,7 +400,11 @@ def main():
 
     model_kd = None
     if args.kd_model_name is not None:
-        model_kd = build_kd_model(args)
+        model_kd = KDTeacher(args)
+
+    datasplit_kwargs = {}
+    if args.img_size is not None:
+        datasplit_kwargs = {'img_size': args.img_size}
 
     datasplit_kwargs = {}
     if args.img_size is not None:

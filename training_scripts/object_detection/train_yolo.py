@@ -133,10 +133,9 @@ def train(opt, device):
     # Model
     model = create_model(
         model_name=opt.model_name,
-        pretraining_dataset=opt.pretraining_source_dataset,
+        pretraining_dataset=opt.pretraining_dataset,
         pretrained=opt.pretrained,
         num_classes=nc,
-        progress=True,
         device=device,
     )
 
@@ -188,7 +187,11 @@ def train(opt, device):
 
     # Image sizes
     gs = max(int(model.stride.max()), 32)  # grid size (max stride)
-    nl = model.model[-1].nl  # number of detection layers (used for scaling hyp['obj'])
+
+    if hasattr(model, 'detection'):
+        nl = model.detection.nl
+    else:
+        nl = model.model[-1].nl  # number of detection layers (used for scaling hyp['obj'])
 
     # DP mode
     if cuda and RANK == -1 and torch.cuda.device_count() > 1:
@@ -423,7 +426,7 @@ def parse_opt(known=False):
     parser.add_argument('--pretrained', action='store_true', default=False,
         help='train the model from scratch if false')
     parser.add_argument(
-        "--pretraining_source_dataset", type=str, default="voc",
+        "--pretraining_dataset", type=str, default="coco",
         help="Load pretrained weights fine-tuned on the specified dataset ('voc' or 'coco')",
     )
     parser.add_argument(
@@ -442,7 +445,7 @@ def parse_opt(known=False):
         help="Name of the dataset to train/validate on",
     )
     parser.add_argument(
-        "--net", dest="model_name", type=str, default="yolo5_6m",
+        "--model", dest="model_name", type=str, default="yolo5_6m",
         help="Specific YOLO model name to be used in training (ex. yolo3, yolo4m, yolo5_6s, ...)",
     )
     parser.add_argument(

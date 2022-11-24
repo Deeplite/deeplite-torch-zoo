@@ -17,8 +17,8 @@ __all__ = ["get_food101"]
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name="food101")
 def get_food101(
-    data_root="", batch_size=64, img_size=224, augmentation_mode='imagenet', num_workers=4,
-    fp16=False, download=True, device="cuda", distributed=False, **kwargs,
+    data_root="", batch_size=64, test_batch_size=None, img_size=224, num_workers=4,
+    fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
@@ -48,13 +48,15 @@ def get_food101(
     train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
         fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
 
-    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers,
+    test_batch_size = batch_size if test_batch_size is None else test_batch_size
+    test_loader = get_dataloader(test_dataset, batch_size=test_batch_size, num_workers=num_workers,
         fp16=fp16, distributed=distributed, shuffle=False, device=device)
 
     return {"train": train_loader, "test": test_loader}
 
 
 class Food101(VisionDataset):
+    # Added for compatibility with old torchvision versions
 
     _URL = "http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz"
     _MD5 = "85eeb15f3717b99a5da872d97d918f87"
@@ -69,7 +71,7 @@ class Food101(VisionDataset):
     ) -> None:
         super().__init__(root, transform=transform, target_transform=target_transform)
         self._split = verify_str_arg(split, "split", ("train", "test"))
-        self._base_folder = Path(self.root) / "food-101"
+        self._base_folder = Path(self.root)
         self._meta_folder = self._base_folder / "meta"
         self._images_folder = self._base_folder / "images"
 
