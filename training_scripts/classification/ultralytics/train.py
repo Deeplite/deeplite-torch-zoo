@@ -9,13 +9,14 @@ from pathlib import Path
 
 import torch
 import torch.distributed as dist
+import torch.nn.functional as F
 import torch.optim.lr_scheduler as lr_scheduler
-from deeplite_torch_zoo.wrappers.wrapper import (create_model,
-                                                 get_data_splits_by_name,
-                                                 get_eval_function)
+from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
+                                get_eval_function)
 from torch.cuda import amp
 from tqdm import tqdm
 
+from kd import KDTeacher
 from utils.general import (LOGGER, WorkingDirectory, colorstr, increment_path,
                            init_seeds, print_args, yaml_save)
 from utils.torch_utils import (GenericLogger, ModelEMA, select_device,
@@ -54,19 +55,25 @@ def train(opt, device):
         model_name=opt.model,
         batch_size=bs,
         test_batch_size=opt.test_batch_size,
-        image_size=imgsz,
+        img_size=imgsz,
         num_workers=nw,
     )
     trainloader, testloader = dataloaders['train'], dataloaders['test']
 
     # Model
+    opt.num_classes = len(trainloader.dataset.classes)
     with torch_distributed_zero_first(LOCAL_RANK), WorkingDirectory(ROOT):
         model = create_model(
             model_name=opt.model,
             pretraining_dataset=opt.pretraining_dataset,
-            num_classes=len(trainloader.dataset.classes),
+            num_classes=opt.num_classes,
             pretrained=pretrained,
         )
+
+        model_kd = None
+        if opt.kd_model_name is not None:
+            model_kd = KDTeacher(opt)
+
 
     for p in model.parameters():
         p.requires_grad = True  # for training
@@ -75,7 +82,7 @@ def train(opt, device):
     # Eval function
     evaluation_fn = get_eval_function(
         model_name=opt.model,
-        dataset_name=opt.dataset,
+        dataset_name=opt.pretraining_dataset,
     )
 
     # Info
@@ -122,7 +129,24 @@ def train(opt, device):
 
             # Forward
             with amp.autocast(enabled=cuda):  # stability issues when enabled
-                loss = criterion(model(images), labels)
+                output = model(images)
+                loss = criterion(output, labels)
+
+                if model_kd is not None:
+                    # student probability calculation
+                    prob_s = F.log_softmax(output, dim=-1)
+
+                    # teacher probability calculation
+                    with torch.no_grad():
+                        input_kd = model_kd.normalize_input(images, model)
+                        out_t = model_kd.model(input_kd.detach())
+                        prob_t = F.softmax(out_t, dim=-1)
+
+                # adding KL loss
+                if not opt.use_kd_only_loss:
+                    loss += opt.alpha_kd * F.kl_div(prob_s, prob_t, reduction='batchmean')
+                else: # only kid
+                    loss = opt.alpha_kd * F.kl_div(prob_s, prob_t, reduction='batchmean')
 
             # Backward
             scaler.scale(loss).backward()
@@ -219,6 +243,12 @@ def parse_opt(known=False):
     parser.add_argument('--verbose', action='store_true', help='Verbose mode')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
     parser.add_argument('--local_rank', type=int, default=-1, help='Automatic DDP Multi-GPU argument, do not modify')
+
+    parser.add_argument('--kd_model_name', default=None, type=str)
+    parser.add_argument('--kd_model_checkpoint', default=None, type=str)
+    parser.add_argument('--alpha_kd', default=5, type=float)
+    parser.add_argument('--use_kd_only_loss', action='store_true', default=False)
+
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
 
