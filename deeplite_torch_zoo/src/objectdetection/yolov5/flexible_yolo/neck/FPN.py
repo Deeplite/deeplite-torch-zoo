@@ -10,7 +10,6 @@ def make_divisible(x, divisor):
     return math.ceil(x / divisor) * divisor
 
 
-
 class PyramidFeatures(nn.Module):
     """
     this FPN  refer to yolov5, there are many different versions of implementation, and the details will be different
@@ -24,7 +23,6 @@ class PyramidFeatures(nn.Module):
     V          | up2
     C5 --->    P5
     """
-
     def __init__(self, ch=[256, 512, 1024], channel_outs=[512, 256, 256], version='s'):
         super(PyramidFeatures, self).__init__()
 
@@ -33,21 +31,21 @@ class PyramidFeatures(nn.Module):
         self.C5_size = ch[2]
         self.channels_outs = channel_outs
         self.version = version
-        gains = {
-                'n': {'gd': 0.33, 'gw': 0.25},
-                's': {'gd': 0.33, 'gw': 0.5},
-                'm': {'gd': 0.67, 'gw': 0.75},
-                'l': {'gd': 1, 'gw': 1},
-                'x': {'gd': 1.33, 'gw': 1.25}
-                }
 
+        gains = {
+            'n': {'gd': 0.33, 'gw': 0.25},
+            's': {'gd': 0.33, 'gw': 0.5},
+            'm': {'gd': 0.67, 'gw': 0.75},
+            'l': {'gd': 1, 'gw': 1},
+            'x': {'gd': 1.33, 'gw': 1.25}
+        }
+
+        self.gd = 0.33
+        self.gw = 0.5
         if self.version.lower() in gains:
             # only for yolov5
             self.gd = gains[self.version.lower()]['gd']  # depth gain
             self.gw = gains[self.version.lower()]['gw']  # width gain
-        else:
-            self.gd = 0.33
-            self.gw = 0.5
 
         self.re_channels_out()
         self.concat = Concat()
@@ -61,12 +59,10 @@ class PyramidFeatures(nn.Module):
 
         self.P3 = C3(self.channels_outs[1] + self.C3_size, self.channels_outs[1], self.get_depth(3), False)
 
-
-        self.out_shape = [ self.channels_outs[2], self.channels_outs[1], self.channels_outs[0]]
+        self.out_shape = (self.channels_outs[2], self.channels_outs[1], self.channels_outs[0])
         print("FPN input channel size: C3 {}, C4 {}, C5 {}".format(self.C3_size, self.C4_size, self.C5_size))
         print("FPN output channel size: P3 {}, P4 {}, P5 {}".format(self.channels_outs[2], self.channels_outs[1],
                                                                     self.channels_outs[0]))
-
 
     def get_depth(self, n):
         return max(round(n * self.gd), 1) if n > 1 else n
