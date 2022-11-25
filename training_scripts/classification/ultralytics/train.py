@@ -41,7 +41,7 @@ def train(opt, device):
     # Directories
     wdir = save_dir / 'weights'
     wdir.mkdir(parents=True, exist_ok=True)  # make dir
-    last, best = wdir / 'last.pt', wdir / 'best.pt'
+    last, best, best_sd = wdir / 'last.pt', wdir / 'best.pt', wdir / 'best_state_dict.pt'
 
     # Save run settings
     yaml_save(save_dir / 'opt.yaml', vars(opt))
@@ -207,6 +207,7 @@ def train(opt, device):
                 torch.save(ckpt, last)
                 if best_fitness == fitness:
                     torch.save(ckpt, best)
+                    torch.save(ckpt['model'].state_dict(), best_sd)
                 del ckpt
 
     # Train complete
