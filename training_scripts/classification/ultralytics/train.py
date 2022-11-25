@@ -142,11 +142,11 @@ def train(opt, device):
                         out_t = model_kd.model(input_kd.detach())
                         prob_t = F.softmax(out_t, dim=-1)
 
-                # adding KL loss
-                if not opt.use_kd_only_loss:
-                    loss += opt.alpha_kd * F.kl_div(prob_s, prob_t, reduction='batchmean')
-                else: # only kid
-                    loss = opt.alpha_kd * F.kl_div(prob_s, prob_t, reduction='batchmean')
+                    # adding KL loss
+                    if not opt.use_kd_only_loss:
+                        loss += opt.alpha_kd * F.kl_div(prob_s, prob_t, reduction='batchmean')
+                    else: # only kid
+                        loss = opt.alpha_kd * F.kl_div(prob_s, prob_t, reduction='batchmean')
 
             # Backward
             scaler.scale(loss).backward()
