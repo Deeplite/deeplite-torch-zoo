@@ -7,10 +7,10 @@ __all__ = ["classification_eval"]
 
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='classification')
-def classification_eval(model, dataloader, progressbar=False, device="cuda"):
+def classification_eval(model, dataloader, progressbar=False, device="cuda", top_k=5):
     metrics = {
         'acc': Accuracy(),
-        'acc_top5': Accuracy(top_k=5),
+        f'acc_top{top_k}': Accuracy(top_k=top_k),
     }
 
     if device == "cuda":
