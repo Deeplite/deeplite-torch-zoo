@@ -52,16 +52,16 @@ def yolo7(
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo7$": yolo7,
     "^yolo7_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7_hswish$": partial(yolo7, activation_type="hswish"),
+    "^yolo7_hswish$": partial(yolo7, activation_type="hardswish"),
     "^yolo7[x]$": yolo7,
     "^yolo7[x]_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7[x]_hswish$": partial(yolo7, activation_type="hswish"),
+    "^yolo7[x]_hswish$": partial(yolo7, activation_type="hardswish"),
     "^yolo7_tiny$": yolo7,
     "^yolo7_tiny_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7_tiny_hswish$": partial(yolo7, activation_type="hswish"),
+    "^yolo7_tiny_hswish$": partial(yolo7, activation_type="hardswish"),
     "^yolo7_tinier$": yolo7,
     "^yolo7_tinier_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7_tinier_hswish$": partial(yolo7, activation_type="hswish"),
+    "^yolo7_tinier_hswish$": partial(yolo7, activation_type="hardswish"),
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
