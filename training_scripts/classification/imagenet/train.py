@@ -406,6 +406,10 @@ def main():
     if args.img_size is not None:
         datasplit_kwargs = {'img_size': args.img_size}
 
+    datasplit_kwargs = {}
+    if args.img_size is not None:
+        datasplit_kwargs = {'img_size': args.img_size}
+
     data_splits = get_data_splits_by_name(
         dataset_name=args.dataset,
         model_name=args.model,
