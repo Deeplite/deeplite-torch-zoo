@@ -115,7 +115,8 @@ def create_model(
     return model.half() if fp16 else model
 
 
-def list_models(filter='', print_table=True, return_list=False, task_type_filter=None):
+def list_models(filter='', print_table=True, return_list=False,
+    task_type_filter=None, include_no_checkpoint=False):
     """
     A helper function to list all existing models or dataset calls
     It takes a `model_name` or a `dataset_name` as a filter and
@@ -127,7 +128,10 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
     :param return_list: Whether to return a list with model names and corresponding datasets
     """
     filter = '*' + filter + '*'
-    all_model_keys = MODEL_WRAPPER_REGISTRY.pretrained_models.keys()
+    if include_no_checkpoint:
+        all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
+    else:
+        all_model_keys = MODEL_WRAPPER_REGISTRY.pretrained_models.keys()
     if task_type_filter is not None:
         allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
         if task_type_filter not in allowed_task_types:

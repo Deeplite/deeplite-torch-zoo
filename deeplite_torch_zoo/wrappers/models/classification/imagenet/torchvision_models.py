@@ -12,7 +12,7 @@ def make_wrapper_func(wrapper_fn_name, register_model_name_key, model_name_key):
     @MODEL_WRAPPER_REGISTRY.register(model_name=register_model_name_key, dataset_name='imagenet', task_type='classification')
     @MODEL_WRAPPER_REGISTRY.register(model_name=register_model_name_key, dataset_name='food101',
         task_type='classification', has_checkpoint=False)
-    def wrapper_func(pretrained=False, progress=True, device="cuda", num_classes=1000):
+    def wrapper_func(pretrained=False, progress=True, device="cuda", num_classes=NUM_IMAGENET_CLASSES):
         model = torchvision.models.__dict__[model_name_key](pretrained=pretrained, num_classes=NUM_IMAGENET_CLASSES)
 
         if num_classes != NUM_IMAGENET_CLASSES:
