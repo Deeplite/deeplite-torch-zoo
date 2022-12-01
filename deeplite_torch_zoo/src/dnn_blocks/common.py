@@ -30,7 +30,7 @@ def _make_divisible(v, divisor=8, min_value=None, round_limit=.9):
 class ConvBnAct(nn.Module):
     # Standard convolution
     def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act='relu', d=1, residual=False
+        self, c1, c2, k=1, s=1, p=None, g=1, act='relu', d=1, residual=False, use_bn=True,
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super().__init__()
         self.in_channels = c1
@@ -38,7 +38,7 @@ class ConvBnAct(nn.Module):
 
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), dilation=d, groups=g, bias=False)
 
-        self.bn = nn.BatchNorm2d(c2)
+        self.bn = nn.BatchNorm2d(c2) if use_bn else nn.Identity()
         self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
         self.residual = residual
 
