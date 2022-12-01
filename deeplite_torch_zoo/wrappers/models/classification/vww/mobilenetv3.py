@@ -1,7 +1,7 @@
+from deeplite_torch_zoo.src.classification.mobilenets.mobilenetv3 import (
+    mobilenetv3_large, mobilenetv3_small)
 from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
-from deeplite_torch_zoo.src.classification.mobilenets.mobilenetv3 import mobilenetv3_large, mobilenetv3_small
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
-
 
 __all__ = ["mobilenetv3_small_vww", "mobilenetv3_large_vww"]
 
@@ -16,7 +16,6 @@ def _mobilenetv3_vww(arch="small", pretrained=False, progress=True, num_classes=
         model = mobilenetv3_small(num_classes=num_classes)
     elif arch == "large":
         model = mobilenetv3_large(num_classes=num_classes)
-
 
     if pretrained:
         checkpoint_url = model_urls[f"mobilenetv3_{arch}"]
