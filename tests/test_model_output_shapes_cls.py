@@ -54,6 +54,8 @@ IMAGENET_MODEL_NAMES = [
     # pytorchcv:
     'fdmobilenet_wd4',
     'proxylessnas_mobile',
+    # zoo:
+    'mobilenetv2_w035',
 ]
 
 for model_name in IMAGENET_MODEL_NAMES:
