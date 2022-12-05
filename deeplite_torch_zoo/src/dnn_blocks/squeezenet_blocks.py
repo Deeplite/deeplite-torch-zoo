@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, ACT_TYPE_MAP
+from deeplite_torch_zoo.src.dnn_blocks.common import (
+                                ConvBnAct, ACT_TYPE_MAP, conv1x1)
 
 
 class FireUnit(nn.Module) :
@@ -35,18 +36,14 @@ class FireUnit(nn.Module) :
         expand1x1_channels = expand_channels # Number of output channels for expand 1x1 conv blocks.
         expand3x3_channels = expand_channels # Number of output channels for expand 3x3 conv blocks.
 
-        self.squeeze = ConvBnAct(
+        self.squeeze = conv1x1(
             c1=in_channels,
             c2=squeeze_channels,
-            k=1,
-            p=0,
             act=act,
             use_bn=False)
-        self.expand1x1 = ConvBnAct(
+        self.expand1x1 = conv1x1(
             c1=squeeze_channels,
             c2=expand1x1_channels,
-            k=1,
-            p=0,
             act=act,
             use_bn=False)
         self.expand3x3 = ConvBnAct(
@@ -71,7 +68,11 @@ class FireUnit(nn.Module) :
 
 class SqnxtUnit(nn.Module):
     """
-    SqueezeNext unit.
+    SqueezeNext unit."
+    Original paper: 'SqueezeNext: Hardware-Aware Neural Network Design,'
+    https://arxiv.org/abs/1803.10615.
+    https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/squeezenext.py
+    
     Parameters:
     ----------
     c1 : int
@@ -87,10 +88,9 @@ class SqnxtUnit(nn.Module):
                  s = 1,
                  act="relu"):
         super(SqnxtUnit, self).__init__()
-        stride = s
 
         self.resize_identity = True
-        if stride == 2:
+        if s == 2:
             reduction_den = 1
         elif c1 > c2:
             reduction_den = 4
@@ -100,20 +100,19 @@ class SqnxtUnit(nn.Module):
             reduction_den = 2
             self.resize_identity = False
 
-        print ("self.resize_identity",self.resize_identity, reduction_den)
         # conv 1 x 1 block
-        self.conv1 = ConvBnAct(
+        self.conv1 = conv1x1(
             c1=c1,
             c2=(c1 // reduction_den),
-            k=1,
-            s=stride,
+            s=s,
+            b=True,
             act=act)
 
         # conv 1 x 1 block
-        self.conv2 = ConvBnAct(
+        self.conv2 = conv1x1(
             c1=(c1 // reduction_den),
             c2=(c1 // (2 * reduction_den)),
-            k=1,
+            b=True,
             act=act)
 
         # conv 1 x 3 block
@@ -123,6 +122,7 @@ class SqnxtUnit(nn.Module):
             k=(1, 3),
             s=1,
             p=(0, 1),
+            use_bn=False,
             act=act)
 
         # conv 3 x 1 block
@@ -132,21 +132,23 @@ class SqnxtUnit(nn.Module):
             k=(3, 1),
             s=1,
             p=(1, 0),
+            use_bn=False,
             act=act)
 
         # conv 1 x 1 block
-        self.conv5 = ConvBnAct(
+        self.conv5 = conv1x1(
             c1=(c1 // reduction_den),
             c2=c2,
-            k=1,
+            b=True,
             act=act)
 
         if self.resize_identity:
             self.identity_conv = ConvBnAct(
                 c1=c1,
                 c2=c2,
-                s=stride,
-                act=act)
+                s=s,
+                act=act,
+                use_bn=False)
         self.activ = ACT_TYPE_MAP[act] if act else nn.Identity()
 
     def forward(self, x):
@@ -154,7 +156,6 @@ class SqnxtUnit(nn.Module):
             identity = self.identity_conv(x)
         else:
             identity = x
-        print(identity.shape)
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)

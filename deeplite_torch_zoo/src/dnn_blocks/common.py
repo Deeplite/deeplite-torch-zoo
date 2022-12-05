@@ -30,13 +30,14 @@ def _make_divisible(v, divisor=8, min_value=None, round_limit=.9):
 class ConvBnAct(nn.Module):
     # Standard convolution
     def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act='relu', d=1, residual=False, use_bn=True,
-    ):  # ch_in, ch_out, kernel, stride, padding, groups
+        self, c1, c2, k=1, s=1, p=None, g=1, b=None, act='relu', d=1, residual=False, use_bn=True,
+    ):  # ch_in, ch_out, kernel, stride, padding, groups, bias
         super().__init__()
         self.in_channels = c1
         self.out_channels = c2
-
-        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), dilation=d, groups=g, bias=False)
+        if b is None:
+            b = not use_bn
+        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), dilation=d, groups=g, bias=b)
 
         self.bn = nn.BatchNorm2d(c2) if use_bn else nn.Identity()
         self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
@@ -49,14 +50,21 @@ class ConvBnAct(nn.Module):
             return x + self.act(self.bn(self.conv(x)))
 
 
+def conv1x1(c1, c2, s=1, g=1, b=None, act=None, use_bn=False):
+    """
+    ch_in, ch_out, stride, groups, bias, activation
+    """
+    return ConvBnAct(c1=c1,c2=c2,k=1,s=s,g=g,b=b,act=act,use_bn= use_bn)
+
+
 class DWConv(ConvBnAct):
     # Depth-wise convolution class
     def __init__(
-        self, c1, c2, k, s=1, act='relu', residual=False,
+        self, c1, c2, k, s=1, act='relu', residual=False, use_bn=True
     ):  # ch_in, kernel, stride, padding, groups
         if c1 != c2:
             raise ValueError('Input and output channel count of DWConv does not match')
-        super().__init__(c1, c2, k, s, g=c1, act=act, residual=residual)
+        super().__init__(c1, c2, k, s, g=c1, act=act, residual=residual, use_bn=use_bn)
 
 
 class GhostConv(nn.Module):
