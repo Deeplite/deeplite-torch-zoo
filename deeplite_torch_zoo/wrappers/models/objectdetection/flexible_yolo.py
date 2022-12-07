@@ -4,7 +4,7 @@ from pathlib import Path
 import deeplite_torch_zoo
 from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.model import \
     FlexibleYOLO
-from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 __all__ = []
