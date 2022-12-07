@@ -316,7 +316,7 @@ class MobileOneBlockUnit(nn.Module):
                                              s=s,
                                              p=p,
                                              d=d,
-                                             g=g,
+                                             g=c1,
                                              act=act,
                                              inference_mode=inference_mode,
                                              use_se=use_se,
@@ -365,7 +365,7 @@ def _calc_width(net):
     return weight_count
 
 
-def _test_reparametrize_model(c1, c2, b=1, res=32):
+def _test_reparametrize_model(c1, c2, b=2, res=32):
     # perform a basic forward pass after reparam
     input = torch.rand((b,c1,res, res), device=None, requires_grad=False)
     block = MobileOneBlock(c1, c2, 3)
@@ -374,7 +374,6 @@ def _test_reparametrize_model(c1, c2, b=1, res=32):
     weight_count2 = _calc_width(block)
     output = block(input) # test forward pass after reparam
     print (f"Weight Before and after reparameterization {weight_count1} -> {weight_count2}")
-    print (block)
 
     block = MobileOneBlockUnit(c1, c2, 3)
     weight_count1 = _calc_width(block)
