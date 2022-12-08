@@ -1,5 +1,6 @@
 import hashlib
 import os
+from contextlib import contextmanager
 
 import deeplite_torch_zoo
 import torch
@@ -69,3 +70,13 @@ def load_state_dict_partial(model, pretrained_dict):
     model_dict.update(pretrained_dict)
     model.load_state_dict(model_dict)
     print(f'Loaded {len(pretrained_dict)}/{len(model_dict)} modules')
+
+
+@contextmanager
+def training_mode_switcher(model, is_training=False):
+    is_original_mode_training = model.training
+    model.train(is_training)
+    try:
+        yield
+    finally:
+        model.train(is_original_mode_training)
