@@ -18,7 +18,8 @@ __all__ = ["get_flowers102"]
 @DATA_WRAPPER_REGISTRY.register(dataset_name="flowers102")
 def get_flowers102(
     data_root="", batch_size=64, test_batch_size=None, img_size=224, num_workers=4,
-    fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
+    fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet',
+    train_transforms=None, val_transforms=None, **kwargs,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
@@ -27,9 +28,12 @@ def get_flowers102(
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
 
     if augmentation_mode == 'imagenet':
-        train_transforms, test_transforms = get_imagenet_transforms(img_size)
+        default_train_transforms, default_val_transforms = get_imagenet_transforms(img_size)
     else:
-        train_transforms, test_transforms = get_vanilla_transforms(img_size)
+        default_train_transforms, default_val_transforms = get_vanilla_transforms(img_size)
+
+    train_transforms = train_transforms if train_transforms is not None else default_train_transforms
+    val_transforms = val_transforms if val_transforms is not None else default_val_transforms
 
     train_dataset = Flowers102(
         root=data_root,
@@ -42,7 +46,7 @@ def get_flowers102(
         root=data_root,
         split='test',
         download=download,
-        transform=test_transforms,
+        transform=val_transforms,
     )
 
     train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
