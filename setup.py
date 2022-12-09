@@ -34,7 +34,6 @@ INSTALL_REQUIRES = [
     "timm==0.5.4",
     "pytorchcv==0.0.67",
     "texttable==1.6.4",
-    "torchmetrics==0.8.0",
     "torchprofile==0.0.3",
     "torchinfo==1.5.4",
     "addict==2.4.0",
