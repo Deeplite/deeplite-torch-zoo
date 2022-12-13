@@ -32,13 +32,13 @@ INSTALL_REQUIRES = [
     "tensorboardX==2.4.1",
     "pyvww==0.1.1",
     "timm==0.5.4",
-    "texttable==1.6.4",
-    "torchmetrics==0.8.0",
-    "ptflops==0.6.2",
-    "pytz",
-    "addict",
-    "pandas",
     "pytorchcv==0.0.67",
+    "texttable==1.6.4",
+    "torchprofile==0.0.3",
+    "torchinfo==1.5.4",
+    "addict==2.4.0",
+    "pytz",
+    "pandas",
 ]
 
 

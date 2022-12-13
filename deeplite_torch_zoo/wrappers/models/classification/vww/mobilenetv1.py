@@ -1,6 +1,6 @@
 from deeplite_torch_zoo.src.classification.mobilenets.mobilenetv1 import \
     MobileNetV1
-from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 __all__ = ["mobilenet_v1_vww", 'mobilenet_v1_025_vww', 'mobilenet_v1_025_96px_vww']
