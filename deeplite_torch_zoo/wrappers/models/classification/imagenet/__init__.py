@@ -3,3 +3,4 @@ from .torchvision_models_quantized import *
 from .timm_models import *
 from .pytorchcv_models import *
 from .zoo_models import *
+from .mobileone import *

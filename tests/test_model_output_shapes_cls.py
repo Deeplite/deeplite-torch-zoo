@@ -56,6 +56,11 @@ IMAGENET_MODEL_NAMES = [
     'proxylessnas_mobile',
     # zoo:
     'mobilenetv2_w035',
+    'mobileone_s0',
+    'mobileone_s1',
+    'mobileone_s2',
+    'mobileone_s3',
+    'mobileone_s4',
 ]
 
 for model_name in IMAGENET_MODEL_NAMES:
