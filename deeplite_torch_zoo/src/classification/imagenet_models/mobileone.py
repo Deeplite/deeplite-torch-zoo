@@ -2,12 +2,13 @@
 # For licensing see accompanying LICENSE file.
 # Copyright (C) 2022 Apple Inc. All Rights Reserved.
 #
-from typing import Optional, List
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
-from deeplite_torch_zoo.src.dnn_blocks.mobileone_blocks import MobileOneBlock, reparameterize_model
 
+from deeplite_torch_zoo.src.dnn_blocks.mobileone_blocks import (
+    MobileOneBlock, reparameterize_model)
 
 __all__ = ['MobileOne', 'mobileone', 'reparameterize_model']
 
@@ -116,7 +117,7 @@ class MobileOne(nn.Module):
         x = self.linear(x)
         return x
 
-    
+
     def get_reparameterize_model(self):
         return reparameterize_model(self)
 
