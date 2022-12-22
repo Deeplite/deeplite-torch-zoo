@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from deeplite_torch_zoo.src.dnn_blocks.common import (ACT_TYPE_MAP, ConvBnAct,
                                                       DWConv, GhostConv,
-                                                      _make_divisible)
+                                                      round_channels)
 from deeplite_torch_zoo.src.dnn_blocks.resnet_blocks import (GhostBottleneck,
                                                              ResXNetBottleneck)
 
@@ -39,7 +39,7 @@ class YOLOBottleneck(nn.Module):
     ):  # ch_in, ch_out, shortcut, groups, expansion
         super().__init__()
         if g != 1:
-            e = c1 / _make_divisible(round(c1 * e), divisor=g)
+            e = c1 / round_channels(round(c1 * e), divisor=g)
         c_ = int(c2 * e)  # hidden channels
         if c_ < g:
             return

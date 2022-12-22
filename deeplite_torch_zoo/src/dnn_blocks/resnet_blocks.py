@@ -1,7 +1,7 @@
 import torch.nn as nn
 from deeplite_torch_zoo.src.dnn_blocks.common import (ACT_TYPE_MAP, ConvBnAct,
                                                       DWConv, GhostConv,
-                                                      SELayer, _make_divisible)
+                                                      SELayer, round_channels)
 from torch import Tensor
 
 
@@ -53,7 +53,7 @@ class ResXNetBottleneck(ResNetBottleneck):
         act='relu',
         se_ratio=None,
     ):
-        e = c1 / _make_divisible(round(c1 * e))
+        e = c1 / round_channels(round(c1 * e))
         super(ResXNetBottleneck, self).__init__(c1, c2, e, k, stride, groups,
             dilation, act, se_ratio)
 

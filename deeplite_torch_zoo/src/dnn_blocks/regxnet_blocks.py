@@ -3,7 +3,7 @@ from functools import partial
 import torch
 import torch.nn as nn
 from deeplite_torch_zoo.src.dnn_blocks.common import (ACT_TYPE_MAP, ConvBnAct,
-                                                      SELayer, _make_divisible)
+                                                      SELayer, round_channels)
 
 SEWithNorm = partial(SELayer, norm_layer=nn.BatchNorm2d)
 
@@ -17,7 +17,7 @@ class RexNetBottleneck(nn.Module):
         self.out_channels = c2
 
         if exp_ratio != 1.:
-            dw_chs = _make_divisible(round(c1 * exp_ratio), divisor=ch_div)
+            dw_chs = round_channels(round(c1 * exp_ratio), divisor=ch_div)
             self.conv_exp = ConvBnAct(c1, dw_chs, act=act)
         else:
             dw_chs = c1
@@ -25,7 +25,7 @@ class RexNetBottleneck(nn.Module):
 
         self.conv_dw = ConvBnAct(dw_chs, dw_chs, k, s=stride, g=dw_chs, act=None)
 
-        self.se = SEWithNorm(dw_chs, rd_channels=_make_divisible(int(dw_chs * se_ratio), ch_div)) if se_ratio is not None \
+        self.se = SEWithNorm(dw_chs, rd_channels=round_channels(int(dw_chs * se_ratio), ch_div)) if se_ratio is not None \
             else nn.Identity()
 
         self.se = SELayer(dw_chs, reduction=se_ratio) if se_ratio else nn.Identity()
