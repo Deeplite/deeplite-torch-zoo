@@ -1,11 +1,12 @@
 
 import torch
 import torch.nn as nn
-from deeplite_torch_zoo.src.dnn_blocks.common import (ACT_TYPE_MAP, ConvBnAct,
-                                                      DWConv, GhostConv,
-                                                      _make_divisible)
+from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
+                                                      GhostConv,
+                                                      get_activation,
+                                                      round_channels)
 from deeplite_torch_zoo.src.dnn_blocks.resnet_blocks import (GhostBottleneck,
-                                                             ResXNetBottleneck)
+                                                             ResNeXtBottleneck)
 
 
 class SPPBottleneck(nn.Module):
@@ -39,7 +40,7 @@ class YOLOBottleneck(nn.Module):
     ):  # ch_in, ch_out, shortcut, groups, expansion
         super().__init__()
         if g != 1:
-            e = c1 / _make_divisible(round(c1 * e), divisor=g)
+            e = c1 / round_channels(round(c1 * e), divisor=g)
         c_ = int(c2 * e)  # hidden channels
         if c_ < g:
             return
@@ -77,7 +78,7 @@ class YOLOBottleneckCSP(nn.Module):
         self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         self.cv4 = ConvBnAct(2 * c_, c2, 1, 1,  act=act)
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
-        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
+        self.act = get_activation(act)
         self.m = nn.Sequential(
             *(YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n))
         )
@@ -139,7 +140,7 @@ class YOLOBottleneckCSPF(nn.Module):
         # self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         self.cv4 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
-        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
+        self.act = get_activation(act)
         self.m = nn.Sequential(
             *[YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n)]
         )
@@ -163,7 +164,7 @@ class YOLOBottleneckCSPL(nn.Module):
         self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         # self.cv4 = Conv(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(c2)  # applied to cat(cv2, cv3)
-        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
+        self.act = get_activation(act)
         self.m = nn.Sequential(
             *[YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n)]
         )
@@ -187,7 +188,7 @@ class YOLOBottleneckCSPLG(nn.Module):
         self.cv3 = nn.Conv2d(g * c_, g * c_, 1, 1, groups=g, bias=False)
         # self.cv4 = Conv(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(c2)  # applied to cat(cv2, cv3)
-        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
+        self.act = get_activation(act)
         self.m = nn.Sequential(
             *[YOLOBottleneck(g * c_, g * c_, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n)]
         )
@@ -253,7 +254,7 @@ class ResCSPA(BottleneckCSPA):
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e)
         c_ = int(c2 * e)  # hidden channels
-        self.m = nn.Sequential(*[ResXNetBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)])
+        self.m = nn.Sequential(*[ResNeXtBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)])
 
 
 class ResCSPB(BottleneckCSPB):
@@ -261,7 +262,7 @@ class ResCSPB(BottleneckCSPB):
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e)
         c_ = int(c2)  # hidden channels
-        self.m = nn.Sequential(*[ResXNetBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)])
+        self.m = nn.Sequential(*[ResNeXtBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)])
 
 
 class ResCSPC(BottleneckCSPC):
@@ -269,7 +270,7 @@ class ResCSPC(BottleneckCSPC):
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e)
         c_ = int(c2 * e)  # hidden channels
-        self.m = nn.Sequential(*[ResXNetBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)])
+        self.m = nn.Sequential(*[ResNeXtBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)])
 
 
 class GhostCSPA(BottleneckCSPA):
