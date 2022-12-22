@@ -12,6 +12,10 @@ ACT_TYPE_MAP = {
 }
 
 
+def get_activation(activation_name):
+    return ACT_TYPE_MAP[activation_name] if activation_name else nn.Identity()
+
+
 def autopad(k, p=None):  # kernel, padding
     # Pad to 'same'
     if p is None:
@@ -64,14 +68,16 @@ class ConvBnAct(nn.Module):
 
         self.in_channels = c1
         self.out_channels = c2
-        if b is None:
-            b = not use_bn
+        self.use_bn = use_bn
+        b = not self.use_bn if b is None else b
 
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), dilation=d, groups=g, bias=b)
 
         self.bn = nn.BatchNorm2d(c2) if use_bn else nn.Identity()
         self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
         self.residual = residual
+
+        self.resize_identity = (c1 != c2) or (s != 1)
 
         if self.residual:
             # in case the input and output shapes are different, we need a 1x1 conv in the skip connection
@@ -88,13 +94,6 @@ class ConvBnAct(nn.Module):
             else:
                 identity = x
         return identity + self.act(self.bn(self.conv(x)))
-
-
-def conv1x1(c1, c2, s=1, g=1, b=None, act=None, use_bn=False):
-    """
-    ch_in, ch_out, stride, groups, bias, activation
-    """
-    return ConvBnAct(c1=c1, c2=c2, k=1, s=s, g=g, b=b, act=act, use_bn=use_bn)
 
 
 class DWConv(ConvBnAct):
@@ -270,3 +269,55 @@ class DropPath(nn.Module):
 
     def extra_repr(self):
         return f'drop_prob={round(self.drop_prob,3):0.3f}'
+
+
+def channel_shuffle(x, groups):
+    """
+    Channel shuffle operation from 'ShuffleNet: An Extremely Efficient Convolutional Neural
+    Network for Mobile Devices,' https://arxiv.org/abs/1707.01083.
+    Parameters:
+    ----------
+    x : Tensor
+        Input tensor.
+    groups : int
+        Number of groups.
+    Returns:
+    -------
+    Tensor
+        Resulted tensor.
+    """
+    batch, channels, height, width = x.size()
+    # assert (channels % groups == 0)
+    channels_per_group = channels // groups
+    x = x.view(batch, groups, channels_per_group, height, width)
+    x = torch.transpose(x, 1, 2).contiguous()
+    x = x.view(batch, channels, height, width)
+    return x
+
+
+class ChannelShuffle(nn.Module):
+    """
+    Channel shuffle layer. This is a wrapper over the same operation. It is designed to save the number of groups.
+    Parameters:
+    ----------
+    channels : int
+        Number of channels.
+    groups : int
+        Number of groups.
+    """
+    def __init__(self,
+                 channels,
+                 groups):
+        super(ChannelShuffle, self).__init__()
+        if channels % groups != 0:
+            raise ValueError("channels must be divisible by groups")
+        self.groups = groups
+
+    def forward(self, x):
+        return channel_shuffle(x, self.groups)
+
+    def __repr__(self):
+        s = "{name}(groups={groups})"
+        return s.format(
+            name=self.__class__.__name__,
+            groups=self.groups)

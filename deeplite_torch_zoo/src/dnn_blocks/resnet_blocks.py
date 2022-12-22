@@ -1,7 +1,10 @@
+
 import torch.nn as nn
-from deeplite_torch_zoo.src.dnn_blocks.common import (ACT_TYPE_MAP, ConvBnAct,
-                                                      DWConv, GhostConv,
-                                                      SELayer, round_channels)
+from deeplite_torch_zoo.src.dnn_blocks.cnn_attention import SELayer
+from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
+                                                      GhostConv,
+                                                      get_activation,
+                                                      round_channels)
 from torch import Tensor
 
 
@@ -18,17 +21,26 @@ class ResNetBottleneck(nn.Module):
         dilation: int = 1,
         act='relu',
         se_ratio=None,
+        channel_divisor=1,
+        mid_channels=None
     ) -> None:
         super().__init__()
-        c_ = int(e * c1)
+
+        self.resize_identity = (c1 != c2) or (stride != 1)
+        c_ = mid_channels if mid_channels is not None else round_channels(e * c1, channel_divisor)
+
         self.conv1 = ConvBnAct(c1, c_, 1, act=act)
         self.conv2 = ConvBnAct(c_, c_, k, stride, g=groups, d=dilation, act=act)
         self.conv3 = ConvBnAct(c_, c2, 1, act=False)
-        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
+        self.act = get_activation(act)
         self.se = SELayer(c2, reduction=se_ratio) if se_ratio else nn.Identity()
+        self.identity_conv = ConvBnAct(c1, c2, 1, stride, act=False)
 
     def forward(self, x: Tensor) -> Tensor:
-        identity = x
+        if self.resize_identity:
+            identity = self.identity_conv(x)
+        else:
+            identity = x
 
         out = self.conv1(x)
         out = self.conv2(out)
@@ -38,24 +50,6 @@ class ResNetBottleneck(nn.Module):
         out = self.act(out)
 
         return out
-
-
-class ResXNetBottleneck(ResNetBottleneck):
-    def __init__(
-        self,
-        c1: int,
-        c2: int,
-        e: float = 1.0,
-        k: int = 3,
-        stride: int = 1,
-        groups: int = 1,
-        dilation: int = 1,
-        act='relu',
-        se_ratio=None,
-    ):
-        e = c1 / round_channels(round(c1 * e))
-        super(ResXNetBottleneck, self).__init__(c1, c2, e, k, stride, groups,
-            dilation, act, se_ratio)
 
 
 class ResNetBasicBlock(nn.Module):
@@ -68,16 +62,23 @@ class ResNetBasicBlock(nn.Module):
         stride: int = 1,
         act='relu',
         se_ratio=None,
+        channel_divisor=1,
     ) -> None:
         super().__init__()
+        c2 = round_channels(c2, channel_divisor)
 
+        self.resize_identity = (c1 != c2) or (stride != 1)
         self.conv1 = ConvBnAct(c1, c2, k, stride, act=act)
         self.conv2 = ConvBnAct(c2, c2, k, act=False)
-        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
+        self.act = get_activation(act)
         self.se = SELayer(c2, reduction=se_ratio) if se_ratio else nn.Identity()
+        self.identity_conv = ConvBnAct(c1, c2, 1, stride, act=False)
 
     def forward(self, x: Tensor) -> Tensor:
-        identity = x
+        if self.resize_identity:
+            identity = self.identity_conv(x)
+        else:
+            identity = x
 
         out = self.conv1(x)
         out = self.conv2(out)
@@ -88,7 +89,26 @@ class ResNetBasicBlock(nn.Module):
         return out
 
 
+class ResNeXtBottleneck(ResNetBottleneck):
+    def __init__(
+        self,
+        c1: int,
+        c2: int,
+        e: float = 1.0,
+        k: int = 3,
+        stride: int = 1,
+        groups: int = 1,
+        dilation: int = 1,
+        act='relu',
+        se_ratio=None,
+    ):
+        super(ResNeXtBottleneck, self).__init__(
+            c1, c2, e, k, stride, groups,
+            dilation, act, se_ratio, channel_divisor=groups)
+
+
 class GhostBottleneck(nn.Module):
+
     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
     def __init__(self, c1, c2, k=3, s=1, shrink_factor=2):  # ch_in, ch_out, kernel, stride
         super(GhostBottleneck, self).__init__()

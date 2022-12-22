@@ -1,11 +1,12 @@
-from functools import partial
 
 import torch
 import torch.nn as nn
-from deeplite_torch_zoo.src.dnn_blocks.common import (ACT_TYPE_MAP, ConvBnAct,
-                                                      SELayer, round_channels)
+from deeplite_torch_zoo.src.dnn_blocks.cnn_attention import SEWithNorm
 
-SEWithNorm = partial(SELayer, norm_layer=nn.BatchNorm2d)
+SEWithNorm
+from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct,
+                                                      get_activation,
+                                                      round_channels)
 
 
 class RexNetBottleneck(nn.Module):
@@ -25,12 +26,10 @@ class RexNetBottleneck(nn.Module):
 
         self.conv_dw = ConvBnAct(dw_chs, dw_chs, k, s=stride, g=dw_chs, act=None)
 
-        self.se = SEWithNorm(dw_chs, rd_channels=round_channels(int(dw_chs * se_ratio), ch_div)) if se_ratio is not None \
-            else nn.Identity()
+        self.se = SEWithNorm(dw_chs, mid_channels=round_channels(int(dw_chs * se_ratio), ch_div)) \
+            if se_ratio is not None else nn.Identity()
 
-        self.se = SELayer(dw_chs, reduction=se_ratio) if se_ratio else nn.Identity()
-
-        self.act_dw = ACT_TYPE_MAP[dw_act] if dw_act else nn.Identity()
+        self.act_dw = get_activation(dw_act)
 
         self.conv_pwl = ConvBnAct(dw_chs, c2, 1, act=None)
 
