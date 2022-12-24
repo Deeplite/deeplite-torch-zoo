@@ -1,7 +1,7 @@
 import math
 
 import torch.nn as nn
-from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.modules.common import (
+from deeplite_torch_zoo.src.objectdetection.flexible_yolo.modules.common import (
     C3, Concat, Conv)
 
 
