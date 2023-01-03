@@ -1,11 +1,9 @@
 import torch
 import torch.nn as nn
-
-from deeplite_torch_zoo.src.dnn_blocks.common import (
-                                ConvBnAct, ACT_TYPE_MAP, conv1x1)
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, get_activation
 
 
-class FireUnit(nn.Module) :
+class FireUnit(nn.Module):
     """
     SqueezeNet unit, so-called 'Fire' unit.
     https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/squeezenet.py
@@ -25,34 +23,40 @@ class FireUnit(nn.Module) :
     def __init__(self,
                  c1,
                  c2,
-                 e =1/8,
-                 act = "relu",
-                 residual = False):
+                 e=0.125,
+                 act='relu',
+                 residual=True,
+                 use_bn=True,
+            ):
         super(FireUnit, self).__init__()
         self.residual = residual
         in_channels = c1
         expand_channels = c2 // 2
-        squeeze_channels = int(c2 * e) # Number of output channels for squeeze conv blocks.
-        expand1x1_channels = expand_channels # Number of output channels for expand 1x1 conv blocks.
-        expand3x3_channels = expand_channels # Number of output channels for expand 3x3 conv blocks.
+        squeeze_channels = int(c2 * e)  # Number of output channels for squeeze conv blocks.
+        expand1x1_channels = expand_channels  # Number of output channels for expand 1x1 conv blocks.
+        expand3x3_channels = expand_channels  # Number of output channels for expand 3x3 conv blocks.
 
-        self.squeeze = conv1x1(
+        self.squeeze = ConvBnAct(
             c1=in_channels,
             c2=squeeze_channels,
+            k=1,
             act=act,
-            use_bn=False)
-        self.expand1x1 = conv1x1(
+            use_bn=use_bn)
+
+        self.expand1x1 = ConvBnAct(
             c1=squeeze_channels,
             c2=expand1x1_channels,
+            k=1,
             act=act,
-            use_bn=False)
+            use_bn=use_bn)
+
         self.expand3x3 = ConvBnAct(
             c1=squeeze_channels,
             c2=expand3x3_channels,
             k=3,
             p=1,
             act=act,
-            use_bn=False)
+            use_bn=use_bn)
 
     def forward(self, x):
         if self.residual:
@@ -68,11 +72,11 @@ class FireUnit(nn.Module) :
 
 class SqnxtUnit(nn.Module):
     """
-    SqueezeNext unit."
+    SqueezeNext unit.
     Original paper: 'SqueezeNext: Hardware-Aware Neural Network Design,'
     https://arxiv.org/abs/1803.10615.
     https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/squeezenext.py
-    
+
     Parameters:
     ----------
     c1 : int
@@ -82,74 +86,76 @@ class SqnxtUnit(nn.Module):
     s : int or tuple/list of 2 int
         Strides of the convolution.
     """
-    def __init__(self,
-                 c1,
-                 c2,
-                 s = 1,
-                 act="relu"):
+    def __init__(
+        self,
+        c1,
+        c2,
+        s=1,
+        act='relu'
+    ):
         super(SqnxtUnit, self).__init__()
 
-        self.resize_identity = True
         if s == 2:
             reduction_den = 1
+            self.resize_identity = True
         elif c1 > c2:
             reduction_den = 4
+            self.resize_identity = True
         elif c1 < c2:
-            reduction_den = 2
-        else:
             reduction_den = 2
             self.resize_identity = False
 
-        # conv 1 x 1 block
-        self.conv1 = conv1x1(
+        self.conv1 = ConvBnAct(
             c1=c1,
             c2=(c1 // reduction_den),
+            k=1,
             s=s,
             b=True,
-            act=act)
+            act=act
+        )
 
-        # conv 1 x 1 block
-        self.conv2 = conv1x1(
+        self.conv2 = ConvBnAct(
             c1=(c1 // reduction_den),
             c2=(c1 // (2 * reduction_den)),
+            k=1,
             b=True,
-            act=act)
+            act=act
+        )
 
-        # conv 1 x 3 block
         self.conv3 = ConvBnAct(
             c1=(c1 // (2 * reduction_den)),
             c2=(c1 // reduction_den),
             k=(1, 3),
             s=1,
             p=(0, 1),
-            use_bn=False,
-            act=act)
+            act=act
+        )
 
-        # conv 3 x 1 block
         self.conv4 = ConvBnAct(
             c1=(c1 // reduction_den),
             c2=(c1 // reduction_den),
             k=(3, 1),
             s=1,
             p=(1, 0),
-            use_bn=False,
-            act=act)
+            act=act
+        )
 
-        # conv 1 x 1 block
-        self.conv5 = conv1x1(
+        self.conv5 = ConvBnAct(
             c1=(c1 // reduction_den),
             c2=c2,
+            k=1,
             b=True,
-            act=act)
+            act=act
+        )
 
         if self.resize_identity:
             self.identity_conv = ConvBnAct(
                 c1=c1,
                 c2=c2,
                 s=s,
-                act=act,
-                use_bn=False)
-        self.activ = ACT_TYPE_MAP[act] if act else nn.Identity()
+                act=act
+            )
+        self.activ = get_activation(act)
 
     def forward(self, x):
         if self.resize_identity:
@@ -179,8 +185,8 @@ def _test_blocks(c1, c2, b=2, res=32):
     output = sqnxrt_block(input)
     assert output.shape == (b, c2, res, res)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     _test_blocks(64, 64) #  c1 == c2
     _test_blocks(64, 32) #  c1 > c2
     _test_blocks(32, 64) #  c1 < c2
