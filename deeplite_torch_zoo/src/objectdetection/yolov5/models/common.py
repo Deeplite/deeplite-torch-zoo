@@ -10,6 +10,9 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.activations import \
 from deeplite_torch_zoo.utils.registry import Registry
 from torch.nn.modules.activation import LeakyReLU
 
+from deeplite_torch_zoo.src.dnn_blocks.common import *
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import *
+
 try:
     from mish_cuda import MishCuda as Mish
 except:
@@ -73,14 +76,18 @@ class Bottleneck(nn.Module):
         self, c1, c2, shortcut=True, g=1, e=0.5, activation_type='hardswish',
     ):  # ch_in, ch_out, shortcut, groups, expansion
         super(Bottleneck, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = Conv_(c_, c2, 3, 1, g=g)
-        self.add = shortcut and c1 == c2
+
+        if activation_type=='hardswish':
+            activation_type = 'hswish'
+        # Conv_ = functools.partial(ConvBnAct, act=activation_type)
+        # c_ = int(c2 * e)  # hidden channels
+        # self.cv1 = Conv_(c1, c_, 1, 1)
+        # self.cv2 = Conv_(c_, c2, 3, 1, g=g)
+        # self.add = shortcut and c1 == c2
+        self.Conv_ = YOLOBottleneck(c1=c1, c2=c2, shortcut=shortcut, g=g, e=e, act=activation_type)
 
     def forward(self, x):
-        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+        return self.Conv_(x) #x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
 @CUSTOM_ACTIVATION_MODULES.register('BottleneckCSP')
