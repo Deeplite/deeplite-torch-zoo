@@ -28,7 +28,7 @@ CUSTOM_ACTIVATION_MODULES = Registry()
 ACTIVATION_FN_NAME_MAP = {
     'relu': nn.ReLU,
     'silu': nn.SiLU,
-    'hardswish': Hardswish,
+    'hswish': Hardswish,
     'mish': Mish,
     'leakyrelu': nn.LeakyReLU,
     'leakyrelu_0.1': functools.partial(nn.LeakyReLU, negative_slope=0.1),
@@ -42,7 +42,7 @@ def autopad(k, p=None):  # kernel, padding
     return p
 
 
-def DWConv(c1, c2, k=1, s=1, act=True, activation_type='hardswish'):
+def DWConv(c1, c2, k=1, s=1, act=True, activation_type='hswish'):
     # Depthwise convolution
     Conv_ = functools.partial(Conv, activation_type=activation_type)
     return Conv_(c1, c2, k, s, g=math.gcd(c1, c2), act=act)
@@ -52,7 +52,7 @@ def DWConv(c1, c2, k=1, s=1, act=True, activation_type='hardswish'):
 class Conv(nn.Module):
     # Standard convolution
     def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act=True, activation_type='hardswish'
+        self, c1, c2, k=1, s=1, p=None, g=1, act=True, activation_type='hswish'
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super(Conv, self).__init__()
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
@@ -90,73 +90,23 @@ def BottleneckCSP2Leaky(c1, c2, n=1, shortcut=False, g=1, e=0.5, activation_type
     return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('VoVCSP')
-class VoVCSP(nn.Module):
-    # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish',
-    ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super(VoVCSP, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        c_ = int(c2)  # hidden channels
-        self.cv1 = Conv_(c1 // 2, c_ // 2, 3, 1)
-        self.cv2 = Conv_(c_ // 2, c_ // 2, 3, 1)
-        self.cv3 = Conv_(c_, c2, 1, 1)
-
-    def forward(self, x):
-        _, x1 = x.chunk(2, dim=1)
-        x1 = self.cv1(x1)
-        x2 = self.cv2(x1)
-        return self.cv3(torch.cat((x1, x2), dim=1))
-
+def VoVCSP(c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hswish'):
+    Conv_ = YOLOVoVCSP(c1, c2, n=n, shortcut=shortcut, g=g, e=e, act=activation_type)
+    return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('SPP')
-class SPP(nn.Module):
-    # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13), activation_type='hardswish'):
-        super(SPP, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        c_ = c1 // 2  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = Conv_(c_ * (len(k) + 1), c2, 1, 1)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-
-    def forward(self, x):
-        x = self.cv1(x)
-        return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
-
+def SPP(c1, c2, k=(5, 9, 13), activation_type='hswish'):
+    Conv_ = YOLOSPP(c1, c2, k=k, act=activation_type)
+    return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('SPPCSP')
-class SPPCSP(nn.Module):
-    # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hardswish'):
-        super(SPPCSP, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        c_ = int(2 * c2 * e)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = Conv_(c_, c_, 3, 1)
-        self.cv4 = Conv_(c_, c_, 1, 1)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-        self.cv5 = Conv_(4 * c_, c_, 1, 1)
-        self.cv6 = Conv_(c_, c_, 3, 1)
-        self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = Mish()
-        self.cv7 = Conv_(2 * c_, c2, 1, 1)
-
-    def forward(self, x):
-        x1 = self.cv4(self.cv3(self.cv1(x)))
-        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
-        y2 = self.cv2(x)
-        return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-
+def SPPCSP(c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hswish'):
+    Conv_ = YOLOSPPCSP(c1, c2, n=n, shortcut=shortcut, g=g, e=e, k=k, act=activation_type)
+    return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('SPPCSPLeaky')
 class SPPCSPLeaky(nn.Module):
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hardswish'):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hswish'):
         super(SPPCSPLeaky, self).__init__()
         Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = int(2 * c2 * e)  # hidden channels
@@ -184,7 +134,7 @@ class SPPCSPLeaky(nn.Module):
 class Focus(nn.Module):
     # Focus wh information into c-space
     def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act=True, activation_type='hardswish',
+        self, c1, c2, k=1, s=1, p=None, g=1, act=True, activation_type='hswish',
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super(Focus, self).__init__()
         Conv_ = functools.partial(Conv, activation_type=activation_type)
@@ -243,7 +193,7 @@ class Classify(nn.Module):
 @CUSTOM_ACTIVATION_MODULES.register('SPPF')
 class SPPF(nn.Module):
     # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
-    def __init__(self, c1, c2, k=5, activation_type='hardswish'):  # equivalent to SPP(k=(5, 9, 13))
+    def __init__(self, c1, c2, k=5, activation_type='hswish'):  # equivalent to SPP(k=(5, 9, 13))
         super().__init__()
         Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = c1 // 2  # hidden channels
@@ -334,7 +284,7 @@ class ImplicitM(nn.Module):
 @CUSTOM_ACTIVATION_MODULES.register('SPPCSPC')
 class SPPCSPC(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hardswish'):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hswish'):
         super(SPPCSPC, self).__init__()
         Conv_ = functools.partial(Conv, activation_type=activation_type)
         c_ = int(2 * c2 * e)  # hidden channels
@@ -359,7 +309,7 @@ class RepConv(nn.Module):
     # Represented convolution
     # https://arxiv.org/abs/2101.03697
 
-    def __init__(self, c1, c2, k=3, s=1, p=None, g=1, act=True, activation_type='hardswish', deploy=False):
+    def __init__(self, c1, c2, k=3, s=1, p=None, g=1, act=True, activation_type='hswish', deploy=False):
         super(RepConv, self).__init__()
 
         self.deploy = deploy

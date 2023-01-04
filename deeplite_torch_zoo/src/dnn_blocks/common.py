@@ -5,6 +5,7 @@ ACT_TYPE_MAP = {
     'relu': nn.ReLU(inplace=True),
     'relu6': nn.ReLU6(inplace=True),
     'hswish': nn.Hardswish(inplace=True),
+    'hardswish': nn.Hardswish(inplace=True),
     'silu': nn.SiLU(inplace=True),
     'lrelu': nn.LeakyReLU(0.1, inplace=True),
     'hsigmoid': nn.Hardsigmoid(inplace=True),
