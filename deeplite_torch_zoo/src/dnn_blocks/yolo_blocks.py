@@ -44,7 +44,7 @@ class SPPBottleneck(nn.Module):
 class YOLOBottleneck(nn.Module):
     # Ultralytics bottleneck (2 convs)
     def __init__(
-        self, c1, c2, k=3, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, shortcut=True, g=1, e=0.5, act='relu'
     ):  # ch_in, ch_out, shortcut, groups, expansion
         super().__init__()
         if g != 1:
@@ -53,7 +53,7 @@ class YOLOBottleneck(nn.Module):
         if c_ < g:
             return
         self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = ConvBnAct(c_, c2, k, 1, g=g, act=act)
+        self.cv2 = ConvBnAct(c_, c2, 3, 1, g=g, act=act)
         self.add = shortcut and c1 == c2
 
     def forward(self, x):
@@ -109,7 +109,7 @@ class YOLOBottleneckCSP2(nn.Module):
         self.bn = nn.BatchNorm2d(2 * c_)
         self.act = Mish()
         self.m = nn.Sequential(
-            *(YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n))
+            *(YOLOBottleneck(c_, c_, 3, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n))
         )
 
     def forward(self, x):
@@ -188,6 +188,29 @@ class YOLOSPPCSP(nn.Module):
         self.cv6 = ConvBnAct(c_, c_, 3, 1, act=act)
         self.bn = nn.BatchNorm2d(2 * c_)
         self.act = Mish()
+        self.cv7 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
+
+    def forward(self, x):
+        x1 = self.cv4(self.cv3(self.cv1(x)))
+        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
+        y2 = self.cv2(x)
+        return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+
+class YOLOSPPCSPLeaky(nn.Module):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), act='hswish'):
+        super().__init__()
+        c_ = int(2 * c2 * e)  # hidden channels
+        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
+        self.cv3 = ConvBnAct(c_, c_, 3, 1, act=act)
+        self.cv4 = ConvBnAct(c_, c_, 1, 1, act=act)
+        self.m = nn.ModuleList(
+            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
+        )
+        self.cv5 = ConvBnAct(4 * c_, c_, 1, 1, act=act)
+        self.cv6 = ConvBnAct(c_, c_, 3, 1, act=act)
+        self.bn = nn.BatchNorm2d(2 * c_)
+        self.act = LeakyReLU(negative_slope=0.1)
         self.cv7 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
 
     def forward(self, x):

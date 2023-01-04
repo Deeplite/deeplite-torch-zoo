@@ -72,7 +72,7 @@ class Conv(nn.Module):
 
 @CUSTOM_ACTIVATION_MODULES.register('Bottleneck')
 def Bottleneck(c1, c2, shortcut=True, g=1, e=0.5, activation_type='hswish'):
-    Conv_ = YOLOBottleneck(c1, c2, k=3, shortcut=shortcut, g=g, e=e, act=activation_type)
+    Conv_ = YOLOBottleneck(c1, c2, shortcut=shortcut, g=g, e=e, act=activation_type)
     return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('BottleneckCSP')
@@ -106,29 +106,9 @@ def SPPCSP(c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_typ
     return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('SPPCSPLeaky')
-class SPPCSPLeaky(nn.Module):
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hswish'):
-        super(SPPCSPLeaky, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        c_ = int(2 * c2 * e)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = Conv_(c_, c_, 3, 1)
-        self.cv4 = Conv_(c_, c_, 1, 1)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-        self.cv5 = Conv_(4 * c_, c_, 1, 1)
-        self.cv6 = Conv_(c_, c_, 3, 1)
-        self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = LeakyReLU(negative_slope=0.1)
-        self.cv7 = Conv_(2 * c_, c2, 1, 1)
-
-    def forward(self, x):
-        x1 = self.cv4(self.cv3(self.cv1(x)))
-        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
-        y2 = self.cv2(x)
-        return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+def SPPCSPLeaky(c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hswish'):
+    Conv_ = YOLOSPPCSPLeaky(c1, c2, n=n, shortcut=shortcut, g=g, e=e, k=k, act=activation_type)
+    return Conv_
 
 
 @CUSTOM_ACTIVATION_MODULES.register('Focus')
