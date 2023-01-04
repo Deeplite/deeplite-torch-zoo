@@ -2,7 +2,7 @@
 import functools
 import math
 import warnings
-
+import numpy as np
 import torch
 import torch.nn as nn
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.activations import \
@@ -70,103 +70,24 @@ class Conv(nn.Module):
         return self.act(self.conv(x))
 
 @CUSTOM_ACTIVATION_MODULES.register('Bottleneck')
-class Bottleneck(nn.Module):
-    # Standard bottleneck
-    def __init__(
-        self, c1, c2, shortcut=True, g=1, e=0.5, activation_type='hardswish',
-    ):  # ch_in, ch_out, shortcut, groups, expansion
-        super(Bottleneck, self).__init__()
-
-        if activation_type=='hardswish':
-            activation_type = 'hswish'
-        # Conv_ = functools.partial(ConvBnAct, act=activation_type)
-        # c_ = int(c2 * e)  # hidden channels
-        # self.cv1 = Conv_(c1, c_, 1, 1)
-        # self.cv2 = Conv_(c_, c2, 3, 1, g=g)
-        # self.add = shortcut and c1 == c2
-        self.Conv_ = YOLOBottleneck(c1=c1, c2=c2, shortcut=shortcut, g=g, e=e, act=activation_type)
-
-    def forward(self, x):
-        return self.Conv_(x) #x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
-
+def Bottleneck(c1, c2, shortcut=True, g=1, e=0.5, activation_type='hswish'):
+    Conv_ = YOLOBottleneck(c1, c2, k=3, shortcut=shortcut, g=g, e=e, act=activation_type)
+    return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('BottleneckCSP')
-class BottleneckCSP(nn.Module):
-    # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish',
-    ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super(BottleneckCSP, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv4 = Conv_(2 * c_, c2, 1, 1)
-        self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
-        self.act = nn.LeakyReLU(0.1, inplace=True)
-        self.m = nn.Sequential(
-            *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
-        )
-
-    def forward(self, x):
-        y1 = self.cv3(self.m(self.cv1(x)))
-        y2 = self.cv2(x)
-        return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-
+def BottleneckCSP(c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hswish'):
+    Conv_ = YOLOBottleneckCSP(c1, c2, n=n, shortcut=shortcut, g=g, e=e, act=activation_type)
+    return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('BottleneckCSP2')
-class BottleneckCSP2(nn.Module):
-    # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, activation_type='hardswish',
-    ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super(BottleneckCSP2, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
-        c_ = int(c2)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv3 = Conv_(2 * c_, c2, 1, 1)
-        self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = Mish()
-        self.m = nn.Sequential(
-            *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
-        )
-
-    def forward(self, x):
-        x1 = self.cv1(x)
-        y1 = self.m(x1)
-        y2 = self.cv2(x1)
-        return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-
+def BottleneckCSP2(c1, c2, n=1, shortcut=False, g=1, e=0.5, activation_type='hswish'):
+    Conv_ = YOLOBottleneckCSP2(c1, c2, n=n, shortcut=shortcut, g=g, e=e, act=activation_type)
+    return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('BottleneckCSP2Leaky')
-class BottleneckCSP2Leaky(nn.Module):
-    # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, activation_type='hardswish',
-    ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super(BottleneckCSP2Leaky, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
-        c_ = int(c2)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv3 = Conv_(2 * c_, c2, 1, 1)
-        self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = LeakyReLU(negative_slope=0.1)
-        self.m = nn.Sequential(
-            *[Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)]
-        )
-
-    def forward(self, x):
-        x1 = self.cv1(x)
-        y1 = self.m(x1)
-        y2 = self.cv2(x1)
-        return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-
+def BottleneckCSP2Leaky(c1, c2, n=1, shortcut=False, g=1, e=0.5, activation_type='hswish'):
+    Conv_ = YOLOBottleneckCSP2Leaky(c1, c2, n=n, shortcut=shortcut, g=g, e=e, act=activation_type)
+    return Conv_
 
 @CUSTOM_ACTIVATION_MODULES.register('VoVCSP')
 class VoVCSP(nn.Module):
