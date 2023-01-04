@@ -11,15 +11,19 @@ __all__ = ["get_vww"]
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name='vww')
 def get_vww(data_root, batch_size=128, test_batch_size=None, img_size=224,
-    num_workers=4, fp16=False, distributed=False, device="cuda", **kwargs):
+    num_workers=4, fp16=False, distributed=False, device="cuda",
+    train_transforms=None, val_transforms=None, **kwargs):
 
     if len(kwargs):
         import sys
         print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
 
-    train_transforms, val_transforms = get_vanilla_transforms(
+    default_train_transforms, default_val_transforms = get_vanilla_transforms(
         img_size,
     )
+
+    train_transforms = train_transforms if train_transforms is not None else default_train_transforms
+    val_transforms = val_transforms if val_transforms is not None else default_val_transforms
 
     train_dataset = pyvww.pytorch.VisualWakeWordsClassification(
         root=os.path.join(data_root, "all"),

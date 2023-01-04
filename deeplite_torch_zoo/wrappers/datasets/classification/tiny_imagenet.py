@@ -11,18 +11,22 @@ __all__ = ["get_tinyimagenet"]
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name='tinyimagenet')
 def get_tinyimagenet(data_root, batch_size=128, test_batch_size=None, num_workers=4,
-    fp16=False, img_size=64, device="cuda", distributed=False, **kwargs):
+    fp16=False, img_size=64, device="cuda", distributed=False,
+    train_transforms=None, val_transforms=None, **kwargs):
 
     if len(kwargs):
         import sys
         print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
 
-    train_transforms, val_transforms = get_vanilla_transforms(
+    default_train_transforms, default_val_transforms = get_vanilla_transforms(
         img_size,
         mean=(0.4802, 0.4481, 0.3975),
         std=(0.2302, 0.2265, 0.2262),
         crop_pct = 1.0,
     )
+
+    train_transforms = train_transforms if train_transforms is not None else default_train_transforms
+    val_transforms = val_transforms if val_transforms is not None else default_val_transforms
 
     data_transforms = {'train': train_transforms, 'val': val_transforms}
     image_datasets = {x: datasets.ImageFolder(os.path.join(data_root, x), data_transforms[x])
