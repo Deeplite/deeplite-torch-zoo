@@ -61,7 +61,7 @@ def train(opt, device):
     trainloader, testloader = dataloaders['train'], dataloaders['test']
 
     # Model
-    opt.num_classes = 2 #len(trainloader.dataset.classes)
+    opt.num_classes = len(trainloader.dataset.classes)
     with torch_distributed_zero_first(LOCAL_RANK), WorkingDirectory(ROOT):
         model = create_model(
             model_name=opt.model,
@@ -82,7 +82,7 @@ def train(opt, device):
     # Eval function
     evaluation_fn = get_eval_function(
         model_name=opt.model,
-        dataset_name=opt.dataset,
+        dataset_name=opt.pretraining_dataset,
     )
 
     # Info
