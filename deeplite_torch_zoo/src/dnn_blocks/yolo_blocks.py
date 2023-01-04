@@ -109,7 +109,7 @@ class YOLOBottleneckCSP2(nn.Module):
         self.bn = nn.BatchNorm2d(2 * c_)
         self.act = Mish()
         self.m = nn.Sequential(
-            *(YOLOBottleneck(c_, c_, 3, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n))
+            *(YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n))
         )
 
     def forward(self, x):
