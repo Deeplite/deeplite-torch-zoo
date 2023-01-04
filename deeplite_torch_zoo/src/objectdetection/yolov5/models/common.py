@@ -29,6 +29,7 @@ ACTIVATION_FN_NAME_MAP = {
     'relu': nn.ReLU,
     'silu': nn.SiLU,
     'hswish': Hardswish,
+    'hardswish': Hardswish,
     'mish': Mish,
     'leakyrelu': nn.LeakyReLU,
     'leakyrelu_0.1': functools.partial(nn.LeakyReLU, negative_slope=0.1),

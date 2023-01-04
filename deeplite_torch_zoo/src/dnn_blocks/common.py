@@ -1,6 +1,15 @@
 import torch
 import torch.nn as nn
 
+from torch.nn.modules.activation import LeakyReLU
+try:
+    from mish_cuda import MishCuda as Mish
+except:
+
+    class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
+        def forward(self, x):
+            return x * torch.nn.functional.softplus(x).tanh()
+
 ACT_TYPE_MAP = {
     'relu': nn.ReLU(inplace=True),
     'relu6': nn.ReLU6(inplace=True),
@@ -10,6 +19,9 @@ ACT_TYPE_MAP = {
     'lrelu': nn.LeakyReLU(0.1, inplace=True),
     'hsigmoid': nn.Hardsigmoid(inplace=True),
     'sigmoid': nn.Sigmoid(),
+    'mish': Mish,
+    'leakyrelu': nn.LeakyReLU(0.1, inplace=True),
+    'leakyrelu_0.1': nn.LeakyReLU(negative_slope=0.1)
 }
 
 
