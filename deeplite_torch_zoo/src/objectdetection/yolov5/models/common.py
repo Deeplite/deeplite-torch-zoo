@@ -1,7 +1,6 @@
 # This file contains modules common to various models
 import functools
 import math
-import warnings
 import numpy as np
 import torch
 import torch.nn as nn
@@ -12,7 +11,7 @@ from torch.nn.modules.activation import LeakyReLU
 
 from deeplite_torch_zoo.src.dnn_blocks.common import *
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import *
-
+from deeplite_torch_zoo.src.dnn_blocks.repvgg_blocks import *
 try:
     from mish_cuda import MishCuda as Mish
 except:
@@ -172,23 +171,9 @@ class Classify(nn.Module):
 
 
 @CUSTOM_ACTIVATION_MODULES.register('SPPF')
-class SPPF(nn.Module):
-    # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
-    def __init__(self, c1, c2, k=5, activation_type='hswish'):  # equivalent to SPP(k=(5, 9, 13))
-        super().__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        c_ = c1 // 2  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = Conv_(c_ * 4, c2, 1, 1)
-        self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
-
-    def forward(self, x):
-        x = self.cv1(x)
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')  # suppress torch 1.9.0 max_pool2d() warning
-            y1 = self.m(x)
-            y2 = self.m(y1)
-            return self.cv2(torch.cat([x, y1, y2, self.m(y2)], 1))
+def SPPF(c1, c2, k=5, activation_type='hswish'):
+    Conv_ = YOLOSPPF(c1, c2, k=k, act=activation_type)
+    return Conv_
 
 class Contract(nn.Module):
     # Contract width-height into channels, i.e. x(1,64,80,80) to x(1,256,40,40)
@@ -263,26 +248,9 @@ class ImplicitM(nn.Module):
 
 
 @CUSTOM_ACTIVATION_MODULES.register('SPPCSPC')
-class SPPCSPC(nn.Module):
-    # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hswish'):
-        super(SPPCSPC, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        c_ = int(2 * c2 * e)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = Conv_(c1, c_, 1, 1)
-        self.cv3 = Conv_(c_, c_, 3, 1)
-        self.cv4 = Conv_(c_, c_, 1, 1)
-        self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k])
-        self.cv5 = Conv_(4 * c_, c_, 1, 1)
-        self.cv6 = Conv_(c_, c_, 3, 1)
-        self.cv7 = Conv_(2 * c_, c2, 1, 1)
-
-    def forward(self, x):
-        x1 = self.cv4(self.cv3(self.cv1(x)))
-        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
-        y2 = self.cv2(x)
-        return self.cv7(torch.cat((y1, y2), dim=1))
+def SPPCSPC(c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), activation_type='hswish'):
+    Conv_ = YOLOSPPCSPC(c1, c2, n=n, shortcut=shortcut, g=g, e=e, k=k, act=activation_type)
+    return Conv_
 
 
 @CUSTOM_ACTIVATION_MODULES.register('RepConv')

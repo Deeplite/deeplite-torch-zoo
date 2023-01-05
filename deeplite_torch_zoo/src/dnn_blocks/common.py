@@ -19,7 +19,7 @@ ACT_TYPE_MAP = {
     'lrelu': nn.LeakyReLU(0.1, inplace=True),
     'hsigmoid': nn.Hardsigmoid(inplace=True),
     'sigmoid': nn.Sigmoid(),
-    'mish': Mish,
+    'mish': Mish(),
     'leakyrelu': nn.LeakyReLU(0.1, inplace=True),
     'leakyrelu_0.1': nn.LeakyReLU(negative_slope=0.1)
 }
@@ -56,7 +56,7 @@ def round_channels(channels,
         rounded_channels += divisor
     return rounded_channels
 
-
+import numpy as np
 class ConvBnAct(nn.Module):
     # Standard convolution-batchnorm-activation block
     def __init__(
@@ -106,7 +106,9 @@ class ConvBnAct(nn.Module):
                 identity = self.identity_conv(x)
             else:
                 identity = x
-        return identity + self.act(self.bn(self.conv(x)))
+        conv_ = self.bn(self.conv(x))
+        actiavted = identity + self.act(conv_)
+        return actiavted
 
 
 class DWConv(ConvBnAct):

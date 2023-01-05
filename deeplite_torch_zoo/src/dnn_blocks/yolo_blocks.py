@@ -1,6 +1,7 @@
 
 import torch
 import torch.nn as nn
+import warnings
 from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
                                                       GhostConv,
                                                       get_activation,
@@ -40,11 +41,10 @@ class SPPBottleneck(nn.Module):
         x = self.conv2(x)
         return x
 
-
 class YOLOBottleneck(nn.Module):
     # Ultralytics bottleneck (2 convs)
     def __init__(
-        self, c1, c2, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, k=3, shortcut=True, g=1, e=0.5, act='relu'
     ):  # ch_in, ch_out, shortcut, groups, expansion
         super().__init__()
         if g != 1:
@@ -53,12 +53,11 @@ class YOLOBottleneck(nn.Module):
         if c_ < g:
             return
         self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = ConvBnAct(c_, c2, 3, 1, g=g, act=act)
+        self.cv2 = ConvBnAct(c_, c2, k, 1, g=g, act=act)
         self.add = shortcut and c1 == c2
 
     def forward(self, x):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
-
 
 class YOLOCrossConv(nn.Module):
     # Ultralytics Cross Convolution Downsample
@@ -218,6 +217,43 @@ class YOLOSPPCSPLeaky(nn.Module):
         y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
         y2 = self.cv2(x)
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+
+class YOLOSPPF(nn.Module):
+    # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
+    def __init__(self, c1, c2, k=5, act='hswish'):  # equivalent to SPP(k=(5, 9, 13))
+        super().__init__()
+        c_ = c1 // 2  # hidden channels
+        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv2 = ConvBnAct(c_ * 4, c2, 1, 1, act=act)
+        self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
+
+    def forward(self, x):
+        x = self.cv1(x)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')  # suppress torch 1.9.0 max_pool2d() warning
+            y1 = self.m(x)
+            y2 = self.m(y1)
+            return self.cv2(torch.cat([x, y1, y2, self.m(y2)], 1))
+
+class YOLOSPPCSPC(nn.Module):
+    # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), act='hswish'):
+        super().__init__()
+        c_ = int(2 * c2 * e)  # hidden channels
+        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv2 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv3 = ConvBnAct(c_, c_, 3, 1, act=act)
+        self.cv4 = ConvBnAct(c_, c_, 1, 1, act=act)
+        self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k])
+        self.cv5 = ConvBnAct(4 * c_, c_, 1, 1, act=act)
+        self.cv6 = ConvBnAct(c_, c_, 3, 1, act=act)
+        self.cv7 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
+
+    def forward(self, x):
+        x1 = self.cv4(self.cv3(self.cv1(x)))
+        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
+        y2 = self.cv2(x)
+        return self.cv7(torch.cat((y1, y2), dim=1))
 
 class YOLOC3(nn.Module):
     # CSP Bottleneck with 3 convolutions
