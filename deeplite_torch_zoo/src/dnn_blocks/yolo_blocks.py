@@ -130,7 +130,7 @@ class YOLOBottleneckCSP2Leaky(nn.Module):
         self.bn = nn.BatchNorm2d(2 * c_)
         self.act = LeakyReLU(negative_slope=0.1)
         self.m = nn.Sequential(
-            *[YOLOBottleneck(c_, c_, shortcut, g, e=1.0, act=act) for _ in range(n)]
+            *[YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act) for _ in range(n)]
         )
 
     def forward(self, x):
