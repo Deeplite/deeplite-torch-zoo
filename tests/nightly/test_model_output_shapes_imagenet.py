@@ -1,7 +1,8 @@
 import pytest
 import torch
+
 from deeplite_torch_zoo import create_model, get_model_by_name, list_models
-from deeplite_torch_zoo.wrappers.models.classification.imagenet.impl_model_names import (
+from deeplite_torch_zoo.wrappers.models.classification.impl_model_names import (
     FIXED_SIZE_INPUT_MODELS, INPLACE_ABN_MODELS)
 
 TEST_BATCH_SIZE = 2
