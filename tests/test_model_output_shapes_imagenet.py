@@ -17,9 +17,10 @@ def get_models_by_dataset(dataset_name):
 IMAGENET_MODEL_TESTS = []
 for model_name in get_models_by_dataset('imagenet'):
     if model_name not in FIXED_SIZE_INPUT_MODELS and model_name not in INPLACE_ABN_MODELS:
-        IMAGENET_MODEL_TESTS.append((model_name, 'imagenet', 224, 3, 1000, False))
+        IMAGENET_MODEL_TESTS.append((model_name, 'imagenet', 224, 3, 1000))
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     ('model_name', 'dataset_name', 'input_resolution', 'num_inp_channels', 'target_output_shape'),
     IMAGENET_MODEL_TESTS,
@@ -38,6 +39,7 @@ def test_classification_model_output_shape(model_name, dataset_name, input_resol
     assert y.shape == (TEST_BATCH_SIZE, target_output_shape)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     ('model_name', 'dataset_name', 'input_resolution', 'num_inp_channels', 'target_output_shape'),
     IMAGENET_MODEL_TESTS,

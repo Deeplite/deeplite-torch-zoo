@@ -15,12 +15,11 @@ CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/flowers102"
 def find_model_implementation(model_name, num_classes):
     if model_name in timm.list_models():
         return timm.create_model(model_name, pretrained=False, num_classes=num_classes)
-    elif model_name.replace('_pytorchcv', '') in IMPL_MODEL_NAMES['pytorchcv']:
+    if model_name.replace('_pytorchcv', '') in IMPL_MODEL_NAMES['pytorchcv']:
         return ptcv_get_model(model_name.replace('_pytorchcv', ''), num_classes=num_classes)
-    elif model_name.replace('_torchvision', '') in IMPL_MODEL_NAMES['torchvision']:
+    if model_name.replace('_torchvision', '') in IMPL_MODEL_NAMES['torchvision']:
         return torchvision.models.__dict__[model_name.replace('_torchvision', '')](pretrained=False, num_classes=num_classes)
-    else:
-        raise ValueError('Can\'t find model implementation of {model_name} in the zoo')
+    raise ValueError('Can\'t find model implementation of {model_name} in the zoo')
 
 
 def make_wrapper_func(wrapper_fn_name, model_name_key):
