@@ -17,7 +17,7 @@ __all__ = ["get_imagenette"]
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name="imagenette")
 def get_imagenette(
-    data_root="", batch_size=64, test_batch_size=None, img_size=160, num_workers=4,
+    data_root="", batch_size=64, val_batch_size=None, img_size=160, num_workers=4,
     fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
 ):
     if data_root == "":
