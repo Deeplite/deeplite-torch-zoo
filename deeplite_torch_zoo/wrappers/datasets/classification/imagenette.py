@@ -90,8 +90,8 @@ class Imagenette(VisionDataset):
             for root, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
                 for fname in sorted(fnames):
                     path = os.path.join(root, fname)
-                    self._labels += class_index
-                    self._image_files += path
+                    self._labels.append(class_index)
+                    self._image_files.append(path)
 
     def __len__(self) -> int:
         return len(self._image_files)
