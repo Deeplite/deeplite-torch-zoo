@@ -2,9 +2,10 @@ import os
 from os.path import expanduser
 
 import torchvision
-from deeplite_torch_zoo.wrappers.datasets.classification.augs import \
+
+from deeplite_torch_zoo.src.classification.augmentations.augs import \
     get_vanilla_transforms
-from deeplite_torch_zoo.wrappers.datasets.classification.autoaugment import \
+from deeplite_torch_zoo.src.classification.augmentations.autoaugment import \
     CIFAR10Policy
 from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY

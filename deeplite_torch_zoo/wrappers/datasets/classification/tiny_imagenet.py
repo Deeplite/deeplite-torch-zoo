@@ -1,10 +1,11 @@
 import os
 
-from deeplite_torch_zoo.wrappers.datasets.classification.augs import \
+from torchvision import datasets
+
+from deeplite_torch_zoo.src.classification.augmentations.augs import \
     get_vanilla_transforms
 from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-from torchvision import datasets
 
 __all__ = ["get_tinyimagenet"]
 
