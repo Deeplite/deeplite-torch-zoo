@@ -1,7 +1,8 @@
 import torch
+from tqdm import tqdm
+
 from deeplite_torch_zoo.utils import training_mode_switcher
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
-from tqdm import tqdm
 
 __all__ = ['classification_eval']
 

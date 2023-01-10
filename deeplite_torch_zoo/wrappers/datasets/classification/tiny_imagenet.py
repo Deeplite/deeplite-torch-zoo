@@ -23,7 +23,7 @@ def get_tinyimagenet(data_root, batch_size=128, test_batch_size=None, num_worker
         img_size,
         mean=(0.4802, 0.4481, 0.3975),
         std=(0.2302, 0.2265, 0.2262),
-        crop_pct = 1.0,
+        crop_pct=1.0,
     )
 
     train_transforms = train_transforms if train_transforms is not None else default_train_transforms
