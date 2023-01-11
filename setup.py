@@ -37,6 +37,7 @@ INSTALL_REQUIRES = [
     "torchprofile==0.0.3",
     "torchinfo==1.5.4",
     "addict==2.4.0",
+    "Wand==0.6.11",
     "pytz",
     "pandas",
 ]
