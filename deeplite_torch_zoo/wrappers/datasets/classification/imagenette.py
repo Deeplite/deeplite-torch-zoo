@@ -1,4 +1,3 @@
-import json
 import os
 from os.path import expanduser
 from pathlib import Path
@@ -87,9 +86,9 @@ class Imagenette(VisionDataset):
         for target_class in sorted(self.class_to_idx.keys()):
             class_index = self.class_to_idx[target_class]
             target_dir = os.path.join(self._base_folder/f"{split}", target_class)
-            for root, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
+            for folder, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
                 for fname in sorted(fnames):
-                    path = os.path.join(root, fname)
+                    path = os.path.join(folder, fname)
                     self._labels.append(class_index)
                     self._image_files.append(path)
 
