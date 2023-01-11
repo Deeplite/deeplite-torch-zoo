@@ -6,7 +6,7 @@
 """
 
 
-from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.src.classification.mnist_models.lenet import LeNet5
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 

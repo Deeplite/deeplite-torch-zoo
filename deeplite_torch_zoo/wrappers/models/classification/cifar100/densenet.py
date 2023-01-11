@@ -8,10 +8,10 @@
 
 """
 
-from deeplite_torch_zoo.src.classification.cifar_models.densenet import DenseNet, Bottleneck
+from deeplite_torch_zoo.src.classification.cifar_models.densenet import (
+    Bottleneck, DenseNet)
+from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
-from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
-
 
 __all__ = [
     "densenet121_cifar100",

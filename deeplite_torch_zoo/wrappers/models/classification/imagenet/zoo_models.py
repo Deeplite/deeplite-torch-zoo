@@ -1,11 +1,11 @@
-from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 from torchvision.models import MobileNetV2
 
 __all__ = ["mobilenetv2_w035", ]
 
 model_urls = {
-    "mobilenetv2_w035": "http://download.deeplite.ai/zoo/models/mobilenetv2_w035_imagenet_5976_b859bcdc6e436fc6.pt",
+    "mobilenetv2_w035": "http://download.deeplite.ai/zoo/models/mobilenetv2_w035_imagenet_6020_4a56477132807d76.pt",
 }
 
 

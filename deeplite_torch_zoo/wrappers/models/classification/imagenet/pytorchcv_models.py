@@ -1,8 +1,9 @@
-from deeplite_torch_zoo.wrappers.models.classification.imagenet.impl_model_names import \
-    IMPL_MODEL_NAMES
-from deeplite_torch_zoo.wrappers.models.utils import load_state_dict_partial
-from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 from pytorchcv.model_provider import get_model as ptcv_get_model
+
+from deeplite_torch_zoo.utils import load_state_dict_partial
+from deeplite_torch_zoo.wrappers.models.classification.impl_model_names import \
+    IMPL_MODEL_NAMES
+from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 NUM_IMAGENET_CLASSES = 1000
 

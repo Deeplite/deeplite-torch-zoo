@@ -58,7 +58,8 @@ def get_vanilla_transforms(
     mean=IMAGENET_DEFAULT_MEAN,
     std=IMAGENET_DEFAULT_STD,
     crop_pct=DEFAULT_CROP_PCT,
-    autoaugment_policy=None,
+    add_train_transforms=None,
+    add_test_transforms=None,
     cutout_args=None,
 ):
     train_transforms = [
@@ -66,8 +67,8 @@ def get_vanilla_transforms(
         transforms.RandomHorizontalFlip(hflip),
         transforms.ColorJitter(brightness=jitter, contrast=jitter, saturation=jitter, hue=0),
     ]
-    if autoaugment_policy is not None:
-        train_transforms.append(autoaugment_policy)
+    if add_train_transforms is not None:
+        train_transforms.append(add_train_transforms)
 
     train_transforms.append(transforms.ToTensor())
 
@@ -79,6 +80,11 @@ def get_vanilla_transforms(
     test_transforms = [
         transforms.Resize(int(img_size / crop_pct)),
         transforms.CenterCrop(img_size),
+    ]
+    if add_test_transforms is not None:
+        test_transforms.append(add_test_transforms)
+
+    test_transforms += [
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
     ]

@@ -7,11 +7,11 @@ import pkg_resources as pkg
 import torch
 import yaml
 from addict import Dict
-from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.backbone import \
+from deeplite_torch_zoo.src.objectdetection.flexible_yolo.backbone import \
     build_backbone
-from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.modules.common import \
+from deeplite_torch_zoo.src.objectdetection.flexible_yolo.modules.common import \
     Conv
-from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.neck import \
+from deeplite_torch_zoo.src.objectdetection.flexible_yolo.neck import \
     build_neck
 from torch import nn
 

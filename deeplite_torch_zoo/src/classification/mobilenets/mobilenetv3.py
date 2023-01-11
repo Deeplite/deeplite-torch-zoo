@@ -12,7 +12,7 @@ import math
 __all__ = ['mobilenetv3_large', 'mobilenetv3_small']
 
 
-def _make_divisible(v, divisor, min_value=None):
+def round_channels(v, divisor, min_value=None):
     """
     This function is taken from the original tf repo.
     It ensures that all layers have a channel number that is divisible by 8
@@ -55,9 +55,9 @@ class SELayer(nn.Module):
         super(SELayer, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
-                nn.Linear(channel, _make_divisible(channel // reduction, 8)),
+                nn.Linear(channel, round_channels(channel // reduction, 8)),
                 nn.ReLU(inplace=True),
-                nn.Linear(_make_divisible(channel // reduction, 8), channel),
+                nn.Linear(round_channels(channel // reduction, 8), channel),
                 h_sigmoid()
         )
 
@@ -135,13 +135,13 @@ class MobileNetV3(nn.Module):
         assert mode in ['large', 'small']
 
         # building first layer
-        input_channel = _make_divisible(16 * width_mult, 8)
+        input_channel = round_channels(16 * width_mult, 8)
         layers = [conv_3x3_bn(3, input_channel, 2)]
         # building inverted residual blocks
         block = InvertedResidual
         for k, t, c, use_se, use_hs, s in self.cfgs:
-            output_channel = _make_divisible(c * width_mult, 8)
-            exp_size = _make_divisible(input_channel * t, 8)
+            output_channel = round_channels(c * width_mult, 8)
+            exp_size = round_channels(input_channel * t, 8)
             layers.append(block(input_channel, exp_size, output_channel, k, s, use_se, use_hs))
             input_channel = output_channel
         self.features = nn.Sequential(*layers)
@@ -149,7 +149,7 @@ class MobileNetV3(nn.Module):
         self.conv = conv_1x1_bn(input_channel, exp_size)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         output_channel = {'large': 1280, 'small': 1024}
-        output_channel = _make_divisible(output_channel[mode] * width_mult, 8) if width_mult > 1.0 else output_channel[mode]
+        output_channel = round_channels(output_channel[mode] * width_mult, 8) if width_mult > 1.0 else output_channel[mode]
         self.classifier = nn.Sequential(
             nn.Linear(exp_size, output_channel),
             h_swish(),
@@ -187,7 +187,7 @@ def mobilenetv3_large(**kwargs):
     Constructs a MobileNetV3-Large model
     """
     cfgs = [
-        # k, t, c, SE, HS, s 
+        # k, t, c, SE, HS, s
         [3,   1,  16, 0, 0, 1],
         [3,   4,  24, 0, 0, 2],
         [3,   3,  24, 0, 0, 1],
@@ -212,7 +212,7 @@ def mobilenetv3_small(**kwargs):
     Constructs a MobileNetV3-Small model
     """
     cfgs = [
-        # k, t, c, SE, HS, s 
+        # k, t, c, SE, HS, s
         [3,    1,  16, 1, 0, 2],
         [3,  4.5,  24, 0, 0, 2],
         [3, 3.67,  24, 0, 0, 1],

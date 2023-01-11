@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from deeplite_torch_zoo.src.dnn_blocks.common import ACT_TYPE_MAP, autopad
+from deeplite_torch_zoo.src.dnn_blocks.common import autopad, get_activation
 
 
 class RepConv(nn.Module):
@@ -20,7 +20,7 @@ class RepConv(nn.Module):
 
         padding_11 = autopad(k, p) - k // 2
 
-        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
+        self.act = get_activation(act)
 
         if deploy:
             self.rbr_reparam = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=True)

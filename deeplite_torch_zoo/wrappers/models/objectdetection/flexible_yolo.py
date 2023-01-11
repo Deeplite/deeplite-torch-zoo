@@ -2,9 +2,9 @@ import urllib.parse as urlparse
 from pathlib import Path
 
 import deeplite_torch_zoo
-from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.model import \
+from deeplite_torch_zoo.src.objectdetection.flexible_yolo.model import \
     FlexibleYOLO
-from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
 __all__ = []
@@ -13,7 +13,7 @@ def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
 
-CFG_PATH = 'deeplite_torch_zoo/src/objectdetection/yolov5/flexible_yolo/configs'
+CFG_PATH = 'deeplite_torch_zoo/src/objectdetection/flexible_yolo/configs'
 CHECKPOINT_STORAGE_URL = 'http://download.deeplite.ai/zoo/models/'
 
 model_urls = {}
