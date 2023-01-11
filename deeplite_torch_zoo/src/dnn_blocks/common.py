@@ -96,6 +96,13 @@ class ConvBnAct(nn.Module):
         return identity + self.act(self.bn(self.conv(x)))
 
 
+def conv1x1(c1, c2, s=1, g=1, b=None, act=None, use_bn=False):
+    """
+    ch_in, ch_out, stride, groups, bias, activation
+    """
+    return ConvBnAct(c1=c1,c2=c2,k=1,s=s,g=g,b=b,act=act,use_bn= use_bn)
+
+
 class DWConv(ConvBnAct):
     # Depth-wise convolution class
     def __init__(

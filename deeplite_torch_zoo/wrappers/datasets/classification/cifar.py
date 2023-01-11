@@ -2,9 +2,10 @@ import os
 from os.path import expanduser
 
 import torchvision
-from deeplite_torch_zoo.wrappers.datasets.classification.augs import \
+
+from deeplite_torch_zoo.src.classification.augmentations.augs import \
     get_vanilla_transforms
-from deeplite_torch_zoo.wrappers.datasets.classification.autoaugment import \
+from deeplite_torch_zoo.src.classification.augmentations.autoaugment import \
     CIFAR10Policy
 from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
@@ -24,7 +25,7 @@ def _get_cifar(
         mean=(0.4914, 0.4822, 0.4465),
         std=(0.2023, 0.1994, 0.2010),
         crop_pct=1.0,
-        autoaugment_policy=CIFAR10Policy(),
+        add_train_transforms=CIFAR10Policy(),
         cutout_args={'n_holes': 1, 'length': int(img_size / 1.6)},
     )
 
