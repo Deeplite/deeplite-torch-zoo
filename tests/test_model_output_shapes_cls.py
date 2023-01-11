@@ -2,6 +2,7 @@ from collections import namedtuple
 
 import pytest
 import torch
+
 from deeplite_torch_zoo import create_model, get_model_by_name, list_models
 
 

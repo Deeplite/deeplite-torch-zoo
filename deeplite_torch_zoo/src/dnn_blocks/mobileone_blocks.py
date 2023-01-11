@@ -1,50 +1,10 @@
-from typing import Optional, List, Tuple
-
 import copy
+from typing import Tuple
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
-from deeplite_torch_zoo.src.dnn_blocks.common import ACT_TYPE_MAP
-
-
-class SEBlock(nn.Module):
-    """ Squeeze and Excite module.
-
-        Pytorch implementation of `Squeeze-and-Excitation Networks` -
-        https://arxiv.org/pdf/1709.01507.pdf
-    """
-
-    def __init__(self,
-                 in_channels: int,
-                 rd_ratio: float = 0.0625) -> None:
-        """ Construct a Squeeze and Excite Module.
-
-        :param in_channels: Number of input channels.
-        :param rd_ratio: Input channel reduction ratio.
-        """
-        super(SEBlock, self).__init__()
-        self.reduce = nn.Conv2d(in_channels=in_channels,
-                                out_channels=int(in_channels * rd_ratio),
-                                kernel_size=1,
-                                stride=1,
-                                bias=True)
-        self.expand = nn.Conv2d(in_channels=int(in_channels * rd_ratio),
-                                out_channels=in_channels,
-                                kernel_size=1,
-                                stride=1,
-                                bias=True)
-
-    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        """ Apply forward pass. """
-        b, c, h, w = inputs.size()
-        x = F.avg_pool2d(inputs, kernel_size=[h, w])
-        x = self.reduce(x)
-        x = F.relu(x)
-        x = self.expand(x)
-        x = torch.sigmoid(x)
-        x = x.view(-1, c, 1, 1)
-        return inputs * x
+from deeplite_torch_zoo.src.dnn_blocks.cnn_attention import SELayer
+from deeplite_torch_zoo.src.dnn_blocks.common import get_activation
 
 
 class MobileOneBlock(nn.Module):
@@ -91,12 +51,8 @@ class MobileOneBlock(nn.Module):
         self.num_conv_branches = num_conv_branches
 
         # Check if SE-ReLU is requested
-        if use_se:
-            self.se = SEBlock(c2)
-        else:
-            self.se = nn.Identity()
-      
-        self.activation = ACT_TYPE_MAP[act] if act else nn.Identity()
+        self.se = SELayer(c2) if use_se else nn.Identity()
+        self.activation = get_activation(act)
 
         if inference_mode:
             self.reparam_conv = nn.Conv2d(in_channels=c1,
@@ -274,7 +230,7 @@ class MobileOneBlock(nn.Module):
 
 
 class MobileOneBlockUnit(nn.Module):
-    """ MobileOne building block, 
+    """ MobileOne building block,
         It is a combination of Depthwise and pointwise conv, as mentioned in paper
 
         This block has a multi-branched architecture at train-time
