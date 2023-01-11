@@ -52,7 +52,7 @@ def get_imagenette(
     val_loader = get_dataloader(val_dataset, batch_size=val_batch_size, num_workers=num_workers,
         fp16=fp16, distributed=distributed, shuffle=False, device=device)
 
-    return {"train": train_loader, "val": val_loader}
+    return {"train": train_loader, "test":val_loader}
 
 
 class Imagenette(VisionDataset):
@@ -81,12 +81,12 @@ class Imagenette(VisionDataset):
         self._labels = []
         self._image_files = []
 
-        self.classes = sorted(entry.name for entry in os.scandir(self._meta_folder/"train") if entry.is_dir())
+        self.classes = sorted(entry.name for entry in os.scandir(self._base_folder/"train") if entry.is_dir())
         self.class_to_idx = {cls_name: i for i, cls_name in enumerate(self.classes)}
 
         for target_class in sorted(self.class_to_idx.keys()):
             class_index = self.class_to_idx[target_class]
-            target_dir = os.path.join(self._meta_folder/f"{split}", target_class)
+            target_dir = os.path.join(self._base_folder/f"{split}", target_class)
             for root, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
                 for fname in sorted(fnames):
                     path = os.path.join(root, fname)
@@ -112,7 +112,7 @@ class Imagenette(VisionDataset):
         return f"split={self._split}"
 
     def _check_exists(self) -> bool:
-        return all(folder.exists() and folder.is_dir() for folder in (self._meta_folder, self._images_folder))
+        return all(folder.exists() and folder.is_dir() for folder in (self._base_folder,))
 
     def _download(self) -> None:
         if self._check_exists():
