@@ -43,22 +43,9 @@ class SqueezeExcite(nn.Module):
         x = x * self.gate_fn(x_se)
         return x    
 
-class ConvBnAct(nn.Module):
-    def __init__(self, in_chs, out_chs, kernel_size,
-                 stride=1, act_layer=nn.ReLU):
-        super(ConvBnAct, self).__init__()
-        self.conv = nn.Conv2d(in_chs, out_chs, kernel_size, stride, kernel_size//2, bias=False)
-        self.bn1 = nn.BatchNorm2d(out_chs)
-        self.act1 = act_layer(inplace=True)
-
-    def forward(self, x):
-        x = self.conv(x)
-        x = self.bn1(x)
-        x = self.act1(x)
-        return x
 
 class GhostModuleV2(nn.Module):
-    def __init__(self, c1, c2, k=1, ratio=2, dw_size=3, s=1, relu=True,mode=None,args=None):
+    def __init__(self, c1, c2, k=3, ratio=2, dw_size=3, s=1, relu=True,mode=None):
         super(GhostModuleV2, self).__init__()
         self.mode=mode
         self.gate_fn=nn.Sigmoid()
@@ -100,19 +87,23 @@ class GhostModuleV2(nn.Module):
                 nn.BatchNorm2d(c2),
             ) 
 
+    def attention_layer(self, x, downscale=True):
+
+        res = F.avg_pool2d(x,kernel_size=2,stride=2) #if downscale else x
+        res=self.short_conv(res)
+        res = self.gate_fn(res)
+        if downscale:
+            res = F.interpolate(res,size=x.shape[-1],mode='nearest')
+        return res
+
     def forward(self, x):
-        print (x)
+        x1 = self.primary_conv(x)
+        x2 = self.cheap_operation(x1)
+        out = torch.cat([x1,x2], dim=1)
         if self.mode in ['original']:
-            x1 = self.primary_conv(x)
-            x2 = self.cheap_operation(x1)
-            out = torch.cat([x1,x2], dim=1)
-            return out[:,:self.oup,:,:]         
-        elif self.mode in ['attn']:  
-            res=self.short_conv(F.avg_pool2d(x,kernel_size=2,stride=2))  
-            x1 = self.primary_conv(x)
-            x2 = self.cheap_operation(x1)
-            out = torch.cat([x1,x2], dim=1)
-            return out[:,:self.oup,:,:]*F.interpolate(self.gate_fn(res),size=out.shape[-1],mode='nearest')
+            return out[:,:self.oup,:,:]
+        elif self.mode in ['attn']:
+            return out[:,:self.oup,:,:]*self.attention_layer(x)
 
 
 def _test_blocks(c1, c2, b=2, res=32):
