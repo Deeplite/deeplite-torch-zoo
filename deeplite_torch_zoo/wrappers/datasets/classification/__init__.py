@@ -1,5 +1,6 @@
 try:
     from .vww import *
+    from .imagenette import *
 except ImportError:
     pass
 
@@ -10,4 +11,4 @@ from .vww import *
 from .tiny_imagenet import *
 from .food101 import *
 from .flowers102 import *
-from .imagenette import *
+
