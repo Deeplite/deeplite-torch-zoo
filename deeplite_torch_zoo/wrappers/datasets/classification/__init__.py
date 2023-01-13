@@ -1,9 +1,11 @@
 try:
     from .vww import *
+except ImportError:
+    pass
+try:
     from .imagenette import *
 except ImportError:
     pass
-
 from .cifar import *
 from .imagenet import *
 from .mnist import *
