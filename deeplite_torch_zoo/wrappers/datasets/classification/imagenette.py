@@ -3,7 +3,7 @@ from os.path import expanduser
 from pathlib import Path
 
 import PIL.Image
-from deeplite_torch_zoo.wrappers.datasets.classification.augs import (
+from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_imagenet_transforms, get_vanilla_transforms)
 from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
