@@ -19,7 +19,7 @@ def find_model_implementation(model_name, num_classes):
         return ptcv_get_model(model_name.replace('_pytorchcv', ''), num_classes=num_classes)
     if model_name.replace('_torchvision', '') in IMPL_MODEL_NAMES['torchvision']:
         return torchvision.models.__dict__[model_name.replace('_torchvision', '')](pretrained=False, num_classes=num_classes)
-    raise ValueError('Can\'t find model implementation of {model_name} in the zoo')
+    raise ValueError(f'Can\'t find model implementation of {model_name} in the zoo')
 
 
 def make_wrapper_func(wrapper_fn_name, model_name_key):

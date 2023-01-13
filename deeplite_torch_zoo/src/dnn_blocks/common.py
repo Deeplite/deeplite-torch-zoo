@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-from torch.nn.modules.activation import LeakyReLU
 try:
     from mish_cuda import MishCuda as Mish
 except:
@@ -9,6 +8,7 @@ except:
     class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
         def forward(self, x):
             return x * torch.nn.functional.softplus(x).tanh()
+
 
 ACT_TYPE_MAP = {
     'relu': nn.ReLU(inplace=True),
@@ -20,8 +20,8 @@ ACT_TYPE_MAP = {
     'hsigmoid': nn.Hardsigmoid(inplace=True),
     'sigmoid': nn.Sigmoid(),
     'mish': Mish(),
-    'leakyrelu': nn.LeakyReLU(0.1, inplace=True),
-    'leakyrelu_0.1': nn.LeakyReLU(negative_slope=0.1)
+    'leakyrelu': nn.LeakyReLU(negative_slope=0.1, inplace=True),
+    'leakyrelu_0.1': nn.LeakyReLU(negative_slope=0.1, inplace=True),
 }
 
 
@@ -36,8 +36,7 @@ def autopad(k, p=None):  # kernel, padding
     return p
 
 
-def round_channels(channels,
-                   divisor=8):
+def round_channels(channels, divisor=8):
     """
     Round weighted channel number (make divisible operation).
     Parameters:
@@ -56,7 +55,7 @@ def round_channels(channels,
         rounded_channels += divisor
     return rounded_channels
 
-import numpy as np
+
 class ConvBnAct(nn.Module):
     # Standard convolution-batchnorm-activation block
     def __init__(
@@ -95,7 +94,9 @@ class ConvBnAct(nn.Module):
         if self.residual:
             # in case the input and output shapes are different, we need a 1x1 conv in the skip connection
             self.identity_conv = nn.Sequential()
-            self.identity_conv.add_module('conv', nn.Conv2d(c1, c2, 1, s, autopad(1, p), bias=b))
+            self.identity_conv.add_module(
+                'conv', nn.Conv2d(c1, c2, 1, s, autopad(1, p), bias=b)
+            )
             if self.use_bn:
                 self.identity_conv.add_module('bn', nn.BatchNorm2d(c2))
 
@@ -106,9 +107,7 @@ class ConvBnAct(nn.Module):
                 identity = self.identity_conv(x)
             else:
                 identity = x
-        conv_ = self.bn(self.conv(x))
-        actiavted = identity + self.act(conv_)
-        return actiavted
+        return identity + self.act(self.bn(self.conv(x)))
 
 
 class DWConv(ConvBnAct):
@@ -118,8 +117,17 @@ class DWConv(ConvBnAct):
     ):  # ch_in, kernel, stride, padding, groups
         if c1 != c2:
             raise ValueError('Input and output channel count of DWConv does not match')
-        super().__init__(c1, c2, k, s, g=c1, act=act,
-            residual=residual, use_bn=use_bn, channel_divisor=channel_divisor)
+        super().__init__(
+            c1,
+            c2,
+            k,
+            s,
+            g=c1,
+            act=act,
+            residual=residual,
+            use_bn=use_bn,
+            channel_divisor=channel_divisor,
+        )
 
 
 class GhostConv(nn.Module):
@@ -320,9 +328,8 @@ class ChannelShuffle(nn.Module):
     groups : int
         Number of groups.
     """
-    def __init__(self,
-                 channels,
-                 groups):
+
+    def __init__(self, channels, groups):
         super(ChannelShuffle, self).__init__()
         if channels % groups != 0:
             raise ValueError("channels must be divisible by groups")
@@ -333,6 +340,4 @@ class ChannelShuffle(nn.Module):
 
     def __repr__(self):
         s = "{name}(groups={groups})"
-        return s.format(
-            name=self.__class__.__name__,
-            groups=self.groups)
+        return s.format(name=self.__class__.__name__, groups=self.groups)

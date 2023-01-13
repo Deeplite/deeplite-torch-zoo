@@ -1,8 +1,29 @@
+import inspect
 import logging
+import math
 from copy import deepcopy
 from pathlib import Path
 
 import torch
+
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
+from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
+from deeplite_torch_zoo.src.dnn_blocks.repvgg_blocks import RepConv
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPP as SPP
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPPCSP as SPPCSP
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+    YOLOSPPCSPC as SPPCSPC
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPPF as SPPF
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+    YOLOBottleneck as Bottleneck
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+    YOLOBottleneckCSP as BottleneckCSP
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+    YOLOBottleneckCSP2 as BottleneckCSP2
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+    YOLOBottleneckCSP2Leaky as BottleneckCSP2Leaky
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+    YOLOSPPCSPLeaky as SPPCSPLeaky
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
@@ -262,8 +283,8 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
             c2 = ch[f]
 
         kwargs = dict()
-        if m in CUSTOM_ACTIVATION_MODULES.registry_dict.values():
-            kwargs.update({'activation_type': activation_type})
+        if 'act' in inspect.signature(m).parameters:
+            kwargs.update({'act': activation_type})
 
         m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
