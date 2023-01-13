@@ -70,6 +70,7 @@ The zoo enables to load any ImageNet-pretrained model from the [timm repo](https
 | mlp2                             | mnist                                     |
 | mlp4                             | mnist                                     |
 | mlp8                             | mnist                                     |
+| mobileone s0,s1,s2,s3,s4         | imagenet                                  |
 | mobilenet_v1                     | cifar100, vww                             |
 | mobilenet_v2_0_35                | imagenet10                                |
 | mobilenet_v2                     | cifar100, imagenet, tinyimagenet          |

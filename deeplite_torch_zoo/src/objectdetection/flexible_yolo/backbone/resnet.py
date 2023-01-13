@@ -2,7 +2,7 @@ import math
 
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
-from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.modules import (
+from deeplite_torch_zoo.src.objectdetection.flexible_yolo.modules import (
     CBAM, DropBlock2D, LinearScheduler)
 
 model_urls = {

@@ -5,7 +5,7 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
-from deeplite_torch_zoo.src.objectdetection.yolov5.flexible_yolo.modules.common import \
+from deeplite_torch_zoo.src.objectdetection.flexible_yolo.modules.common import \
     Conv
 
 
