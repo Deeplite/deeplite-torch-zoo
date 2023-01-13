@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
+from deeplite_torch_zoo.src.dnn_blocks.common import get_activation
+
 
 def _make_divisible(v, divisor, min_value=None):
     """
@@ -45,11 +47,11 @@ class SqueezeExcite(nn.Module):
 
 
 class GhostModuleV2(nn.Module):
-    def __init__(self, c1, c2, k=3, ratio=2, dw_size=3, s=1, relu=True,mode=None):
+    def __init__(self, c1, c2, k=3, ratio=2, dw_size=3, s=1, act="relu",mode=None):
         super(GhostModuleV2, self).__init__()
         self.mode=mode
         self.gate_fn=nn.Sigmoid()
-
+        self.activation = get_activation(act)
         if self.mode in ['original']:
             self.oup = c2
             init_channels = math.ceil(c2 / ratio) 
@@ -57,12 +59,12 @@ class GhostModuleV2(nn.Module):
             self.primary_conv = nn.Sequential(  
                 nn.Conv2d(c1, init_channels, k, s, k//2, bias=False),
                 nn.BatchNorm2d(init_channels),
-                nn.ReLU(inplace=True) if relu else nn.Sequential(),
+                get_activation(act),
             )
             self.cheap_operation = nn.Sequential(
                 nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size//2, groups=init_channels, bias=False),
                 nn.BatchNorm2d(new_channels),
-                nn.ReLU(inplace=True) if relu else nn.Sequential(),
+                get_activation(act),
             )
         elif self.mode in ['attn']: 
             self.oup = c2
@@ -71,12 +73,12 @@ class GhostModuleV2(nn.Module):
             self.primary_conv = nn.Sequential(  
                 nn.Conv2d(c1, init_channels, k, s, k//2, bias=False),
                 nn.BatchNorm2d(init_channels),
-                nn.ReLU(inplace=True) if relu else nn.Sequential(),
+                get_activation(act),
             )
             self.cheap_operation = nn.Sequential(
                 nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size//2, groups=init_channels, bias=False),
                 nn.BatchNorm2d(new_channels),
-                nn.ReLU(inplace=True) if relu else nn.Sequential(),
+                get_activation(act),
             ) 
             self.short_conv = nn.Sequential( 
                 nn.Conv2d(c1, c2, k, s, k//2, bias=False),
@@ -108,7 +110,7 @@ class GhostModuleV2(nn.Module):
 class GhostBottleneckV2(nn.Module): 
 
     def __init__(self, c1, c2, mid_chs=None, e=2, dw_kernel_size=3,
-                 s=1, act_layer=nn.ReLU, se_ratio=0.,use_attn=True):
+                 s=1, act="relu", se_ratio=0.,use_attn=True):
         super(GhostBottleneckV2, self).__init__()
         has_se = se_ratio is not None and se_ratio > 0.
         self.stride = s
