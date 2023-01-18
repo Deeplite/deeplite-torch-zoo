@@ -11,16 +11,18 @@ from torchvision.datasets.utils import (download_and_extract_archive,
                                         verify_str_arg)
 from torchvision.datasets.vision import VisionDataset
 
-__all__ = ["get_imagenette"]
+__all__ = ["get_imagenette", "get_imagenette_320", "get_imagenette_160"]
 
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name="imagenette")
 def get_imagenette(
-    data_root="", batch_size=64, val_batch_size=None, img_size=160, num_workers=4,
+    data_root="", batch_size=64, val_batch_size=None, img_size=224, num_workers=4,
     fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
+
+    _URL="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz"
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
@@ -53,11 +55,92 @@ def get_imagenette(
 
     return {"train": train_loader, "test":val_loader}
 
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenette_320")
+def get_imagenette_320(
+    data_root="", batch_size=64, val_batch_size=None, img_size=224, num_workers=4,
+    fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
+):
+    if data_root == "":
+        data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
+
+    _URL="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-320.tgz"
+
+    if augmentation_mode not in ('vanilla', 'imagenet'):
+        raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
+
+    if augmentation_mode == 'imagenet':
+        train_transforms, val_transforms = get_imagenet_transforms(img_size)
+    else:
+        train_transforms, val_transforms = get_vanilla_transforms(img_size)
+
+    train_dataset = Imagenette(
+        root=data_root,
+        split='train',
+        download=download,
+        transform=train_transforms
+    )
+
+    val_dataset = Imagenette(
+        root=data_root,
+        split='val',
+        download=download,
+        transform=val_transforms,
+    )
+
+    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
+
+    val_batch_size = batch_size if val_batch_size is None else val_batch_size
+    val_loader = get_dataloader(val_dataset, batch_size=val_batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=False, device=device)
+
+    return {"train": train_loader, "test":val_loader}
+
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenette_160")
+def get_imagenette_160(
+    data_root="", batch_size=64, val_batch_size=None, img_size=224, num_workers=4,
+    fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
+):
+    if data_root == "":
+        data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
+
+    _URL="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-160.tgz"
+
+    if augmentation_mode not in ('vanilla', 'imagenet'):
+        raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
+
+    if augmentation_mode == 'imagenet':
+        train_transforms, val_transforms = get_imagenet_transforms(img_size)
+    else:
+        train_transforms, val_transforms = get_vanilla_transforms(img_size)
+
+    train_dataset = Imagenette(
+        root=data_root,
+        split='train',
+        download=download,
+        transform=train_transforms,
+        url = _URL,
+    )
+
+    val_dataset = Imagenette(
+        root=data_root,
+        split='val',
+        download=download,
+        transform=val_transforms,
+        url = _URL,
+    )
+
+    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
+
+    val_batch_size = batch_size if val_batch_size is None else val_batch_size
+    val_loader = get_dataloader(val_dataset, batch_size=val_batch_size, num_workers=num_workers,
+        fp16=fp16, distributed=distributed, shuffle=False, device=device)
+
+    return {"train": train_loader, "test":val_loader}
 
 class Imagenette(VisionDataset):
     # Added for compatibility with old torchvision versions
-
-    _URL = "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette.zip"
 
     def __init__(
         self,
@@ -66,6 +149,7 @@ class Imagenette(VisionDataset):
         transform = None,
         target_transform = None,
         download: bool = False,
+        url: str = ""
     ) -> None:
         super().__init__(root, transform=transform, target_transform=target_transform)
         self._split = verify_str_arg(split, "split", ("train", "val"))
@@ -116,4 +200,4 @@ class Imagenette(VisionDataset):
     def _download(self) -> None:
         if self._check_exists():
             return
-        download_and_extract_archive(self._URL, download_root=self.root)
+        download_and_extract_archive(self.url, download_root=self.root)
