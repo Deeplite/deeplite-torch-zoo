@@ -157,9 +157,10 @@ class Imagenette(VisionDataset):
     ) -> None:
         super().__init__(root, transform=transform, target_transform=target_transform)
         self._split = verify_str_arg(split, "split", ("train", "val"))
-        if url[-7:]=="320.zip":
+        self.url=url
+        if self.url[-7:]=="320.zip":
             self._base_folder = Path(self.root) / "imagenette320"
-        else if url[-7:]=="160.zip"
+        elif self.url[-7:]=="160.zip":
             self._base_folder = Path(self.root) / "imagenette160"
         else:
             self._base_folder = Path(self.root) / "imagenette"
@@ -209,4 +210,4 @@ class Imagenette(VisionDataset):
     def _download(self) -> None:
         if self._check_exists():
             return
-        download_and_extract_archive(url, download_root=self.root)
+        download_and_extract_archive(self.url, download_root=self.root)
