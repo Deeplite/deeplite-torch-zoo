@@ -22,7 +22,7 @@ def get_imagenette(
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
-    _URL="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz"
+    _URL="https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette.zip"
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
@@ -65,7 +65,7 @@ def get_imagenette_320(
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
-    _URL="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-320.tgz"
+    _URL="https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette320.zip"
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
@@ -108,7 +108,7 @@ def get_imagenette_160(
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
-    _URL="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-160.tgz"
+    _URL="https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette160.zip"
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
