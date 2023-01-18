@@ -98,7 +98,7 @@ def get_imagenette_320(
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name="imagenette_160")
 def get_imagenette_160(
-    data_root="", batch_size=64, val_batch_size=None, img_size=224, num_workers=4,
+    data_root="", batch_size=64, val_batch_size=None, img_size=160, num_workers=4,
     fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
 ):
     if data_root == "":
