@@ -36,7 +36,8 @@ def get_imagewoof(
         root=data_root,
         split='train',
         download=download,
-        transform=train_transforms
+        transform=train_transforms,
+        url = _URL,
     )
 
     val_dataset = Imagewoof(
@@ -44,6 +45,7 @@ def get_imagewoof(
         split='val',
         download=download,
         transform=val_transforms,
+        url = _URL,
     )
 
     train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
