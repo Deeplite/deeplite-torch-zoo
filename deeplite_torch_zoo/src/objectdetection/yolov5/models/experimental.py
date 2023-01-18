@@ -6,19 +6,21 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import \
-    Conv, DWConv, Bottleneck, SPP, CUSTOM_ACTIVATION_MODULES
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
+from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPP as SPP
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+    YOLOBottleneck as Bottleneck
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.google_utils import \
     attempt_download
 
 
-@CUSTOM_ACTIVATION_MODULES.register('CrossConv')
 class CrossConv(nn.Module):
     # Cross Convolution Downsample
-    def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, shortcut=False, activation_type='hardswish'):
+    def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, shortcut=False, act='hardswish'):
         # ch_in, ch_out, kernel, stride, groups, expansion, shortcut
         super(CrossConv, self).__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
+        Conv_ = functools.partial(Conv, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, (1, k), (1, s))
         self.cv2 = Conv_(c_, c2, (k, 1), (s, 1), g=g)
@@ -28,13 +30,12 @@ class CrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
-@CUSTOM_ACTIVATION_MODULES.register('C3')
 class C3(nn.Module):
     # CSP Bottleneck with 4 convolutions
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        CrossConv_ = functools.partial(CrossConv, activation_type=activation_type)
+        Conv_ = functools.partial(Conv, act=act)
+        CrossConv_ = functools.partial(CrossConv, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
@@ -52,18 +53,17 @@ class C3(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@CUSTOM_ACTIVATION_MODULES.register('C3v6')
 class C3v6(nn.Module):
     # CSP Bottleneck with 3 convolutions
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        Bottleneck_ = functools.partial(Bottleneck, activation_type=activation_type)
+        Conv_ = functools.partial(Conv, act=act)
+        Bottleneck_ = functools.partial(Bottleneck, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv_(c1, c_, 1, 1)
         self.cv2 = Conv_(c1, c_, 1, 1)
         self.cv3 = Conv_(2 * c_, c2, 1)  # act=FReLU(c2)
-        self.m = nn.Sequential(*(Bottleneck_(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
+        self.m = nn.Sequential(*(Bottleneck_(c1=c_, c2=c_, shortcut=shortcut, g=g, e=1.0) for _ in range(n)))
 
     def forward(self, x):
         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
@@ -92,44 +92,40 @@ class Sum(nn.Module):
         return y
 
 
-@CUSTOM_ACTIVATION_MODULES.register('C3TR')
 class C3TR(C3):
     # C3 module with TransformerBlock()
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish'):
-        super().__init__(c1, c2, n, shortcut, g, e, activation_type=activation_type)
-        TransformerBlock_ = functools.partial(TransformerBlock, activation_type=activation_type)
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
+        TransformerBlock_ = functools.partial(TransformerBlock, act=act)
         c_ = int(c2 * e)
         self.m = TransformerBlock_(c_, c_, 4, n)
 
 
-@CUSTOM_ACTIVATION_MODULES.register('C3SPP')
 class C3SPP(C3):
     # C3 module with SPP()
-    def __init__(self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish'):
-        super().__init__(c1, c2, n, shortcut, g, e, activation_type=activation_type)
-        SPP_ = functools.partial(SPP, activation_type=activation_type)
+    def __init__(self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5, act='hardswish'):
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
+        SPP_ = functools.partial(SPP, act=act)
         c_ = int(c2 * e)
         self.m = SPP_(c_, c_, k)
 
 
-@CUSTOM_ACTIVATION_MODULES.register('C3Ghost')
 class C3Ghost(C3):
     # C3 module with GhostBottleneck()
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, activation_type='hardswish'):
-        super().__init__(c1, c2, n, shortcut, g, e, activation_type=activation_type)
-        GhostBottleneck_ = functools.partial(GhostBottleneck, activation_type=activation_type)
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
+        GhostBottleneck_ = functools.partial(GhostBottleneck, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(*(GhostBottleneck_(c_, c_) for _ in range(n)))
 
 
-@CUSTOM_ACTIVATION_MODULES.register('GhostBottleneck')
 class GhostBottleneck(nn.Module):
     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=3, s=1, activation_type='hardswish'):  # ch_in, ch_out, kernel, stride
+    def __init__(self, c1, c2, k=3, s=1, act='hardswish'):  # ch_in, ch_out, kernel, stride
         super().__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
-        GhostConv_ = functools.partial(GhostConv, activation_type=activation_type)
-        DWConv_ = functools.partial(DWConv, activation_type=activation_type)
+        Conv_ = functools.partial(Conv, act=act)
+        GhostConv_ = functools.partial(GhostConv, act=act)
+        DWConv_ = functools.partial(DWConv, act=act)
         c_ = c2 // 2
         self.conv = nn.Sequential(GhostConv_(c1, c_, 1, 1),  # pw
                                   DWConv_(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
@@ -141,12 +137,11 @@ class GhostBottleneck(nn.Module):
         return self.conv(x) + self.shortcut(x)
 
 
-@CUSTOM_ACTIVATION_MODULES.register('GhostConv')
 class GhostConv(nn.Module):
     # Ghost Convolution https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=1, s=1, g=1, act=True, activation_type='hardswish'):  # ch_in, ch_out, kernel, stride, groups
+    def __init__(self, c1, c2, k=1, s=1, g=1, act='hardswish'):  # ch_in, ch_out, kernel, stride, groups
         super().__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
+        Conv_ = functools.partial(Conv, act=act)
         c_ = c2 // 2  # hidden channels
         self.cv1 = Conv_(c1, c_, k, s, None, g, act)
         self.cv2 = Conv_(c_, c_, 5, 1, None, c_, act)
@@ -173,12 +168,11 @@ class TransformerLayer(nn.Module):
         return x
 
 
-@CUSTOM_ACTIVATION_MODULES.register('TransformerBlock')
 class TransformerBlock(nn.Module):
     # Vision Transformer https://arxiv.org/abs/2010.11929
-    def __init__(self, c1, c2, num_heads, num_layers, activation_type='hardswish'):
+    def __init__(self, c1, c2, num_heads, num_layers, act='hardswish'):
         super().__init__()
-        Conv_ = functools.partial(Conv, activation_type=activation_type)
+        Conv_ = functools.partial(Conv, act=act)
         self.conv = None
         if c1 != c2:
             self.conv = Conv_(c1, c2)
