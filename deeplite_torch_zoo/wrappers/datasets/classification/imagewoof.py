@@ -23,7 +23,7 @@ def get_imagewoof(
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
     _URL = "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof.zip"
-        
+
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
 
@@ -66,7 +66,7 @@ def get_imagewoof_320(
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
     _URL = "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof320.zip"
-        
+
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
 
@@ -80,7 +80,7 @@ def get_imagewoof_320(
         split='train',
         download=download,
         transform=train_transforms,
-        url = _URL,
+        url=_URL,
     )
 
     val_dataset = Imagewoof(
@@ -88,7 +88,7 @@ def get_imagewoof_320(
         split='val',
         download=download,
         transform=val_transforms,
-        url = _URL
+        url=_URL,
     )
 
     train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
@@ -109,7 +109,7 @@ def get_imagewoof_160(
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
     _URL = "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof160.zip"
-        
+
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
 
@@ -164,7 +164,7 @@ class Imagewoof(VisionDataset):
             self._base_folder = Path(self.root) / "imagewoof160"
         else:
             self._base_folder = Path(self.root) / "imagewoof"
-        
+
         if download:
             self._download()
 
