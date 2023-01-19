@@ -164,7 +164,7 @@ class Imagenette(VisionDataset):
             self._base_folder = Path(self.root) / "imagenette160"
         else:
             self._base_folder = Path(self.root) / "imagenette"
-        
+
         if download:
             self._download()
 
