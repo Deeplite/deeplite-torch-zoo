@@ -1,18 +1,13 @@
 import pytest
 import torch
 
-from deeplite_torch_zoo import create_model, get_model_by_name, list_models
+from deeplite_torch_zoo import (create_model, get_model_by_name,
+                                get_models_by_dataset)
 from deeplite_torch_zoo.wrappers.models.classification.impl_model_names import (
     FIXED_SIZE_INPUT_MODELS, INPLACE_ABN_MODELS)
 
 TEST_BATCH_SIZE = 2
 TEST_NUM_CLASSES = 42
-
-
-def get_models_by_dataset(dataset_name):
-    return [model_key.model_name for model_key in list_models(dataset_name, return_list=True, print_table=False)
-        if model_key.dataset_name == dataset_name]
-
 
 IMAGENET_MODEL_TESTS = []
 for model_name in get_models_by_dataset('imagenet'):
