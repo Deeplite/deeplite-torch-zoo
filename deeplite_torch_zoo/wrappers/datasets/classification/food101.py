@@ -4,13 +4,14 @@ from os.path import expanduser
 from pathlib import Path
 
 import PIL.Image
-from deeplite_torch_zoo.wrappers.datasets.classification.augs import (
-    get_imagenet_transforms, get_vanilla_transforms)
-from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
-from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 from torchvision.datasets.utils import (download_and_extract_archive,
                                         verify_str_arg)
 from torchvision.datasets.vision import VisionDataset
+
+from deeplite_torch_zoo.src.classification.augmentations.augs import (
+    get_imagenet_transforms, get_vanilla_transforms)
+from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
+from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
 __all__ = ["get_food101"]
 
@@ -18,7 +19,8 @@ __all__ = ["get_food101"]
 @DATA_WRAPPER_REGISTRY.register(dataset_name="food101")
 def get_food101(
     data_root="", batch_size=64, test_batch_size=None, img_size=224, num_workers=4,
-    fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
+    fp16=False, download=True, device="cuda", distributed=False,
+    augmentation_mode='imagenet', train_transforms=None, val_transforms=None, **kwargs,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
@@ -27,9 +29,12 @@ def get_food101(
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
 
     if augmentation_mode == 'imagenet':
-        train_transforms, test_transforms = get_imagenet_transforms(img_size)
+        default_train_transforms, default_val_transforms = get_imagenet_transforms(img_size)
     else:
-        train_transforms, test_transforms = get_vanilla_transforms(img_size)
+        default_train_transforms, default_val_transforms = get_vanilla_transforms(img_size)
+
+    train_transforms = train_transforms if train_transforms is not None else default_train_transforms
+    val_transforms = val_transforms if val_transforms is not None else default_val_transforms
 
     train_dataset = Food101(
         root=data_root,
@@ -42,7 +47,7 @@ def get_food101(
         root=data_root,
         split='test',
         download=download,
-        transform=test_transforms,
+        transform=val_transforms,
     )
 
     train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,

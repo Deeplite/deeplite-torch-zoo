@@ -50,7 +50,8 @@ class Registry:
             cls_name = name
             if cls_name is None:
                 cls_name = obj.__name__
-            cls_name = (cls_name, *args)
+            if args:
+                cls_name = (cls_name, *args)
             _register(cls_name, obj)
             return obj
 

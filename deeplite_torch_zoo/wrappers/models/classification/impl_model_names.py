@@ -500,6 +500,7 @@ IMPL_MODEL_NAMES = {
 }
 
 
+# Models that require the inplace-ABN module
 INPLACE_ABN_MODELS = [
     'densenet264d_iabn',
     'ese_vovnet99b_iabn',
