@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, get_activation
 
 
@@ -101,7 +102,7 @@ class SqnxtUnit(nn.Module):
         elif c1 > c2:
             reduction_den = 4
             self.resize_identity = True
-        elif c1 < c2:
+        elif c1 <= c2:
             reduction_den = 2
             self.resize_identity = False
 
