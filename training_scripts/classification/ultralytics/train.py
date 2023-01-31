@@ -26,7 +26,7 @@ from utils.torch_utils import (GenericLogger, ModelEMA, select_device,
                                smartCrossEntropyLoss,
                                torch_distributed_zero_first)
 
-_DROPBLOCK = False  
+_DROPBLOCK = True  
 if not _DROPBLOCK : 
     from deeplite_torch_zoo.src.classification.dropblock_models.resnet import resnet18 
 else : 

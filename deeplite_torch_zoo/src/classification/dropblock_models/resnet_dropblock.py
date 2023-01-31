@@ -10,7 +10,7 @@ __all__ = ['ResNet', 'resnet10', 'resnet12', 'resnet14', 'resnetbc14b', 'resnet1
 
 import os
 import torch.nn as nn
-from .common import conv1x1_block, conv3x3_block, conv7x7_block
+from .common_dropblock import conv1x1_block, conv3x3_block, conv7x7_block
 from dropblock import DropBlock2D
 
 

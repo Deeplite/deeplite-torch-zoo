@@ -18,6 +18,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
+from dropblock import DropBlock2D
 
 def round_channels(channels,
                    divisor=8):
@@ -436,11 +437,15 @@ class ConvBlock(nn.Module):
                  groups=1,
                  bias=False,
                  use_bn=True,
+                 use_dropblock=False,
+                 dropblock_size = 3, 
                  bn_eps=1e-5,
                  activation=(lambda: nn.ReLU(inplace=True))):
         super(ConvBlock, self).__init__()
         self.activate = (activation is not None)
         self.use_bn = use_bn
+        self.use_dropblock = use_dropblock
+        self.dropblock_size = dropblock_size
         self.use_pad = (isinstance(padding, (list, tuple)) and (len(padding) == 4))
 
         if self.use_pad:
@@ -461,10 +466,14 @@ class ConvBlock(nn.Module):
                 eps=bn_eps)
         if self.activate:
             self.activ = get_activation_layer(activation)
+        
+        self.dropblock = DropBlock2D(block_size=self.dropblock_size, drop_prob=0.2)
 
     def forward(self, x):
         if self.use_pad:
             x = self.pad(x)
+        if self.use_dropblock: 
+            x = self.dropblock(x)
         x = self.conv(x)
         if self.use_bn:
             x = self.bn(x)
@@ -563,6 +572,7 @@ def conv3x3_block(in_channels,
         groups=groups,
         bias=bias,
         use_bn=use_bn,
+        use_dropblock=True, 
         bn_eps=bn_eps,
         activation=activation)
 
@@ -612,6 +622,8 @@ def conv5x5_block(in_channels,
         groups=groups,
         bias=bias,
         use_bn=use_bn,
+        use_dropblock=True, 
+        dropblock_size = 5, 
         bn_eps=bn_eps,
         activation=activation)
 
