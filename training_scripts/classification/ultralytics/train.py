@@ -6,6 +6,7 @@ import time
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
+import torch.nn as nn
 
 import torch
 import torch.distributed as dist
@@ -13,6 +14,7 @@ import torch.nn.functional as F
 import torch.optim.lr_scheduler as lr_scheduler
 from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_eval_function)
+
 from torch.cuda import amp
 from tqdm import tqdm
 
@@ -23,6 +25,13 @@ from utils.torch_utils import (GenericLogger, ModelEMA, select_device,
                                smart_DDP, smart_optimizer,
                                smartCrossEntropyLoss,
                                torch_distributed_zero_first)
+
+_DROPBLOCK = False  
+if not _DROPBLOCK : 
+    from deeplite_torch_zoo.src.classification.dropblock_models.resnet import resnet18 
+else : 
+    from deeplite_torch_zoo.src.classification.dropblock_models.resnet_dropblock import resnet18 
+
 
 ROOT = Path.cwd()
 
@@ -63,12 +72,16 @@ def train(opt, device):
     # Model
     opt.num_classes = len(trainloader.dataset.classes)
     with torch_distributed_zero_first(LOCAL_RANK), WorkingDirectory(ROOT):
-        model = create_model(
-            model_name=opt.model,
-            pretraining_dataset=opt.pretraining_dataset,
-            num_classes=opt.num_classes,
-            pretrained=pretrained,
-        )
+        
+        model = resnet18(pretrained=True)        
+        model.output = nn.Linear(in_features=512, out_features=102, bias=True) 
+
+        # model = create_model(
+        #     model_name=opt.model,
+        #     pretraining_dataset=opt.pretraining_dataset,
+        #     num_classes=opt.num_classes,
+        #     pretrained=pretrained,
+        # )
 
         model_kd = None
         if opt.kd_model_name is not None:
@@ -224,7 +237,7 @@ def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-root', type=str, default='./')
     parser.add_argument('--model', type=str, default='resnet18')
-    parser.add_argument('--dataset', type=str, default='cifar100', help='cifar10, cifar100, mnist, imagenet, ...')
+    parser.add_argument('--dataset', type=str, default='flowers102', help='cifar10, cifar100, mnist, imagenet, ...')
     parser.add_argument('--pretraining-dataset', type=str, default='imagenet')
     parser.add_argument('--epochs', type=int, default=200, help='total training epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs')
