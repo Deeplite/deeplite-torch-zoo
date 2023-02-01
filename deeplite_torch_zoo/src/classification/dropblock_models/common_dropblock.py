@@ -466,8 +466,16 @@ class ConvBlock(nn.Module):
                 eps=bn_eps)
         if self.activate:
             self.activ = get_activation_layer(activation)
-        
-        self.dropblock = DropBlock2D(block_size=self.dropblock_size, drop_prob=0.2)
+
+        self.drop_prob = 0.2
+        self.dropblock = DropBlock2D(block_size=self.dropblock_size,
+                drop_prob=self.drop_prob)
+
+    def update_dropProb(self, drop_prob):
+        self.drop_prob = drop_prob
+        self.dropblock = DropBlock2D(
+                block_size=self.dropblock_size, drop_prob=self.drop_prob)
+        return
 
     def forward(self, x):
         if self.use_pad:

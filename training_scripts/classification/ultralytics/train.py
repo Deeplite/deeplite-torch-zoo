@@ -69,11 +69,21 @@ def train(opt, device):
     )
     trainloader, testloader = dataloaders['train'], dataloaders['test']
 
+    # DropBlock prob with polyDecay trend (TO-DO: Get Params from args)
+    power = 2 # Exp of the function (if power = 1 >> linear)
+    initial_value = 0.1
+    final_value = 0.25
+    begin_step = 10
+    end_step = 150
+    def get_dropProb(step):
+        p = min( 1.0, max(0.0,  (step - begin_step) / ((end_step - begin_step)), ),)
+        return final_value + (initial_value - final_value) * ((1 - p) ** power)
+
     # Model
     opt.num_classes = len(trainloader.dataset.classes)
     with torch_distributed_zero_first(LOCAL_RANK), WorkingDirectory(ROOT):
-        
-        model = resnet18(pretrained=True)        
+
+        model = resnet18(pretrained=True)
         model.output = nn.Linear(in_features=512, out_features=102, bias=True) 
 
         # model = create_model(
@@ -135,6 +145,16 @@ def train(opt, device):
         tloss, vloss, fitness = 0.0, 0.0, 0.0  # train loss, val loss, fitness
         model.train()
         pbar = enumerate(trainloader)
+
+        ## DropBlock Update Prob
+        for n, m in model.named_modules():
+            if hasattr(m, 'dropblock'):
+                m.update_dropProb(get_dropProb(epoch))
+        # for n, m in model.named_modules():
+        #     if hasattr(m, 'dropblock'):
+        #         print("  >> DropProb: {}".format(m.drop_prob))
+        #         break
+
         if RANK in {-1, 0}:
             pbar = tqdm(enumerate(trainloader), total=len(trainloader), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')
         for i, (images, labels) in pbar:  # progress bar
