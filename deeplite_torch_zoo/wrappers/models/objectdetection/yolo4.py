@@ -4,7 +4,7 @@ from pathlib import Path
 
 import deeplite_torch_zoo
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import \
-    YoloV5_6
+    YOLOModel
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
@@ -42,7 +42,7 @@ def yolo4(
     progress=True, device="cuda", ch=3,
 ):
     config_path = get_project_root() / CFG_PATH / yolov4_cfg[model_name]
-    model = YoloV5_6(config_path, ch=ch, nc=num_classes)
+    model = YOLOModel(config_path, ch=ch, nc=num_classes)
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
             raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
