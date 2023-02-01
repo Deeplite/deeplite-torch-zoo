@@ -14,13 +14,14 @@ import torch
 import torch.distributed as dist
 import torch.nn as nn
 import yaml
-from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 from pycocotools.coco import COCO
 from torch.cuda import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import SGD, Adam, lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+
+from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -29,18 +30,18 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 
+from utils.general import (AverageMeter, colorstr, init_seeds, one_cycle,
+                           print_args, set_logging, strip_optimizer)
+from utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel,
+                               select_device)
+
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_eval_function)
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_loss import \
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolov5_loss import \
     YoloV5Loss
-
-from utils.general import (AverageMeter, colorstr, init_seeds, one_cycle,
-                           print_args, set_logging, strip_optimizer)
-from utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel,
-                               select_device)
 
 LOGGER = logging.getLogger(__name__)
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
