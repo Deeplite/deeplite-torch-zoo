@@ -34,6 +34,31 @@ def test_cifar10_dataset():
     assert train_len ==  391
     assert test_len ==  79
 
+def test_imagenette_dataset():
+    BATCH_SIZE = 128
+    datasplit = get_data_splits_by_name(
+        data_root='./',
+        model_name='resnet50',
+        dataset_name="imagenette",
+        batch_size=BATCH_SIZE
+    )
+    train_len = len(datasplit["train"])
+    test_len = len(datasplit["test"])
+    assert train_len ==  74
+    assert test_len ==  31
+ 
+def test_imagewoof_dataset():
+    BATCH_SIZE = 128
+    datasplit = get_data_splits_by_name(
+        data_root='./',
+        model_name='resnet50',
+        dataset_name="imagewoof",
+        batch_size=BATCH_SIZE
+    )
+    train_len = len(datasplit["train"])
+    test_len = len(datasplit["test"])
+    assert train_len ==  71
+    assert test_len ==  31
 
 def test_mnist_dataset():
     BATCH_SIZE = 128

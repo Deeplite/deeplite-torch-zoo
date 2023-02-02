@@ -5,7 +5,7 @@ from pathlib import Path
 
 import deeplite_torch_zoo
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import \
-    YoloV5_6
+    YOLOModel
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
 
@@ -70,12 +70,15 @@ MODEL_NAME_SUFFICES = ('relu', 'hswish')
 def yolo5_6(
     model_name="yolo5_6s", dataset_name="voc", num_classes=20, activation_type=None,
     pretrained=False, progress=True, device="cuda", ch=3,
-):
+):  # pylint: disable=W0621
+    if 'yolo5_6' not in model_name and 'yolo5' in model_name:
+        model_name = model_name.replace('yolo5', 'yolo5_6')
+
     config_key = model_name
     for suffix in MODEL_NAME_SUFFICES:
         config_key = re.sub(f'\_{suffix}$', '', config_key) # pylint: disable=W1401
     config_path = get_project_root() / CFG_PATH / yolov5_cfg[config_key]
-    model = YoloV5_6(config_path, ch=ch, nc=num_classes, activation_type=activation_type)
+    model = YOLOModel(config_path, ch=ch, nc=num_classes, activation_type=activation_type)
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
             raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
@@ -97,11 +100,13 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo5_6[nsmlx]_tiny_hswish$": partial(yolo5_6, activation_type="hardswish"),
 }
 
-def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
+def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):  # pylint: disable=W0621
 
     model_wrapper_fn = None
     for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
         if re.match(net_name, model_name):
+            model_wrapper_fn = model_fn
+        if re.match(net_name, model_name.replace('yolo5', 'yolo5_6')):
             model_wrapper_fn = model_fn
     if model_wrapper_fn is None:
         raise ValueError(f'Could not find a wrapper function for model name {model_name}')
@@ -127,6 +132,11 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 model_list = list(yolov5_cfg.keys())
 for model_name_suffix in MODEL_NAME_SUFFICES:
     model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov5_cfg]
+
+for model_name in yolov5_cfg:
+    if 'yolo5_6' in model_name:
+        model_list.append(model_name.replace('yolo5_6', 'yolo5'))
+
 datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
 
 for dataset_tag, n_classes in datasets:

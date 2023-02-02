@@ -3,17 +3,18 @@ import fnmatch
 import json
 import subprocess
 
+import texttable
+import torch
+from torchinfo import summary
+from torchprofile import profile_macs
+
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.eval  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
-import texttable
-import torch
 from deeplite_torch_zoo.utils import training_mode_switcher
 from deeplite_torch_zoo.wrappers.registries import (DATA_WRAPPER_REGISTRY,
                                                     EVAL_WRAPPER_REGISTRY,
                                                     MODEL_WRAPPER_REGISTRY)
-from torchinfo import summary
-from torchprofile import profile_macs
 
 __all__ = [
     "get_data_splits_by_name",
@@ -23,6 +24,7 @@ __all__ = [
     "create_model",
     "dump_json_model_list",
     "profile",
+    "get_models_by_dataset",
 ]
 
 
@@ -198,6 +200,11 @@ def list_models(filter='', print_table=True, return_list=False,
         print(table.draw())
 
     return found_model_keys if return_list else None
+
+
+def get_models_by_dataset(dataset_name):
+    return [model_key.model_name for model_key in list_models(dataset_name, return_list=True, print_table=False)
+            if model_key.dataset_name == dataset_name]
 
 
 def dump_json_model_list(filepath=None, indent=4):

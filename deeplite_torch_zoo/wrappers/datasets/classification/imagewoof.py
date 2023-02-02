@@ -11,18 +11,18 @@ from torchvision.datasets.utils import (download_and_extract_archive,
                                         verify_str_arg)
 from torchvision.datasets.vision import VisionDataset
 
-__all__ = ["get_imagenette", "get_imagenette_320", "get_imagenette_160"]
+__all__ = ["get_imagewoof", "get_imagewoof_320", "get_imagewoof_160"]
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenette")
-def get_imagenette(
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagewoof")
+def get_imagewoof(
     data_root="", batch_size=64, val_batch_size=None, img_size=224, num_workers=4,
     fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
-    _URL="https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette.zip"
+    _URL = "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof.zip"
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
@@ -32,7 +32,7 @@ def get_imagenette(
     else:
         train_transforms, val_transforms = get_vanilla_transforms(img_size)
 
-    train_dataset = Imagenette(
+    train_dataset = Imagewoof(
         root=data_root,
         split='train',
         download=download,
@@ -40,7 +40,7 @@ def get_imagenette(
         url = _URL,
     )
 
-    val_dataset = Imagenette(
+    val_dataset = Imagewoof(
         root=data_root,
         split='val',
         download=download,
@@ -57,15 +57,15 @@ def get_imagenette(
 
     return {"train": train_loader, "test":val_loader}
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenette_320")
-def get_imagenette_320(
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagewoof_320")
+def get_imagewoof_320(
     data_root="", batch_size=64, val_batch_size=None, img_size=224, num_workers=4,
     fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
-    _URL="https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette320.zip"
+    _URL = "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof320.zip"
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
@@ -75,20 +75,20 @@ def get_imagenette_320(
     else:
         train_transforms, val_transforms = get_vanilla_transforms(img_size)
 
-    train_dataset = Imagenette(
+    train_dataset = Imagewoof(
         root=data_root,
         split='train',
         download=download,
         transform=train_transforms,
-        url = _URL,
+        url=_URL,
     )
 
-    val_dataset = Imagenette(
+    val_dataset = Imagewoof(
         root=data_root,
         split='val',
         download=download,
         transform=val_transforms,
-        url = _URL,
+        url=_URL,
     )
 
     train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
@@ -100,15 +100,15 @@ def get_imagenette_320(
 
     return {"train": train_loader, "test":val_loader}
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenette_160")
-def get_imagenette_160(
+@DATA_WRAPPER_REGISTRY.register(dataset_name="imagewoof_160")
+def get_imagewoof_160(
     data_root="", batch_size=64, val_batch_size=None, img_size=160, num_workers=4,
     fp16=False, download=True, device="cuda", distributed=False, augmentation_mode='imagenet', **kwargs,
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
-    _URL="https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette160.zip"
+    _URL = "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof160.zip"
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"')
@@ -118,7 +118,7 @@ def get_imagenette_160(
     else:
         train_transforms, val_transforms = get_vanilla_transforms(img_size)
 
-    train_dataset = Imagenette(
+    train_dataset = Imagewoof(
         root=data_root,
         split='train',
         download=download,
@@ -126,12 +126,12 @@ def get_imagenette_160(
         url = _URL,
     )
 
-    val_dataset = Imagenette(
+    val_dataset = Imagewoof(
         root=data_root,
         split='val',
         download=download,
         transform=val_transforms,
-        url = _URL,
+        url = _URL
     )
 
     train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
@@ -143,7 +143,7 @@ def get_imagenette_160(
 
     return {"train": train_loader, "test":val_loader}
 
-class Imagenette(VisionDataset):
+class Imagewoof(VisionDataset):
     # Added for compatibility with old torchvision versions
 
     def __init__(
@@ -158,12 +158,12 @@ class Imagenette(VisionDataset):
         super().__init__(root, transform=transform, target_transform=target_transform)
         self._split = verify_str_arg(split, "split", ("train", "val"))
         self.url=url
-        if self.url[-7:]=="320.zip":
-            self._base_folder = Path(self.root) / "imagenette320"
-        elif self.url[-7:]=="160.zip":
-            self._base_folder = Path(self.root) / "imagenette160"
+        if url[-7:]=="320.zip":
+            self._base_folder = Path(self.root) / "imagewoof320"
+        elif url[-7:]=="160.zip":
+            self._base_folder = Path(self.root) / "imagewoof160"
         else:
-            self._base_folder = Path(self.root) / "imagenette"
+            self._base_folder = Path(self.root) / "imagewoof"
 
         if download:
             self._download()

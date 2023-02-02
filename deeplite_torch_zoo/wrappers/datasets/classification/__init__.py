@@ -10,3 +10,4 @@ from .tiny_imagenet import *
 from .food101 import *
 from .flowers102 import *
 from .imagenette import *
+from .imagewoof import *
