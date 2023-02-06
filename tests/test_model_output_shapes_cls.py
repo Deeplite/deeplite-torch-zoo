@@ -3,14 +3,8 @@ from collections import namedtuple
 import pytest
 import torch
 
-from deeplite_torch_zoo import create_model, get_model_by_name, list_models
-
-
-def get_models_by_dataset(dataset_name):
-    return [model_key.model_name for model_key in
-        list_models(dataset_name, return_list=True, print_table=False, include_no_checkpoint=True)
-        if model_key.dataset_name == dataset_name]
-
+from deeplite_torch_zoo import (create_model, get_model_by_name,
+                                get_models_by_dataset)
 
 Dataset = namedtuple(typename='Dataset', field_names=('name', 'img_res', 'in_channels', 'num_classes'))
 

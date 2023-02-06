@@ -71,18 +71,25 @@ def train(opt, device):
 
     # DropBlock prob with polyDecay trend (TO-DO: Get Params from args)
     power = 2 # Exp of the function (if power = 1 >> linear)
+
     initial_value = 0.01
     final_value = 0.50
     begin_step = 5
     end_step = 388
+    frequency = 2
     def get_dropProb(step):
         if step % 2 == 0 : 
             return 0.0
         drop_values = np.linspace(start=initial_value, stop=final_value, num=int(end_step-begin_step))
         drop_prob = drop_values[step]
         return drop_prob
+    
         # p = min( 1.0, max(0.0,  (step - begin_step) / ((end_step - begin_step)), ),)
         # return final_value + (initial_value - final_value) * ((1 - p) ** power)
+    def should_do(step):
+        is_in_action_range = (step + 1) >= begin_step
+        is_action_turn = ((step - begin_step) % frequency) == 0
+        return is_in_action_range and is_action_turn
 
     # Model
     opt.num_classes = len(trainloader.dataset.classes)
@@ -155,8 +162,11 @@ def train(opt, device):
         for n, m in model.named_modules():
             if hasattr(m, 'dropblock'):
                 m.update_dropProb(get_dropProb(epoch))
-        
-        print ("drop_prob : ", get_dropProb(epoch))
+         print ("drop_prob : ", get_dropProb(epoch))
+        # if should_do(epoch):
+        #     do ...
+
+
         # for n, m in model.named_modules():
         #     if hasattr(m, 'dropblock'):
         #         print("  >> DropProb: {}".format(m.drop_prob))
