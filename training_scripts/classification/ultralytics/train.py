@@ -14,7 +14,7 @@ import torch.nn.functional as F
 import torch.optim.lr_scheduler as lr_scheduler
 from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_eval_function)
-
+import numpy as np 
 from torch.cuda import amp
 from tqdm import tqdm
 
@@ -71,20 +71,25 @@ def train(opt, device):
 
     # DropBlock prob with polyDecay trend (TO-DO: Get Params from args)
     power = 2 # Exp of the function (if power = 1 >> linear)
-    initial_value = 0.1
-    final_value = 0.25
-    begin_step = 10
-    end_step = 150
+    initial_value = 0.01
+    final_value = 0.50
+    begin_step = 5
+    end_step = 388
     def get_dropProb(step):
-        p = min( 1.0, max(0.0,  (step - begin_step) / ((end_step - begin_step)), ),)
-        return final_value + (initial_value - final_value) * ((1 - p) ** power)
+        if step % 2 == 0 : 
+            return 0.0
+        drop_values = np.linspace(start=initial_value, stop=final_value, num=int(end_step-begin_step))
+        drop_prob = drop_values[step]
+        return drop_prob
+        # p = min( 1.0, max(0.0,  (step - begin_step) / ((end_step - begin_step)), ),)
+        # return final_value + (initial_value - final_value) * ((1 - p) ** power)
 
     # Model
     opt.num_classes = len(trainloader.dataset.classes)
     with torch_distributed_zero_first(LOCAL_RANK), WorkingDirectory(ROOT):
 
         model = resnet18(pretrained=True)
-        model.output = nn.Linear(in_features=512, out_features=102, bias=True) 
+        model.output = nn.Linear(in_features=512, out_features=101, bias=True) 
 
         # model = create_model(
         #     model_name=opt.model,
@@ -150,6 +155,8 @@ def train(opt, device):
         for n, m in model.named_modules():
             if hasattr(m, 'dropblock'):
                 m.update_dropProb(get_dropProb(epoch))
+        
+        print ("drop_prob : ", get_dropProb(epoch))
         # for n, m in model.named_modules():
         #     if hasattr(m, 'dropblock'):
         #         print("  >> DropProb: {}".format(m.drop_prob))
@@ -259,7 +266,7 @@ def parse_opt(known=False):
     parser.add_argument('--model', type=str, default='resnet18')
     parser.add_argument('--dataset', type=str, default='flowers102', help='cifar10, cifar100, mnist, imagenet, ...')
     parser.add_argument('--pretraining-dataset', type=str, default='imagenet')
-    parser.add_argument('--epochs', type=int, default=200, help='total training epochs')
+    parser.add_argument('--epochs', type=int, default=400, help='total training epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs')
     parser.add_argument('--test-batch-size', type=int, default=256, help='testing batch size')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=224, help='train, val image size (pixels)')

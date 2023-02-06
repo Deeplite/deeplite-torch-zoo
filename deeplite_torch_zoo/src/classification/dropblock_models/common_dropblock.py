@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
-from dropblock import DropBlock2D
+from .dropblock import DropBlock2D
 
 def round_channels(channels,
                    divisor=8):
@@ -476,7 +476,10 @@ class ConvBlock(nn.Module):
         self.dropblock = DropBlock2D(
                 block_size=self.dropblock_size, drop_prob=self.drop_prob)
         return
-
+    
+    def get_dropProb(self):
+        return self.drop_prob
+    
     def forward(self, x):
         if self.use_pad:
             x = self.pad(x)

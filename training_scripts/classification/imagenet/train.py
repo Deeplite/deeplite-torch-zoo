@@ -27,6 +27,8 @@ import torch.nn.functional as F
 import torchvision.utils
 import yaml
 from deeplite_torch_zoo import create_model, get_data_splits_by_name
+
+import torch
 from timm import utils
 from timm.data import FastCollateMixup, Mixup, resolve_data_config
 from timm.models import (convert_splitbn_model, convert_sync_batchnorm,
@@ -62,6 +64,12 @@ try:
 except ImportError as e:
     has_functorch = False
 
+_DROPBLOCK = False  
+if not _DROPBLOCK : 
+    from deeplite_torch_zoo.src.classification.dropblock_models.resnet import resnet18 
+else : 
+    from deeplite_torch_zoo.src.classification.dropblock_models.resnet_dropblock import resnet18 
+
 
 torch.backends.cudnn.benchmark = True
 _logger = logging.getLogger('train')
@@ -78,7 +86,7 @@ parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 # Dataset parameters
 group = parser.add_argument_group('Dataset parameters')
 # Keep this argument outside of the dataset group because it is positional.
-parser.add_argument('data_dir', metavar='DIR',
+parser.add_argument('--data_dir', metavar='DIR',
                     help='path to dataset')
 group.add_argument('--dataset', default='imagenet',
                     help='dataset name (e.g. "imagenet", "imagenet16", "cifar100")')
@@ -420,13 +428,34 @@ def main():
     )
     loader_train, loader_eval = data_splits['train'], data_splits['test']
 
-    model = create_model(
-        model_name=args.model,
-        pretraining_dataset=args.pretraining_dataset,
-        num_classes=len(loader_train.dataset.classes),
-        pretrained=args.pretrained,
-        progress=True,
-    )
+
+    # DropBlock prob with polyDecay trend (TO-DO: Get Params from args)
+    power = 1 # Exp of the function (if power = 1 >> linear)
+    initial_value = 0.01
+    final_value = 0.25
+    begin_step = 10
+    end_step = 199
+    def get_dropProb(step):
+        # drop_values = np.linspace(start=initial_value, stop=final_value, num=int(end_step-begin_step))
+        # drop_prob = drop_values[step]
+        # return drop_prob
+        if step %2 ==0 : 
+            return 0.0 
+        p = min( 1.0, max(0.0,  (step - begin_step) / ((end_step - begin_step)), ),)
+        return final_value + (initial_value - final_value) * ((1 - p) ** power)
+
+
+    model = resnet18(pretrained=True)
+
+    # model = create_model(
+    #     model_name=args.model,
+    #     pretraining_dataset=args.pretraining_dataset,
+    #     num_classes=len(loader_train.dataset.classes),
+    #     pretrained=args.pretrained,
+    #     progress=True,
+    # )
+    
+    
 
     if args.num_classes is None:
         assert hasattr(model, 'num_classes'), 'Model must have `num_classes` attr if not set on cmd line/config.'

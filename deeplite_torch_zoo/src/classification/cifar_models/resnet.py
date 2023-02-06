@@ -2,7 +2,7 @@
 
 import torch.nn as nn
 import torch.nn.functional as F
-from dropblock import DropBlock2D
+
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -89,7 +89,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
         self.linear = nn.Linear(512 * block.expansion, num_classes)
-        self.dropblock = DropBlock2D(block_size=3, drop_prob=0.3)
+       
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
@@ -102,13 +102,9 @@ class ResNet(nn.Module):
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.layer1(out)
-        # out = self.dropblock(out)
         out = self.layer2(out)
-        # out = self.dropblock(out)
         out = self.layer3(out)
-        # out = self.dropblock(out)
         out = self.layer4(out)
-        # out = self.dropblock(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
