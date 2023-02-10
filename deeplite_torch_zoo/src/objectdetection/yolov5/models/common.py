@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # This file contains modules common to various models
 import functools
 import math
@@ -153,12 +152,12 @@ class SPPCSP(nn.Module):
         y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
         y2 = self.cv2(x)
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-=======
+
 import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, autopad
->>>>>>> 31b0d7a27cd451116077a9327b75914a729e391c
+
 
 
 class Focus(nn.Module):

@@ -32,9 +32,9 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
     make_divisible
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
     fuse_conv_and_bn, initialize_weights, model_info, scale_img)
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detectx import DetectX
 
 logger = logging.getLogger(__name__)
-
 
 class YOLOModel(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
@@ -212,6 +212,10 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
         elif m is Concat:
             c2 = sum(ch[x] for x in f)
         elif m is Detect:
+            args.append([ch[x] for x in f])
+            if isinstance(args[1], int):  # number of anchors
+                args[1] = [list(range(args[1] * 2))] * len(f)
+        elif m is DetectX:
             args.append([ch[x] for x in f])
             if isinstance(args[1], int):  # number of anchors
                 args[1] = [list(range(args[1] * 2))] * len(f)
