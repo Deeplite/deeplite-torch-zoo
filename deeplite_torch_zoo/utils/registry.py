@@ -1,8 +1,8 @@
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from collections import namedtuple
 import re
+from collections import namedtuple
 
 
 def extract_model_type(model_name):
@@ -50,7 +50,8 @@ class Registry:
             cls_name = name
             if cls_name is None:
                 cls_name = obj.__name__
-            cls_name = (cls_name, *args)
+            if args:
+                cls_name = (cls_name, *args)
             _register(cls_name, obj)
             return obj
 
@@ -76,16 +77,23 @@ class ModelWrapperRegistry(Registry):
         super().__init__()
         self._task_type_map = dict()
         self._registry_key = namedtuple('RegistryKey', ['model_name', 'dataset_name'])
+        self._registry_pretrained_models = {}
 
     @property
     def task_type_map(self):
         return self._task_type_map
 
-    def register(self, model_name, dataset_name, task_type):
+    @property
+    def pretrained_models(self):
+        return self._registry_pretrained_models
+
+    def register(self, model_name, dataset_name, task_type, has_checkpoint=True):
         def _register(obj_name, obj, task_type):
             if obj_name in self._registry_dict:
                 raise KeyError(f'{obj_name} is already registered in the model wrapper registry')
             self._registry_dict[obj_name] = obj
+            if has_checkpoint:
+                self._registry_pretrained_models[obj_name] = obj
             self._task_type_map[obj_name] = task_type
 
         def wrap(obj):

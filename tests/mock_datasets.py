@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 
 __all__ = ["VocYoloFake", "SegmentationFake"]
 
@@ -42,6 +42,7 @@ class VocYoloFake(FakeDataset):
 
     def __len__(self):
         return self.num_samples
+
 
 class SegmentationFake(FakeDataset):
     def __init__(self, num_samples=100, num_classes=None, img_size=416, device="cuda"):

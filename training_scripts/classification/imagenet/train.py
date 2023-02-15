@@ -37,7 +37,7 @@ from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
-from kd import build_kd_model
+from kd import KDTeacher
 
 try:
     from apex import amp
@@ -80,9 +80,7 @@ group = parser.add_argument_group('Dataset parameters')
 # Keep this argument outside of the dataset group because it is positional.
 parser.add_argument('data_dir', metavar='DIR',
                     help='path to dataset')
-group.add_argument('--dataset', '-d', metavar='NAME', default='',
-                    help='dataset type (default: ImageFolder/ImageTar if empty)')
-group.add_argument('--dataset-name', default='imagenet',
+group.add_argument('--dataset', default='imagenet',
                     help='dataset name (e.g. "imagenet", "imagenet16", "cifar100")')
 group.add_argument('--train-split', metavar='NAME', default='imagenet_training',
                     help='dataset train split (default: train)')
@@ -330,6 +328,7 @@ group.add_argument('--log-wandb', action='store_true', default=False,
                     help='log training and validation metrics to wandb')
 # KD parameters:
 group.add_argument('--kd_model_name', default=None, type=str)
+group.add_argument('--kd_model_checkpoint', default=None, type=str)
 group.add_argument('--alpha_kd', default=5, type=float)
 group.add_argument('--use_kd_only_loss', action='store_true', default=False)
 
@@ -401,15 +400,23 @@ def main():
 
     model_kd = None
     if args.kd_model_name is not None:
-        model_kd = build_kd_model(args)
+        model_kd = KDTeacher(args)
+
+    datasplit_kwargs = {}
+    if args.img_size is not None:
+        datasplit_kwargs = {'img_size': args.img_size}
+
+    datasplit_kwargs = {}
+    if args.img_size is not None:
+        datasplit_kwargs = {'img_size': args.img_size}
 
     data_splits = get_data_splits_by_name(
-        dataset_name=args.dataset_name,
+        dataset_name=args.dataset,
         model_name=args.model,
         data_root=args.data_dir,
         batch_size=args.batch_size,
-        # img_size=args.img_size,
         num_workers=args.workers,
+        **datasplit_kwargs
     )
     loader_train, loader_eval = data_splits['train'], data_splits['test']
 
@@ -777,9 +784,8 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='')
     with torch.no_grad():
         for batch_idx, (input, target) in enumerate(loader):
             last_batch = batch_idx == last_idx
-            if not args.prefetcher:
-                input = input.cuda()
-                target = target.cuda()
+            input = input.cuda()
+            target = target.cuda()
             if args.channels_last:
                 input = input.contiguous(memory_format=torch.channels_last)
 

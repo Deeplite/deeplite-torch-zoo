@@ -1,6 +1,6 @@
 from deeplite_torch_zoo.src.segmentation.deeplab.repo.modeling.deeplab import DeepLab
 from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
-from deeplite_torch_zoo.wrappers.models.utils import load_pretrained_weights
+from deeplite_torch_zoo.utils import load_pretrained_weights
 
 
 __all__ = ["deeplab_mobilenet_voc"]

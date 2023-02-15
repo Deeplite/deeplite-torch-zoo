@@ -1,16 +1,15 @@
 import os
+from os.path import abspath, expanduser
 from pathlib import Path
+from typing import Dict, List, Union
 
 import cv2
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as cfg
 import numpy as np
 import torch
-from os.path import abspath, expanduser
-from typing import List, Dict, Union
-
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
-from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
-import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_default as cfg
-
+from deeplite_torch_zoo.src.objectdetection.datasets.dataset import \
+    DLZooDataset
 
 WF_CLASS_NAMES = {
     "BACKGROUND",

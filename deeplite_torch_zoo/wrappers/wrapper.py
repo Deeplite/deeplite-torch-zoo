@@ -3,14 +3,18 @@ import fnmatch
 import json
 import subprocess
 
+import texttable
+import torch
+from torchinfo import summary
+from torchprofile import profile_macs
+
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.eval  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
-import texttable
+from deeplite_torch_zoo.utils import training_mode_switcher
 from deeplite_torch_zoo.wrappers.registries import (DATA_WRAPPER_REGISTRY,
                                                     EVAL_WRAPPER_REGISTRY,
                                                     MODEL_WRAPPER_REGISTRY)
-from ptflops import get_model_complexity_info
 
 __all__ = [
     "get_data_splits_by_name",
@@ -19,7 +23,8 @@ __all__ = [
     "list_models",
     "create_model",
     "dump_json_model_list",
-    "get_flops",
+    "profile",
+    "get_models_by_dataset",
 ]
 
 
@@ -44,7 +49,7 @@ def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
 def get_model_by_name(
     model_name,
     dataset_name,
-    pretrained=False,
+    pretrained=True,
     progress=False,
     fp16=False,
     device="cuda",
@@ -80,7 +85,7 @@ def create_model(
     model_name,
     pretraining_dataset,
     num_classes=None,
-    pretrained=True,
+    pretrained=False,
     progress=False,
     fp16=False,
     device="cuda",
@@ -115,7 +120,38 @@ def create_model(
     return model.half() if fp16 else model
 
 
-def list_models(filter='', print_table=True, return_list=False, task_type_filter=None):
+def profile(model, img_size=224, in_ch=3, verbose=False):
+    """
+    Do model profiling to calculate the MAC count, the number of parameters and weight size of the model.
+    The torchprofile package is used to calculate MACs, which is jit-based and
+    is more accurate than the hook based approach.
+
+    :param model: PyTorch nn.Module object
+    :param img_size: Input image resolution, either an integer value or a tuple of integers of the form (3, 224, 224)
+    :param in_ch: Number of input channels to use in case passed img_size is an integer
+    :param verbose: if True, prints the model summary table from torchinfo
+
+    returns a dictionary with the number of GMACs, number of parameters in millions and model size in megabytes
+    """
+    device = next(model.parameters()).device
+
+    if not isinstance(img_size, tuple):
+        img_size = (in_ch, img_size, img_size)
+
+    with training_mode_switcher(model, is_training=False):
+        model_stats = summary(model, input_size=(1, *img_size), verbose=verbose)
+        model_size_mb = model_stats.to_megabytes(model_stats.total_param_bytes)
+        model_mparams = model_stats.total_params / 1e6
+
+        macs = profile_macs(model.to('cpu'), torch.randn(1, *img_size))
+        model_gmacs = macs / 1e9
+
+    model.to(device)
+    return {'GMACs': model_gmacs, 'size_Mb': model_size_mb, 'Mparams': model_mparams}
+
+
+def list_models(filter='', print_table=True, return_list=False,
+    task_type_filter=None, include_no_checkpoint=False):
     """
     A helper function to list all existing models or dataset calls
     It takes a `model_name` or a `dataset_name` as a filter and
@@ -127,7 +163,10 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
     :param return_list: Whether to return a list with model names and corresponding datasets
     """
     filter = '*' + filter + '*'
-    all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
+    if include_no_checkpoint:
+        all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
+    else:
+        all_model_keys = MODEL_WRAPPER_REGISTRY.pretrained_models.keys()
     if task_type_filter is not None:
         allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
         if task_type_filter not in allowed_task_types:
@@ -163,6 +202,11 @@ def list_models(filter='', print_table=True, return_list=False, task_type_filter
     return found_model_keys if return_list else None
 
 
+def get_models_by_dataset(dataset_name):
+    return [model_key.model_name for model_key in list_models(dataset_name, return_list=True, print_table=False)
+            if model_key.dataset_name == dataset_name]
+
+
 def dump_json_model_list(filepath=None, indent=4):
     commit_label = (
         subprocess.check_output(['git', 'describe', '--always']).strip().decode()
@@ -184,15 +228,3 @@ def dump_json_model_list(filepath=None, indent=4):
 
     with open(filepath, 'w', encoding='utf-8') as outfile:
         json.dump(models_dict, outfile, indent=indent)
-
-
-def get_flops(model, img_size=224, ch=3, verbose=False):
-    if not isinstance(img_size, tuple):
-        img_size = (ch, img_size, img_size)
-    macs, params = get_model_complexity_info(
-        model,
-        img_size,
-        as_strings=False,
-        print_per_layer_stat=verbose,
-        verbose=verbose)
-    return {'GMACs': macs / 1e9, 'Mparams': params / 1e6}
