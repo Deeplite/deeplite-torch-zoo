@@ -3,8 +3,8 @@ from collections import namedtuple
 import pytest
 import torch
 
-from deeplite_torch_zoo import (create_model, get_model_by_name,
-                                get_models_by_dataset)
+from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
+                                get_model_by_name, get_models_by_dataset)
 
 Dataset = namedtuple(typename='Dataset', field_names=('name', 'img_res', 'in_channels', 'num_classes'))
 
@@ -97,3 +97,40 @@ def test_classification_model_output_shape_arbitrary_num_clases(model_name, data
     y = model(torch.randn(TEST_BATCH_SIZE, num_inp_channels, input_resolution, input_resolution))
     y.sum().backward()
     assert y.shape == (TEST_BATCH_SIZE, TEST_NUM_CLASSES)
+
+
+@pytest.mark.parametrize(
+    ('model_name', 'reference_accuracy'),
+    [
+        ('mobilenet_v3_small', 0.53125),
+        ('squeezenet1_0', 0.46875),
+        ('hrnet_w18_small_v2', 0.609375),
+        ('efficientnet_es_pruned', 0.609375),
+        ('mobilenetv2_w035', 0.375),
+        ('mobileone_s0', 0.671875),
+    ]
+)
+def test_classification_model_imagenet_pretrained_accuracy_fast(
+        model_name,
+        reference_accuracy,
+        imagenet_eval_fast_fn,
+        set_torch_seed_value,
+        abs_tolerance=0.05,
+        batch_size=32,
+    ):
+    model = get_model_by_name(
+        model_name=model_name,
+        dataset_name='imagenet',
+        pretrained=True,
+        device='cpu',
+    )
+    with set_torch_seed_value():
+        dataloaders = get_data_splits_by_name(
+            data_root='./',
+            model_name=model_name,
+            dataset_name='imagewoof_160',
+            batch_size=batch_size,
+        )
+        top1_accuracy = imagenet_eval_fast_fn(model, dataloaders['test'])['acc']
+
+    assert pytest.approx(top1_accuracy, abs_tolerance) == reference_accuracy
