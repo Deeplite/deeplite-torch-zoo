@@ -161,6 +161,7 @@ class DetectX(nn.Module):
             return outputs
 
     def forward(self, x):
+        print(len(x))
         outputs = self._forward(x)
 
         if self.training:
@@ -258,9 +259,9 @@ class DetectX(nn.Module):
     def get_losses(self, bbox_preds, cls_preds, obj_preds, origin_preds, org_xy_shifts, xy_shifts, expanded_strides,
                    center_ltrbes, whwh, labels, dtype,):
         # calculate targets
-        nlabel = labels[:, 0].long().bincount(minlength=cls_preds.shape[0]).tolist()
-        batch_gt_classes = labels[:, 1].type_as(cls_preds).contiguous()  # [num_gt, 1]
-        batch_org_gt_bboxes = labels[:, 2:6].contiguous()  # [num_gt, 4]  bbox: cx, cy, w, h
+        nlabel = labels[:,0].long().bincount(minlength=cls_preds.shape[0]).tolist()
+        batch_gt_classes = labels[:,1].type_as(cls_preds).contiguous()  # [num_gt, 1]
+        batch_org_gt_bboxes = labels[:,2:6].contiguous()  # [num_gt, 4]  bbox: cx, cy, w, h
         batch_org_gt_bboxes.mul_(whwh)
         batch_gt_bboxes = torch.empty_like(batch_org_gt_bboxes)  # [num_gt, 4]  bbox: l, t, r, b
         batch_gt_half_wh = batch_org_gt_bboxes[:, 2:] / 2
@@ -291,7 +292,7 @@ class DetectX(nn.Module):
                 _num_gts = num_gts + num_gt
                 org_gt_bboxes_per_image = batch_org_gt_bboxes[num_gts:_num_gts]
                 gt_bboxes_per_image = batch_gt_bboxes[num_gts:_num_gts]
-                gt_classes = batch_gt_classes[num_gts:_num_gts]
+                gt_classes = batch_gt_classes[:,num_gts:_num_gts]
                 num_gts = _num_gts
                 bboxes_preds_per_image = bbox_preds[batch_idx]
                 cls_preds_per_image = cls_preds[batch_idx]

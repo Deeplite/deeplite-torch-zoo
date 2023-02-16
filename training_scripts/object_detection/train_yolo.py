@@ -21,6 +21,9 @@ from torch.optim import SGD, Adam, lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
+
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
 FILE = Path(__file__).resolve()
@@ -42,6 +45,8 @@ from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_eval_function)
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolov5_loss import \
     YoloV5Loss
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolox_loss import \
+    ComputeXLoss
 
 LOGGER = logging.getLogger(__name__)
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
@@ -193,7 +198,7 @@ def train(opt, device):
         nl = model.detection.nl
     else:
         nl = model.model[-1].nl  # number of detection layers (used for scaling hyp['obj'])
-
+    
     # DP mode
     if cuda and RANK == -1 and torch.cuda.device_count() > 1:
         logging.warning('DP not recommended, instead use torch.distributed.run for best DDP Multi-GPU results.\n'
@@ -225,12 +230,21 @@ def train(opt, device):
 
     eval_function = get_eval_function(dataset_name=opt.dataset_name,
         model_name=opt.model_name)
-    criterion = YoloV5Loss(
-        model=model,
-        num_classes=nc,
-        device=device,
-        hyp_cfg=hyp_loss,
-    )
+    
+    if opt.model_name.split('_')[0] == 'yolox':
+
+        criterion = ComputeXLoss(
+            model=model,
+            device=device,
+        )
+
+    else:
+        criterion = YoloV5Loss(
+            model=model,
+            num_classes=nc,
+            device=device,
+            hyp_cfg=hyp_loss,
+        )
 
     if opt.eval_before_train:
         ap_dict = evaluate(model, eval_function, opt.dataset_name, opt.img_dir,
@@ -257,11 +271,16 @@ def train(opt, device):
     for epoch in range(start_epoch, epochs):  # epoch
         model.train()
 
-        mloss = torch.zeros(3, device=device)  # mean losses
+        if opt.model_name.split('_')[0] == 'yolox':
+            mloss = torch.zeros(4, device=device)  # mean losses
+            LOGGER.info(('\n' + '%10s' * 8) % ('Epoch', 'gpu_mem', 'box', 'obj', 'cls', 'l1', 'labels', 'img_size'))
+        else:
+            mloss = torch.zeros(3, device=device)  # mean losses
+            LOGGER.info(('\n' + '%10s' * 7) % ('Epoch', 'gpu_mem', 'box', 'obj', 'cls', 'labels', 'img_size'))
+
         if RANK != -1:
             train_loader.sampler.set_epoch(epoch)
         pbar = enumerate(train_loader)
-        LOGGER.info(('\n' + '%10s' * 7) % ('Epoch', 'gpu_mem', 'box', 'obj', 'cls', 'labels', 'img_size'))
         if RANK in [-1, 0]:
             pbar = tqdm(pbar, total=nb)  # progress bar
         optimizer.zero_grad()
@@ -290,11 +309,15 @@ def train(opt, device):
             # Forward
             with amp.autocast(enabled=cuda):
                 pred = model(imgs)  # forward
-                loss, loss_giou, loss_conf, loss_cls = criterion(
-                       pred, targets, labels_length, imgs.shape[-1]
-                )
-                # Update running mean of tracked metrics
-                loss_items = torch.tensor([loss_giou, loss_conf, loss_cls]).to(device)
+
+                if opt.model_name.split('_')[0] == 'yolox':
+                    loss, loss_items = criterion(pred, targets.to(device))
+                else:
+                    loss, loss_giou, loss_conf, loss_cls = criterion(
+                        pred, targets, labels_length, imgs.shape[-1]
+                    )
+                    # Update running mean of tracked metrics
+                    loss_items = torch.tensor([loss_giou, loss_conf, loss_cls]).to(device)
 
                 if RANK in (-1, 0):
                     loss_giou_mean.update(loss_giou, imgs.size(0))

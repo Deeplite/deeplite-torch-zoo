@@ -64,13 +64,15 @@ class YOLOModel(nn.Module):
         if isinstance(m, Detect):
             s = 256  # 2x min stride
             m.inplace = self.inplace
-
             m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])
             m.anchors /= m.stride.view(-1, 1, 1)
 
             self.stride = m.stride
             self._initialize_biases()  # only run once
-
+        if isinstance(m, DetectX):
+            m.inplace = self.inplace
+            self.stride = torch.tensor(m.stride)
+            m.initialize_biases()     # only run once
         # Init weights, biases
         initialize_weights(self)
         self.info()
@@ -217,8 +219,6 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
                 args[1] = [list(range(args[1] * 2))] * len(f)
         elif m is DetectX:
             args.append([ch[x] for x in f])
-            if isinstance(args[1], int):  # number of anchors
-                args[1] = [list(range(args[1] * 2))] * len(f)
         elif m is Contract:
             c2 = ch[f] * args[0] ** 2
         elif m is Expand:
