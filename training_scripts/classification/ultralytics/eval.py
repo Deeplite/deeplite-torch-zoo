@@ -53,12 +53,12 @@ def train(opt, device):
     cuda = device.type != 'cpu'
 
     base_dir = "/home/sudhakar/prj/all_neutrino/zoo/deeplite-torch-zoo/runs/train-cls/"
-    model_name = "food101_dropblock0.5_alter_epochs400" 
+    # model_name = "food101_dropblock0.5_alter_epochs400" 
     # model_name = "food101_no_dropblock_epochs200"
     # model_name = "food101_dropblock_alternate_correct_epochs400"
-    model_path = os.path.join(base_dir, model_name, "weights/best_state_dict.pt")
+    model_name = "food101_blocksparse_alter_epochs400"
+    model_path = os.path.join(base_dir, model_name, "weights/last.pt")
     
-    dropblock_prob = 0.25
     # Directories
     
     # Dataloaders
@@ -96,8 +96,12 @@ def train(opt, device):
    
         
     model = model.to(device)
-    model.load_state_dict(torch.load(model_path))
-    model.eval()    
+    # model.load_state_dict(torch.load(model_path))
+    # model.load(model_path)
+    ckpt = torch.load(model_path, map_location=device)
+    model.load_state_dict(ckpt['model'].state_dict())
+    model.eval()   
+    
     # Eval function
     evaluation_fn = get_eval_function(
         model_name=opt.model,
@@ -109,7 +113,7 @@ def train(opt, device):
     y_values = [] 
     for epoch in range(10):  # loop over the dataset multiple times
         # dropblock_prob = epoch * 0.05
-        dropblock_prob = 0.25
+        dropblock_prob = 0.40
         print (f'evaluating epoch {epoch}...')
          ## DropBlock Update Prob
         for n, m in model.named_modules():

@@ -467,7 +467,7 @@ class ConvBlock(nn.Module):
         if self.activate:
             self.activ = get_activation_layer(activation)
 
-        self.drop_prob = 0.2
+        self.drop_prob = 0.0
         self.dropblock = DropBlock2D(block_size=self.dropblock_size,
                 drop_prob=self.drop_prob)
 
@@ -483,11 +483,24 @@ class ConvBlock(nn.Module):
     def forward(self, x):
         if self.use_pad:
             x = self.pad(x)
-        if self.use_dropblock: 
-            x = self.dropblock(x)
+        
+        # if self.use_dropblock:             
+        # if self.use_dropblock: 
+        #     x = self.dropblock(x)
         x = self.conv(x)
+        
+        if self.use_dropblock:  
+            if not self.drop_prob ==0.0: 
+                mask = (torch.rand(x.shape[0], *x.shape[2:]) > self.drop_prob).float()
+                mask = torch.reshape(mask, (x.shape[0], 1, x.shape[2], x.shape[3]))
+                mask = torch.tile(mask, dims = (1,x.shape[1],1,1))
+                mask = mask.to("cuda") # need to update this 
+                x = torch.mul(x, mask)
+                
         if self.use_bn:
             x = self.bn(x)
+        
+            
         if self.activate:
             x = self.activ(x)
         return x

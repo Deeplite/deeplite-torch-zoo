@@ -161,8 +161,8 @@ def train(opt, device):
         ## DropBlock Update Prob
         for n, m in model.named_modules():
             if hasattr(m, 'dropblock'):
-                m.update_dropProb(get_dropProb(epoch))
-         print ("drop_prob : ", get_dropProb(epoch))
+                m.update_dropProb(get_dropProb(epoch))  
+        print ("drop_prob : ", get_dropProb(epoch))
         # if should_do(epoch):
         #     do ...
 
