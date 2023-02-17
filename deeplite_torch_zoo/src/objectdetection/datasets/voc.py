@@ -3,9 +3,10 @@ import random
 from pathlib import Path
 
 import cv2
-import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as cfg
 import numpy as np
 import torch
+
+import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.objectdetection.datasets.dataset import \
     DLZooDataset
@@ -56,7 +57,6 @@ class VocDataset(DLZooDataset):
 
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()
-
         return img, bboxes, bboxes.shape[0], img_id, shape
 
     def collate_img_label_fn(self, sample):

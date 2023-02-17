@@ -1,20 +1,13 @@
-import os
-import sys
-from pathlib import Path
+import time
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # YOLOv5 root directory
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))  # add ROOT to PATH
-ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
-
+from deeplite_torch_zoo.src.objectdetection.eval.mean_average_precision import \
+    MetricBuilder
 from deeplite_torch_zoo.src.objectdetection.eval.yolov5_eval.utils import (
     box_iou, check_version, non_max_suppression)
-from mean_average_precision import MetricBuilder
 
 
 def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
@@ -62,6 +55,8 @@ def evaluate(
         single_cls=False,  # treat as single-class dataset
         augment=False,  # augmented inference
         half=False,  # use FP16 half-precision inference
+        eval_style='coco',
+        map_iou_thresh=0.5,
 ):
     if num_classes is None:
         num_classes = dataloader.dataset.num_classes
@@ -81,10 +76,13 @@ def evaluate(
     s = ('%22s' + '%11s' * 6) % ('Class', 'Images', 'Instances', 'P', 'R', 'mAP50', 'mAP50-95')
     pbar = tqdm(dataloader, desc=s, bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')  # progress bar
 
-    metric_fn = MetricBuilder.build_evaluation_metric("map_2d",
-        async_mode=True, num_classes=num_classes)
+    metric_fn = MetricBuilder.build_evaluation_metric(
+        "map_2d",
+        async_mode=False,
+        num_classes=num_classes
+    )
 
-    print('Inference on the testing set and post-processing')
+    print('Inference on test set')
     for im, targets, _, shapes in pbar:
         if cuda:
             im = im.to(device, non_blocking=True)
@@ -135,9 +133,27 @@ def evaluate(
 
             metric_fn.add(p, gt)
 
-    print('Calculating mAP')
-    val = metric_fn.value(iou_thresholds=0.5, recall_thresholds=np.arange(0., 1.01, 0.01), mpolicy='soft')
-    return val
+    print('Computing mAP value')
+    t1 = time.perf_counter()
+    if eval_style == 'coco':
+        metrics = metric_fn.value(
+            iou_thresholds=map_iou_thresh,
+            recall_thresholds=np.arange(0., 1.01, 0.01),
+            mpolicy='soft'
+        )
+    elif eval_style == 'voc':
+        metrics = metric_fn.value(iou_thresholds=map_iou_thresh)
+    t2 = time.perf_counter()
+    print(f'Finished in {t2 - t1} sec')
+
+    APs = {'mAP': metrics['mAP']}
+
+    print(APs)
+
+    if isinstance(map_iou_thresh, float):
+        for cls_id, ap_dict in metrics[map_iou_thresh].items():
+            APs[cls_id] = ap_dict['ap']
+    return APs
 
 
 def scale_predictions(
