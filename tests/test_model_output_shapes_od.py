@@ -69,7 +69,7 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
 
     if 'yolo' in model_name:
         dataset = train_loader.dataset
-        img, _, _, _ = dataset[0]
+        img, *_ = dataset[0]
         y = model(torch.unsqueeze(img, dim=0))
         y[0].sum().backward()
         assert y[0].shape == (1, *output_shapes[0], datasplit_kwargs['num_classes'] + 5)
@@ -110,7 +110,7 @@ def test_detection_model_output_shape_arbitrary_num_clases(model_name, dataset_n
 
     if 'yolo' in model_name:
         dataset = train_loader.dataset
-        img, _, _, _ = dataset[0]
+        img, *_ = dataset[0]
         y = model(torch.unsqueeze(img, dim=0))
         y[0].sum().backward()
         assert y[0].shape == (1, *output_shapes[0], TEST_NUM_CLASSES + 5)

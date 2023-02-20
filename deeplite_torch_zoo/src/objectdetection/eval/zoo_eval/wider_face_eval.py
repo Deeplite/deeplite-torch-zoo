@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import glob
 import time
 
 import cv2
 import numpy as np
 import torch
 
-from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import WiderFace
-from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
-from deeplite_torch_zoo.src.objectdetection.eval.metrics import MAP
-
+from deeplite_torch_zoo.src.objectdetection.datasets.wider_face import \
+    WiderFace
+from deeplite_torch_zoo.src.objectdetection.eval.zoo_eval.evaluator import \
+    Evaluator
+from deeplite_torch_zoo.src.objectdetection.eval.zoo_eval.metrics import MAP
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
