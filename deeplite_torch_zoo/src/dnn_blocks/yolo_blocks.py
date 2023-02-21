@@ -2,21 +2,14 @@ import warnings
 
 import torch
 import torch.nn as nn
+from torch.nn.modules.activation import LeakyReLU
 
 from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
-                                                      GhostConv,
+                                                      GhostConv, Mish,
                                                       get_activation,
                                                       round_channels)
 from deeplite_torch_zoo.src.dnn_blocks.resnet_blocks import (GhostBottleneck,
                                                              ResNeXtBottleneck)
-from torch.nn.modules.activation import LeakyReLU
-try:
-    from mish_cuda import MishCuda as Mish
-except:
-
-    class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
-        def forward(self, x):
-            return x * torch.nn.functional.softplus(x).tanh()
 
 
 class SPPBottleneck(nn.Module):
@@ -121,6 +114,7 @@ class YOLOBottleneckCSP2(nn.Module):
         y1 = self.m(x1)
         y2 = self.cv2(x1)
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+
 
 class YOLOBottleneckCSP2Leaky(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
