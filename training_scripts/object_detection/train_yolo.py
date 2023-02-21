@@ -14,14 +14,11 @@ import torch
 import torch.distributed as dist
 import torch.nn as nn
 import yaml
-from pycocotools.coco import COCO
 from torch.cuda import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import SGD, Adam, lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-
-from deeplite_torch_zoo.src.objectdetection.datasets.coco import SubsampledCOCO
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -108,8 +105,8 @@ def train(opt, device):
 
     # Dataloaders
     dataset_kwargs = {}
-    if opt.train_img_res:
-        dataset_kwargs = {'img_size': opt.train_img_res}
+    if opt.img_size:
+        dataset_kwargs = {'img_size': opt.img_size}
     dataset_splits = get_data_splits_by_name(
         data_root=opt.img_dir,
         dataset_name=opt.dataset_name,
@@ -121,10 +118,10 @@ def train(opt, device):
     )
     train_img_size = dataset_splits["train"].dataset._img_size
     test_img_size = dataset_splits["test"].dataset._img_size
-    if opt.test_img_res:
-        test_img_size = opt.test_img_res
 
-    train_loader = dataset_splits["train"]
+    train_loader = dataset_splits['train']
+    test_loader = dataset_splits['test']
+
     dataset = train_loader.dataset
     nc = dataset.num_classes
     print("Number of classes = ", nc)
@@ -223,8 +220,10 @@ def train(opt, device):
     model.nc = nc  # attach number of classes to model
     model.hyp = hyp  # attach hyperparameters to model
 
-    eval_function = get_eval_function(dataset_name=opt.dataset_name,
-        model_name=opt.model_name)
+    eval_function = get_eval_function(
+        dataset_name=opt.dataset_name,
+        model_name=opt.model_name
+    )
     criterion = YoloV5Loss(
         model=model,
         num_classes=nc,
@@ -233,8 +232,7 @@ def train(opt, device):
     )
 
     if opt.eval_before_train:
-        ap_dict = evaluate(model, eval_function, opt.dataset_name, opt.img_dir,
-            nc, test_img_size, device)
+        ap_dict = eval_function(model, test_loader)
         LOGGER.info(f'Eval metrics: {ap_dict}')
 
     # Start training
@@ -249,6 +247,8 @@ def train(opt, device):
     loss_conf_mean = AverageMeter()
     loss_cls_mean = AverageMeter()
     loss_mean = AverageMeter()
+
+    ap_dict = {'mAP': 0}
 
     LOGGER.info(f'Image sizes {train_img_size} train, {test_img_size} val\n'
                 f'Using {train_loader.num_workers} dataloader workers\n'
@@ -339,9 +339,8 @@ def train(opt, device):
             # mAP
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
-            if (not noval or final_epoch) and epoch % opt.eval_freq == 0:  # Calculate mAP
-                ap_dict = evaluate(ema.ema, eval_function, opt.dataset_name, opt.img_dir,
-                    nc, test_img_size, device)
+            if (not noval or final_epoch) and epoch > opt.eval_skip_epochs - 1:  # Calculate mAP
+                ap_dict = eval_function(ema.ema, test_loader)
                 LOGGER.info(f'Eval metrics: {ap_dict}')
                 tb_writer.add_scalar('eval/mAP', ap_dict['mAP'], epoch)
                 for eval_key, eval_value in ap_dict.items():
@@ -386,37 +385,12 @@ def train(opt, device):
                     ckpt = torch.load(f, map_location=device)
                     model = ckpt['ema' if ckpt.get('ema') else 'model']
                     model.float().eval()
-
-                    ap_dict = evaluate(model, eval_function, opt.dataset_name, opt.img_dir,
-                        nc, test_img_size, device)
+                    ap_dict = eval_function(model, test_loader)
                     LOGGER.info(f'Eval metrics: {ap_dict}')
 
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}")
 
     torch.cuda.empty_cache()
-
-
-def evaluate(model, eval_function, dataset_name, test_set,
-    num_classes, test_img_size, device, gt=None):
-    if dataset_name in ("voc", "voc07"):
-        test_set = test_set / "VOC2007"
-    elif dataset_name == "coco":
-        gt = COCO(test_set / "annotations/instances_val2017.json")
-    elif dataset_name == "car_detection":
-        gt = SubsampledCOCO(
-            test_set / "annotations/instances_val2017.json",
-            subsample_categories=["car"],
-        )
-    ap_dict = eval_function(
-        model,
-        test_set,
-        gt=gt,
-        num_classes=num_classes,
-        device=device,
-        img_size=test_img_size,
-        progressbar=True,
-    )
-    return ap_dict
 
 
 def parse_opt(known=False):
@@ -455,13 +429,8 @@ def parse_opt(known=False):
         help="The hyperparameter configuration name to use. Available options: 'scratch', 'finetune'",
     )
     parser.add_argument(
-        "--test_img_res",
-        dest="test_img_res", type=int, default=False,
-        help="Image resolution to use during model testing",
-    )
-    parser.add_argument(
-        "--train_img_res",
-        dest="train_img_res", type=int, default=False,
+        "--img_size",
+        dest="img_size", type=int, default=False,
         help="Image resolution to use during model training. If False, the default config value is used.",
     )
     parser.add_argument(
@@ -472,11 +441,11 @@ def parse_opt(known=False):
         help="where weights should be stored",
     )
     parser.add_argument(
-        "--eval-freq",
-        dest="eval_freq",
+        "--eval-skip-epochs",
+        dest="eval_skip_epochs",
         type=int,
-        default=5,
-        help="Evaluation run frequency (in training epochs)",
+        default=1,
+        help="Skip evaluation for this number of epochs in the beginning",
     )
 
     parser.add_argument('--eval_before_train', action='store_true', help='run eval before training starts')
