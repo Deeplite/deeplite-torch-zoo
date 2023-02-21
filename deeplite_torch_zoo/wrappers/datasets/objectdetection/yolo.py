@@ -7,8 +7,8 @@ from deeplite_torch_zoo.src.objectdetection.datasets.coco import \
 from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import (
     COCO_DATA_CATEGORIES, COCO_MISSING_IDS)
 from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
-from deeplite_torch_zoo.src.objectdetection.datasets.transforms import \
-    random_transform_fn
+from deeplite_torch_zoo.src.objectdetection.datasets.transforms import (
+    default_transform_fn, random_transform_fn)
 from deeplite_torch_zoo.src.objectdetection.datasets.voc import VocDataset
 from deeplite_torch_zoo.src.objectdetection.datasets.voc_utils import \
     prepare_yolo_voc_data
@@ -67,7 +67,7 @@ def create_coco_datasets(data_root, num_classes, img_size, subsample_categories=
     val_coco_root = os.path.join(data_root, "val2017")
     test_dataset = CocoDetectionBoundingBox(
         val_coco_root, val_annotate, num_classes=num_classes, img_size=img_size,
-        classes=categories, category=category_indices, missing_ids=missing_ids
+        transform=default_transform_fn, classes=categories, category=category_indices, missing_ids=missing_ids
     )
 
     return train_dataset, test_dataset
@@ -87,12 +87,14 @@ def create_voc_datasets(data_root, num_classes, img_size, is_07_subset=False, st
         anno_file_type="train",
         img_size=img_size,
         class_names=class_names,
+        augment=True,
     )
     test_dataset = VocDataset(
         annotation_path=annotation_path,
         anno_file_type="test",
         img_size=img_size,
-        class_names=class_names
+        class_names=class_names,
+        augment=False,
     )
     return train_dataset, test_dataset
 

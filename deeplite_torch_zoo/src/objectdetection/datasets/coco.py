@@ -24,19 +24,18 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import time
 import json
-
-import numpy as np
-from PIL import ImageFile
-
-from pycocotools.coco import COCO
+import time
 from collections import defaultdict
 
+import numpy as np
 import torch
+from PIL import ImageFile
+from pycocotools.coco import COCO
 from torchvision.datasets import CocoDetection
 
-from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
+from deeplite_torch_zoo.src.objectdetection.eval.zoo_eval.coco.utils import \
+    xywh_to_xyxy
 
 
 class CocoDetectionBoundingBox(CocoDetection):
@@ -85,16 +84,19 @@ class CocoDetectionBoundingBox(CocoDetection):
             conf = torch.tensor([1.0])
             category_id = self._delete_coco_empty_category(category_id)
             category_id = torch.tensor([float(category_id)])
-            label = torch.cat((bbox, category_id, conf))
+            label = torch.cat((bbox, category_id))
             labels.append(label)
         if labels:
             label_tensor = torch.stack(labels)
         else:
-            label_tensor = torch.zeros((0, 6))
+            label_tensor = torch.zeros((0, 5))
         del labels
+
+        shape = (np.array(img).shape[0], np.array(img).shape[1])
 
         if self._tf == None:
             return np.array(img), None, None, self.ids[index]
+
         transformed_img_tensor, label_tensor = self._tf(self._img_size)(
             img, label_tensor
         )
@@ -104,23 +106,23 @@ class CocoDetectionBoundingBox(CocoDetection):
             label_tensor,
             label_tensor.size(0),
             self.ids[index],
+            shape
         )
-
 
     def collate_img_label_fn(self, sample):
         images = []
         labels = []
         lengths = []
         labels_with_tail = []
-        img_ids = []
+        shapes = []
 
         max_num_obj = 0
-        for image, label, length, img_id in sample:
+        for image, label, length, _, shape in sample:
             images.append(image)
             labels.append(label)
             lengths.append(length)
             max_num_obj = max(max_num_obj, length)
-            img_ids.append(torch.tensor([img_id]))
+            shapes.append(shape)
         for label in labels:
             num_obj = label.size(0)
             zero_tail = torch.zeros(
@@ -133,9 +135,8 @@ class CocoDetectionBoundingBox(CocoDetection):
         image_tensor = torch.stack(images)
         label_tensor = torch.stack(labels_with_tail)
         length_tensor = torch.tensor(lengths)
-        img_ids_tensor = torch.stack(img_ids)
-        return image_tensor, label_tensor, length_tensor, img_ids_tensor
-
+        shape_tensor = torch.tensor(shapes)
+        return image_tensor, label_tensor, length_tensor, shape_tensor
 
     def _delete_coco_empty_category(self, old_id):
         """The COCO dataset has 91 categories but 11 of them are empty.
@@ -158,7 +159,6 @@ class CocoDetectionBoundingBox(CocoDetection):
             else:
                 break
         return new_id
-
 
     def add_coco_empty_category(self, old_id):
         """The reverse of delete_coco_empty_category."""

@@ -1,14 +1,10 @@
-import os
-
-from tqdm import tqdm
 import numpy as np
 import torch
 from pycocotools.cocoeval import COCOeval
+from tqdm import tqdm
 
-from deeplite_torch_zoo.src.objectdetection.eval.evaluator import Evaluator
-from deeplite_torch_zoo.src.objectdetection.datasets.coco import CocoDetectionBoundingBox
-from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import COCO_MISSING_IDS, COCO_DATA_CATEGORIES
-from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.src.objectdetection.eval.zoo_eval.evaluator import \
+    Evaluator
 
 
 class COCOEvaluator(Evaluator):
@@ -133,36 +129,3 @@ def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", ne
             predictor=predictor,
             net=net
         ).evaluate()
-
-
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='coco')
-def yolo_eval_coco(model, data_root, gt=None, device="cuda",
-                   net="yolo3", img_size=448, subsample_categories=None, progressbar=False, **kwargs):
-
-    val_annotate = os.path.join(data_root, "annotations/instances_val2017.json")
-    val_coco_root = os.path.join(data_root, "val2017")
-
-    if subsample_categories is not None:
-        categories = subsample_categories
-        category_indices = [COCO_DATA_CATEGORIES["CLASSES"].index(cat) + 1 for cat in categories]
-        missing_ids = [category for category in list(range(1, 92)) if category not in category_indices]
-    else:
-        categories = COCO_DATA_CATEGORIES["CLASSES"]
-        category_indices = 'all'
-        missing_ids = COCO_MISSING_IDS
-
-    dataset = CocoDetectionBoundingBox(val_coco_root, val_annotate,
-        img_size=img_size, classes=categories, category=category_indices, missing_ids=missing_ids)
-
-    model.to(device)
-    with torch.no_grad():
-        return YoloCOCOEvaluator(model, dataset, gt=dataset.coco if gt is None else gt, net=net,
-            img_size=img_size, progressbar=progressbar).evaluate()
-
-
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='car_detection')
-def yolo_eval_coco_car(model, data_root, gt=None, device="cuda",
-    net="yolo3", img_size=448, subsample_categories=["car"], progressbar=False, **kwargs):
-    return yolo_eval_coco(model, data_root, gt=None, device=device,
-        net=net, img_size=img_size, subsample_categories=subsample_categories,
-        progressbar=progressbar, **kwargs)

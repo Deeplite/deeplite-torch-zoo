@@ -26,14 +26,13 @@
 
 import os
 
-import numpy as np
-import torch
 import cv2
-
+import numpy as np
 from PIL import ImageFile
 from torchvision.datasets import CocoDetection
 
-from deeplite_torch_zoo.src.objectdetection.eval.coco.utils import xywh_to_xyxy
+from deeplite_torch_zoo.src.objectdetection.eval.zoo_eval.coco.utils import \
+    xywh_to_xyxy
 
 
 class CocoDetectionBoundingBox(CocoDetection):
@@ -71,7 +70,7 @@ class CocoDetectionBoundingBox(CocoDetection):
         #image, targets = super(CocoDetectionBoundingBox, self).__getitem__(index)
         img_id = self.ids[index]
         image = self._read_image(img_id)
-        boxes, labels, _ = self._get_annotation(img_id) 
+        boxes, labels, _ = self._get_annotation(img_id)
 
         if self.transform:
             image, boxes, labels = self.transform(image, boxes, labels)
