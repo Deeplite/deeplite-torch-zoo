@@ -55,16 +55,17 @@ class IOUloss(nn.Module):
 
 class ComputeXLoss:
     # Compute losses
-    def __init__(self, model, autobalance=False):
+    def __init__(self, model, device="cuda", autobalance=False):
         super(ComputeXLoss, self).__init__()
 
         det = model.module.model[-1] if is_parallel(model) else model.model[-1]  # Detect() module
         self.det = det
+        self.device = device
 
     def __call__(self, p, targets):  # predictions, targets, model
-        device = targets.device
+        #device = targets.device
         if (not self.det.training) or (len(p) == 0):
-            return torch.zeros(1, device=device), torch.zeros(4, device=device)
+            return torch.zeros(1, device=self.device), torch.zeros(4, device=self.device)
 
         (loss, iou_loss, obj_loss, cls_loss, l1_loss, num_fg,) = self.det.get_losses(*p, targets, dtype=p[0].dtype, )
         return loss, torch.hstack((iou_loss, obj_loss, cls_loss, l1_loss)).detach()
