@@ -104,9 +104,7 @@ class YoloV5Loss(nn.Module):
         loss = lbox + lobj + lcls
         return (
             loss * bs,
-            lbox,
-            lobj,
-            lcls,
+            torch.tensor([lbox, lobj, lcls]).to(self.device)
         )
 
     def build_targets(self, p, targets):

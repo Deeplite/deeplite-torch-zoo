@@ -2,28 +2,63 @@
 YOLOX-specific modules
 """
 
-import sys
-from pathlib import Path
-import logging
+import math
 
 import torch
-
-FILE = Path(__file__).absolute()
-sys.path.append(FILE.parents[1].as_posix())
-
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
-
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolox_loss import *
 import torch.nn.functional as F
 from torch.cuda.amp import autocast
 
-try:
-    import thop
-except ImportError:
-    thop = None
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolox_loss import *
 
-LOGGER = logging.getLogger(__name__)
+
+class IOUloss(nn.Module):
+    def __init__(self, reduction="none", loss_type="iou"):
+        super(IOUloss, self).__init__()
+        self.reduction = reduction
+        self.loss_type = loss_type
+
+    def forward(self, pred, target, xyxy=False):
+        assert pred.shape[0] == target.shape[0]
+
+        pred = pred.view(-1, 4)
+        target = target.view(-1, 4)
+        if xyxy:
+            tl = torch.max(pred[:, :2], target[:, :2])
+            br = torch.min(pred[:, 2:], target[:, 2:])
+            area_p = torch.prod(pred[:, 2:] - pred[:, :2], 1)
+            area_g = torch.prod(target[:, 2:] - target[:, :2], 1)
+        else:
+            tl = torch.max((pred[:, :2] - pred[:, 2:] / 2), (target[:, :2] - target[:, 2:] / 2))
+            br = torch.min((pred[:, :2] + pred[:, 2:] / 2), (target[:, :2] + target[:, 2:] / 2))
+            area_p = torch.prod(pred[:, 2:], 1)
+            area_g = torch.prod(target[:, 2:], 1)
+
+        hw = (br - tl).clamp(min=0)  # [rows, 2]
+        area_i = torch.prod(hw, 1)
+
+        iou = (area_i) / (area_p + area_g - area_i + 1e-16)
+
+        if self.loss_type == "iou":
+            loss = 1 - iou ** 2
+        elif self.loss_type == "giou":
+            if xyxy:
+                c_tl = torch.min(pred[:, :2], target[:, :2])
+                c_br = torch.max(pred[:, 2:], target[:, 2:])
+            else:
+                c_tl = torch.min((pred[:, :2] - pred[:, 2:] / 2), (target[:, :2] - target[:, 2:] / 2))
+                c_br = torch.max((pred[:, :2] + pred[:, 2:] / 2), (target[:, :2] + target[:, 2:] / 2))
+            area_c = torch.prod(c_br - c_tl, 1)
+            giou = iou - (area_c - area_i) / area_c.clamp(1e-16)
+            loss = 1 - giou.clamp(min=-1.0, max=1.0)
+
+        if self.reduction == "mean":
+            loss = loss.mean()
+        elif self.reduction == "sum":
+            loss = loss.sum()
+
+        return loss
 
 
 class DetectX(nn.Module):
@@ -31,7 +66,8 @@ class DetectX(nn.Module):
     onnx_dynamic = False  # ONNX export parameter
     export = False
 
-    def __init__(self, num_classes, anchors=1, in_channels=(128, 128, 128, 128, 128, 128), inplace=True, prior_prob=1e-2,):
+    def __init__(self, num_classes, anchors=1, in_channels=(128, 128, 128, 128, 128, 128),
+        inplace=True, prior_prob=1e-2,):
         super().__init__()
         if isinstance(anchors, (list, tuple)):
             self.n_anchors = len(anchors)
@@ -161,7 +197,6 @@ class DetectX(nn.Module):
             return outputs
 
     def forward(self, x):
-        print(len(x))
         outputs = self._forward(x)
 
         if self.training:
@@ -177,7 +212,7 @@ class DetectX(nn.Module):
                 bs, no = outputs[0].shape[0], outputs[0].shape[1]
 
             self.hw = [out.shape[-2:] for out in outputs]
-            
+
             # [batch, n_anchors_all, 85]
             outs = []
             for i in range(len(outputs)):
@@ -256,8 +291,8 @@ class DetectX(nn.Module):
         out = torch.cat([xy, wh, score], -1)
         return out
 
-    def get_losses(self, bbox_preds, cls_preds, obj_preds, origin_preds, org_xy_shifts, xy_shifts, expanded_strides,
-                   center_ltrbes, whwh, labels, dtype,):
+    def get_losses(self, bbox_preds, cls_preds, obj_preds, origin_preds, org_xy_shifts,
+        xy_shifts, expanded_strides, center_ltrbes, whwh, labels, dtype):
         # calculate targets
         nlabel = labels[:,0].long().bincount(minlength=cls_preds.shape[0]).tolist()
         batch_gt_classes = labels[:,1].type_as(cls_preds).contiguous()  # [num_gt, 1]
@@ -292,7 +327,8 @@ class DetectX(nn.Module):
                 _num_gts = num_gts + num_gt
                 org_gt_bboxes_per_image = batch_org_gt_bboxes[num_gts:_num_gts]
                 gt_bboxes_per_image = batch_gt_bboxes[num_gts:_num_gts]
-                gt_classes = batch_gt_classes[:,num_gts:_num_gts]
+                # gt_classes = batch_gt_classes[:,num_gts:_num_gts]
+                gt_classes = batch_gt_classes[num_gts:_num_gts]
                 num_gts = _num_gts
                 bboxes_preds_per_image = bbox_preds[batch_idx]
                 cls_preds_per_image = cls_preds[batch_idx]
@@ -319,7 +355,7 @@ class DetectX(nn.Module):
                         xy_shifts,
                     )
                 except RuntimeError:
-                    LOGGER.error(
+                    print(
                         "OOM RuntimeError is raised due to the huge memory cost during label assignment. \
                            CPU mode is applied in this batch. If you want to avoid this issue, \
                            try to reduce the batch size or image size."

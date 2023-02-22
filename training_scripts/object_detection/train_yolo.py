@@ -264,12 +264,11 @@ def train(opt, device):
     for epoch in range(start_epoch, epochs):  # epoch
         model.train()
 
-        if opt.model_name.split('_')[0] == 'yolox':
-            mloss = torch.zeros(4, device=device)  # mean losses
-            LOGGER.info(('\n' + '%10s' * 8) % ('Epoch', 'gpu_mem', 'box', 'obj', 'cls', 'l1', 'labels', 'img_size'))
-        else:
+        if not 'yolox' in opt.model_name:
             mloss = torch.zeros(3, device=device)  # mean losses
-            LOGGER.info(('\n' + '%10s' * 7) % ('Epoch', 'gpu_mem', 'box', 'obj', 'cls', 'labels', 'img_size'))
+        else:
+            mloss = torch.zeros(4, device=device)  # mean losses
+        LOGGER.info(('\n' + '%10s' * 7) % ('Epoch', 'gpu_mem', 'box', 'obj', 'cls', 'labels', 'img_size'))
 
         if RANK != -1:
             train_loader.sampler.set_epoch(epoch)
@@ -303,19 +302,14 @@ def train(opt, device):
             with amp.autocast(enabled=cuda):
                 pred = model(imgs)  # forward
 
-                if opt.model_name.split('_')[0] == 'yolox':
-                    loss, loss_items = criterion(pred, targets.to(device))
-                else:
-                    loss, loss_giou, loss_conf, loss_cls = criterion(
-                        pred, targets, labels_length, imgs.shape[-1]
-                    )
-                    # Update running mean of tracked metrics
-                    loss_items = torch.tensor([loss_giou, loss_conf, loss_cls]).to(device)
+                loss, loss_items = criterion(
+                    pred, targets, labels_length, imgs.shape[-1]
+                )
 
                 if RANK in (-1, 0):
-                    loss_giou_mean.update(loss_giou, imgs.size(0))
-                    loss_conf_mean.update(loss_conf, imgs.size(0))
-                    loss_cls_mean.update(loss_cls, imgs.size(0))
+                    loss_giou_mean.update(loss_items[0], imgs.size(0))
+                    loss_conf_mean.update(loss_items[1], imgs.size(0))
+                    loss_cls_mean.update(loss_items[2], imgs.size(0))
                     loss_mean.update(loss, imgs.size(0))
 
                 if RANK != -1:
@@ -338,7 +332,7 @@ def train(opt, device):
                 mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
                 mem = f'{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G'  # (GB)
                 pbar.set_description(('%10s' * 2 + '%10.4g' * 5) % (
-                    f'{epoch}/{epochs - 1}', mem, *mloss, targets.shape[0], imgs.shape[-1]))
+                    f'{epoch}/{epochs - 1}', mem, *mloss[:3], targets.shape[0], imgs.shape[-1]))
             # end batch
 
         # Scheduler
@@ -460,7 +454,7 @@ def parse_opt(known=False):
         "--eval-skip-epochs",
         dest="eval_skip_epochs",
         type=int,
-        default=1,
+        default=100,
         help="Skip evaluation for this number of epochs in the beginning",
     )
 

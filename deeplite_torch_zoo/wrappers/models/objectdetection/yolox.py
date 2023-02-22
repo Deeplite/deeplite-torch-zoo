@@ -22,12 +22,12 @@ model_urls = {
 }
 
 yolox_cfg = {
-    "yolox_x": "yoloxx.yaml",
-    "yolox_l": "yoloxl.yaml",
-    "yolox_m": "yoloxm.yaml",
-    "yolox_s": "yoloxs.yaml",
-    "yolox_t": "yoloxt.yaml",
-    "yolox_n": "yoloxn.yaml",
+    "yoloxx": "yoloxx.yaml",
+    "yoloxl": "yoloxl.yaml",
+    "yoloxm": "yoloxm.yaml",
+    "yoloxs": "yoloxs.yaml",
+    "yoloxt": "yoloxt.yaml",
+    "yoloxn": "yoloxn.yaml",
 }
 
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
@@ -52,9 +52,9 @@ def yolox(
 
 
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
-    "^yolox_[nsmlxt]$": yolox,
-    "^yolox_[nsmlxt]_relu$": partial(yolox, activation_type="relu"),
-    "^yolox_[nsmlxt]_hswish$": partial(yolox, activation_type="hardswish"),
+    "^yolox[nsmlxt]$": yolox,
+    "^yolox[nsmlxt]_relu$": partial(yolox, activation_type="relu"),
+    "^yolox[nsmlxt]_hswish$": partial(yolox, activation_type="hardswish"),
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):

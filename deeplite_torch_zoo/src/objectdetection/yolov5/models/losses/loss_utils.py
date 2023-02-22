@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -33,7 +35,7 @@ def get_yolov5_targets(raw_targets, labels_length, img_size, device):
         prv_index = cum_index[i]
 
     targets[:, 2:6] /= img_size  # Normalize to 0 - 1
-    return
+    return targets
 
 
 class FocalLoss(nn.Module):
