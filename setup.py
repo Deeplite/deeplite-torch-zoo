@@ -29,6 +29,7 @@ INSTALL_REQUIRES = [
     "albumentations==1.0.3",
     "pretrainedmodels==0.7.4",
     "torchfcn==1.9.7",
+    "tensorboard==2.10.1",
     "tensorboardX==2.4.1",
     "pyvww==0.1.1",
     "timm==0.5.4",

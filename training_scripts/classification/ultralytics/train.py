@@ -224,7 +224,7 @@ def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-root', type=str, default='./')
     parser.add_argument('--model', type=str, default='resnet18')
-    parser.add_argument('--dataset', type=str, default='cifar100', help='cifar10, cifar100, mnist, imagenet, ...')
+    parser.add_argument('--dataset', type=str, default='flowers102', help='cifar10, cifar100, flowers102, food101, ...')
     parser.add_argument('--pretraining-dataset', type=str, default='imagenet')
     parser.add_argument('--epochs', type=int, default=200, help='total training epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs')
