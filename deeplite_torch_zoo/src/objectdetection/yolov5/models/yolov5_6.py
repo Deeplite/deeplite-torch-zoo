@@ -21,8 +21,6 @@ from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
     YOLOBottleneckCSP2 as BottleneckCSP2
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
-    YOLOBottleneckCSP2Leaky as BottleneckCSP2Leaky
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
     YOLOSPPCSPLeaky as SPPCSPLeaky
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
@@ -201,14 +199,14 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                 BottleneckCSP, C3, C3v6, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP, BottleneckCSP2Leaky,
+                 BottleneckCSP, C3, C3v6, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP,
                  SPPCSPLeaky, RepConv, SPPCSPC]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3, C3v6, C3TR, C3Ghost, BottleneckCSP2, BottleneckCSP2Leaky, SPPCSPC]:
+            if m in [BottleneckCSP, C3, C3v6, C3TR, C3Ghost, BottleneckCSP2, SPPCSPC]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:
