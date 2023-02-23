@@ -21,13 +21,13 @@ from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
     YOLOBottleneckCSP2 as BottleneckCSP2
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
-    YOLOBottleneckCSP2Leaky as BottleneckCSP2Leaky
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
     YOLOSPPCSPLeaky as SPPCSPLeaky
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect import \
     Detect
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detectx import \
+    DetectX
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
     make_divisible
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
@@ -64,13 +64,15 @@ class YOLOModel(nn.Module):
         if isinstance(m, Detect):
             s = 256  # 2x min stride
             m.inplace = self.inplace
-
             m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])
             m.anchors /= m.stride.view(-1, 1, 1)
 
             self.stride = m.stride
             self._initialize_biases()  # only run once
-
+        if isinstance(m, DetectX):
+            m.inplace = self.inplace
+            self.stride = torch.tensor(m.stride)
+            m.initialize_biases()     # only run once
         # Init weights, biases
         initialize_weights(self)
         self.info()
@@ -197,14 +199,14 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                 BottleneckCSP, C3, C3v6, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP, BottleneckCSP2Leaky,
+                 BottleneckCSP, C3, C3v6, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP,
                  SPPCSPLeaky, RepConv, SPPCSPC]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3, C3v6, C3TR, C3Ghost, BottleneckCSP2, BottleneckCSP2Leaky, SPPCSPC]:
+            if m in [BottleneckCSP, C3, C3v6, C3TR, C3Ghost, BottleneckCSP2, SPPCSPC]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:
@@ -215,6 +217,8 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
             args.append([ch[x] for x in f])
             if isinstance(args[1], int):  # number of anchors
                 args[1] = [list(range(args[1] * 2))] * len(f)
+        elif m is DetectX:
+            args.append([ch[x] for x in f])
         elif m is Contract:
             c2 = ch[f] * args[0] ** 2
         elif m is Expand:
