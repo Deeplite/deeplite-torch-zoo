@@ -430,8 +430,8 @@ def parse_opt(known=False):
         help="Name of the dataset to train/validate on",
     )
     parser.add_argument(
-        "--model", dest="model_name", type=str, default="yolo5_6m",
-        help="Specific YOLO model name to be used in training (ex. yolo3, yolo4m, yolo5_6s, ...)",
+        "--model", dest="model_name", type=str, default="yolo5n",
+        help="Specific YOLO model name to be used in training (ex. yolo3, yolo4m, yolo5n, ...)",
     )
     parser.add_argument(
         "--hp_config",
@@ -444,11 +444,11 @@ def parse_opt(known=False):
         help="Image resolution to use during model training. If False, the default config value is used.",
     )
     parser.add_argument(
-        "--weight_path",
+        "--logdir",
         type=str,
         dest="save_dir",
-        default="models",
-        help="where weights should be stored",
+        default="runs",
+        help="Log directory",
     )
     parser.add_argument(
         "--eval-skip-epochs",
@@ -483,7 +483,7 @@ def main(opt):
     # Checks
     set_logging(RANK)
     if RANK in [-1, 0]:
-        print_args(FILE.stem, opt)
+        print_args(vars(opt))
 
     # DDP mode
     device = select_device(opt.device, batch_size=opt.batch_size)

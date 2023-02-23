@@ -1,6 +1,7 @@
 # This file contains experimental modules
 
 import functools
+import math
 
 import numpy as np
 import torch
@@ -11,8 +12,6 @@ from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPP as SPP
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
     YOLOBottleneck as Bottleneck
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.google_utils import \
-    attempt_download
 
 
 class CrossConv(nn.Module):
@@ -30,7 +29,7 @@ class CrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
-class C3(nn.Module):
+class C3_old(nn.Module):
     # CSP Bottleneck with 4 convolutions
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
@@ -53,7 +52,7 @@ class C3(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-class C3v6(nn.Module):
+class C3(nn.Module):
     # CSP Bottleneck with 3 convolutions
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
@@ -90,6 +89,14 @@ class Sum(nn.Module):
             for i in self.iter:
                 y = y + x[i + 1]
         return y
+
+
+class C3x(C3):
+    # C3 module with cross-convolutions
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+        super().__init__(c1, c2, n, shortcut, g, e)
+        c_ = int(c2 * e)
+        self.m = nn.Sequential(*(CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)))
 
 
 class C3TR(C3):
@@ -234,19 +241,50 @@ class Ensemble(nn.ModuleList):
         return y, None  # inference, train output
 
 
-def attempt_load(weights, map_location=None):
+class DWConvTranspose2d(nn.ConvTranspose2d):
+    # Depth-wise transpose convolution
+    def __init__(self, c1, c2, k=1, s=1, p1=0, p2=0):  # ch_in, ch_out, kernel, stride, padding, padding_out
+        super().__init__(c1, c2, k, s, p1, p2, groups=math.gcd(c1, c2))
+
+
+def attempt_load(weights, device=None, inplace=True, fuse=True):
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
+    from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import (
+        Detect, YOLOModel)
+
     model = Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
-        attempt_download(w)
-        model.append(
-            torch.load(w, map_location=map_location)["model"].float().fuse().eval()
-        )  # load FP32 model
+        # ckpt = torch.load(attempt_download(w), map_location='cpu')  # load
+        ckpt = torch.load(w, map_location='cpu')  # load
+        ckpt = (ckpt.get('ema') or ckpt['model']).to(device).float()  # FP32 model
 
+        # Model compatibility updates
+        if not hasattr(ckpt, 'stride'):
+            ckpt.stride = torch.tensor([32.])
+        if hasattr(ckpt, 'names') and isinstance(ckpt.names, (list, tuple)):
+            ckpt.names = dict(enumerate(ckpt.names))  # convert to dict
+
+        model.append(ckpt.fuse().eval() if fuse and hasattr(ckpt, 'fuse') else ckpt.eval())  # model in eval mode
+
+    # Module compatibility updates
+    for m in model.modules():
+        t = type(m)
+        if t in (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, YOLOModel):
+            m.inplace = inplace  # torch 1.7.0 compatibility
+            if t is Detect and not isinstance(m.anchor_grid, list):
+                delattr(m, 'anchor_grid')
+                setattr(m, 'anchor_grid', [torch.zeros(1)] * m.nl)
+        elif t is nn.Upsample and not hasattr(m, 'recompute_scale_factor'):
+            m.recompute_scale_factor = None  # torch 1.11.0 compatibility
+
+    # Return model
     if len(model) == 1:
-        return model[-1]  # return model
-    else:
-        print("Ensemble created with %s\n" % weights)
-        for k in ["names", "stride"]:
-            setattr(model, k, getattr(model[-1], k))
-        return model  # return ensemble
+        return model[-1]
+
+    # Return detection ensemble
+    print(f'Ensemble created with {weights}\n')
+    for k in 'names', 'nc', 'yaml':
+        setattr(model, k, getattr(model[0], k))
+    model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride  # max stride
+    assert all(model[0].nc == m.nc for m in model), f'Models have different class counts: {[m.nc for m in model]}'
+    return model

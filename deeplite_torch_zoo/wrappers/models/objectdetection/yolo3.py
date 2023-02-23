@@ -14,7 +14,7 @@ __all__ = []
 def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
-CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs"
+CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs/yolo3"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
