@@ -36,7 +36,7 @@ INSTALL_REQUIRES = [
     "pytorchcv==0.0.67",
     "texttable==1.6.4",
     "torchprofile==0.0.3",
-    "torchinfo==1.5.4",
+    "torchinfo==1.7.2",
     "addict==2.4.0",
     "Wand==0.6.11",
     "pytz",
