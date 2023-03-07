@@ -1,5 +1,6 @@
 import os
 import pathlib
+import sys
 from subprocess import check_call
 
 from setuptools import find_packages, setup
@@ -35,13 +36,18 @@ INSTALL_REQUIRES = [
     "timm==0.5.4",
     "pytorchcv==0.0.67",
     "texttable==1.6.4",
-    "torchprofile==0.0.3",
-    "torchinfo==1.7.2",
+    "torchprofile==0.0.4",
     "addict==2.4.0",
     "Wand==0.6.11",
     "pytz",
     "pandas",
 ]
+
+python_version = sys.version_info
+if python_version < (3, 7, 0):
+    INSTALL_REQUIRES.append("torchinfo==1.5.4")
+else:
+    INSTALL_REQUIRES.append("torchinfo==1.7.2")
 
 
 def create_init_files_in_submodules():
