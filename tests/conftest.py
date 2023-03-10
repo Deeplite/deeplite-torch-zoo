@@ -5,7 +5,7 @@ import pytest
 import torch
 from torch.utils.data import Dataset
 
-from deeplite_torch_zoo.utils import training_mode_switcher
+from deeplite_torch_zoo.utils import switch_train_mode
 
 IMAGENETTE_IMAGENET_CLS_LABEL_MAP = (0, 217, 482, 491, 497, 566, 569, 571, 574, 701)
 IMAGEWOOF_IMAGENET_CLS_LABEL_MAP =  (155, 159, 162, 167, 182, 193, 207, 229, 258, 273)
@@ -79,7 +79,7 @@ def imagenet_eval_fast(model, dataloader, device='cuda',
     model.to(device)
     pred = []
     targets = []
-    with training_mode_switcher(model, is_training=False):
+    with switch_train_mode(model, is_training=False):
         with torch.no_grad():
             for iter_no, (inputs, target) in enumerate(dataloader):
                 if iter_no > max_iters:

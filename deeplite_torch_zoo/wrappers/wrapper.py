@@ -11,7 +11,7 @@ from torchprofile import profile_macs
 import deeplite_torch_zoo.wrappers.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.eval  # pylint: disable=unused-import
 import deeplite_torch_zoo.wrappers.models  # pylint: disable=unused-import
-from deeplite_torch_zoo.utils import training_mode_switcher
+from deeplite_torch_zoo.utils import switch_train_mode
 from deeplite_torch_zoo.wrappers.registries import (DATA_WRAPPER_REGISTRY,
                                                     EVAL_WRAPPER_REGISTRY,
                                                     MODEL_WRAPPER_REGISTRY)
@@ -138,7 +138,7 @@ def profile(model, img_size=224, in_ch=3, verbose=False):
     if not isinstance(img_size, tuple):
         img_size = (in_ch, img_size, img_size)
 
-    with training_mode_switcher(model, is_training=False):
+    with switch_train_mode(model, is_training=False):
         model_stats = summary(model, input_size=(1, *img_size), verbose=verbose)
         model_size_mb = model_stats.to_megabytes(model_stats.total_param_bytes)
         model_mparams = model_stats.total_params / 1e6
