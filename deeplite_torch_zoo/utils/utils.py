@@ -2,9 +2,10 @@ import hashlib
 import os
 from contextlib import contextmanager
 
-import deeplite_torch_zoo
 import torch
 from torch.hub import load_state_dict_from_url
+
+import deeplite_torch_zoo
 
 KB_IN_MB_COUNT = 1024
 
@@ -73,7 +74,7 @@ def load_state_dict_partial(model, pretrained_dict):
 
 
 @contextmanager
-def training_mode_switcher(model, is_training=False):
+def switch_train_mode(model, is_training=False):
     is_original_mode_training = model.training
     model.train(is_training)
     try:

@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 
-from deeplite_torch_zoo.utils import training_mode_switcher
+from deeplite_torch_zoo.utils import switch_train_mode
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 __all__ = ['classification_eval']
@@ -15,7 +15,7 @@ def classification_eval(model, dataloader, progressbar=False, device='cuda', top
     model.to(device)
     pred = []
     targets = []
-    with training_mode_switcher(model, is_training=False):
+    with switch_train_mode(model, is_training=False):
         with torch.no_grad():
             for inputs, target in tqdm(dataloader, disable=not progressbar):
                 inputs = inputs.to(device)
