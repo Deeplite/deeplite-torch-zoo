@@ -63,8 +63,6 @@ import torch.nn as nn
 from torch.utils.mobile_optimizer import optimize_for_mobile
 
 from deeplite_torch_zoo import get_model_by_name
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import \
-    YOLOModel
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -77,8 +75,8 @@ from utils.general import (Profile, check_img_size, check_version, colorstr,
                            file_size, get_default_args, print_args)
 from utils.torch_utils import select_device, smart_inference_mode
 
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import \
-    Detect
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import (
+    Detect, YOLOModel)
 
 MACOS = platform.system() == 'Darwin'  # macOS environment
 check_requirements = lambda x: x
@@ -137,7 +135,7 @@ def export_torchscript(model, im, file, optimize, prefix=colorstr('TorchScript:'
 
 
 @try_export
-def export_onnx(model, im, file, opset, dynamic, simplify, prefix=colorstr('ONNX:')):
+def export_onnx(model, im, file, opset, dynamic, simplify, no_post_processing=False, prefix=colorstr('ONNX:')):
     # YOLOv5 ONNX export
     check_requirements('onnx>=1.12.0')
     import onnx
@@ -145,7 +143,7 @@ def export_onnx(model, im, file, opset, dynamic, simplify, prefix=colorstr('ONNX
     print(f'\n{prefix} starting export with onnx {onnx.__version__}...')
     f = file.with_suffix('.onnx')
 
-    output_names = ['output0']
+    output_names = ['output0'] if not no_post_processing else ['output0', 'output1', 'output2']
     if dynamic:
         dynamic = {'images': {0: 'batch', 2: 'height', 3: 'width'}}  # shape(1,3,640,640)
         dynamic['output0'] = {0: 'batch', 1: 'anchors'}  # shape(1,25200,85)
@@ -394,6 +392,7 @@ def export_tflite(keras_model, im, file, int8, data, nms, agnostic_nms, prefix=c
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     if int8:
         def representative_dataset(ncalib=100):
+            # Dummy dataset to export with int8 for latency profiling only
             for _ in range(ncalib):
                 data = np.random.rand(1, imgsz[0], imgsz[1], 3)
                 yield [data.astype(np.float32)]
@@ -538,6 +537,7 @@ def run(
         topk_all=100,  # TF.js NMS: topk for all classes to keep
         iou_thres=0.45,  # TF.js NMS: IoU threshold
         conf_thres=0.25,  # TF.js NMS: confidence threshold
+        no_post_processing=False,  # export without post-processing ops
 ):
     t_start = time.time()
     file = Path(outfile) if outfile is not None else Path(model_name)
@@ -553,8 +553,12 @@ def run(
         assert device.type != 'cpu' or coreml, '--half only compatible with GPU export, i.e. use --device 0'
         assert not dynamic, '--half not compatible with --dynamic, i.e. use either --half or --dynamic but not both'
 
-    model = get_model_by_name(model_name=model_name, dataset_name=dataset_name,
-        pretrained=False, device='cpu')
+    model = get_model_by_name(
+        model_name=model_name,
+        dataset_name=dataset_name,
+        pretrained=False,
+        device='cpu'
+    )
 
     # Model compatibility updates
     if not hasattr(model, 'stride'):
@@ -592,15 +596,18 @@ def run(
             m.inplace = inplace
             m.dynamic = dynamic
             m.export = True
+            m.no_post_processing = no_post_processing
 
     for _ in range(2):
         y = model(im)  # dry runs
 
     if half and not coreml:
         im, model = im.half(), model.half()  # to FP16
-    shape = tuple((y[0] if isinstance(y, tuple) else y).shape)  # model output shape
+    if not no_post_processing:
+        shape = tuple((y[0] if isinstance(y, tuple) else y).shape)  # model output shape
+        print(f"\n{colorstr('PyTorch:')} starting from {file} with output shape {shape} ({file_size(file):.1f} MB)")
+
     metadata = {'stride': int(max(model.stride)), 'names': model.names}  # model metadata
-    print(f"\n{colorstr('PyTorch:')} starting from {file} with output shape {shape} ({file_size(file):.1f} MB)")
 
     # Exports
     f = [''] * len(fmts)  # exported filenames
@@ -610,7 +617,7 @@ def run(
     if engine:  # TensorRT required before ONNX
         f[1], _ = export_engine(model, im, file, half, dynamic, simplify, workspace, verbose)
     if onnx or xml:  # OpenVINO requires ONNX
-        f[2], _ = export_onnx(model, im, file, opset, dynamic, simplify)
+        f[2], _ = export_onnx(model, im, file, opset, dynamic, simplify, no_post_processing)
     if xml:  # OpenVINO
         f[3], _ = export_openvino(file, metadata, half)
     if coreml:  # CoreML
@@ -683,6 +690,7 @@ def parse_opt(known=False):
     parser.add_argument('--topk-all', type=int, default=100, help='TF.js NMS: topk for all classes to keep')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='TF.js NMS: IoU threshold')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='TF.js NMS: confidence threshold')
+    parser.add_argument('--no-post-processing', action='store_true', default=False, help='whether to export w/o post-processing ops')
     parser.add_argument(
         '--include',
         nargs='+',

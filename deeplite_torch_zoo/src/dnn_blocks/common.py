@@ -28,8 +28,10 @@ def get_activation(activation_name):
     return ACT_TYPE_MAP[activation_name] if activation_name else nn.Identity()
 
 
-def autopad(k, p=None):  # kernel, padding
-    # Pad to 'same'
+def autopad(k, p=None, d=1):  # kernel, padding, dilation
+    # Pad to 'same' shape outputs
+    if d > 1:
+        k = d * (k - 1) + 1 if isinstance(k, int) else [d * (x - 1) + 1 for x in k]  # actual kernel-size
     if p is None:
         p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
     return p
@@ -100,22 +102,22 @@ class ConvBnAct(nn.Module):
                 self.identity_conv.add_module('bn', nn.BatchNorm2d(c2))
 
     def forward(self, x):
-        identity = 0
+        out = self.act(self.bn(self.conv(x)))
         if self.residual:
             if self.resize_identity:
-                identity = self.identity_conv(x)
+                out += self.identity_conv(x)
             else:
-                identity = x
-        return identity + self.act(self.bn(self.conv(x)))
+                out += x
+        return out
 
     def forward_fuse(self, x):
-        identity = 0
+        out = self.act(self.conv(x))
         if self.residual:
             if self.resize_identity:
-                identity = self.identity_conv(x)
+                out += self.identity_conv(x)
             else:
-                identity = x
-        return identity + self.act(self.conv(x))
+                out += x
+        return out
 
 
 class DWConv(ConvBnAct):
