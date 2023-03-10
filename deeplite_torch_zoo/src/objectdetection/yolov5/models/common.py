@@ -10,7 +10,7 @@ class Focus(nn.Module):
         self, c1, c2, k=1, s=1, p=None, g=1, act='hswish',
     ):  # ch_in, ch_out, kernel, stride, padding, groups
         super(Focus, self).__init__()
-        self.conv = ConvBnAct(c1 * 4, c2, k, s, p, g, act)
+        self.conv = ConvBnAct(c1 * 4, c2, k, s, p, g, act=act)
 
     def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
         return self.conv(
