@@ -49,6 +49,7 @@ class YOLOModel(nn.Module):
                 self.yaml = yaml.safe_load(f)  # model dict
 
         # Define model
+        self.nc = nc
         ch = self.yaml['ch'] = self.yaml.get('ch', ch)  # input channels
         if nc and nc != self.yaml['nc']:
             logger.info(f"Overriding model.yaml nc={self.yaml['nc']} with nc={nc}")
@@ -199,14 +200,14 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                 BottleneckCSP, C3, C3v6, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP,
+                 BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP,
                  SPPCSPLeaky, RepConv, SPPCSPC]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3, C3v6, C3TR, C3Ghost, BottleneckCSP2, SPPCSPC]:
+            if m in [BottleneckCSP, C3, C3TR, C3Ghost, BottleneckCSP2, SPPCSPC]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:

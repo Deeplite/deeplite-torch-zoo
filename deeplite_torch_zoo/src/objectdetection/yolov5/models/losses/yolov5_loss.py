@@ -35,6 +35,7 @@ class YoloV5Loss(nn.Module):
             det = de_parallel(model).model[-1]  # Detect() module
         if hasattr(model, 'detection'):
             det = de_parallel(model).detection
+
         self.na = copy(det.na)
         self.nl = copy(det.nl)
         self.nc = copy(det.nc)
