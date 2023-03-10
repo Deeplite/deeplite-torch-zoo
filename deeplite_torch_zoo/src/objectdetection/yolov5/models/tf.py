@@ -540,6 +540,8 @@ class AgnosticNMS(keras.layers.Layer):
 
 def activations(act=nn.SiLU):
     # Returns TF activation from input PyTorch activation
+    if isinstance(act, nn.ReLU):
+        return lambda x: keras.activations.relu(x)
     if isinstance(act, nn.LeakyReLU):
         return lambda x: keras.activations.relu(x, alpha=0.1)
     elif isinstance(act, nn.Hardswish):
