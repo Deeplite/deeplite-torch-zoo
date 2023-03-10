@@ -108,6 +108,15 @@ class ConvBnAct(nn.Module):
                 identity = x
         return identity + self.act(self.bn(self.conv(x)))
 
+    def forward_fuse(self, x):
+        identity = 0
+        if self.residual:
+            if self.resize_identity:
+                identity = self.identity_conv(x)
+            else:
+                identity = x
+        return identity + self.act(self.conv(x))
+
 
 class DWConv(ConvBnAct):
     # Depth-wise convolution class

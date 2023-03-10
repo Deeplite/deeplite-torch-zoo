@@ -59,9 +59,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn as nn
 from torch.utils.mobile_optimizer import optimize_for_mobile
 
 from deeplite_torch_zoo import get_model_by_name
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import \
+    YOLOModel
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -536,7 +539,7 @@ def run(
         iou_thres=0.45,  # TF.js NMS: IoU threshold
         conf_thres=0.25,  # TF.js NMS: confidence threshold
 ):
-    t = time.time()
+    t_start = time.time()
     file = Path(outfile) if outfile is not None else Path(model_name)
     include = [x.lower() for x in include]  # to lowercase
     fmts = tuple(export_formats()['Argument'][1:])  # --include arguments
@@ -553,6 +556,26 @@ def run(
     model = get_model_by_name(model_name=model_name, dataset_name=dataset_name,
         pretrained=False, device='cpu')
 
+    # Model compatibility updates
+    if not hasattr(model, 'stride'):
+        model.stride = torch.tensor([32.])
+
+    if hasattr(model, 'names') and isinstance(model.names, (list, tuple)):
+        model.names = dict(enumerate(model.names))  # convert to dict
+
+    model = model.fuse().eval() if hasattr(model, 'fuse') else model.eval()  # model in eval mode
+
+    # Module compatibility updates
+    for m in model.modules():
+        t = type(m)
+        if t in (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, YOLOModel):
+            m.inplace = inplace  # torch 1.7.0 compatibility
+            if t is Detect and not isinstance(m.anchor_grid, list):
+                delattr(m, 'anchor_grid')
+                setattr(m, 'anchor_grid', [torch.zeros(1)] * m.nl)
+        elif t is nn.Upsample and not hasattr(m, 'recompute_scale_factor'):
+            m.recompute_scale_factor = None  # torch 1.11.0 compatibility
+
     # Checks
     imgsz *= 2 if len(imgsz) == 1 else 1  # expand
     if optimize:
@@ -564,7 +587,6 @@ def run(
     im = torch.zeros(batch_size, 3, *imgsz).to(device)  # image size(1,3,320,192) BCHW iDetection
 
     # Update model
-    model.eval()
     for k, m in model.named_modules():
         if isinstance(m, Detect):
             m.inplace = inplace
@@ -573,6 +595,7 @@ def run(
 
     for _ in range(2):
         y = model(im)  # dry runs
+
     if half and not coreml:
         im, model = im.half(), model.half()  # to FP16
     shape = tuple((y[0] if isinstance(y, tuple) else y).shape)  # model output shape
@@ -625,7 +648,7 @@ def run(
         h = '--half' if half else ''  # --half FP16 inference arg
         s = '# WARNING ⚠️ ClassificationModel not yet supported for PyTorch Hub AutoShape inference' if cls else \
             '# WARNING ⚠️ SegmentationModel not yet supported for PyTorch Hub AutoShape inference' if seg else ''
-        print(f'\nExport complete ({time.time() - t:.1f}s)'
+        print(f'\nExport complete ({time.time() - t_start:.1f}s)'
                     f"\nResults saved to {colorstr('bold', file.parent.resolve())}"
                     f"\nDetect:          python {dir / ('detect.py' if det else 'predict.py')} --weights {f[-1]} {h}"
                     f"\nValidate:        python {dir / 'val.py'} --weights {f[-1]} {h}"
