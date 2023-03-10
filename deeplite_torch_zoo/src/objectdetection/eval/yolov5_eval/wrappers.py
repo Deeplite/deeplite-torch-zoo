@@ -1,5 +1,4 @@
 import numpy as np
-
 from deeplite_torch_zoo.src.objectdetection.eval.yolov5_eval.yolov5_eval import \
     evaluate
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
@@ -17,6 +16,7 @@ def yolo_eval_voc(
     eval_style='coco',
     progressbar=False,
     subclasses=None,
+    num_classes=None,
     **kwargs
 ):
     model.to(device)
@@ -27,6 +27,7 @@ def yolo_eval_voc(
         iou_thres=nms_thresh,
         eval_style=eval_style,
         map_iou_thresh=iou_thresh,
+        num_classes=num_classes,
     )
     return ap_dict
 
@@ -41,6 +42,7 @@ def yolo_eval_coco(
     eval_style='coco',
     progressbar=False,
     subclasses=None,
+    num_classes=None,
     **kwargs
 ):
     model.to(device)
@@ -51,5 +53,6 @@ def yolo_eval_coco(
         iou_thres=nms_thresh,
         eval_style=eval_style,
         map_iou_thresh=np.arange(0.5, 1.0, 0.05),
+        num_classes=num_classes,
     )
     return ap_dict
