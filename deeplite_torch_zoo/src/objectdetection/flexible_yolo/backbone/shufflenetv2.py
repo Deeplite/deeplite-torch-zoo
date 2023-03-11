@@ -1,3 +1,4 @@
+# Code credit: https://github.com/Bobo-y/flexible-yolov5
 # -*- coding: utf-8 -*-
 
 import torch

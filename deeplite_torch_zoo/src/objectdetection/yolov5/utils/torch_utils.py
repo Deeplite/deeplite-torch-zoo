@@ -1,6 +1,7 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+
 import logging
 import math
-import os
 import time
 from copy import deepcopy
 

@@ -1,6 +1,9 @@
+# Taken from: https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/common.py
+
 from functools import partial
 
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.dnn_blocks.common import (get_activation,
                                                       round_channels)
 

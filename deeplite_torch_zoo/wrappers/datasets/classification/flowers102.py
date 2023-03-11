@@ -61,6 +61,7 @@ def get_flowers102(
 
 
 class Flowers102(VisionDataset):
+    # Taken from https://github.com/pytorch/vision/blob/HEAD/torchvision/datasets/flowers102.py
     # Added for compatibility with old torchvision versions
 
     _download_url_prefix = "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/"

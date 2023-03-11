@@ -1,3 +1,5 @@
+# Code modified from: https://github.com/DeepVoltaire/AutoAugment
+
 import numpy as np
 import torch
 from timm.data.transforms_factory import (transforms_imagenet_eval,

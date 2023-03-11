@@ -1,3 +1,4 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 # This file contains experimental modules
 
 import functools

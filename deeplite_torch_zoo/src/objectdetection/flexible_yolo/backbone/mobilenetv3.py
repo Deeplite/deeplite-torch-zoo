@@ -1,5 +1,7 @@
-from torch import nn
+# Code credit: https://github.com/Bobo-y/flexible-yolov5
+
 import torch.nn.functional as F
+from torch import nn
 
 
 class HSwish(nn.Module):

@@ -1,3 +1,5 @@
+# Code modified from: https://github.com/DeepVoltaire/AutoAugment
+
 import random
 
 import numpy as np

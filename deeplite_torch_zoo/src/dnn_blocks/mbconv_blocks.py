@@ -1,15 +1,13 @@
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.dnn_blocks.cnn_attention import SELayer
-from deeplite_torch_zoo.src.dnn_blocks.common import (
-    ConvBnAct,
-    DWConv,
-    get_activation,
-    round_channels,
-)
+from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
+                                                      get_activation,
+                                                      round_channels)
 
 
 class MBConv(nn.Module):
-    # https://github.com/d-li14/mobilenetv2.pytorch/blob/master/models/imagenet/mobilenetv2.py
+    # Taken from: https://github.com/d-li14/mobilenetv2.pytorch/blob/master/models/imagenet/mobilenetv2.py
     def __init__(
         self, c1, c2, e=1.0, k=3, stride=1, act='relu', se_ratio=None, channel_divisor=1
     ):
@@ -47,7 +45,7 @@ class MBConv(nn.Module):
 
 
 class FusedMBConv(nn.Module):
-    # https://github.com/d-li14/efficientnetv2.pytorch/blob/main/effnetv2.py
+    # Taken from https://github.com/d-li14/efficientnetv2.pytorch/blob/main/effnetv2.py
     def __init__(
         self, c1, c2, e=1.0, k=3, stride=1, act='relu', se_ratio=None, channel_divisor=1
     ):

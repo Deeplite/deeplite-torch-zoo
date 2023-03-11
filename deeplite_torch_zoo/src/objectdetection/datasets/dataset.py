@@ -1,10 +1,13 @@
+# Code modified from https://github.com/Peterisfar/YOLOV3/
+
 import random
 
 import numpy as np
+from torch.utils.data import Dataset
+
 from deeplite_torch_zoo.src.objectdetection.datasets.data_augment import (
     AugmentHSV, Mixup, RandomHorizontalFlip, RandomVerticalFlip, Resize,
     random_perspective)
-from torch.utils.data import Dataset
 
 
 class DLZooDataset(Dataset):

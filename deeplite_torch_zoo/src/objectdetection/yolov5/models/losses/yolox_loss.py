@@ -1,3 +1,5 @@
+# Source: https://github.com/jizhishutong/YOLOU
+
 import torch
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.loss_utils import (

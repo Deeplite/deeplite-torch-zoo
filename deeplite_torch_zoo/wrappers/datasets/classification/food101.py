@@ -61,6 +61,7 @@ def get_food101(
 
 
 class Food101(VisionDataset):
+    # Taken from https://github.com/pytorch/vision/blob/HEAD/torchvision/datasets/food101.py
     # Added for compatibility with old torchvision versions
 
     _URL = "http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz"

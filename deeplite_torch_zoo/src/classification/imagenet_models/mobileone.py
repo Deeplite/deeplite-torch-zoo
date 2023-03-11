@@ -2,6 +2,9 @@
 # For licensing see accompanying LICENSE file.
 # Copyright (C) 2022 Apple Inc. All Rights Reserved.
 #
+
+# Code from https://github.com/apple/ml-mobileone
+
 from typing import List, Optional
 
 import torch

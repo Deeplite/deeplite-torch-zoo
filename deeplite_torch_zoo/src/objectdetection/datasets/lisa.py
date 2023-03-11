@@ -1,5 +1,6 @@
+# Code modified from https://github.com/Peterisfar/YOLOV3/
+
 import csv
-import os
 import random
 from pathlib import Path
 
@@ -8,7 +9,8 @@ import numpy as np
 import torch
 
 import deeplite_torch_zoo.src.objectdetection.yolov5.configs.hyps.hyp_config_lisa as lisa_cfg
-from deeplite_torch_zoo.src.objectdetection.datasets.dataset import DLZooDataset
+from deeplite_torch_zoo.src.objectdetection.datasets.dataset import \
+    DLZooDataset
 
 
 class LISA(DLZooDataset):

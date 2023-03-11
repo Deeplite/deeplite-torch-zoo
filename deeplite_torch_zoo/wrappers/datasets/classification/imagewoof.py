@@ -3,13 +3,14 @@ from os.path import expanduser
 from pathlib import Path
 
 import PIL.Image
+from torchvision.datasets.utils import (download_and_extract_archive,
+                                        verify_str_arg)
+from torchvision.datasets.vision import VisionDataset
+
 from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_imagenet_transforms, get_vanilla_transforms)
 from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
-from torchvision.datasets.utils import (download_and_extract_archive,
-                                        verify_str_arg)
-from torchvision.datasets.vision import VisionDataset
 
 __all__ = ["get_imagewoof", "get_imagewoof_320", "get_imagewoof_160"]
 
@@ -144,8 +145,6 @@ def get_imagewoof_160(
     return {"train": train_loader, "test":val_loader}
 
 class Imagewoof(VisionDataset):
-    # Added for compatibility with old torchvision versions
-
     def __init__(
         self,
         root: str,
@@ -158,9 +157,9 @@ class Imagewoof(VisionDataset):
         super().__init__(root, transform=transform, target_transform=target_transform)
         self._split = verify_str_arg(split, "split", ("train", "val"))
         self.url=url
-        if url[-7:]=="320.zip":
+        if url[-7:] == "320.zip":
             self._base_folder = Path(self.root) / "imagewoof320"
-        elif url[-7:]=="160.zip":
+        elif url[-7:] == "160.zip":
             self._base_folder = Path(self.root) / "imagewoof160"
         else:
             self._base_folder = Path(self.root) / "imagewoof"

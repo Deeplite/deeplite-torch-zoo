@@ -1,35 +1,18 @@
+# Taken from:
+# - https://github.com/WongKinYiu/yolov7/blob/HEAD/models/common.py
+# - https://github.com/WongKinYiu/yolor/blob/paper/models/common.py
+
 import warnings
 
 import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
-                                                      GhostConv, get_activation,
+                                                      GhostConv,
+                                                      get_activation,
                                                       round_channels)
 from deeplite_torch_zoo.src.dnn_blocks.resnet_blocks import (GhostBottleneck,
                                                              ResNeXtBottleneck)
-
-
-class SPPBottleneck(nn.Module):
-    """Spatial pyramid pooling layer used in YOLOv3-SPP"""
-
-    def __init__(self, c1, c2, kernel_sizes=(5, 9, 13), act="relu"):
-        super().__init__()
-        c_ = c1 // 2
-        self.conv1 = ConvBnAct(c1, c_, k=1, s=1, act=act)
-        self.m = nn.ModuleList(
-            [
-                nn.MaxPool2d(kernel_size=ks, stride=1, padding=ks // 2)
-                for ks in kernel_sizes
-            ]
-        )
-        self.conv2 = ConvBnAct(c_ * 4, c2, k=1, s=1, act=act)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = torch.cat([x] + [m(x) for m in self.m], dim=1)
-        x = self.conv2(x)
-        return x
 
 
 class YOLOBottleneck(nn.Module):
@@ -354,7 +337,7 @@ class YOLOBottleneckCSPL(nn.Module):
 
 class YOLOBottleneckCSPLG(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
-    # modified by @ivan-lazarevich to have c2 out channels
+    # modified by @lzrvch to have c2 out channels
     def __init__(
         self, c1, c2, n=1, shortcut=True, g=3, e=0.25, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion

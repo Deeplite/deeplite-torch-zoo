@@ -1,7 +1,10 @@
+# Code credit: https://github.com/Bobo-y/flexible-yolov5
+
 import math
 
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
+
 from deeplite_torch_zoo.src.objectdetection.flexible_yolo.modules import (
     CBAM, DropBlock2D, LinearScheduler)
 

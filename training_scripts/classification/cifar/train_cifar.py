@@ -1,8 +1,11 @@
+# Source: https://github.com/y0ast/pytorch-snippets/blob/main/minimal_cifar/train_cifar.py
+
 import torch
 import torch.nn.functional as F
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+
+from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
 
 
 def train(model, train_loader, optimizer, epoch, writer):

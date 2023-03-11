@@ -1,3 +1,5 @@
+# Code credit: https://github.com/Bobo-y/flexible-yolov5
+
 from .FPN import PyramidFeatures as FPN
 from .PAN import PAN
 

@@ -1,6 +1,9 @@
-import cv2
+# Code modified from https://github.com/Peterisfar/YOLOV3/
+
 import math
 import random
+
+import cv2
 import numpy as np
 
 

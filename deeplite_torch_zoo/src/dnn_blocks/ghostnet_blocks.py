@@ -1,3 +1,5 @@
+# Taken from https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
+
 import math
 
 import torch

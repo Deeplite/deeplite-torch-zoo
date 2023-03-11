@@ -1,3 +1,5 @@
+# Code modified from https://github.com/Peterisfar/YOLOV3/
+
 import os
 import random
 from pathlib import Path
