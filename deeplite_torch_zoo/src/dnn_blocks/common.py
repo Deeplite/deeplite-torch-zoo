@@ -1,3 +1,11 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+
+# Code taken from:
+# - https://github.com/ultralytics/yolov5/
+# - https://github.com/osmr/imgclsmob
+# - https://github.com/huggingface/pytorch-image-models/
+
+
 import torch
 import torch.nn as nn
 
@@ -118,15 +126,6 @@ class ConvBnAct(nn.Module):
             else:
                 out += x
         return out
-
-    def forward_fuse(self, x):
-        identity = 0
-        if self.residual:
-            if self.resize_identity:
-                identity = self.identity_conv(x)
-            else:
-                identity = x
-        return identity + self.act(self.conv(x))
 
 
 class DWConv(ConvBnAct):

@@ -1,5 +1,8 @@
+# Taken from https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/shufflenet.py
+
 import torch
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.dnn_blocks.common import (ChannelShuffle,
                                                       ConvBnAct, DWConv,
                                                       get_activation)
