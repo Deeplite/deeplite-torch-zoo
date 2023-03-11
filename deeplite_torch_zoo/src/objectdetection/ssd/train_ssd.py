@@ -1,31 +1,31 @@
 import argparse
-import os
-import logging
-import sys
 import itertools
+import logging
+import os
+import sys
 
 import torch
-from torch.utils.data import DataLoader, ConcatDataset
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
-import deeplite_torch_zoo
-from vision.utils.misc import str2bool, Timer, freeze_net_layers, store_labels
-from vision.ssd.ssd import MatchPrior
-from vision.ssd.vgg_ssd import create_vgg_ssd
+from torch.utils.data import ConcatDataset, DataLoader
+from vision.datasets.open_images import OpenImagesDataset
+from vision.datasets.voc_dataset import VOCDataset
+from vision.nn.multibox_loss import MultiboxLoss
+from vision.ssd.config import (mobilenetv1_ssd_config, squeezenet_ssd_config,
+                               vgg_ssd_config)
+from vision.ssd.data_preprocessing import TestTransform, TrainAugmentation
+from vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite
 from vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd
 from vision.ssd.mobilenetv1_ssd_lite import create_mobilenetv1_ssd_lite
-from vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.models.mobilenetv2_ssd import create_mobilenetv2_ssd
-from deeplite_torch_zoo.wrappers.models import mb2_ssd_w as mb2_ssd
-from vision.ssd.mobilenetv3_ssd_lite import create_mobilenetv3_large_ssd_lite, create_mobilenetv3_small_ssd_lite
+from vision.ssd.mobilenetv3_ssd_lite import (create_mobilenetv3_large_ssd_lite,
+                                             create_mobilenetv3_small_ssd_lite)
 from vision.ssd.squeezenet_ssd_lite import create_squeezenet_ssd_lite
-from vision.datasets.voc_dataset import VOCDataset
-from vision.datasets.open_images import OpenImagesDataset
-from vision.nn.multibox_loss import MultiboxLoss
-from vision.ssd.config import vgg_ssd_config
-from vision.ssd.config import mobilenetv1_ssd_config
-from vision.ssd.config import squeezenet_ssd_config
-from vision.ssd.data_preprocessing import TrainAugmentation, TestTransform
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.coco import CocoDetectionBoundingBox
+from vision.ssd.ssd import MatchPrior
+from vision.ssd.vgg_ssd import create_vgg_ssd
+from vision.utils.misc import Timer, freeze_net_layers, store_labels, str2bool
+
+from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.coco import \
+    CocoDetectionBoundingBox
+from deeplite_torch_zoo.wrappers.models import mb2_ssd_w as mb2_ssd
 
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Training With Pytorch')
@@ -233,7 +233,7 @@ if __name__ == '__main__':
                 transform=train_transform, target_transform=target_transform)
             label_file = os.path.join(args.checkpoint_folder, "coco-model-labels.txt")
             store_labels(label_file, dataset.class_names)
-            num_classes = len(dataset.class_names)            
+            num_classes = len(dataset.class_names)
         elif args.dataset_type == 'custom-coco':
             train_annotate = os.path.join(dataset_path, "train_data_COCO.json")
             train_coco_root = os.path.join(dataset_path, "images/train")
@@ -359,7 +359,7 @@ if __name__ == '__main__':
         scheduler.step()
         train(train_loader, net, criterion, optimizer,
               device=DEVICE, debug_steps=args.debug_steps, epoch=epoch)
-        
+
         if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
             val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
             logging.info(
