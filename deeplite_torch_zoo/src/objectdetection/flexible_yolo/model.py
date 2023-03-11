@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Code credit: https://github.com/Bobo-y/flexible-yolov5
+
 import math
 from copy import deepcopy
 from pathlib import Path
@@ -7,13 +9,14 @@ import pkg_resources as pkg
 import torch
 import yaml
 from addict import Dict
+from torch import nn
+
 from deeplite_torch_zoo.src.objectdetection.flexible_yolo.backbone import \
     build_backbone
 from deeplite_torch_zoo.src.objectdetection.flexible_yolo.modules.common import \
     Conv
 from deeplite_torch_zoo.src.objectdetection.flexible_yolo.neck import \
     build_neck
-from torch import nn
 
 DEFAULT_ANCHORS = [[10, 13, 16, 30, 33, 23], [30, 61, 62, 45, 59, 119], [116, 90, 156, 198, 373, 326]]
 

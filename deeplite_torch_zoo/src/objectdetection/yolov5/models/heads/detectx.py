@@ -1,5 +1,6 @@
 """
 YOLOX-specific modules
+Source: https://github.com/jizhishutong/YOLOU
 """
 
 import math

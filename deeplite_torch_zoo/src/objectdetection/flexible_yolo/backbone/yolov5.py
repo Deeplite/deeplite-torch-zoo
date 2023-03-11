@@ -1,6 +1,9 @@
+# Code credit: https://github.com/Bobo-y/flexible-yolov5
+
 import math
 
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.objectdetection.flexible_yolo.modules.common import (
     C3, C3TR, SPPF, Conv)
 

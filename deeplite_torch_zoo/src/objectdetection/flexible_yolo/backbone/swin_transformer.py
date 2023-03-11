@@ -1,3 +1,5 @@
+# Code credit: https://github.com/Bobo-y/flexible-yolov5
+
 # --------------------------------------------------------
 # Swin Transformer
 # Copyright (c) 2021 Microsoft
@@ -5,14 +7,14 @@
 # Written by Ze Liu, Yutong Lin, Yixuan Wei
 # --------------------------------------------------------
 
-from sys import version
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
-import numpy as np
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 import torch.utils.model_zoo as model_zoo
+from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
 __all__ = [
     'small', 'base', 'tiny'
