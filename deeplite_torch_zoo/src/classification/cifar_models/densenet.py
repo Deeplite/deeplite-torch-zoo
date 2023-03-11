@@ -1,9 +1,11 @@
+# Code taken from: https://github.com/kuangliu/pytorch-cifar
 
 import math
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 
 class Bottleneck(nn.Module):
     def __init__(self, in_planes, growth_rate):

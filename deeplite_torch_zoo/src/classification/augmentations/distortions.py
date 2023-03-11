@@ -1,3 +1,5 @@
+# Code modified from: https://github.com/hendrycks/robustness
+
 import ctypes
 import pathlib
 from io import BytesIO
@@ -16,8 +18,6 @@ from deeplite_torch_zoo.utils.registry import Registry
 
 DISTORTION_REGISTRY = Registry()
 
-
-# Code modified from: https://github.com/hendrycks/robustness
 
 def disk(radius, alias_blur=0.1, dtype=np.float32):
     if radius <= 8:
