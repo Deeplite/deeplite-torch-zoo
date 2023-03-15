@@ -1,21 +1,34 @@
-import pytest
+from pathlib import Path, PurePosixPath
 from unittest import mock
 from unittest.mock import mock_open
-from pathlib import Path, PurePosixPath
 
-from deeplite_torch_zoo.wrappers.datasets.classification.cifar import get_cifar10, get_cifar100
-from deeplite_torch_zoo.wrappers.datasets.classification.flowers102 import get_flowers102
-from deeplite_torch_zoo.wrappers.datasets.classification.food101 import get_food101
-from deeplite_torch_zoo.wrappers.datasets.classification.imagenet import get_imagenet
-from deeplite_torch_zoo.wrappers.datasets.classification.imagenette import get_imagenette_160, get_imagenette_320
-from deeplite_torch_zoo.wrappers.datasets.classification.imagewoof import get_imagewoof_160, get_imagewoof_320
+import pytest
+
+from deeplite_torch_zoo.wrappers.datasets.classification.cifar import (
+    get_cifar10, get_cifar100)
+from deeplite_torch_zoo.wrappers.datasets.classification.flowers102 import \
+    get_flowers102
+from deeplite_torch_zoo.wrappers.datasets.classification.food101 import \
+    get_food101
+from deeplite_torch_zoo.wrappers.datasets.classification.imagenet import \
+    get_imagenet
+from deeplite_torch_zoo.wrappers.datasets.classification.imagenette import (
+    get_imagenette_160, get_imagenette_320)
+from deeplite_torch_zoo.wrappers.datasets.classification.imagewoof import (
+    get_imagewoof_160, get_imagewoof_320)
 from deeplite_torch_zoo.wrappers.datasets.classification.mnist import get_mnist
-from deeplite_torch_zoo.wrappers.datasets.classification.tiny_imagenet import get_tinyimagenet
-
-from deeplite_torch_zoo.wrappers.datasets.objectdetection.mask_rcnn import get_coco_for_fasterrcnn_resnet50_fpn
-from deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd import create_coco_datasets as ccd_ssd, \
+from deeplite_torch_zoo.wrappers.datasets.classification.tiny_imagenet import \
+    get_tinyimagenet
+from deeplite_torch_zoo.wrappers.datasets.classification.vww import get_vww
+from deeplite_torch_zoo.wrappers.datasets.objectdetection.mask_rcnn import \
+    get_coco_for_fasterrcnn_resnet50_fpn
+from deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd import \
+    create_coco_datasets as ccd_ssd
+from deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd import \
     create_widerface_datasets as cwd_ssd
-from deeplite_torch_zoo.wrappers.datasets.objectdetection.yolo import create_coco_datasets as ccd_yolo, \
+from deeplite_torch_zoo.wrappers.datasets.objectdetection.yolo import \
+    create_coco_datasets as ccd_yolo
+from deeplite_torch_zoo.wrappers.datasets.objectdetection.yolo import \
     create_widerface_datasets as cwd_yolo
 
 
@@ -116,6 +129,12 @@ def test_unit_imagenette(*args):
 def test_unit_imagewoof(*args):
     get_imagewoof_160('', x=3)
     get_imagewoof_320('', x=3)
+
+
+@mock.patch("deeplite_torch_zoo.wrappers.datasets.classification.vww.VisualWakeWordsClassification")
+@mock.patch("deeplite_torch_zoo.wrappers.datasets.classification.vww.get_dataloader", get_dataloader)
+def test_unit_vww(*args):
+    get_vww('', x=3)
 
 
 @mock.patch("deeplite_torch_zoo.wrappers.datasets.classification.mnist.torchvision")

@@ -1,7 +1,5 @@
 import collections
 import fnmatch
-import json
-import subprocess
 
 import texttable
 import torch
@@ -22,7 +20,6 @@ __all__ = [
     "get_eval_function",
     "list_models",
     "create_model",
-    "dump_json_model_list",
     "profile",
     "get_models_by_dataset",
 ]
@@ -189,6 +186,7 @@ def list_models(filter='', print_table=True, return_list=False,
         if include_models:
             models = set(models).union(include_models)
     found_model_keys = [all_models[model] for model in sorted(models)]
+
     if print_table:
         table = texttable.Texttable()
         rows = collections.defaultdict(list)
@@ -205,26 +203,3 @@ def list_models(filter='', print_table=True, return_list=False,
 def get_models_by_dataset(dataset_name):
     return [model_key.model_name for model_key in list_models(dataset_name, return_list=True, print_table=False)
             if model_key.dataset_name == dataset_name]
-
-
-def dump_json_model_list(filepath=None, indent=4):
-    commit_label = (
-        subprocess.check_output(['git', 'describe', '--always']).strip().decode()
-    )
-
-    if filepath is None:
-        filepath = f'deeplite-torch-zoo_models_{commit_label}.json'
-
-    models_dict = {}
-    allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
-    for task_type in allowed_task_types:
-        task_specific_models = list_models(
-            print_table=False, return_list=True, task_type_filter=task_type
-        )
-        models_dict[task_type] = [
-            {'model_name': model_key.model_name, 'dataset_name': model_key.dataset_name}
-            for model_key in task_specific_models
-        ]
-
-    with open(filepath, 'w', encoding='utf-8') as outfile:
-        json.dump(models_dict, outfile, indent=indent)
