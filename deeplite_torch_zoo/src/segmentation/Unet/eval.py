@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
-from tqdm import tqdm
 
 from deeplite_torch_zoo.src.segmentation.eval.utils.metrics import \
     compute_iou_batch
@@ -13,7 +12,8 @@ from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 def eval_net(net, loader, device="cuda"):
     """Evaluation without the densecrf with the dice coefficient"""
     net.eval()
-    mask_type = torch.float32 if net.n_classes == 1 else torch.long
+
+    mask_type = torch.float32 if hasattr(net, 'n_classes') and net.n_classes == 1 else torch.long
     n_val = len(loader)  # the number of batch
     tot = 0
 
@@ -33,7 +33,7 @@ def eval_net(net, loader, device="cuda"):
             tot += dice_coeff(pred, true_masks).item()
 
     net.train()
-    return tot / n_val
+    return {'dice_coeff': tot / n_val}
 
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='semantic_segmentation', model_type='unet_scse')
@@ -71,4 +71,4 @@ def eval_net_miou(model, loader, device="cuda", net_type="unet"):
 
     test_iou = np.nanmean(test_ious)
     model.train()
-    return test_iou
+    return {'miou': test_iou}

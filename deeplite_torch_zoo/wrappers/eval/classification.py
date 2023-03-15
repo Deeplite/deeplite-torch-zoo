@@ -8,7 +8,7 @@ __all__ = ['classification_eval']
 
 
 @EVAL_WRAPPER_REGISTRY.register(task_type='classification')
-def classification_eval(model, dataloader, progressbar=False, device='cuda', top_k=5):
+def classification_eval(model, dataloader, progressbar=False, device='cuda', top_k=5, break_iter=None):
     if not torch.cuda.is_available():
         device = 'cpu'
 
@@ -17,7 +17,9 @@ def classification_eval(model, dataloader, progressbar=False, device='cuda', top
     targets = []
     with switch_train_mode(model, is_training=False):
         with torch.no_grad():
-            for inputs, target in tqdm(dataloader, disable=not progressbar):
+            for iter_no, (inputs, target) in tqdm(enumerate(dataloader), disable=not progressbar):
+                if iter_no == break_iter:
+                    break
                 inputs = inputs.to(device)
                 target = target.to(device)
                 y = model(inputs)

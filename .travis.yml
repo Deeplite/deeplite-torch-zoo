@@ -2,8 +2,8 @@ language: python
 jobs:
   include:
     # perform a linux build
-    - python: 3.6
-      env: PYTAG="py36"
+    # - python: 3.6
+    #   env: PYTAG="py36"
 
     - python:  3.7.9
       env: PYTAG="py37"
@@ -17,7 +17,7 @@ jobs:
 env:
   global:
     - TWINE_USERNAME="__token__"
-    - TWINE_PASSWORD=$PYPITOKEN 
+    - TWINE_PASSWORD=$PYPITOKEN
 # command to install dependencies
 install:
   - pip install --upgrade pip
@@ -68,7 +68,7 @@ deploy:
       branch: master
       tags: true
       condition: "$TRAVIS_TAG =~ -release$"
-  
+
   # - provider: pages
   #   skip_cleanup: true
   #   github_token: $GITHUB_TOKEN

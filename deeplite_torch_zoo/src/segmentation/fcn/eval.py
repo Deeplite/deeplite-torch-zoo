@@ -20,8 +20,7 @@ def evaluate_fcn(model, loader, device="cuda"):
             lbl_true = target.data.cpu()
             for img, lt, lp in zip(imgs, lbl_true, lbl_pred):
                 img, lt = loader.dataset.untransform(img, lt)
-                label_trues.append(lt)
+                label_trues.append(lt.numpy())
                 label_preds.append(lp)
     metrics = label_accuracy_score(label_trues, label_preds, n_class)
-    miou = {"miou":metrics[1] }
-    return miou
+    return {"miou": metrics[1]}
