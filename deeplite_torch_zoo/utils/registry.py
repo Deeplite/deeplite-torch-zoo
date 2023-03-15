@@ -260,15 +260,15 @@ class EvaluatorWrapperRegistry(Registry):
 
 
 class RegistryStorage:
-    def __init__(self, d):
-        regs = [r for r in d.values() if isinstance(r, Registry)]
+    def __init__(self, registry_list):
+        regs = [r for r in registry_list if isinstance(r, Registry)]
         self.registries = {}
         for r in regs:
             if r.name in self.registries:
-                raise RuntimeError('There are more than one registry with the name "{}"'.format(r.name))
+                raise RuntimeError(f'There are more than one registry with the name "{r.name}"')
             self.registries[r.name] = r
 
-    def get_registry(self, registry_name):
+    def get(self, registry_name: str) -> Registry:
         if registry_name not in self.registries:
-            raise RuntimeError('Cannot find registry with registry_name "{}"'.format(registry_name))
+            raise RuntimeError(f'Cannot find registry with registry_name "{registry_name}"')
         return self.registries[registry_name]
