@@ -23,9 +23,10 @@ from vision.ssd.ssd import MatchPrior
 from vision.ssd.vgg_ssd import create_vgg_ssd
 from vision.utils.misc import Timer, freeze_net_layers, store_labels, str2bool
 
-from deeplite_torch_zoo.src.objectdetection.mb_ssd.datasets.coco import \
+from deeplite_torch_zoo.src.objectdetection.ssd.datasets.coco import \
     CocoDetectionBoundingBox
-from deeplite_torch_zoo.wrappers.models import mb2_ssd_w as mb2_ssd
+#from deeplite_torch_zoo.wrappers.models import mb2_ssd_w as mb2_ssd
+from deeplite_torch_zoo.wrappers import get_model_by_name
 
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Training With Pytorch')
@@ -39,8 +40,8 @@ parser.add_argument('--balance_data', action='store_true',
                     help="Balance training data by down-sampling more frequent labels.")
 
 
-parser.add_argument('--net', default="mb2-ssd",
-                    help="The network architecture, it can be mb1-ssd, mb1-lite-ssd, mb2-ssd-lite, mb3-large-ssd-lite, mb3-small-ssd-lite or vgg16-ssd.")
+parser.add_argument('--net', default="mb2_ssd",
+                    help="The network architecture, it can be mb1_ssd, mb1_lite_ssd, mb2_ssd_lite, mb3-large-ssd-lite, mb3-small-ssd-lite or vgg16_ssd.")
 parser.add_argument('--freeze_base_net', action='store_true',
                     help="Freeze base net layers.")
 parser.add_argument('--freeze_net', action='store_true',
@@ -175,24 +176,24 @@ if __name__ == '__main__':
     timer = Timer()
 
     logging.info(args)
-    if args.net == 'vgg16-ssd':
+    if args.net == 'vgg16_ssd':
         create_net = create_vgg_ssd
         config = vgg_ssd_config
-    elif args.net == 'mb1-ssd':
+    elif args.net == 'mb1_ssd':
         create_net = create_mobilenetv1_ssd
         config = mobilenetv1_ssd_config
-    elif args.net == 'mb1-ssd-lite':
+    elif args.net == 'mb1_ssd-lite':
         create_net = create_mobilenetv1_ssd_lite
         config = mobilenetv1_ssd_config
     elif args.net == 'sq-ssd-lite':
         create_net = create_squeezenet_ssd_lite
         config = squeezenet_ssd_config
-    elif args.net == 'mb2-ssd-lite':
+    elif args.net == 'mb2_ssd_lite':
         create_net = lambda num: create_mobilenetv2_ssd_lite(num, width_mult=args.mb2_width_mult)
         config = mobilenetv1_ssd_config
-    elif args.net == 'mb2-ssd':
-        create_net = mb2_ssd
-        config = mobilenetv1_ssd_config
+    #elif args.net == 'mb2_ssd':
+    #    create_net = mb2_ssd
+    #    config = mobilenetv1_ssd_config
     elif args.net == 'mb3-large-ssd-lite':
         create_net = lambda num: create_mobilenetv3_large_ssd_lite(num)
         config = mobilenetv1_ssd_config
@@ -329,7 +330,9 @@ if __name__ == '__main__':
         net.init_from_base_net(args.base_net)
     elif args.pretrained_ssd:
         logging.info(f"Init from pretrained ssd {args.pretrained_ssd}")
-        net.init_from_pretrained_ssd(args.pretrained_ssd)
+        model = get_model_by_name(model_name=args.net, dataset_name=args.dataset_type)
+        net.load_state_dict(model.state_dict())
+        # net.init_from_pretrained_ssd(args.pretrained_ssd)
     logging.info(f'Took {timer.end("Load Model"):.2f} seconds to load the model.')
 
     net.to(DEVICE)
