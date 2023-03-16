@@ -31,7 +31,7 @@ class Pascal_Data(VOCSegmentation):
         ]
     )
 
-    def __init__(self, root, image_set="train", backbone="vgg", download=False):
+    def __init__(self, root, image_set="train", backbone="vgg", download=True):
         transform = self.transform
         self.backbone = backbone
         if backbone == "vgg":

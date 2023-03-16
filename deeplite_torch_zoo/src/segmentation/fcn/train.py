@@ -18,8 +18,8 @@ from tqdm import tqdm
 from deeplite_torch_zoo.wrappers.wrapper import get_data_splits_by_name
 from torchfcn.models import *
 from deeplite_torch_zoo.src.segmentation.fcn.utils import label_accuracy_score
-from deeplite_torch_zoo.src.segmentation.models.utils.optimizer import \
-    create_optimizer
+from deeplite_torch_zoo.src.segmentation.unet_scse.repo.src.utils.optimizer import create_optimizer
+
 
 
 def cross_entropy2d(input, target, weight=None, size_average=True):
@@ -57,6 +57,7 @@ class Trainer(object):
         out,
         epochs=100,
         size_average=False,
+        n_class=21
     ):
         self.cuda = cuda
         self.epochs = epochs
@@ -74,6 +75,7 @@ class Trainer(object):
         self.interval_validate = 5
 
         self.out = out
+        self.n_class = n_class
         if not osp.exists(self.out):
             os.makedirs(self.out)
 
@@ -104,12 +106,12 @@ class Trainer(object):
         training = self.model.training
         self.model.eval()
 
-        n_class = self.val_loader.dataset.n_classes
+        n_class = self.n_class
 
         val_loss = 0
         visualizations = []
         label_trues, label_preds = [], []
-        for batch_idx, (data, target, _) in tqdm(enumerate(self.val_loader)):
+        for batch_idx, (data, target) in tqdm(enumerate(self.val_loader)):
             if self.cuda:
                 data, target = data.cuda(), target.cuda()
             data, target = Variable(data, volatile=True), Variable(target)
@@ -177,11 +179,11 @@ class Trainer(object):
     def train_epoch(self):
         self.model.train()
 
-        n_class = self.train_loader.dataset.n_classes
+        n_class = self.n_class
         metrics = []
         train_loss = 0
 
-        for batch_idx, (data, target, _) in tqdm(enumerate(self.train_loader)):
+        for batch_idx, (data, target) in tqdm(enumerate(self.train_loader)):
             assert self.model.training
 
             if self.cuda:
@@ -277,13 +279,14 @@ if __name__ == "__main__":
     #   - For N > 2 classes, use n_classes=N
 
     data_splits = get_data_splits_by_name(
-        data_root="data/VOC/VOCdevkit/VOC2012/",
+        data_root="data",
         dataset_name="voc",
         model_name="fcn",
         batch_size=args.batchsize,
         num_workers=1,
     )
-    net = FCN32s(n_class=data_splits["train"].dataset.n_classes)
+    n_class = 21
+    net = FCN32s(n_class=n_class)
 
     net.to(device=device)
     optimizer, scheduler = create_optimizer(
@@ -302,6 +305,7 @@ if __name__ == "__main__":
             val_loader=data_splits["test"],
             out="data/weight/segmentation/fcn32s/pascal/",
             epochs=args.epochs,
+            n_class=n_class
         ).train()
     except KeyboardInterrupt:
         torch.save(net.state_dict(), "INTERRUPTED.pth")
