@@ -18,11 +18,9 @@ CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs/
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
-    "yolo5_6s_coco": "yolov5_6s-coco-80classes_301-8ff1dabeec225366.pt",
-    "yolo5_6m_coco": "yolov5_6m-coco-80classes_374-f93fa94b629c45ab.pt",
-    "yolo5_6n_coco": "yolov5_6n-coco-80classes_211-e9e44a7de1f08ea2.pt",
-    "yolo5_6sa_coco": "yolov5_6sa-coco-80classes_297-6c1972b5f7ae6ab6.pt",
-    "yolo5_6ma_coco": "yolov5_6ma-coco-80classes_365-4756729c4f6a834f.pt",
+    "yolo5_6s_coco": "yolo5_6s_coco_3299_de35eb2af44ac037.pt",
+    "yolo5_6m_coco": "yolo5_6m_coco_4045_f4c983c9e011dcde.pt",
+    "yolo5_6n_coco": "yolo5_6n_coco_2420_9361acabe4b27b7a.pt",
     "yolo5_6n_hswish_coco": "yolov5_6n_hswish-coco-80classes-183-a2fed163ec98352a.pt",
     "yolo5_6n_relu_coco": "yolov5_6n_relu-coco-80classes-167-7b6609497c63df79.pt",
 }
