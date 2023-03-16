@@ -1,15 +1,22 @@
+#
+# For licensing see accompanying LICENSE file.
+# Copyright (C) 2022 Apple Inc. All Rights Reserved.
+#
+
+# Taken from https://github.com/apple/ml-mobileone
+
 import copy
 from typing import Tuple
 
 import torch
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.dnn_blocks.cnn_attention import SELayer
 from deeplite_torch_zoo.src.dnn_blocks.common import get_activation
 
 
 class MobileOneBlock(nn.Module):
     """ MobileOne building block.
-        https://github.com/apple/ml-mobileone
         This block has a multi-branched architecture at train-time
         and plain-CNN style architecture at inference time
         For more details, please refer to our paper:

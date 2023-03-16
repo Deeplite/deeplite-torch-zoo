@@ -1,3 +1,7 @@
+# Taken from:
+# - https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/squeezenet.py
+# - https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/squeezenext.py
+
 import torch
 import torch.nn as nn
 
@@ -7,7 +11,6 @@ from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, get_activation
 class FireUnit(nn.Module):
     """
     SqueezeNet unit, so-called 'Fire' unit.
-    https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/squeezenet.py
     Parameters:
     ----------
     c1 : int
@@ -76,7 +79,6 @@ class SqnxtUnit(nn.Module):
     SqueezeNext unit.
     Original paper: 'SqueezeNext: Hardware-Aware Neural Network Design,'
     https://arxiv.org/abs/1803.10615.
-    https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/squeezenext.py
 
     Parameters:
     ----------

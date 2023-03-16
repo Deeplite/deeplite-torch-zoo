@@ -1,4 +1,5 @@
 import numpy as np
+
 from deeplite_torch_zoo.src.objectdetection.eval.yolov5_eval.yolov5_eval import \
     evaluate
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY

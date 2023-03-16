@@ -7,7 +7,7 @@ __all__ = ["deeplab_mobilenet_voc"]
 
 
 model_urls = {
-    "mobilenet_voc": "http://download.deeplite.ai/zoo/models/deeplab-mobilenet-voc-20_593-94ac51da679409d6.pth",
+    "mobilenet_voc": "http://download.deeplite.ai/zoo/models/deeplab-mobilenet-voc-20_61-56bc197b0d0ff05f.pth",
 }
 
 

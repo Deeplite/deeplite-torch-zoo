@@ -1,5 +1,8 @@
+# Taken from https://github.com/WongKinYiu/yolov7/blob/HEAD/models/common.py
+
 import torch
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.dnn_blocks.common import autopad, get_activation
 
 

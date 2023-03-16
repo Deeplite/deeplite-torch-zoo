@@ -1,6 +1,6 @@
 import os
 
-import pyvww
+from pyvww.pytorch import VisualWakeWordsClassification
 
 from deeplite_torch_zoo.src.classification.augmentations.augs import \
     get_vanilla_transforms
@@ -26,13 +26,13 @@ def get_vww(data_root, batch_size=128, test_batch_size=None, img_size=224,
     train_transforms = train_transforms if train_transforms is not None else default_train_transforms
     val_transforms = val_transforms if val_transforms is not None else default_val_transforms
 
-    train_dataset = pyvww.pytorch.VisualWakeWordsClassification(
+    train_dataset = VisualWakeWordsClassification(
         root=os.path.join(data_root, "all"),
         annFile=os.path.join(data_root, "annotations/instances_train.json"),
         transform=train_transforms,
     )
 
-    test_dataset = pyvww.pytorch.VisualWakeWordsClassification(
+    test_dataset = VisualWakeWordsClassification(
         root=os.path.join(data_root, "all"),
         annFile=os.path.join(data_root, "annotations/instances_val.json"),
         transform=val_transforms,

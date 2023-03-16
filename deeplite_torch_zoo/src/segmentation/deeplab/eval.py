@@ -25,4 +25,4 @@ def evaluate_deeplab(model, loader, device="cuda"):
     Acc = evaluator.Pixel_Accuracy()
     Acc_class = evaluator.Pixel_Accuracy_Class()
     mIoU = evaluator.Mean_Intersection_over_Union()
-    return mIoU
+    return {'miou': mIoU}

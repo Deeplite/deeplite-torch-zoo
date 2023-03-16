@@ -1,3 +1,5 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+
 import glob
 import logging
 import math
@@ -16,14 +18,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torch.nn as nn
 import yaml
 from tqdm import tqdm
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import \
     init_seeds as init_torch_seeds
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import \
-    is_parallel
 
 # Set printoptions
 torch.set_printoptions(linewidth=320, precision=5, profile="long")
@@ -529,7 +528,6 @@ def non_max_suppression(
                     i = i[iou.sum(1) > 1]  # require redundancy
             except:  # possible CUDA error https://github.com/ultralytics/yolov3/issues/1139
                 print(x, i, x.shape, i.shape)
-                pass
 
         output[xi] = x[i]
         if (time.time() - t) > time_limit:

@@ -1,8 +1,12 @@
+# Taken from:
+# https://github.com/WongKinYiu/yolov7/blob/HEAD/models/common.py
+
 import torch
+from torch import nn
+
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct
 from deeplite_torch_zoo.src.dnn_blocks.transformer_common import (
     SwinTransformerLayer, SwinTransformerLayer_v2, TransformerLayer)
-from torch import nn
 
 
 class TransformerBlock(nn.Module):
