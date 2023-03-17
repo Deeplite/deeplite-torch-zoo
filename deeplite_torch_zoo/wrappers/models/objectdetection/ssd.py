@@ -29,8 +29,8 @@ model_urls = {
     "mb2_ssd_voc": "mb2-ssd-voc-20-0_440-8402e1cfc3e076b1.pth",
     "vgg16_ssd_voc": "vgg16-ssd-voc-mp-0_7726-b1264e8beec69cbc.pth",
     "vgg16_ssd_wider_face": "vgg16-ssd-wider_face-0_707-8c76d36acb083648.pth",
-    "mb1_ssd_voc": "mb1-ssd-voc-mp-0_675-58694caf.pth",
-    "mb2_ssd_lite_voc": "mb2-ssd-lite-voc-mp-0_686-b0d1ac2c.pth",
+    "mb1_ssd_voc": "mb1-ssd-voc-mp-0_677-8003fb6573883e5e.pth",
+    "mb2_ssd_lite_voc": "mb2-ssd-lite-voc-mp-688-0d5d1a46f1e31a11.pth",
     "mb2_ssd_lite_person_detection": "mb2-ssd-lite-coco_person_0_441_300.pth",
 }
 
