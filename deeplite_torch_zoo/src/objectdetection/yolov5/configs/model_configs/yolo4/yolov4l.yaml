@@ -1,8 +1,10 @@
+# https://github.com/WongKinYiu/PyTorch_YOLOv4/blob/u5/models/yolov4l-mish.yaml
+
 # parameters
 nc: 80  # number of classes
 depth_multiple: 1.0  # expand model depth
 width_multiple: 1.0  # expand layer channels
-activation_type: leakyrelu
+activation_type: silu
 
 # anchors
 anchors:
@@ -29,7 +31,7 @@ backbone:
 # yolov4l head
 # na = len(anchors[0])
 head:
-  [[-1, 1, SPPCSPLeaky, [512]], # 11
+  [[-1, 1, SPPCSP, [512]], # 11
    [-1, 1, Conv, [256, 1, 1]],
    [-1, 1, nn.Upsample, [None, 2, 'nearest']],
    [8, 1, Conv, [256, 1, 1]], # route backbone P4

@@ -1,5 +1,6 @@
-
+import re
 import urllib.parse as urlparse
+from functools import partial
 from pathlib import Path
 
 import deeplite_torch_zoo
@@ -23,17 +24,25 @@ model_urls = {
 
 yolov3_cfg = {
     "yolo3": "yolov3.yaml",
+    "yolo3n": "yolov3n.yaml",
+    "yolo3s": "yolov3s.yaml",
+    "yolo3m": "yolov3m.yaml",
+    "yolo3l": "yolov3l.yaml",
     "yolo3_tiny": "yolov3-tiny.yaml",
     "yolo3_spp": "yolov3-spp.yaml",
 }
 
+MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 def yolo3(
-    model_name="yolo3", dataset_name="voc", num_classes=20, pretrained=False,
-    progress=True, device="cuda", ch=3,
+    model_name="yolo3", dataset_name="voc", num_classes=20, activation_type=None,
+    pretrained=False, progress=True, device="cuda", ch=3,
 ):
-    config_path = get_project_root() / CFG_PATH / yolov3_cfg[model_name]
-    model = YOLOModel(config_path, ch=ch, nc=num_classes)
+    config_key = model_name
+    for suffix in MODEL_NAME_SUFFICES:
+        config_key = re.sub(f'\_{suffix}$', '', config_key) # pylint: disable=W1401
+    config_path = get_project_root() / CFG_PATH / yolov3_cfg[config_key]
+    model = YOLOModel(config_path, ch=ch, nc=num_classes, activation_type=activation_type)
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
             raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
@@ -44,14 +53,27 @@ def yolo3(
     return model.to(device)
 
 
+MODEL_TAG_TO_WRAPPER_FN_MAP = {
+    "yolo3": yolo3,
+    "^yolo3[nsmlx]$": yolo3,
+    "^yolo3[nsmlx]_relu$": partial(yolo3, activation_type="relu"),
+    "^yolo3[nsmlx]_hswish$": partial(yolo3, activation_type="hardswish"),
+}
+
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
+
+    model_wrapper_fn = None
+    for net_name, model_fn in MODEL_TAG_TO_WRAPPER_FN_MAP.items():
+        if re.match(net_name, model_name):
+            model_wrapper_fn = model_fn
+
     has_checkpoint = True
     if f"{model_name}_{dataset_name}" not in model_urls:
         has_checkpoint = False
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection', has_checkpoint=has_checkpoint)
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
-        return yolo3(
+        return model_wrapper_fn(
             model_name=model_name,
             dataset_name=dataset_name,
             num_classes=num_classes,
@@ -64,6 +86,8 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 
 
 model_list = list(yolov3_cfg.keys())
+for model_name_suffix in MODEL_NAME_SUFFICES:
+    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov3_cfg]
 datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20)]
 
 for dataset_tag, n_classes in datasets:

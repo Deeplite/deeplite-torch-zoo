@@ -1,5 +1,6 @@
 import re
 import urllib.parse as urlparse
+from functools import partial
 from pathlib import Path
 
 import deeplite_torch_zoo
@@ -29,20 +30,24 @@ model_urls = {
 }
 
 yolov4_cfg = {
-    "yolo4s": "yolov4s-mish.yaml",
-    "yolo4m": "yolov4m-mish.yaml",
-    "yolo4l": "yolov4l-mish.yaml",
-    "yolo4x": "yolov4x-mish.yaml",
-    "yolo4l_leaky": "yolov4l-leaky.yaml",
+    "yolo4n": "yolov4n.yaml",
+    "yolo4s": "yolov4s.yaml",
+    "yolo4m": "yolov4m.yaml",
+    "yolo4l": "yolov4l.yaml",
+    "yolo4x": "yolov4x.yaml",
 }
 
+MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 def yolo4(
-    model_name="yolo4s", dataset_name="voc", num_classes=20, pretrained=False,
-    progress=True, device="cuda", ch=3,
+    model_name="yolo4s", dataset_name="voc", num_classes=20, activation_type=None,
+    pretrained=False, progress=True, device="cuda", ch=3,
 ):
-    config_path = get_project_root() / CFG_PATH / yolov4_cfg[model_name]
-    model = YOLOModel(config_path, ch=ch, nc=num_classes)
+    config_key = model_name
+    for suffix in MODEL_NAME_SUFFICES:
+        config_key = re.sub(f'\_{suffix}$', '', config_key) # pylint: disable=W1401
+    config_path = get_project_root() / CFG_PATH / yolov4_cfg[config_key]
+    model = YOLOModel(config_path, ch=ch, nc=num_classes, activation_type=activation_type)
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
             raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
@@ -53,8 +58,9 @@ def yolo4(
 
 
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
-    "^yolo4[smlx]$": yolo4,
-    "^yolo4[smlx]_leaky$": yolo4,
+    "^yolo4[nsmlx]$": yolo4,
+    "^yolo4[nsmlx]_relu$": partial(yolo4, activation_type='relu'),
+    "^yolo4[nsmlx]_hswish$": partial(yolo4, activation_type='hswish'),
 }
 
 
@@ -85,6 +91,9 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 
 
 model_list = list(yolov4_cfg.keys())
+for model_name_suffix in MODEL_NAME_SUFFICES:
+    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov4_cfg]
+
 datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20)]
 
 for dataset_tag, n_classes in datasets:

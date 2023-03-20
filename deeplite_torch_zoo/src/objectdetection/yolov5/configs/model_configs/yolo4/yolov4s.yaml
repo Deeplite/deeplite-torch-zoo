@@ -1,8 +1,10 @@
+# https://github.com/WongKinYiu/PyTorch_YOLOv4/blob/u5/models/yolov4l-mish.yaml
+
 # parameters
 nc: 80  # number of classes
-depth_multiple: 1.33  # model depth multiple
-width_multiple: 1.25  # layer channel multiple
-activation_type: mish
+depth_multiple: 0.33  # model depth multiple
+width_multiple: 0.50  # layer channel multiple
+activation_type: silu
 
 # anchors
 anchors:
@@ -10,7 +12,7 @@ anchors:
   - [36,75, 76,55, 72,146]  # P4/16
   - [142,110, 192,243, 459,401]  # P5/32
 
-# yolov4x backbone
+# yolov4l backbone
 backbone:
   # [from, number, module, args]
   [[-1, 1, Conv, [32, 3, 1]],  # 0
@@ -26,7 +28,7 @@ backbone:
    [-1, 4, BottleneckCSP, [1024]],  # 10
   ]
 
-# yolov4x head
+# yolov4l head
 # na = len(anchors[0])
 head:
   [[-1, 1, SPPCSP, [512]], # 11
