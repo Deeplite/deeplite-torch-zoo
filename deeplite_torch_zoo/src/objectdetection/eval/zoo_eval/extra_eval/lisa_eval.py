@@ -24,8 +24,6 @@ from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
 from deeplite_torch_zoo.src.objectdetection.eval.zoo_eval.evaluator import \
     Evaluator
 from deeplite_torch_zoo.src.objectdetection.eval.zoo_eval.metrics import MAP
-from deeplite_torch_zoo.src.objectdetection.yolov5.utils.visualize import \
-    visualize_boxes
 from deeplite_torch_zoo.wrappers.registries import EVAL_WRAPPER_REGISTRY
 
 
@@ -65,13 +63,6 @@ class Demo(Evaluator):
             class_inds = bboxes_prd[..., 5].astype(np.int32)
             scores = bboxes_prd[..., 4]
 
-            visualize_boxes(
-                image=image,
-                boxes=boxes,
-                labels=class_inds,
-                probs=scores,
-                class_labels=self.classes,
-            )
             path = "data/results/{:05}.jpg".format(iter_)
             iter_ = iter_ + 1
             print(path)
