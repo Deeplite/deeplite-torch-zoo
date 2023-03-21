@@ -9,24 +9,29 @@
 
 The ``deeplite-torch-zoo`` package is a collection of popular (pretrained) CNN model architectures and benchmark datasets for PyTorch. The models are grouped under different datasets and different task types such as classification, object detection, and semantic segmentation. The primary aim of ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models for a given task. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
 
-* [Installation](#Installation)
-    * [Install using pip](#Install-using-pip-release-version)
-    * [Install from source](#install-from-source-development-version)
-    * [Install in Dev mode](#Install-in-dev-mode)
-
-* [How to Use](#How-to-Use)
-    * [Loading Datasets](#Loading-Datasets)
-        * [Classification Datasets](#Classification-Datasets)
-        * [Object Detection Datasets](#Object-Detection-Datasets)
-    * [Loading Models](#Loading-Models)
-        * [Classification Models](#Classification-Models)
-        * [Object Detection Models](#Object-Detection-Models)
-
-* [Available Models](#Available-Models)
-* [Available Datasets](#Available-Datasets)
-* [Training on Custom Data](#train-on-custom-dataset)
-* [Benchmark Results](#Benchmark-Results)
-* [Contribute a Model/Dataset to the Zoo](#Contribute-a-Model/Dataset-to-the-Zoo)
+- [Deeplite Torch Zoo](#deeplite-torch-zoo)
+- [Installation](#installation)
+  - [Install using pip (release version)](#install-using-pip-release-version)
+  - [Install from source (development version)](#install-from-source-development-version)
+  - [Install in dev mode](#install-in-dev-mode)
+- [How to Use](#how-to-use)
+  - [Loading Datasets](#loading-datasets)
+    - [Classification Datasets](#classification-datasets)
+    - [Object Detection Datasets](#object-detection-datasets)
+  - [Loading and Creating Models](#loading-and-creating-models)
+    - [Classification Models](#classification-models)
+    - [Object Detection Models](#object-detection-models)
+  - [Creating an evaluation function](#creating-an-evaluation-function)
+- [Available Models](#available-models)
+- [Train on Custom Dataset](#train-on-custom-dataset)
+- [Benchmark Results](#benchmark-results)
+- [Contribute a Model/Dataset to the Zoo](#contribute-a-modeldataset-to-the-zoo)
+  - [Credit](#credit)
+    - [Object Detection](#object-detection)
+    - [Segmentation](#segmentation)
+    - [Classification](#classification)
+    - [DNN building block implementations](#dnn-building-block-implementations)
+    - [Misc](#misc)
 
 
 # Installation
@@ -244,9 +249,11 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 ### Object Detection
 - The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of resnet-ssd: [Nvidia-SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
+- The implementation of yolov3-voc: [Peterisfar/YOLOV3](https://github.com/Peterisfar/YOLOV3/)
 - The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
 - The implementation of flexible-yolov5: [Bobo-y/flexible-yolov5](https://github.com/Bobo-y/flexible-yolov5)
 - The implementation of yolov7: [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
+- The implementation of yolox: [jizhishutong/YOLOU](https://github.com/jizhishutong/YOLOU)
 
 ### Segmentation
 - The implementation of deeplab: [pytorch-deeplab-xception](https://github.com/jfzhang95/pytorch-deeplab-xception)
@@ -258,6 +265,16 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - The implementation of models on CIFAR100 dataset: [kuangliu/pytorch-cifar](https://github.com/kuangliu/pytorch-cifar)
 - The implementation of Mobilenetv1 model on VWW dataset: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of Mobilenetv3 model on VWW dataset: [d-li14/mobilenetv3.pytorch](https://github.com/d-li14/mobilenetv3.pytorch)
+
+### DNN building block implementations
+- [d-li14/mobilenetv2.pytorch](https://github.com/d-li14/mobilenetv2.pytorch)
+- [d-li14/efficientnetv2.pytorch](https://github.com/d-li14/efficientnetv2.pytorch)
+- [apple/ml-mobileone](https://github.com/apple/ml-mobileone)
+- [osmr/imgclsmob](https://github.com/osmr/imgclsmob)
+- [huggingface/pytorch-image-models](https://github1s.com/huggingface/pytorch-image-models)
+- [moskomule/senet.pytorch](https://github.com/moskomule/senet.pytorch)
+- [DingXiaoH/RepLKNet-pytorch](https://github.com/DingXiaoH/RepLKNet-pytorch)
+- [huawei-noah/Efficient-AI-Backbones](https://github.com/huawei-noah/Efficient-AI-Backbones)
 
 ### Misc
 - mAP metric calculation code: [bes-dev/mean_average_precision](https://github.com/bes-dev/mean_average_precision)
