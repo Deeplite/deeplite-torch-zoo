@@ -253,7 +253,7 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
 - The implementation of flexible-yolov5: [Bobo-y/flexible-yolov5](https://github.com/Bobo-y/flexible-yolov5)
 - The implementation of yolov7: [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
-- The implementation of yolox: [jizhishutong/YOLOU](https://github.com/jizhishutong/YOLOU)
+- The implementation of yolox: [iscyy/yoloair](https://github.com/iscyy/yoloair)
 - [westerndigitalcorporation/YOLOv3-in-PyTorch](https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch)
 
 ### Segmentation
@@ -286,3 +286,4 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - Cutout implementation: [uoguelph-mlrg/Cutout](https://github.com/uoguelph-mlrg/Cutout)
 - Robustness measurement image distortions: [hendrycks/robustness](https://github.com/hendrycks/robustness)
 - Registry implementation: [openvinotoolkit/openvino/tools/pot](https://github.com/openvinotoolkit/openvino/blob/master/tools/pot)
+- [PyTorch/Detection/SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
