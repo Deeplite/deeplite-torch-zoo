@@ -11,8 +11,8 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.cnn_attention import SELayer
 from deeplite_torch_zoo.src.dnn_blocks.common import get_activation
+from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
 
 
 class MobileOneBlock(nn.Module):
