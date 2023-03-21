@@ -5,7 +5,7 @@ import torch
 from torch import nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct
-from deeplite_torch_zoo.src.dnn_blocks.transformer_common import (
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.transformer_common import (
     SwinTransformerLayer, SwinTransformerLayer_v2, TransformerLayer)
 
 

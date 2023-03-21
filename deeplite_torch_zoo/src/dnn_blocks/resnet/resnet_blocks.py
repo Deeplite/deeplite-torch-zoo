@@ -3,11 +3,11 @@
 import torch.nn as nn
 from torch import Tensor
 
-from deeplite_torch_zoo.src.dnn_blocks.cnn_attention import SELayer
 from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
                                                       GhostConv,
                                                       get_activation,
                                                       round_channels)
+from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
 
 
 class ResNetBottleneck(nn.Module):

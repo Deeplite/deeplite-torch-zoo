@@ -10,7 +10,8 @@
 
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, DropPath
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct
+from deeplite_torch_zoo.src.dnn_blocks.timm import DropPath
 
 
 class LargeKernelReparam(nn.Module):
