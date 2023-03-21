@@ -41,7 +41,7 @@ from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_eval_function)
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolov5_loss import \
     YoloV5Loss
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolox_loss import \
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolox.yolox_loss import \
     ComputeXLoss
 
 LOGGER = logging.getLogger(__name__)

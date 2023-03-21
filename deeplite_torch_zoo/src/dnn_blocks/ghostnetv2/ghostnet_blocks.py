@@ -6,9 +6,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from deeplite_torch_zoo.src.dnn_blocks.cnn_attention import SELayer
 from deeplite_torch_zoo.src.dnn_blocks.common import (get_activation,
                                                       round_channels)
+from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
 
 
 class DFCModule(nn.Module):

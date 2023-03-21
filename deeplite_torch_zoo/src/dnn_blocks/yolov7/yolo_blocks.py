@@ -1,6 +1,5 @@
 # Taken from:
 # - https://github.com/WongKinYiu/yolov7/blob/HEAD/models/common.py
-# - https://github.com/WongKinYiu/yolor/blob/paper/models/common.py
 
 import warnings
 
@@ -11,8 +10,8 @@ from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
                                                       GhostConv,
                                                       get_activation,
                                                       round_channels)
-from deeplite_torch_zoo.src.dnn_blocks.resnet_blocks import (GhostBottleneck,
-                                                             ResNeXtBottleneck)
+from deeplite_torch_zoo.src.dnn_blocks.resnet.resnet_blocks import (
+    GhostBottleneck, ResNeXtBottleneck)
 
 
 class YOLOBottleneck(nn.Module):

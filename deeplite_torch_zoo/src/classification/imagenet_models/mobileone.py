@@ -10,7 +10,7 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.mobileone_blocks import (
+from deeplite_torch_zoo.src.dnn_blocks.mobileone.mobileone_blocks import (
     MobileOneBlock, reparameterize_model)
 
 __all__ = ['MobileOne', 'mobileone', 'reparameterize_model']

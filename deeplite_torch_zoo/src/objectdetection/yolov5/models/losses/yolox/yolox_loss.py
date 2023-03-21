@@ -1,4 +1,4 @@
-# Source: https://github.com/jizhishutong/YOLOU
+# Source: https://github.com/iscyy/yoloair
 
 import torch
 

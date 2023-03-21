@@ -1,4 +1,4 @@
-# Code modified from: https://github.com/DeepVoltaire/AutoAugment
+# Code modified from: https://github.com/uoguelph-mlrg/Cutout
 
 import random
 

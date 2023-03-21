@@ -1,6 +1,6 @@
 """
 YOLOX-specific modules
-Source: https://github.com/jizhishutong/YOLOU
+Source: https://github.com/iscyy/yoloair
 """
 
 import math
@@ -11,7 +11,7 @@ from torch.cuda.amp import autocast
 
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolox_loss import *
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolox.yolox_loss import *
 
 
 class IOUloss(nn.Module):

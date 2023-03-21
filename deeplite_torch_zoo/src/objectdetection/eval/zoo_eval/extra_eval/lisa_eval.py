@@ -35,7 +35,7 @@ class Demo(Evaluator):
     def __init__(
         self,
         model,
-        data_root="data/esmart/images",
+        data_root="",
         visiual=False,
         net="yolov3",
         img_size=448,

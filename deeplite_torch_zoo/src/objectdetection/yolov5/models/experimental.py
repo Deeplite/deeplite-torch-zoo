@@ -10,8 +10,8 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPP as SPP
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import YOLOSPP as SPP
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import \
     YOLOBottleneck as Bottleneck
 
 

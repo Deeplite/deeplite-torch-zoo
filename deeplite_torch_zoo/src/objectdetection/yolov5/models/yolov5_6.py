@@ -10,25 +10,27 @@ import torch
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
-from deeplite_torch_zoo.src.dnn_blocks.repvgg_blocks import RepConv
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPP as SPP
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPPCSP as SPPCSP
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.repvgg_blocks import RepConv
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import YOLOSPP as SPP
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import \
+    YOLOSPPCSP as SPPCSP
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import \
     YOLOSPPCSPC as SPPCSPC
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPPF as SPPF
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import \
+    YOLOSPPF as SPPF
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import \
     YOLOBottleneck as Bottleneck
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import \
     YOLOBottleneckCSP as BottleneckCSP
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import \
     YOLOBottleneckCSP2 as BottleneckCSP2
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import \
     YOLOSPPCSPLeaky as SPPCSPLeaky
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect import \
     Detect
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detectx import \
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.yolox.detectx import \
     DetectX
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
     make_divisible
