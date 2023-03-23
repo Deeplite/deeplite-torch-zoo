@@ -36,13 +36,20 @@ MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 def yolo3(
     model_name="yolo3", dataset_name="voc", num_classes=20, activation_type=None,
-    pretrained=False, progress=True, device="cuda", ch=3,
+    depth_mul=None, width_mul=None, pretrained=False, progress=True, device="cuda", ch=3,
 ):
     config_key = model_name
     for suffix in MODEL_NAME_SUFFICES:
         config_key = re.sub(f'\_{suffix}$', '', config_key) # pylint: disable=W1401
     config_path = get_project_root() / CFG_PATH / yolov3_cfg[config_key]
-    model = YOLOModel(config_path, ch=ch, nc=num_classes, activation_type=activation_type)
+    model = YOLOModel(
+        config_path,
+        ch=ch,
+        nc=num_classes,
+        activation_type=activation_type,
+        depth_mul=depth_mul,
+        width_mul=width_mul,
+    )
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
             raise ValueError(f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
@@ -72,7 +79,7 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
         has_checkpoint = False
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection', has_checkpoint=has_checkpoint)
-    def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda"):
+    def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device="cuda", **kwargs):
         return model_wrapper_fn(
             model_name=model_name,
             dataset_name=dataset_name,
@@ -80,6 +87,7 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
             pretrained=pretrained,
             progress=progress,
             device=device,
+            **kwargs
         )
     wrapper_func.__name__ = wrapper_name
     return wrapper_func

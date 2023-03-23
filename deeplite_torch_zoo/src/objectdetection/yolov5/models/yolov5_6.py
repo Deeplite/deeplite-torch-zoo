@@ -40,7 +40,8 @@ logger = logging.getLogger(__name__)
 
 class YOLOModel(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
-    def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None, activation_type=None):  # model, input channels, number of classes
+    def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None,
+                    activation_type=None, depth_mul=None, width_mul=None):  # model, input channels, number of classes
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -59,7 +60,13 @@ class YOLOModel(nn.Module):
         if anchors:
             logger.info(f'Overriding model.yaml anchors with anchors={anchors}')
             self.yaml['anchors'] = round(anchors)  # override yaml value
-        self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch], activation_type=activation_type)  # model, savelist
+        self.model, self.save = parse_model(
+            deepcopy(self.yaml),
+            ch=[ch],
+            activation_type=activation_type,
+            depth_mul=depth_mul,
+            width_mul=width_mul,
+        )  # model, savelist
         self.names = [str(i) for i in range(self.yaml['nc'])]  # default names
         self.inplace = self.yaml.get('inplace', True)
 
@@ -184,9 +191,13 @@ class YOLOModel(nn.Module):
         return self
 
 
-def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
+def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None):  # model_dict, input_channels(3)
     logger.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
     anchors, nc, gd, gw = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple']
+    if depth_mul is not None:
+        gd = depth_mul
+    if width_mul is not None:
+        gw = width_mul
     activation_type = activation_type if activation_type is not None else d['activation_type']
     na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
