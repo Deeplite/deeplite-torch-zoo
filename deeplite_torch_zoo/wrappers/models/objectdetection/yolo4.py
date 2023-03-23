@@ -35,6 +35,14 @@ yolov4_cfg = {
     "yolo4m": "yolov4m.yaml",
     "yolo4l": "yolov4l.yaml",
     "yolo4x": "yolov4x.yaml",
+    "yolo4_d1w5": "yolo4_d1w5.yaml",
+    "yolo4_d1w25": "yolo4_d1w25.yaml",
+    "yolo4_d1w75": "yolo4_d1w75.yaml",
+    "yolo4_d33w1": "yolo4_d33w1.yaml",
+    "yolo4_d33w75": "yolo4_d33w75.yaml",
+    "yolo4_d67w1": "yolo4_d67w1.yaml",
+    "yolo4_d67w5": "yolo4_d67w5.yaml",
+    "yolo4_d67w25": "yolo4_d67w25.yaml",
 }
 
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
@@ -69,6 +77,7 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo4[nsmlx]$": yolo4,
     "^yolo4[nsmlx]_relu$": partial(yolo4, activation_type='relu'),
     "^yolo4[nsmlx]_hswish$": partial(yolo4, activation_type='hswish'),
+    "yolo4_d*w*": yolo4,
 }
 
 

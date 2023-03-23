@@ -28,6 +28,15 @@ yolov3_cfg = {
     "yolo3s": "yolov3s.yaml",
     "yolo3m": "yolov3m.yaml",
     "yolo3l": "yolov3l.yaml",
+    "yolo3_d1w5": "yolo3_d1w5.yaml",
+    "yolo3_d1w25": "yolo3_d1w25.yaml",
+    "yolo3_d1w75": "yolo3_d1w75.yaml",
+    "yolo3_d33w1": "yolo3_d33w1.yaml",
+    "yolo3_d33w75": "yolo3_d33w75.yaml",
+    "yolo3_d67w1": "yolo3_d67w1.yaml",
+    "yolo3_d67w5": "yolo3_d67w5.yaml",
+    "yolo3_d67w25": "yolo3_d67w25.yaml",
+    #######
     "yolo3_tiny": "yolov3-tiny.yaml",
     "yolo3_spp": "yolov3-spp.yaml",
 }
@@ -66,6 +75,7 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo3[nsmlx]$": yolo3,
     "^yolo3[nsmlx]_relu$": partial(yolo3, activation_type="relu"),
     "^yolo3[nsmlx]_hswish$": partial(yolo3, activation_type="hardswish"),
+    "yolo3_d*w*": yolo3,
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
