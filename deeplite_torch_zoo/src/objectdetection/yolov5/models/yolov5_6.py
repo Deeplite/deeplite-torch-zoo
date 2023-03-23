@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 class YOLOModel(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
     def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None,
-                    activation_type=None, depth_mul=None, width_mul=None):  # model, input channels, number of classes
+                    activation_type=None, depth_mul=None, width_mul=None, channel_divisor=8):  # model, input channels, number of classes
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -66,6 +66,7 @@ class YOLOModel(nn.Module):
             activation_type=activation_type,
             depth_mul=depth_mul,
             width_mul=width_mul,
+            yolo_channel_divisor=channel_divisor,
         )  # model, savelist
         self.names = [str(i) for i in range(self.yaml['nc'])]  # default names
         self.inplace = self.yaml.get('inplace', True)
@@ -191,7 +192,7 @@ class YOLOModel(nn.Module):
         return self
 
 
-def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None):  # model_dict, input_channels(3)
+def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, yolo_channel_divisor=8):  # model_dict, input_channels(3)
     logger.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
     anchors, nc, gd, gw = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple']
     if depth_mul is not None:
@@ -216,8 +217,9 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None):  # mode
                  BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP,
                  SPPCSPLeaky, RepConv, SPPCSPC]:
             c1, c2 = ch[f], args[0]
+
             if c2 != no:  # if not output
-                c2 = make_divisible(c2 * gw, 8)
+                c2 = make_divisible(c2 * gw, yolo_channel_divisor)
 
             args = [c1, c2, *args[1:]]
             if m in [BottleneckCSP, C3, C3TR, C3Ghost, BottleneckCSP2, SPPCSPC]:

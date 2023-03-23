@@ -35,7 +35,7 @@ MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 def yolox(
     model_name="yolox_s", dataset_name="voc", num_classes=20, activation_type=None,
-    pretrained=False, progress=True, device="cuda", ch=3, depth_mul=None, width_mul=None,
+    pretrained=False, progress=True, channel_divisor=8, device="cuda", ch=3, depth_mul=None, width_mul=None,
 ):
     config_key = model_name
     for suffix in MODEL_NAME_SUFFICES:
@@ -48,6 +48,7 @@ def yolox(
         activation_type=activation_type,
         depth_mul=depth_mul,
         width_mul=width_mul,
+        channel_divisor=channel_divisor,
     )
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
