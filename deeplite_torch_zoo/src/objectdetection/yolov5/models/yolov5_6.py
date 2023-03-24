@@ -214,7 +214,6 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
                  SPPCSPLeaky, RepConv, SPPCSPC,RepVGGBlock, 
                  ]:
             c1, c2 = ch[f], args[0]
-            print (c1, c2, args)
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
 
@@ -241,13 +240,11 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
         elif m is Expand:
             c2 = ch[f] // args[0] ** 2
         else:
-            print (m, args)
             c2 = ch[f]
 
         kwargs = dict()
         if 'act' in inspect.signature(m).parameters:
             kwargs.update({'act': activation_type})
-        print (m, args, kwargs)
         m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
         np = sum(x.numel() for x in m_.parameters())  # number params

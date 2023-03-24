@@ -2,8 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-from .utils import generate_anchors
-from .utils import dist2bbox
+
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.losses.yolo6.utils.general import generate_anchors, dist2bbox
+# from .utils import generate_anchors
+# from .utils import dist2bbox
 
 
 class Conv(nn.Module):
