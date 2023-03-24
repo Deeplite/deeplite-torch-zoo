@@ -1,9 +1,10 @@
 # Parameters
 nc: 80  # number of classes
-depth_multiple: 0.33  # model depth multiple
-width_multiple: 0.50  # layer channel multiple
+depth_multiple: 1.0  # model depth multiple
+width_multiple: 1.0  # layer channel multiple
 anchors: 1  # number of anchors
 
+activation_type: relu
 # YOLOv6 backbone
 backbone:
   # [from, number, module, args]
@@ -38,5 +39,5 @@ head:
    [-1, 1, SimConv, [128, 128, 3, 2]],   # 21
    [[-1, 10], 1, Concat, [1]],          # 22 cat head P5
    [-1, 1, RepBlock, [256, 256, 4]],    # 23 (P5/32-large)   [256, 20, 20]
-   [[17, 20, 23], 1, Detectv6, [nc, [64, 128, 256]]],  # Detect(P3, P4, P5)
+   [[17, 20, 23], 1, Detectv6_E, [nc, [32, 64, 128, 256, 512, 128, 64, 64, 128, 128, 256]]],  # Detect(P3, P4, P5)
   ]

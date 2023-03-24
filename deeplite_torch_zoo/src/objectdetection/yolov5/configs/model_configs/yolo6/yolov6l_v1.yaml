@@ -4,6 +4,7 @@ depth_multiple: 1.0  # model depth multiple
 width_multiple: 1.0  # layer channel multiple
 anchors: 1  # number of anchors
 
+activation_type: relu
 # YOLOv6 backbone
 backbone:
   # [from, number, module, args]

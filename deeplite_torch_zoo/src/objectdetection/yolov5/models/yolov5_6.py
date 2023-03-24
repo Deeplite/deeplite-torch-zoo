@@ -32,10 +32,16 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect import \
     Detect
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.yolox.detectx import \
     DetectX
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.yolo6.detect6_v1 import Detectv6
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.yolo6.detect6_v2 import Detectv6_E
+
+from deeplite_torch_zoo.src.dnn_blocks.yolov6.yolov6_blocks import RepBlock, RepVGGBlock, SimSPPF, SimConv
+
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
     make_divisible
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
     fuse_conv_and_bn, initialize_weights, model_info, scale_img)
+
 
 logger = logging.getLogger(__name__)
 
@@ -205,13 +211,16 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
                  BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP,
-                 SPPCSPLeaky, RepConv, SPPCSPC]:
+                 SPPCSPLeaky, RepConv, SPPCSPC,RepVGGBlock, 
+                 ]:
             c1, c2 = ch[f], args[0]
+            print (c1, c2, args)
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3, C3TR, C3Ghost, BottleneckCSP2, SPPCSPC]:
+            
+            if m in [BottleneckCSP, C3, C3TR, C3Ghost, BottleneckCSP2, SPPCSPC, SimSPPF, SimConv]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:
@@ -224,17 +233,21 @@ def parse_model(d, ch, activation_type):  # model_dict, input_channels(3)
                 args[1] = [list(range(args[1] * 2))] * len(f)
         elif m is DetectX:
             args.append([ch[x] for x in f])
+        elif m in [Detectv6, Detectv6_E]: # yolo6 head
+            args.append([ch[x] for x in f])
+            args = args[:2]
         elif m is Contract:
             c2 = ch[f] * args[0] ** 2
         elif m is Expand:
             c2 = ch[f] // args[0] ** 2
         else:
+            print (m, args)
             c2 = ch[f]
 
         kwargs = dict()
         if 'act' in inspect.signature(m).parameters:
             kwargs.update({'act': activation_type})
-
+        print (m, args, kwargs)
         m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
         np = sum(x.numel() for x in m_.parameters())  # number params

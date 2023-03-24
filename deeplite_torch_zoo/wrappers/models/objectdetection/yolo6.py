@@ -21,23 +21,28 @@ model_urls = {
 
 }
 
-yolox_cfg = {
-    "yolo6s": "yolo6s.yaml",
-    "yolo6m": "yolo6m.yaml",
-    "yolo6l": "yolo6l.yaml",
+yolo6_cfg = {
+    "yolo6_v1s": "yolov6s_v1.yaml",
+    "yolo6_v1m": "yolov6m_v1.yaml",
+    "yolo6_v1l": "yolov6l_v1.yaml",
+
+    "yolo6_v2s": "yolov6s_v2.yaml",
+    "yolo6_v2m": "yolov6s_v2.yaml",
+    "yolo6_v2l": "yolov6s_v2.yaml",
+
 }
 
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 
 def yolo6(
-    model_name="yolo6_s", dataset_name="voc", num_classes=20, activation_type=None,
+    model_name="yolo6_v1s", dataset_name="voc", num_classes=20, activation_type=None,
     pretrained=False, progress=True, device="cuda", ch=3,
 ):
     config_key = model_name
     for suffix in MODEL_NAME_SUFFICES:
         config_key = re.sub(f'\_{suffix}$', '', config_key) # pylint: disable=W1401
-    config_path = get_project_root() / CFG_PATH / yolox_cfg[config_key]
+    config_path = get_project_root() / CFG_PATH / yolo6_cfg[config_key]
     model = YOLOModel(config_path, ch=ch, nc=num_classes, activation_type=activation_type)
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
@@ -49,11 +54,14 @@ def yolo6(
 
 
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
-    "^yolo6[nsmlxt]$": yolo6,
-    "^yolo6[nsmlxt]_relu$": partial(yolo6, activation_type="relu"),
-    "^yolo6[nsmlxt]_hswish$": partial(yolo6, activation_type="hardswish"),
-}
+    "^yolo6_v1[nsmlxt]$": yolo6,
+    "^yolo6_v1[nsmlxt]_relu$": partial(yolo6, activation_type="relu"),
+    "^yolo6_v1[nsmlxt]_hswish$": partial(yolo6, activation_type="hardswish"),
 
+    "^yolo6_v2[nsmlxt]$": partial(yolo6, model_name = "yolo6_v2s"),
+    "^yolo6_v2[nsmlxt]_relu$": partial(yolo6, activation_type="relu"),
+    "^yolo6_v2[nsmlxt]_hswish$": partial(yolo6, activation_type="hardswish"),
+}
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 
     model_wrapper_fn = None
@@ -81,9 +89,9 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     return wrapper_func
 
 
-model_list = list(yolox_cfg.keys())
+model_list = list(yolo6_cfg.keys())
 for model_name_suffix in MODEL_NAME_SUFFICES:
-    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolox_cfg]
+    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolo6_cfg]
 datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
 
 for dataset_tag, n_classes in datasets:
