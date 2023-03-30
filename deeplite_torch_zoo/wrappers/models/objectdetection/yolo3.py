@@ -45,7 +45,8 @@ MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 def yolo3(
     model_name="yolo3", dataset_name="voc", num_classes=20, activation_type=None,
-    depth_mul=None, width_mul=None, channel_divisor=8, pretrained=False, progress=True, device="cuda", ch=3,
+    depth_mul=None, width_mul=None, channel_divisor=8, pretrained=False,
+    progress=True, device="cuda", ch=3, custom_head=None,
 ):
     config_key = model_name
     for suffix in MODEL_NAME_SUFFICES:
@@ -59,6 +60,7 @@ def yolo3(
         depth_mul=depth_mul,
         width_mul=width_mul,
         channel_divisor=channel_divisor,
+        custom_head=custom_head,
     )
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:

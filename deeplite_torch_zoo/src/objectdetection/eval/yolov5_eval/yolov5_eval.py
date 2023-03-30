@@ -4,12 +4,15 @@ import time
 
 import numpy as np
 import torch
-from tqdm import tqdm
-
 from deeplite_torch_zoo.src.objectdetection.eval.mean_average_precision import \
     MetricBuilder
 from deeplite_torch_zoo.src.objectdetection.eval.yolov5_eval.utils import (
     box_iou, check_version, non_max_suppression)
+from tqdm import tqdm
+
+# from ultralytics.yolo.utils.ops import \
+#     non_max_suppression as non_max_suppression_v8
+
 
 
 def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
@@ -63,6 +66,8 @@ def evaluate(
     if num_classes is None:
         num_classes = dataloader.dataset.num_classes
 
+    map_iou_thresh = np.arange(0.5, 1.0, 0.05)
+
     # Initialize/load model and set device
     device = next(model.parameters()).device # get model device, PyTorch model
     half &= device.type != 'cpu'  # half precision only supported on CUDA
@@ -96,7 +101,18 @@ def evaluate(
         # Inference
         preds = model(im, augment=augment)
 
+        preds = [torch.cat([pred[:, :, :3], pred[:, :, 4:]], -1) for pred in preds]
+
         # NMS
+        # if True:
+        #     preds = non_max_suppression_v8(preds,
+        #                                 conf_thres,
+        #                                 iou_thres,
+        #                                 labels=[],
+        #                                 multi_label=True,
+        #                                 agnostic=single_cls,
+        #                                 max_det=max_det)
+
         preds = non_max_suppression(preds,
                                     conf_thres,
                                     iou_thres,

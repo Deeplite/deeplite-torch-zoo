@@ -28,6 +28,8 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect import \
     Detect
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect_v8 import \
+    DetectV8
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detectx import \
     DetectX
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
@@ -38,10 +40,15 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
 logger = logging.getLogger(__name__)
 
 
+HEAD_NAME_MAP = {
+    'v8': 'DetectV8',
+}
+
 class YOLOModel(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
     def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None,
-                    activation_type=None, depth_mul=None, width_mul=None, channel_divisor=8):  # model, input channels, number of classes
+                 activation_type=None, depth_mul=None, width_mul=None,
+                 channel_divisor=8, custom_head=None):
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -50,6 +57,9 @@ class YOLOModel(nn.Module):
             self.yaml_file = Path(cfg).name
             with open(cfg, encoding='ascii', errors='ignore') as f:
                 self.yaml = yaml.safe_load(f)  # model dict
+
+        if custom_head is not None:
+            self.yaml['head'][-1][2] = HEAD_NAME_MAP[custom_head]
 
         # Define model
         self.nc = nc
@@ -84,6 +94,14 @@ class YOLOModel(nn.Module):
             m.inplace = self.inplace
             self.stride = torch.tensor(m.stride)
             m.initialize_biases()     # only run once
+        if isinstance(m, DetectV8):
+            s = 256  # 2x min stride
+            m.inplace = self.inplace
+            forward = lambda x: self.forward(x)
+            m.stride = torch.tensor([s / x.shape[-2] for x in forward(torch.zeros(1, ch, s, s))])  # forward
+            self.stride = m.stride
+            m.bias_init()  # only run once
+
         # Init weights, biases
         initialize_weights(self)
         self.info()
@@ -234,6 +252,9 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, yolo_cha
             if isinstance(args[1], int):  # number of anchors
                 args[1] = [list(range(args[1] * 2))] * len(f)
         elif m is DetectX:
+            args.append([ch[x] for x in f])
+        elif m is DetectV8:
+            args = args[:1]
             args.append([ch[x] for x in f])
         elif m is Contract:
             c2 = ch[f] * args[0] ** 2
