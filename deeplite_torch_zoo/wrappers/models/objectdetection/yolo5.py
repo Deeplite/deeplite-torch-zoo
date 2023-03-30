@@ -114,7 +114,10 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo5_6[nsmlx]_tiny$": yolo5_6,
     "^yolo5_6[nsmlx]_tiny_relu$": partial(yolo5_6, activation_type="relu"),
     "^yolo5_6[nsmlx]_tiny_hswish$": partial(yolo5_6, activation_type="hardswish"),
-    "yolo5_d*w*": yolo5_6,
+    "^yolo5_d[0-9]+w[0-9]+$": yolo5_6,
+    "^yolo5_6_d[0-9]+w[0-9]+$": yolo5_6,
+    "^yolo5_6_d[0-9]+w[0-9]+_relu$": partial(yolo5_6, activation_type="relu"),
+    "^yolo5_6_d[0-9]+w[0-9]+_hswish": partial(yolo5_6, activation_type="hardswish"),
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):  # pylint: disable=W0621

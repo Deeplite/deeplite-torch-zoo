@@ -79,7 +79,9 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo4[nsmlx]$": yolo4,
     "^yolo4[nsmlx]_relu$": partial(yolo4, activation_type='relu'),
     "^yolo4[nsmlx]_hswish$": partial(yolo4, activation_type='hswish'),
-    "yolo4_d*w*": yolo4,
+    "^yolo4_d[0-9]+w[0-9]+$": yolo4,
+    "^yolo4_d[0-9]+w[0-9]+_relu$": partial(yolo4, activation_type="relu"),
+    "^yolo4_d[0-9]+w[0-9]+_hswish": partial(yolo4, activation_type="hardswish"),
 }
 
 

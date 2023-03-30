@@ -77,7 +77,9 @@ MODEL_TAG_TO_WRAPPER_FN_MAP = {
     "^yolo3[nsmlx]$": yolo3,
     "^yolo3[nsmlx]_relu$": partial(yolo3, activation_type="relu"),
     "^yolo3[nsmlx]_hswish$": partial(yolo3, activation_type="hardswish"),
-    "yolo3_d*w*": yolo3,
+    "^yolo3_d[0-9]+w[0-9]+$": yolo3,
+    "^yolo3_d[0-9]+w[0-9]+_relu$": partial(yolo3, activation_type="relu"),
+    "^yolo3_d[0-9]+w[0-9]+_hswish": partial(yolo3, activation_type="hardswish"),
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
