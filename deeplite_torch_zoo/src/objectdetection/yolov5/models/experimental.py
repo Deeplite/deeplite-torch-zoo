@@ -9,10 +9,9 @@ import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
-from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPP as SPP
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
-    YOLOBottleneck as Bottleneck
+from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import YOLOSPP as SPP
+from deeplite_torch_zoo.src.dnn_blocks.yolo_ultralytics_blocks import \
+    YOLOC3 as C3
 
 
 class CrossConv(nn.Module):
@@ -53,20 +52,20 @@ class C3_old(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-class C3(nn.Module):
-    # CSP Bottleneck with 3 convolutions
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__()
-        Conv_ = functools.partial(Conv, act=act)
-        Bottleneck_ = functools.partial(Bottleneck, act=act)
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = Conv_(c1, c_, 1, 1)
-        self.cv3 = Conv_(2 * c_, c2, 1)  # act=FReLU(c2)
-        self.m = nn.Sequential(*(Bottleneck_(c1=c_, c2=c_, shortcut=shortcut, g=g, e=1.0) for _ in range(n)))
+# class C3(nn.Module):
+#     # CSP Bottleneck with 3 convolutions
+#     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
+#         super().__init__()
+#         Conv_ = functools.partial(Conv, act=act)
+#         Bottleneck_ = functools.partial(Bottleneck, act=act)
+#         c_ = int(c2 * e)  # hidden channels
+#         self.cv1 = Conv_(c1, c_, 1, 1)
+#         self.cv2 = Conv_(c1, c_, 1, 1)
+#         self.cv3 = Conv_(2 * c_, c2, 1)  # act=FReLU(c2)
+#         self.m = nn.Sequential(*(Bottleneck_(c1=c_, c2=c_, shortcut=shortcut, g=g, e=1.0) for _ in range(n)))
 
-    def forward(self, x):
-        return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
+#     def forward(self, x):
+#         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
 
 
 class Sum(nn.Module):
@@ -92,12 +91,12 @@ class Sum(nn.Module):
         return y
 
 
-class C3x(C3):
-    # C3 module with cross-convolutions
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
-        super().__init__(c1, c2, n, shortcut, g, e)
-        c_ = int(c2 * e)
-        self.m = nn.Sequential(*(CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)))
+# class C3x(C3):
+#     # C3 module with cross-convolutions
+#     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
+#         super().__init__(c1, c2, n, shortcut, g, e)
+#         c_ = int(c2 * e)
+#         self.m = nn.Sequential(*(CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)))
 
 
 class C3TR(C3):
@@ -118,45 +117,45 @@ class C3SPP(C3):
         self.m = SPP_(c_, c_, k)
 
 
-class C3Ghost(C3):
-    # C3 module with GhostBottleneck()
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):
-        super().__init__(c1, c2, n, shortcut, g, e, act=act)
-        GhostBottleneck_ = functools.partial(GhostBottleneck, act=act)
-        c_ = int(c2 * e)  # hidden channels
-        self.m = nn.Sequential(*(GhostBottleneck_(c_, c_) for _ in range(n)))
+# class C3Ghost(C3):
+#     # C3 module with GhostBottleneck()
+#     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):
+#         super().__init__(c1, c2, n, shortcut, g, e, act=act)
+#         GhostBottleneck_ = functools.partial(GhostBottleneck, act=act)
+#         c_ = int(c2 * e)  # hidden channels
+#         self.m = nn.Sequential(*(GhostBottleneck_(c_, c_) for _ in range(n)))
 
 
-class GhostBottleneck(nn.Module):
-    # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=3, s=1, act='hardswish'):  # ch_in, ch_out, kernel, stride
-        super().__init__()
-        Conv_ = functools.partial(Conv, act=act)
-        GhostConv_ = functools.partial(GhostConv, act=act)
-        DWConv_ = functools.partial(DWConv, act=act)
-        c_ = c2 // 2
-        self.conv = nn.Sequential(GhostConv_(c1, c_, 1, 1),  # pw
-                                  DWConv_(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
-                                  GhostConv_(c_, c2, 1, 1, act=False))  # pw-linear
-        self.shortcut = nn.Sequential(DWConv_(c1, c1, k, s, act=False),
-                                      Conv_(c1, c2, 1, 1, act=False)) if s == 2 else nn.Identity()
+# class GhostBottleneck(nn.Module):
+#     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
+#     def __init__(self, c1, c2, k=3, s=1, act='hardswish'):  # ch_in, ch_out, kernel, stride
+#         super().__init__()
+#         Conv_ = functools.partial(Conv, act=act)
+#         GhostConv_ = functools.partial(GhostConv, act=act)
+#         DWConv_ = functools.partial(DWConv, act=act)
+#         c_ = c2 // 2
+#         self.conv = nn.Sequential(GhostConv_(c1, c_, 1, 1),  # pw
+#                                   DWConv_(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
+#                                   GhostConv_(c_, c2, 1, 1, act=False))  # pw-linear
+#         self.shortcut = nn.Sequential(DWConv_(c1, c1, k, s, act=False),
+#                                       Conv_(c1, c2, 1, 1, act=False)) if s == 2 else nn.Identity()
 
-    def forward(self, x):
-        return self.conv(x) + self.shortcut(x)
+#     def forward(self, x):
+#         return self.conv(x) + self.shortcut(x)
 
 
-class GhostConv(nn.Module):
-    # Ghost Convolution https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=1, s=1, g=1, act='hardswish'):  # ch_in, ch_out, kernel, stride, groups
-        super().__init__()
-        Conv_ = functools.partial(Conv, act=act)
-        c_ = c2 // 2  # hidden channels
-        self.cv1 = Conv_(c1, c_, k, s, None, g, act)
-        self.cv2 = Conv_(c_, c_, 5, 1, None, c_, act)
+# class GhostConv(nn.Module):
+#     # Ghost Convolution https://github.com/huawei-noah/ghostnet
+#     def __init__(self, c1, c2, k=1, s=1, g=1, act='hardswish'):  # ch_in, ch_out, kernel, stride, groups
+#         super().__init__()
+#         Conv_ = functools.partial(Conv, act=act)
+#         c_ = c2 // 2  # hidden channels
+#         self.cv1 = Conv_(c1, c_, k, s, None, g, act)
+#         self.cv2 = Conv_(c_, c_, 5, 1, None, c_, act)
 
-    def forward(self, x):
-        y = self.cv1(x)
-        return torch.cat([y, self.cv2(y)], 1)
+#     def forward(self, x):
+#         y = self.cv1(x)
+#         return torch.cat([y, self.cv2(y)], 1)
 
 
 class TransformerLayer(nn.Module):

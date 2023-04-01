@@ -54,5 +54,5 @@ head:
    [26, 2, Conv, [256, 3, 1]],  # 31 cls2 (P5/32-large)
    [26, 2, Conv, [256, 3, 1]],  # 32 reg2 (P5/32-large)
 
-    [[27, 28, 29, 30, 31, 32], 1, DetectX, [nc, anchors]],  # Detect(P3, P4, P5)
+   [[27, 28, 29, 30, 31, 32], 1, DetectX, [nc, anchors]],  # Detect(P3, P4, P5)
   ]

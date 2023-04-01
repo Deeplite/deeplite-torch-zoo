@@ -14,45 +14,32 @@ __all__ = []
 def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
-CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs/yolo7"
+CFG_PATH = "deeplite_torch_zoo/src/objectdetection/yolov5/configs/model_configs/yolo8"
 CHECKPOINT_STORAGE_URL = "http://download.deeplite.ai/zoo/models/"
 
 model_urls = {
 
 }
 
-yolov7_cfg = {
-    "yolo7": "yolov7.yaml",
-    "yolo7n": "yolov7n.yaml",
-    "yolo7s": "yolov7s.yaml",
-    "yolo7m": "yolov7m.yaml",
-    "yolo7l": "yolov7l.yaml",
-    "yolo7_d1w5": "yolo7_d1w5.yaml",
-    "yolo7_d1w25": "yolo7_d1w25.yaml",
-    "yolo7_d1w75": "yolo7_d1w75.yaml",
-    "yolo7_d33w1": "yolo7_d33w1.yaml",
-    "yolo7_d33w75": "yolo7_d33w75.yaml",
-    "yolo7_d67w1": "yolo7_d67w1.yaml",
-    "yolo7_d67w5": "yolo7_d67w5.yaml",
-    "yolo7_d67w25": "yolo7_d67w25.yaml",
-    ####
-    "yolo7x": "yolov7x.yaml",
-    "yolo7_tiny": "yolov7-tiny.yaml",
-    "yolo7_tinier": "yolov7-tinier.yaml",
+yolov8_cfg = {
+    "yolo8n": "yolov8n.yaml",
+    "yolo8s": "yolov8s.yaml",
+    "yolo8m": "yolov8m.yaml",
+    "yolo8l": "yolov8l.yaml",
 }
 
 MODEL_NAME_SUFFICES = ('relu', 'hswish')
 
 
-def yolo7(
-    model_name="yolo7", dataset_name="voc", num_classes=20, activation_type=None,
+def yolo8(
+    model_name="yolo8n", dataset_name="voc", num_classes=20, activation_type=None,
     pretrained=False, progress=True, channel_divisor=8, device="cuda",
     ch=3, depth_mul=None, width_mul=None, custom_head=None,
 ):
     config_key = model_name
     for suffix in MODEL_NAME_SUFFICES:
         config_key = re.sub(f'\_{suffix}$', '', config_key) # pylint: disable=W1401
-    config_path = get_project_root() / CFG_PATH / yolov7_cfg[config_key]
+    config_path = get_project_root() / CFG_PATH / yolov8_cfg[config_key]
     model = YOLOModel(
         config_path,
         ch=ch,
@@ -73,22 +60,9 @@ def yolo7(
 
 
 MODEL_TAG_TO_WRAPPER_FN_MAP = {
-    "yolo7": yolo7,
-    "^yolo7[nsmlx]$": yolo7,
-    "^yolo7[nsmlx]_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7[nsmlx]_hswish$": partial(yolo7, activation_type="hardswish"),
-    "^yolo7[x]$": yolo7,
-    "^yolo7[x]_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7[x]_hswish$": partial(yolo7, activation_type="hardswish"),
-    "^yolo7_tiny$": yolo7,
-    "^yolo7_tiny_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7_tiny_hswish$": partial(yolo7, activation_type="hardswish"),
-    "^yolo7_tinier$": yolo7,
-    "^yolo7_tinier_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7_tinier_hswish$": partial(yolo7, activation_type="hardswish"),
-    "^yolo7_d[0-9]+w[0-9]+$": yolo7,
-    "^yolo7_d[0-9]+w[0-9]+_relu$": partial(yolo7, activation_type="relu"),
-    "^yolo7_d[0-9]+w[0-9]+_hswish": partial(yolo7, activation_type="hardswish"),
+    "^yolo8[nsmlx]$": yolo8,
+    "^yolo8[nsmlx]_relu$": partial(yolo8, activation_type="relu"),
+    "^yolo8[nsmlx]_hswish$": partial(yolo8, activation_type="hardswish"),
 }
 
 def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
@@ -119,9 +93,9 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     return wrapper_func
 
 
-model_list = list(yolov7_cfg.keys())
+model_list = list(yolov8_cfg.keys())
 for model_name_suffix in MODEL_NAME_SUFFICES:
-    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov7_cfg]
+    model_list += [f'{model_name}_{model_name_suffix}' for model_name in yolov8_cfg]
 datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
 
 for dataset_tag, n_classes in datasets:
