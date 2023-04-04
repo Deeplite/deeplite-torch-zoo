@@ -1,8 +1,4 @@
-from .yolo3 import *
-from .yolo4 import *
-from .yolo5 import *
-from .yolo7 import *
-from .mask_rcnn import *
-from .ssd import *
-from .flexible_yolo import *
-from .yolox import *
+from .flexible_yolo import *  # pylint: disable=unused-import
+from .mask_rcnn import *  # pylint: disable=unused-import
+from .ssd import *  # pylint: disable=unused-import
+from .yolo import *  # pylint: disable=unused-import

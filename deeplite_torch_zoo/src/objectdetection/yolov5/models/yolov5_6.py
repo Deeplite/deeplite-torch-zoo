@@ -9,25 +9,26 @@ from pathlib import Path
 import torch
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
-from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
+from deeplite_torch_zoo.src.dnn_blocks.common import DWConv, GhostConv
 from deeplite_torch_zoo.src.dnn_blocks.repvgg_blocks import RepConv
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPP as SPP
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPPCSP as SPPCSP
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
-    YOLOSPPCSPC as SPPCSPC
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import YOLOSPPF as SPPF
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
-    YOLOBottleneck as Bottleneck
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
-    YOLOBottleneckCSP as BottleneckCSP
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
-    YOLOBottleneckCSP2 as BottleneckCSP2
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import \
-    YOLOSPPCSPLeaky as SPPCSPLeaky
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import (YOLOBottleneck,
+                                                           YOLOBottleneckCSP,
+                                                           YOLOBottleneckCSP2,
+                                                           YOLOGhostBottleneck)
+from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import (YOLOSPP,
+                                                               YOLOSPPCSP,
+                                                               YOLOSPPCSPC,
+                                                               YOLOSPPF,
+                                                               YOLOSPPCSPLeaky)
+from deeplite_torch_zoo.src.dnn_blocks.yolo_ultralytics_blocks import (
+    YOLOC3, YOLOC3SPP, YOLOC3TR, MixConv2d, YOLOC2f, YOLOC3Ghost,
+    YOLOCrossConv)
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect import \
     Detect
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect_v8 import \
+    DetectV8
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detectx import \
     DetectX
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
@@ -38,10 +39,15 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
 logger = logging.getLogger(__name__)
 
 
+HEAD_NAME_MAP = {
+    'v8': 'DetectV8',
+}
+
 class YOLOModel(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
     def __init__(self, cfg='yolov5_6s.yaml', ch=3, nc=None, anchors=None,
-                    activation_type=None, depth_mul=None, width_mul=None, channel_divisor=8):  # model, input channels, number of classes
+                 activation_type=None, depth_mul=None, width_mul=None,
+                 channel_divisor=8, max_channels=None, custom_head=None):
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -50,6 +56,9 @@ class YOLOModel(nn.Module):
             self.yaml_file = Path(cfg).name
             with open(cfg, encoding='ascii', errors='ignore') as f:
                 self.yaml = yaml.safe_load(f)  # model dict
+
+        if custom_head is not None:
+            self.yaml['head'][-1][2] = HEAD_NAME_MAP[custom_head]
 
         # Define model
         self.nc = nc
@@ -67,6 +76,7 @@ class YOLOModel(nn.Module):
             depth_mul=depth_mul,
             width_mul=width_mul,
             yolo_channel_divisor=channel_divisor,
+            max_channels=max_channels,
         )  # model, savelist
         self.names = [str(i) for i in range(self.yaml['nc'])]  # default names
         self.inplace = self.yaml.get('inplace', True)
@@ -84,6 +94,14 @@ class YOLOModel(nn.Module):
             m.inplace = self.inplace
             self.stride = torch.tensor(m.stride)
             m.initialize_biases()     # only run once
+        if isinstance(m, DetectV8):
+            s = 256  # 2x min stride
+            m.inplace = self.inplace
+            forward = lambda x: self.forward(x)
+            m.stride = torch.tensor([s / x.shape[-2] for x in forward(torch.zeros(1, ch, s, s))])  # forward
+            self.stride = m.stride
+            m.bias_init()  # only run once
+
         # Init weights, biases
         initialize_weights(self)
         self.info()
@@ -192,20 +210,23 @@ class YOLOModel(nn.Module):
         return self
 
 
-def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, yolo_channel_divisor=8):  # model_dict, input_channels(3)
+def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_channels=None, yolo_channel_divisor=8):
     logger.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
-    anchors, nc, gd, gw = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple']
-    if depth_mul is not None:
-        gd = depth_mul
-    if width_mul is not None:
-        gw = width_mul
+
+    anchors, nc = d['anchors'], d['nc']
+    gd = depth_mul
+    gw = width_mul
     activation_type = activation_type if activation_type is not None else d['activation_type']
+
     na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
 
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
     for i, (f, n, m, args) in enumerate(d['backbone'] + d['head']):  # from, number, module, args
-        m = eval(m) if isinstance(m, str) else m  # eval strings
+        try:
+            m = eval(m) if isinstance(m, str) else m  # eval strings
+        except:
+            m = eval(f'YOLO{m}') if isinstance(m, str) else m  # eval strings
         for j, a in enumerate(args):
             try:
                 args[j] = eval(a) if isinstance(a, str) else a  # eval strings
@@ -213,16 +234,16 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, yolo_cha
                 pass
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
-        if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                 BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, BottleneckCSP2, SPPCSP,
-                 SPPCSPLeaky, RepConv, SPPCSPC]:
+        if m in [Conv, GhostConv, YOLOBottleneck, YOLOGhostBottleneck, YOLOSPP, YOLOSPPF, DWConv, MixConv2d, Focus, YOLOCrossConv,
+                 YOLOBottleneckCSP, YOLOC3, YOLOC2f, YOLOC3TR, YOLOC3SPP, YOLOC3Ghost, YOLOBottleneckCSP2, YOLOSPPCSP,
+                 YOLOSPPCSPLeaky, RepConv, YOLOSPPCSPC]:
             c1, c2 = ch[f], args[0]
 
             if c2 != no:  # if not output
-                c2 = make_divisible(c2 * gw, yolo_channel_divisor)
+                c2 = make_divisible(min(c2, max_channels) * gw, yolo_channel_divisor)
 
             args = [c1, c2, *args[1:]]
-            if m in [BottleneckCSP, C3, C3TR, C3Ghost, BottleneckCSP2, SPPCSPC]:
+            if m in [YOLOBottleneckCSP, YOLOC3, YOLOC2f, YOLOC3TR, YOLOC3Ghost, YOLOBottleneckCSP2, YOLOSPPCSPC]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:
@@ -234,6 +255,9 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, yolo_cha
             if isinstance(args[1], int):  # number of anchors
                 args[1] = [list(range(args[1] * 2))] * len(f)
         elif m is DetectX:
+            args.append([ch[x] for x in f])
+        elif m is DetectV8:
+            args = args[:1]
             args.append([ch[x] for x in f])
         elif m is Contract:
             c2 = ch[f] * args[0] ** 2
