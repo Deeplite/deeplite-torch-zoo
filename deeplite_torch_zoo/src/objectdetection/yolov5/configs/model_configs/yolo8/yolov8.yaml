@@ -1,9 +1,8 @@
 # Parameters
 nc: 80  # number of classes
-depth_multiple: 0.67  # model depth multiple
-width_multiple: 0.75  # layer channel multiple
+depth_multiple: 1.0  # model depth multiple
+width_multiple: 1.0  # layer channel multiple
 activation_type: silu
-max_channels: 768
 
 anchors:
   - [10,13, 16,30, 33,23]  # P3/8
