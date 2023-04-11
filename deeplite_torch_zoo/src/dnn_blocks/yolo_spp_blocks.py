@@ -3,9 +3,11 @@ import warnings
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, get_activation)
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, get_activation
+from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOSPP(nn.Module):
     # Spatial pyramid pooling layer used in YOLOv3-SPP
     def __init__(self, c1, c2, k=(5, 9, 13), act='hswish'):
@@ -22,6 +24,7 @@ class YOLOSPP(nn.Module):
         return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOSPPCSP(nn.Module):
     # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -49,6 +52,7 @@ class YOLOSPPCSP(nn.Module):
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOSPPCSPLeaky(nn.Module):
     def __init__(
         self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), act='leakyrelu'
@@ -75,6 +79,7 @@ class YOLOSPPCSPLeaky(nn.Module):
         return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOSPPF(nn.Module):
     # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
     def __init__(self, c1, c2, k=5, act='hswish'):  # equivalent to SPP(k=(5, 9, 13))
@@ -93,6 +98,7 @@ class YOLOSPPF(nn.Module):
             return self.cv2(torch.cat([x, y1, y2, self.m(y2)], 1))
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOSPPCSPC(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(

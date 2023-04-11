@@ -8,8 +8,12 @@ from deeplite_torch_zoo.src.dnn_blocks.common import ACT_TYPE_MAP, ConvBnAct
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import (YOLOBottleneck,
                                                            YOLOGhostBottleneck)
 from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import YOLOSPP
+from deeplite_torch_zoo.src.registries import (REPEATABLE_BLOCKS,
+                                               VARIABLE_CHANNEL_BLOCKS)
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOCrossConv(nn.Module):
     # Ultralytics Cross Convolution Downsample
     def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, act='relu', shortcut=False):
@@ -24,6 +28,8 @@ class YOLOCrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3(nn.Module):
     # CSP Bottleneck with 3 convolutions
     def __init__(
@@ -46,6 +52,8 @@ class YOLOC3(nn.Module):
         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), 1))
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC2(nn.Module):
     # CSP Bottleneck with 2 convolutions
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'):  # ch_in, ch_out, number, shortcut, groups, expansion
@@ -62,6 +70,8 @@ class YOLOC2(nn.Module):
         return self.cv2(torch.cat((self.m(a), b), 1))
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC2f(nn.Module):
     # CSP Bottleneck with 2 convolutions
     def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='relu'):  # ch_in, ch_out, number, shortcut, groups, expansion
@@ -83,6 +93,8 @@ class YOLOC2f(nn.Module):
         return self.cv2(torch.cat(y, 1))
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC1(nn.Module):
     # CSP Bottleneck with 1 convolution
     def __init__(self, c1, c2, n=1, act='relu'):  # ch_in, ch_out, number
@@ -95,6 +107,8 @@ class YOLOC1(nn.Module):
         return self.m(y) + y
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3x(YOLOC3):
     # C3 module with cross-convolutions
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'):
@@ -104,6 +118,8 @@ class YOLOC3x(YOLOC3):
                                                 g=g, k=((1, 3), (3, 1)), e=1, act=act) for _ in range(n)))
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3Ghost(YOLOC3):
     # C3 module with GhostBottleneck()
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'):
@@ -112,6 +128,7 @@ class YOLOC3Ghost(YOLOC3):
         self.m = nn.Sequential(*(YOLOGhostBottleneck(c_, c_, act=act) for _ in range(n)))
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOCrossConv(nn.Module):
     # Cross Convolution Downsample
     def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, shortcut=False, act='hardswish'):
@@ -127,6 +144,8 @@ class YOLOCrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC4(nn.Module):
     # CSP Bottleneck with 4 convolutions aka old C3
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
@@ -150,6 +169,8 @@ class YOLOC4(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3TR(YOLOC3):
     # C3 module with TransformerBlock()
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):
@@ -159,6 +180,8 @@ class YOLOC3TR(YOLOC3):
         self.m = TransformerBlock_(c_, c_, 4, n)
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3SPP(YOLOC3):
     # C3 module with SPP()
     def __init__(self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5, act='hardswish'):
@@ -168,6 +191,7 @@ class YOLOC3SPP(YOLOC3):
         self.m = SPP_(c_, c_, k)
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class TransformerLayer(nn.Module):
     # Transformer layer https://arxiv.org/abs/2010.11929 (LayerNorm layers removed for better performance)
     def __init__(self, c, num_heads):
@@ -185,6 +209,8 @@ class TransformerLayer(nn.Module):
         return x
 
 
+@REPEATABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOTransformerBlock(nn.Module):
     # Vision Transformer https://arxiv.org/abs/2010.11929
     def __init__(self, c1, c2, num_heads, num_layers, act='hardswish'):
@@ -205,6 +231,7 @@ class YOLOTransformerBlock(nn.Module):
         return self.tr(p + self.linear(p)).unsqueeze(3).transpose(0, 3).reshape(b, self.c2, w, h)
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class MixConv2d(nn.Module):
     # Mixed Depthwise Conv https://arxiv.org/abs/1907.09595
     def __init__(self, c1, c2, k=(1, 3), s=1, equal_ch=True, act='leakyrelu'):

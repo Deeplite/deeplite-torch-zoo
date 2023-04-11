@@ -16,6 +16,7 @@ except:
         def forward(self, x):
             return x * torch.nn.functional.softplus(x).tanh()
 
+from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
 
 ACT_TYPE_MAP = {
     'relu': nn.ReLU(inplace=True),
@@ -65,6 +66,7 @@ def round_channels(channels, divisor=8):
     return rounded_channels
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class ConvBnAct(nn.Module):
     # Standard convolution-batchnorm-activation block
     def __init__(
@@ -130,6 +132,7 @@ class ConvBnAct(nn.Module):
         return out
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class DWConv(ConvBnAct):
     # Depth-wise convolution class
     def __init__(
@@ -150,6 +153,7 @@ class DWConv(ConvBnAct):
         )
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class GhostConv(nn.Module):
     # Ghost Convolution block https://github.com/huawei-noah/ghostnet
     def __init__(
@@ -189,6 +193,7 @@ class GhostConv(nn.Module):
             return x + torch.cat((y, self.cv2(y)), 1)
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class Focus(nn.Module):
     # Focus wh information into c-space
     def __init__(

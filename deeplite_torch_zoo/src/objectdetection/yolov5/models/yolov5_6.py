@@ -8,29 +8,10 @@ from pathlib import Path
 
 import torch
 
+from deeplite_torch_zoo.src.dnn_blocks import *
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
-from deeplite_torch_zoo.src.dnn_blocks.common import DWConv, GhostConv
+from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
 from deeplite_torch_zoo.src.dnn_blocks.repvgg_blocks import RepConv
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import (BottleneckCSPA,
-                                                           BottleneckCSPB,
-                                                           BottleneckCSPC,
-                                                           DownC, ResCSPA,
-                                                           ResCSPB, ResCSPC,
-                                                           ResXCSPA, ResXCSPB,
-                                                           ResXCSPC, Stem,
-                                                           YOLOBottleneck,
-                                                           YOLOBottleneckCSP,
-                                                           YOLOBottleneckCSP2,
-                                                           YOLOGhostBottleneck,
-                                                           YOLOVoVCSP)
-from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import (YOLOSPP,
-                                                               YOLOSPPCSP,
-                                                               YOLOSPPCSPC,
-                                                               YOLOSPPF,
-                                                               YOLOSPPCSPLeaky)
-from deeplite_torch_zoo.src.dnn_blocks.yolo_ultralytics_blocks import (
-    YOLOC3, YOLOC3SPP, YOLOC3TR, MixConv2d, YOLOC2f, YOLOC3Ghost,
-    YOLOCrossConv)
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect import \
@@ -43,6 +24,8 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
     make_divisible
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
     fuse_conv_and_bn, initialize_weights, model_info, scale_img)
+from deeplite_torch_zoo.src.registries import (REPEATABLE_BLOCKS,
+                                               VARIABLE_CHANNEL_BLOCKS)
 
 logger = logging.getLogger(__name__)
 
@@ -242,19 +225,14 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_chan
                 pass
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
-        if m in [Conv, GhostConv, YOLOBottleneck, YOLOGhostBottleneck, YOLOSPP, YOLOSPPF, DWConv, MixConv2d, Focus, YOLOCrossConv,
-                 YOLOBottleneckCSP, YOLOC3, YOLOC2f, YOLOC3TR, YOLOC3SPP, YOLOC3Ghost, YOLOBottleneckCSP2, YOLOSPPCSP,
-                 YOLOSPPCSPLeaky, RepConv, YOLOSPPCSPC, YOLOVoVCSP, BottleneckCSPA, BottleneckCSPB, BottleneckCSPC,
-                 DownC, Stem, ResCSPA, ResCSPB, ResCSPC, ResXCSPA, ResXCSPB, ResXCSPC]:
+        if m in VARIABLE_CHANNEL_BLOCKS.registry_dict.values():
             c1, c2 = ch[f], args[0]
 
             if c2 != no:  # if not output
                 c2 = make_divisible(min(c2, max_channels) * gw, yolo_channel_divisor)
 
             args = [c1, c2, *args[1:]]
-            if m in [YOLOBottleneckCSP, YOLOC3, YOLOC2f, YOLOC3TR, YOLOC3Ghost, YOLOBottleneckCSP2,
-                     YOLOSPPCSPC, YOLOVoVCSP, BottleneckCSPA, BottleneckCSPB, BottleneckCSPC,
-                     ResCSPA, ResCSPB, ResCSPC, ResXCSPA, ResXCSPB, ResXCSPC]:
+            if m in REPEATABLE_BLOCKS.registry_dict.values():
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:

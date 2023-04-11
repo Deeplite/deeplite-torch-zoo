@@ -59,13 +59,14 @@ def extract_dataset_type(dataset_name):
 
 
 class Registry:
-    def __init__(self, name=None):
+    def __init__(self, name=None, error_on_same_key=True):
         self._registry_dict = dict()
         self._name = name if name is not None else ''
+        self._error_on_same_key = error_on_same_key
 
     def register(self, name=None, *args):
         def _register(obj_name, obj):
-            if obj_name in self._registry_dict:
+            if self._error_on_same_key and obj_name in self._registry_dict:
                 raise KeyError(f'{obj_name} is already registered')
             self._registry_dict[obj_name] = obj
 
