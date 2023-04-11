@@ -22,11 +22,24 @@ YOLO_CONFIGS = {
     ############################
     'yolo3-spp-': 'yolo3/yolov3-spp.yaml',
     'yolo3-tiny-': 'yolo3/yolov3-tiny.yaml',
-    'yolo7-tiny-': 'yolo7/yolov7-tiny.yaml',
     ############################
+    'yolo5.6': 'yolo5/yolov5.6.yaml',
+    'yolo5-p2': 'yolo5/yolov5-p2.yaml',
+    'yolo5-p34': 'yolo5/yolov5-p34.yaml',
+    'yolo5-p6': 'yolo5/yolov5-p6.yaml',
+    'yolo5-p7': 'yolo5/yolov5-p7.yaml',
+    'yolo5-fpn-': 'yolo5/yolov5-fpn.yaml',
+    'yolo5-bifpn-': 'yolo5/yolov5-bifpn.yaml',
+    'yolo5-ghost-': 'yolo5/yolov5-ghost.yaml',
+    'yolo5-panet-': 'yolo5/yolov5-panet.yaml',
+    ############################
+    'yolo7-tiny-': 'yolo7/yolov7-tiny.yaml',
     'yolo7-e6': 'yolo7/yolov7-e6.yaml',
     'yolo7-e6e': 'yolo7/yolov7-e6e.yaml',
     'yolo7-w6': 'yolo7/yolov7-w6.yaml',
+    ############################
+    'yolo8': 'yolo8/yolov8-p2.yaml',
+    'yolo8': 'yolo8/yolov8-p6.yaml',
     ############################
     'yolox': 'yolox/yolox.yaml',
 }
