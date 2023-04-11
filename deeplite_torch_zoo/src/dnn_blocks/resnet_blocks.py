@@ -36,7 +36,8 @@ class ResNetBottleneck(nn.Module):
         self.conv3 = ConvBnAct(c_, c2, 1, act=False)
         self.act = get_activation(act)
         self.se = SELayer(c2, reduction=se_ratio) if se_ratio else nn.Identity()
-        self.identity_conv = ConvBnAct(c1, c2, 1, stride, act=False)
+        if self.resize_identity:
+            self.identity_conv = ConvBnAct(c1, c2, 1, stride, act=False)
 
     def forward(self, x: Tensor) -> Tensor:
         if self.resize_identity:
@@ -99,7 +100,7 @@ class ResNeXtBottleneck(ResNetBottleneck):
         e: float = 1.0,
         k: int = 3,
         stride: int = 1,
-        groups: int = 1,
+        groups: int = 32,
         dilation: int = 1,
         act='relu',
         se_ratio=None,

@@ -23,6 +23,12 @@ YOLO_CONFIGS = {
     'yolo3-spp-': 'yolo3/yolov3-spp.yaml',
     'yolo3-tiny-': 'yolo3/yolov3-tiny.yaml',
     ############################
+    'yolo4-tiny-': 'yolo4/yolov4-tiny.yaml',
+    'yolo4-pacsp-': 'yolo4/yolov4-pacsp.yaml',
+    'yolo4-csp-p5': 'yolo4/yolov4-csp-p5.yaml',
+    'yolo4-csp-p6': 'yolo4/yolov4-csp-p6.yaml',
+    'yolo4-csp-p7': 'yolo4/yolov4-csp-p7.yaml',
+    ############################
     'yolo5.6': 'yolo5/yolov5.6.yaml',
     'yolo5-p2': 'yolo5/yolov5-p2.yaml',
     'yolo5-p34': 'yolo5/yolov5-p34.yaml',
@@ -33,6 +39,12 @@ YOLO_CONFIGS = {
     'yolo5-ghost-': 'yolo5/yolov5-ghost.yaml',
     'yolo5-panet-': 'yolo5/yolov5-panet.yaml',
     ############################
+    'yolor': 'yolor/yolor-csp.yaml',
+    'yolor-d6': 'yolor/yolor-d6.yaml',
+    'yolor-e6': 'yolor/yolor-e6.yaml',
+    'yolor-p6': 'yolor/yolor-p6.yaml',
+    'yolor-w6': 'yolor/yolor-w6.yaml',
+    ############################
     'yolo7-tiny-': 'yolo7/yolov7-tiny.yaml',
     'yolo7-e6': 'yolo7/yolov7-e6.yaml',
     'yolo7-e6e': 'yolo7/yolov7-e6e.yaml',
@@ -42,6 +54,9 @@ YOLO_CONFIGS = {
     'yolo8': 'yolo8/yolov8-p6.yaml',
     ############################
     'yolox': 'yolox/yolox.yaml',
+    ############################
+    'yolo-r50-csp-': 'misc/r50-csp.yaml',
+    'yolo-x50-csp-': 'misc/x50-csp.yaml',
 }
 
 ACT_FN_TAGS = {'': None, '_relu': 'relu', '_hswish': 'hardswish'}

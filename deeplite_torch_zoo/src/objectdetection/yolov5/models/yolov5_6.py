@@ -11,10 +11,18 @@ import torch
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.dnn_blocks.common import DWConv, GhostConv
 from deeplite_torch_zoo.src.dnn_blocks.repvgg_blocks import RepConv
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import (YOLOBottleneck,
+from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import (BottleneckCSPA,
+                                                           BottleneckCSPB,
+                                                           BottleneckCSPC,
+                                                           DownC, ResCSPA,
+                                                           ResCSPB, ResCSPC,
+                                                           ResXCSPA, ResXCSPB,
+                                                           ResXCSPC, Stem,
+                                                           YOLOBottleneck,
                                                            YOLOBottleneckCSP,
                                                            YOLOBottleneckCSP2,
-                                                           YOLOGhostBottleneck)
+                                                           YOLOGhostBottleneck,
+                                                           YOLOVoVCSP)
 from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import (YOLOSPP,
                                                                YOLOSPPCSP,
                                                                YOLOSPPCSPC,
@@ -236,14 +244,17 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_chan
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, GhostConv, YOLOBottleneck, YOLOGhostBottleneck, YOLOSPP, YOLOSPPF, DWConv, MixConv2d, Focus, YOLOCrossConv,
                  YOLOBottleneckCSP, YOLOC3, YOLOC2f, YOLOC3TR, YOLOC3SPP, YOLOC3Ghost, YOLOBottleneckCSP2, YOLOSPPCSP,
-                 YOLOSPPCSPLeaky, RepConv, YOLOSPPCSPC]:
+                 YOLOSPPCSPLeaky, RepConv, YOLOSPPCSPC, YOLOVoVCSP, BottleneckCSPA, BottleneckCSPB, BottleneckCSPC,
+                 DownC, Stem, ResCSPA, ResCSPB, ResCSPC, ResXCSPA, ResXCSPB, ResXCSPC]:
             c1, c2 = ch[f], args[0]
 
             if c2 != no:  # if not output
                 c2 = make_divisible(min(c2, max_channels) * gw, yolo_channel_divisor)
 
             args = [c1, c2, *args[1:]]
-            if m in [YOLOBottleneckCSP, YOLOC3, YOLOC2f, YOLOC3TR, YOLOC3Ghost, YOLOBottleneckCSP2, YOLOSPPCSPC]:
+            if m in [YOLOBottleneckCSP, YOLOC3, YOLOC2f, YOLOC3TR, YOLOC3Ghost, YOLOBottleneckCSP2,
+                     YOLOSPPCSPC, YOLOVoVCSP, BottleneckCSPA, BottleneckCSPB, BottleneckCSPC,
+                     ResCSPA, ResCSPB, ResCSPC, ResXCSPA, ResXCSPB, ResXCSPC]:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:
@@ -263,6 +274,8 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_chan
             c2 = ch[f] * args[0] ** 2
         elif m is Expand:
             c2 = ch[f] // args[0] ** 2
+        elif m is ReOrg:
+            c2 = ch[f] * 4
         else:
             c2 = ch[f]
 
