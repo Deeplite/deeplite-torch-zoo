@@ -44,6 +44,8 @@ YOLO_CONFIGS = {
     'yolor-e6': 'yolor/yolor-e6.yaml',
     'yolor-p6': 'yolor/yolor-p6.yaml',
     'yolor-w6': 'yolor/yolor-w6.yaml',
+    'yolor-dwt-': 'yolor/yolor-dwt.yaml',
+    'yolor-s2d-': 'yolor/yolor-s2d.yaml',
     ############################
     'yolo7-tiny-': 'yolo7/yolov7-tiny.yaml',
     'yolo7-e6': 'yolo7/yolov7-e6.yaml',

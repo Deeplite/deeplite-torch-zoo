@@ -5,6 +5,27 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import autopad
 
+try:
+    from pytorch_wavelets import DWTForward
+
+    class DWT(nn.Module):
+        def __init__(self):
+            super(DWT, self).__init__()
+            self.xfm = DWTForward(J=1, wave='db1', mode='zero')
+
+        def forward(self, x):
+            b,c,w,h = x.shape
+            yl, yh = self.xfm(x)
+            return torch.cat([yl/2., yh[0].view(b,-1,w//2,h//2)/2.+.5], 1)
+except:
+
+    class DWT(nn.Module): # use ReOrg instead
+        def __init__(self):
+            super(DWT, self).__init__()
+
+        def forward(self, x):
+            return torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
+
 
 class Concat(nn.Module):
     # Concatenate a list of tensors along dimension
