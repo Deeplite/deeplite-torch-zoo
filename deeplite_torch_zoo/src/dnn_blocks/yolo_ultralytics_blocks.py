@@ -8,11 +8,10 @@ from deeplite_torch_zoo.src.dnn_blocks.common import ACT_TYPE_MAP, ConvBnAct
 from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import (YOLOBottleneck,
                                                            YOLOGhostBottleneck)
 from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import YOLOSPP
-from deeplite_torch_zoo.src.registries import (REPEATABLE_BLOCKS,
+from deeplite_torch_zoo.src.registries import (EXPANDABLE_BLOCKS,
                                                VARIABLE_CHANNEL_BLOCKS)
 
 
-@REPEATABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOCrossConv(nn.Module):
     # Ultralytics Cross Convolution Downsample
@@ -28,7 +27,7 @@ class YOLOCrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3(nn.Module):
     # CSP Bottleneck with 3 convolutions
@@ -52,7 +51,7 @@ class YOLOC3(nn.Module):
         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), 1))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC2(nn.Module):
     # CSP Bottleneck with 2 convolutions
@@ -70,7 +69,7 @@ class YOLOC2(nn.Module):
         return self.cv2(torch.cat((self.m(a), b), 1))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC2f(nn.Module):
     # CSP Bottleneck with 2 convolutions
@@ -93,7 +92,7 @@ class YOLOC2f(nn.Module):
         return self.cv2(torch.cat(y, 1))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC1(nn.Module):
     # CSP Bottleneck with 1 convolution
@@ -107,7 +106,7 @@ class YOLOC1(nn.Module):
         return self.m(y) + y
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3x(YOLOC3):
     # C3 module with cross-convolutions
@@ -118,7 +117,7 @@ class YOLOC3x(YOLOC3):
                                                 g=g, k=((1, 3), (3, 1)), e=1, act=act) for _ in range(n)))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3Ghost(YOLOC3):
     # C3 module with GhostBottleneck()
@@ -144,7 +143,7 @@ class YOLOCrossConv(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC4(nn.Module):
     # CSP Bottleneck with 4 convolutions aka old C3
@@ -169,7 +168,7 @@ class YOLOC4(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3TR(YOLOC3):
     # C3 module with TransformerBlock()
@@ -180,7 +179,7 @@ class YOLOC3TR(YOLOC3):
         self.m = TransformerBlock_(c_, c_, 4, n)
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3SPP(YOLOC3):
     # C3 module with SPP()
@@ -209,7 +208,7 @@ class TransformerLayer(nn.Module):
         return x
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOTransformerBlock(nn.Module):
     # Vision Transformer https://arxiv.org/abs/2010.11929

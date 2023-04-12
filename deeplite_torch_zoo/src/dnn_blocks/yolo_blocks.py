@@ -12,11 +12,10 @@ from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
                                                       round_channels)
 from deeplite_torch_zoo.src.dnn_blocks.resnet_blocks import (GhostBottleneck,
                                                              ResNetBottleneck)
-from deeplite_torch_zoo.src.registries import (REPEATABLE_BLOCKS,
+from deeplite_torch_zoo.src.registries import (EXPANDABLE_BLOCKS,
                                                VARIABLE_CHANNEL_BLOCKS)
 
 
-@REPEATABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneck(nn.Module):
     # Ultralytics bottleneck (2 convs)
@@ -42,7 +41,7 @@ class YOLOBottleneck(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -70,7 +69,7 @@ class YOLOBottleneckCSP(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), 1))))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSP2(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -98,7 +97,6 @@ class YOLOBottleneckCSP2(nn.Module):
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@REPEATABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOVoVCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -125,7 +123,6 @@ class YOLOVoVCSP(nn.Module):
         return self.cv3(torch.cat((x1, x2), dim=1))
 
 
-@REPEATABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOGhostBottleneck(nn.Module):
     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
@@ -149,7 +146,7 @@ class YOLOGhostBottleneck(nn.Module):
         return self.conv(x) + self.shortcut(x)
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSPF(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -177,7 +174,7 @@ class YOLOBottleneckCSPF(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSPL(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -206,7 +203,7 @@ class YOLOBottleneckCSPL(nn.Module):
         return self.act(self.bn(torch.cat((y1, y2), dim=1)))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSPLG(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -235,7 +232,7 @@ class YOLOBottleneckCSPLG(nn.Module):
         return self.act(self.bn(torch.cat((y1, y2), dim=1)))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class BottleneckCSPA(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -257,7 +254,7 @@ class BottleneckCSPA(nn.Module):
         return self.cv3(torch.cat((y1, y2), dim=1))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class BottleneckCSPB(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -280,7 +277,7 @@ class BottleneckCSPB(nn.Module):
         return self.cv3(torch.cat((y1, y2), dim=1))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class BottleneckCSPC(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -303,7 +300,7 @@ class BottleneckCSPC(nn.Module):
         return self.cv4(torch.cat((y1, y2), dim=1))
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class ResCSPA(BottleneckCSPA):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -317,7 +314,7 @@ class ResCSPA(BottleneckCSPA):
         )
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class ResCSPB(BottleneckCSPB):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -331,7 +328,7 @@ class ResCSPB(BottleneckCSPB):
         )
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class ResCSPC(BottleneckCSPC):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -345,7 +342,7 @@ class ResCSPC(BottleneckCSPC):
         )
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class GhostCSPA(BottleneckCSPA):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -359,7 +356,7 @@ class GhostCSPA(BottleneckCSPA):
         )
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class GhostCSPB(BottleneckCSPB):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -373,7 +370,7 @@ class GhostCSPB(BottleneckCSPB):
         )
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class GhostCSPC(BottleneckCSPC):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -387,7 +384,7 @@ class GhostCSPC(BottleneckCSPC):
         )
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class ResXCSPA(ResCSPA):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -397,7 +394,7 @@ class ResXCSPA(ResCSPA):
         self.m = nn.Sequential(*[ResNetBottleneck(c_, c_, shortcut, g, e=1.0, act=act) for _ in range(n)])
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class ResXCSPB(ResCSPB):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -407,7 +404,7 @@ class ResXCSPB(ResCSPB):
         self.m = nn.Sequential(*[ResNetBottleneck(c_, c_, shortcut, g, e=1.0, act=act) for _ in range(n)])
 
 
-@REPEATABLE_BLOCKS.register()
+@EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class ResXCSPC(ResCSPC):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks

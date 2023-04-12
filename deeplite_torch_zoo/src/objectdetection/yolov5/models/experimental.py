@@ -6,6 +6,9 @@ import math
 import torch
 import torch.nn as nn
 
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, get_activation
+from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
+
 
 class Sum(nn.Module):
     # Weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
@@ -92,3 +95,186 @@ def attempt_load(weights, device=None, inplace=True, fuse=True):
     model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride  # max stride
     assert all(model[0].nc == m.nc for m in model), f'Models have different class counts: {[m.nc for m in model]}'
     return model
+
+
+# PicoDet blocks
+# -------------------------------------------------------------------------
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class DWConvblock(nn.Module):
+    "Depthwise conv + Pointwise conv"
+
+    def __init__(self, in_channels, out_channels, k, s, act='relu'):
+        super(DWConvblock, self).__init__()
+        self.p = k // 2
+        self.conv1 = nn.Conv2d(in_channels, in_channels, kernel_size=k, stride=s, padding=self.p, groups=in_channels,
+                               bias=False)
+        self.bn1 = nn.BatchNorm2d(in_channels)
+        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.act = get_activation(act)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.act(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.act(x)
+        return x
+
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class CBH(nn.Module):
+    def __init__(self, num_channels, num_filters,
+                    filter_size, stride, num_groups=1, act='hswish'):
+        super().__init__()
+        self.conv = nn.Conv2d(
+            num_channels,
+            num_filters,
+            filter_size,
+            stride,
+            padding=(filter_size - 1) // 2,
+            groups=num_groups,
+            bias=False)
+        self.bn = nn.BatchNorm2d(num_filters)
+        self.hardswish = get_activation(act)
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.hardswish(x)
+        return x
+
+    def fuseforward(self, x):
+        return self.hardswish(self.conv(x))
+
+
+class GhostConv(nn.Module):
+    # Ghost Convolution https://github.com/huawei-noah/ghostnet
+    def __init__(self, c1, c2, k=3, s=1, g=1, act='relu'):  # ch_in, ch_out, kernel, stride, groups
+        super().__init__()
+        c_ = c2 // 2  # hidden channels
+        self.cv1 = ConvBnAct(c1, c_, 1, s, None, g, act=act)
+        self.cv2 = ConvBnAct(c_, c_, k, s, None, c_, act=act)
+
+    def forward(self, x):
+        y = self.cv1(x)
+        return torch.cat((y, self.cv2(y)), dim=1)
+
+
+def channel_shuffle(x, groups):
+    batchsize, num_channels, height, width = x.data.size()
+    channels_per_group = num_channels // groups
+
+    # reshape
+    x = x.view(batchsize, groups,
+               channels_per_group, height, width)
+
+    x = torch.transpose(x, 1, 2).contiguous()
+
+    # flatten
+    x = x.view(batchsize, -1, height, width)
+
+    return x
+
+
+class ES_SEModule(nn.Module):
+    def __init__(self, channel, reduction=4):
+        super().__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.conv1 = nn.Conv2d(
+            in_channels=channel,
+            out_channels=channel // reduction,
+            kernel_size=1,
+            stride=1,
+            padding=0)
+        self.relu = nn.ReLU()
+        self.conv2 = nn.Conv2d(
+            in_channels=channel // reduction,
+            out_channels=channel,
+            kernel_size=1,
+            stride=1,
+            padding=0)
+        self.hardsigmoid = nn.Hardsigmoid()
+
+    def forward(self, x):
+        identity = x
+        x = self.avg_pool(x)
+        x = self.conv1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        x = self.hardsigmoid(x)
+        out = identity * x
+        return out
+
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class ES_Bottleneck(nn.Module):
+    def __init__(self, inp, oup, stride, act='relu'):
+        super(ES_Bottleneck, self).__init__()
+
+        if not (1 <= stride <= 3):
+            raise ValueError('illegal stride value')
+        self.stride = stride
+
+        branch_features = oup // 2
+        # assert (self.stride != 1) or (inp == branch_features << 1)
+
+        if self.stride > 1:
+            self.branch1 = nn.Sequential(
+                self.depthwise_conv(inp, inp, kernel_size=3, stride=self.stride, padding=1),
+                nn.BatchNorm2d(inp),
+                nn.Conv2d(inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.BatchNorm2d(branch_features),
+                get_activation(act),
+            )
+
+        self.branch2 = nn.Sequential(
+            nn.Conv2d(inp if (self.stride > 1) else branch_features,
+                      branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(branch_features),
+            get_activation(act),
+            self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
+            nn.BatchNorm2d(branch_features),
+            ES_SEModule(branch_features),
+            nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(branch_features),
+            get_activation(act),
+        )
+
+        self.branch3 = nn.Sequential(
+            GhostConv(branch_features, branch_features, 3, 1, act=act),
+            ES_SEModule(branch_features),
+            nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(branch_features),
+            get_activation(act),
+        )
+
+        self.branch4 = nn.Sequential(
+            self.depthwise_conv(oup, oup, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(oup),
+            nn.Conv2d(oup, oup, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(oup),
+            get_activation(act),
+        )
+
+
+    @staticmethod
+    def depthwise_conv(i, o, kernel_size=3, stride=1, padding=0, bias=False):
+        return nn.Conv2d(i, o, kernel_size, stride, padding, bias=bias, groups=i)
+
+    @staticmethod
+    def conv1x1(i, o, kernel_size=1, stride=1, padding=0, bias=False):
+        return nn.Conv2d(i, o, kernel_size, stride, padding, bias=bias)
+
+    def forward(self, x):
+        if self.stride == 1:
+            x1, x2 = x.chunk(2, dim=1)
+            x3 = torch.cat((x1, self.branch3(x2)), dim=1)
+            out = channel_shuffle(x3, 2)
+        elif self.stride == 2:
+            x1 = torch.cat((self.branch1(x), self.branch2(x)), dim=1)
+            out = self.branch4(x1)
+
+        return out

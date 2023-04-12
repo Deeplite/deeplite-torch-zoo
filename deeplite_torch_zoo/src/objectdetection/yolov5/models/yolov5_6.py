@@ -24,7 +24,7 @@ from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
     make_divisible
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import (
     fuse_conv_and_bn, initialize_weights, model_info, scale_img)
-from deeplite_torch_zoo.src.registries import (REPEATABLE_BLOCKS,
+from deeplite_torch_zoo.src.registries import (EXPANDABLE_BLOCKS,
                                                VARIABLE_CHANNEL_BLOCKS)
 
 logger = logging.getLogger(__name__)
@@ -232,7 +232,7 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_chan
                 c2 = make_divisible(min(c2, max_channels) * gw, yolo_channel_divisor)
 
             args = [c1, c2, *args[1:]]
-            if m in REPEATABLE_BLOCKS.registry_dict.values():
+            if m in EXPANDABLE_BLOCKS.registry_dict.values():
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:

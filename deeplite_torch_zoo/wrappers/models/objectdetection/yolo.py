@@ -59,6 +59,8 @@ YOLO_CONFIGS = {
     ############################
     'yolo-r50-csp-': 'misc/r50-csp.yaml',
     'yolo-x50-csp-': 'misc/x50-csp.yaml',
+    ############################
+    'yolo-picodet-': 'picodet/yolo-picodet.yaml'
 }
 
 ACT_FN_TAGS = {'': None, '_relu': 'relu', '_hswish': 'hardswish'}
