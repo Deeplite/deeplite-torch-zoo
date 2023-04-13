@@ -11,6 +11,8 @@ from deeplite_torch_zoo.src.objectdetection.eval.mean_average_precision import \
 from deeplite_torch_zoo.src.objectdetection.eval.yolov5_eval.utils import (
     box_iou, check_version, non_max_suppression)
 
+from .v8_nms import non_max_suppression as non_max_suppression_v8
+
 
 def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
     # Applies torch.inference_mode() decorator if torch>=1.9.0 else torch.no_grad() decorator
@@ -59,7 +61,11 @@ def evaluate(
         half=False,  # use FP16 half-precision inference
         eval_style='coco',
         map_iou_thresh=0.5,
+        v8_eval=False,
 ):
+    if v8_eval:
+        map_iou_thresh = np.arange(0.5, 1.0, 0.05)
+
     if num_classes is None:
         num_classes = dataloader.dataset.num_classes
 
@@ -80,7 +86,7 @@ def evaluate(
 
     metric_fn = MetricBuilder.build_evaluation_metric(
         "map_2d",
-        async_mode=False,
+        async_mode=True,
         num_classes=num_classes
     )
 
@@ -97,13 +103,22 @@ def evaluate(
         preds = model(im, augment=augment)
 
         # NMS
-        preds = non_max_suppression(preds,
-                                    conf_thres,
-                                    iou_thres,
-                                    labels=[],
-                                    multi_label=True,
-                                    agnostic=single_cls,
-                                    max_det=max_det)
+        if not v8_eval:
+            preds = non_max_suppression(preds,
+                                        conf_thres,
+                                        iou_thres,
+                                        labels=[],
+                                        multi_label=True,
+                                        agnostic=single_cls,
+                                        max_det=max_det)
+        else:
+            preds = non_max_suppression_v8(preds,
+                                        conf_thres,
+                                        iou_thres,
+                                        labels=[],
+                                        multi_label=True,
+                                        agnostic=single_cls,
+                                        max_det=max_det)
 
         for i, pred in enumerate(preds):
             orig_shape = tuple(shapes[i].numpy())
