@@ -2,7 +2,8 @@
 nc: 80  # number of classes
 depth_multiple: 1.0  # model depth multiple
 width_multiple: 1.0  # layer channel multiple
-activation_type: leakyrelu_0.1
+activation_type: silu
+# activation_type: leakyrelu_0.1
 
 # anchors
 anchors:

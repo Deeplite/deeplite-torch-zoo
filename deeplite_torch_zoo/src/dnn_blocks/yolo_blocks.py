@@ -5,7 +5,6 @@
 
 import torch
 import torch.nn as nn
-
 from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
                                                       GhostConv,
                                                       get_activation,
@@ -310,7 +309,7 @@ class ResCSPA(BottleneckCSPA):
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(
-            *[ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act) for _ in range(n)]
+            *[ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut) for _ in range(n)]
         )
 
 
@@ -324,7 +323,7 @@ class ResCSPB(BottleneckCSPB):
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2)  # hidden channels
         self.m = nn.Sequential(
-            *[ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act) for _ in range(n)]
+            *[ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut) for _ in range(n)]
         )
 
 
@@ -338,7 +337,7 @@ class ResCSPC(BottleneckCSPC):
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(
-            *[ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act) for _ in range(n)]
+            *[ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut) for _ in range(n)]
         )
 
 
@@ -391,7 +390,7 @@ class ResXCSPA(ResCSPA):
     def __init__(self, c1, c2, n=1, shortcut=True, g=32, e=0.5, act='relu'):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
-        self.m = nn.Sequential(*[ResNetBottleneck(c_, c_, shortcut, g, e=1.0, act=act) for _ in range(n)])
+        self.m = nn.Sequential(*[ResNetBottleneck(c_, c_, groups=g, e=1.0, act=act, shortcut=shortcut) for _ in range(n)])
 
 
 @EXPANDABLE_BLOCKS.register()
@@ -401,7 +400,7 @@ class ResXCSPB(ResCSPB):
     def __init__(self, c1, c2, n=1, shortcut=True, g=32, e=0.5, act='relu'):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2)  # hidden channels
-        self.m = nn.Sequential(*[ResNetBottleneck(c_, c_, shortcut, g, e=1.0, act=act) for _ in range(n)])
+        self.m = nn.Sequential(*[ResNetBottleneck(c_, c_, groups=g, e=1.0, act=act, shortcut=shortcut) for _ in range(n)])
 
 
 @EXPANDABLE_BLOCKS.register()
@@ -411,7 +410,7 @@ class ResXCSPC(ResCSPC):
     def __init__(self, c1, c2, n=1, shortcut=True, g=32, e=0.5, act='relu'):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
-        self.m = nn.Sequential(*[ResNetBottleneck(c_, c_, shortcut, g, e=1.0, act=act) for _ in range(n)])
+        self.m = nn.Sequential(*[ResNetBottleneck(c_, c_, groups=g, e=1.0, act=act, shortcut=shortcut) for _ in range(n)])
 
 
 @VARIABLE_CHANNEL_BLOCKS.register()

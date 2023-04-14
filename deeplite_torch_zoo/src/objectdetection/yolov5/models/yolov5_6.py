@@ -7,7 +7,6 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
-
 from deeplite_torch_zoo.src.dnn_blocks import *
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
@@ -239,6 +238,8 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_chan
             args = [ch[f]]
         elif m is Concat:
             c2 = sum(ch[x] for x in f)
+        elif m is ADD or m is Shortcut:
+            c2 = ch[f[0]]
         elif m is Detect:
             args.append([ch[x] for x in f])
             if isinstance(args[1], int):  # number of anchors
@@ -252,7 +253,7 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_chan
             c2 = ch[f] * args[0] ** 2
         elif m is Expand:
             c2 = ch[f] // args[0] ** 2
-        elif m is ReOrg:
+        elif m is ReOrg or m is DWT:
             c2 = ch[f] * 4
         else:
             c2 = ch[f]

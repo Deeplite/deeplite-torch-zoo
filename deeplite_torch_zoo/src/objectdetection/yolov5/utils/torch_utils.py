@@ -110,37 +110,59 @@ def prune(model, amount=0.3):
     print(" %.3g global sparsity" % sparsity(model))
 
 
+# def fuse_conv_and_bn(conv, bn):
+#     # https://tehnokv.com/posts/fusing-batchnorm-and-conv/
+#     with torch.no_grad():
+#         # init
+#         fusedconv = nn.Conv2d(
+#             conv.in_channels,
+#             conv.out_channels,
+#             kernel_size=conv.kernel_size,
+#             stride=conv.stride,
+#             padding=conv.padding,
+#             bias=True,
+#         ).to(conv.weight.device)
+
+#         # prepare filters
+#         w_conv = conv.weight.clone().view(conv.out_channels, -1)
+#         w_bn = torch.diag(bn.weight.div(torch.sqrt(bn.eps + bn.running_var)))
+#         fusedconv.weight.copy_(torch.mm(w_bn, w_conv).view(fusedconv.weight.size()))
+
+#         # prepare spatial bias
+#         b_conv = (
+#             torch.zeros(conv.weight.size(0), device=conv.weight.device)
+#             if conv.bias is None
+#             else conv.bias
+#         )
+#         b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(
+#             torch.sqrt(bn.running_var + bn.eps)
+#         )
+#         fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
+
+#         return fusedconv
+
 def fuse_conv_and_bn(conv, bn):
-    # https://tehnokv.com/posts/fusing-batchnorm-and-conv/
-    with torch.no_grad():
-        # init
-        fusedconv = nn.Conv2d(
-            conv.in_channels,
-            conv.out_channels,
-            kernel_size=conv.kernel_size,
-            stride=conv.stride,
-            padding=conv.padding,
-            bias=True,
-        ).to(conv.weight.device)
+    # Fuse Conv2d() and BatchNorm2d() layers https://tehnokv.com/posts/fusing-batchnorm-and-conv/
+    fusedconv = nn.Conv2d(conv.in_channels,
+                          conv.out_channels,
+                          kernel_size=conv.kernel_size,
+                          stride=conv.stride,
+                          padding=conv.padding,
+                          dilation=conv.dilation,
+                          groups=conv.groups,
+                          bias=True).requires_grad_(False).to(conv.weight.device)
 
-        # prepare filters
-        w_conv = conv.weight.clone().view(conv.out_channels, -1)
-        w_bn = torch.diag(bn.weight.div(torch.sqrt(bn.eps + bn.running_var)))
-        fusedconv.weight.copy_(torch.mm(w_bn, w_conv).view(fusedconv.weight.size()))
+    # Prepare filters
+    w_conv = conv.weight.clone().view(conv.out_channels, -1)
+    w_bn = torch.diag(bn.weight.div(torch.sqrt(bn.eps + bn.running_var)))
+    fusedconv.weight.copy_(torch.mm(w_bn, w_conv).view(fusedconv.weight.shape))
 
-        # prepare spatial bias
-        b_conv = (
-            torch.zeros(conv.weight.size(0), device=conv.weight.device)
-            if conv.bias is None
-            else conv.bias
-        )
-        b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(
-            torch.sqrt(bn.running_var + bn.eps)
-        )
-        fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
+    # Prepare spatial bias
+    b_conv = torch.zeros(conv.weight.size(0), device=conv.weight.device) if conv.bias is None else conv.bias
+    b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(torch.sqrt(bn.running_var + bn.eps))
+    fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
 
-        return fusedconv
-
+    return fusedconv
 
 def model_info(model, verbose=False, img_size=640):
     # Model information. img_size may be int or list, i.e. img_size=640 or img_size=[640, 320]

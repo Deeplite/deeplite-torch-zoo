@@ -52,15 +52,17 @@ YOLO_CONFIGS = {
     'yolo7-e6e': 'yolo7/yolov7-e6e.yaml',
     'yolo7-w6': 'yolo7/yolov7-w6.yaml',
     ############################
-    'yolo8': 'yolo8/yolov8-p2.yaml',
-    'yolo8': 'yolo8/yolov8-p6.yaml',
+    'yolo8-p2': 'yolo8/yolov8-p2.yaml',
+    'yolo8-p6': 'yolo8/yolov8-p6.yaml',
     ############################
     'yolox': 'yolox/yolox.yaml',
     ############################
     'yolo-r50-csp-': 'misc/r50-csp.yaml',
-    'yolo-x50-csp-': 'misc/x50-csp.yaml',
+    'yolo-x50-csp-': 'misc/x50-csp.yaml', # to be fixed
     ############################
-    'yolo-picodet-': 'picodet/yolo-picodet.yaml'
+    'yolo-picodet-': 'picodet/yolo-picodet.yaml',
+    'yolo5-lite-c-': 'yololite/yolov5_lite_c.yaml',
+    'yolo5-lite-e-': 'yololite/yolov5_lite_e.yaml',
 }
 
 ACT_FN_TAGS = {'': None, '_relu': 'relu', '_hswish': 'hardswish'}

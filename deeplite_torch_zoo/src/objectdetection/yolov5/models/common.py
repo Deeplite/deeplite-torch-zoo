@@ -141,3 +141,37 @@ class ImplicitM(nn.Module):
 
     def forward(self, x):
         return self.implicit * x
+
+
+class Shortcut(nn.Module):
+    def __init__(self, dimension=0):
+        super(Shortcut, self).__init__()
+        self.d = dimension
+
+    def forward(self, x):
+        return x[0]+x[1]
+
+
+class Chuncat(nn.Module):
+    def __init__(self, dimension=1):
+        super(Chuncat, self).__init__()
+        self.d = dimension
+
+    def forward(self, x):
+        x1 = []
+        x2 = []
+        for xi in x:
+            xi1, xi2 = xi.chunk(2, self.d)
+            x1.append(xi1)
+            x2.append(xi2)
+        return torch.cat(x1+x2, self.d)
+
+
+class Foldcut(nn.Module):
+    def __init__(self, dimension=0):
+        super(Foldcut, self).__init__()
+        self.d = dimension
+
+    def forward(self, x):
+        x1, x2 = x.chunk(2, self.d)
+        return x1+x2
