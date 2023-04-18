@@ -1,4 +1,6 @@
 # Source: https://github.com/iscyy/yoloair
+# The file is modified by deeplite from the original implementation on Feb 23, 2023
+# Reuse code from yolov5 loss
 
 import torch
 

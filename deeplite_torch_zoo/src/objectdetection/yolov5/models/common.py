@@ -1,4 +1,6 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# The file is modified by deeplite from the original implementation on Mar 11, 2023
+# Some DNN blocks are moved from common to experimental
 
 import torch
 import torch.nn as nn

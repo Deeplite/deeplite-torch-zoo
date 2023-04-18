@@ -1,4 +1,6 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# The file is modified by deeplite from the original implementation on Mar 21, 2023
+# Support DetectX
 
 import inspect
 import logging
