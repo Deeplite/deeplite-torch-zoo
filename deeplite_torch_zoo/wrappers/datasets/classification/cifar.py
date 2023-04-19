@@ -2,11 +2,8 @@ import os
 from os.path import expanduser
 
 import torchvision
+from torchvision import transforms
 
-from deeplite_torch_zoo.src.classification.augmentations.augs import \
-    get_vanilla_transforms
-from deeplite_torch_zoo.src.classification.augmentations.autoaugment import \
-    CIFAR10Policy
 from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
 from deeplite_torch_zoo.wrappers.registries import DATA_WRAPPER_REGISTRY
 
@@ -20,13 +17,20 @@ def _get_cifar(
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
 
-    default_train_transforms, default_val_transforms = get_vanilla_transforms(
-        img_size,
-        mean=(0.4914, 0.4822, 0.4465),
-        std=(0.2023, 0.1994, 0.2010),
-        crop_pct=1.0,
-        add_train_transforms=CIFAR10Policy(),
-        cutout_args={'n_holes': 1, 'length': int(img_size / 1.6)},
+    default_train_transforms = transforms.Compose(
+        [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ]
+    )
+
+    default_val_transforms = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ]
     )
 
     train_transforms = train_transforms if train_transforms is not None else default_train_transforms
