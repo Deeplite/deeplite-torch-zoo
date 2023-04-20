@@ -1,4 +1,6 @@
 # Taken from https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
+# The file is modified by deeplite from the original implementation on Jan 18, 2023
+# Code implementation refactoring
 
 import math
 

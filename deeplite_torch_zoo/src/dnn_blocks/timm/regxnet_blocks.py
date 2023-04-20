@@ -11,6 +11,8 @@ Copyright 2020 Ross Wightman
 """
 
 # Modified from https://github1s.com/huggingface/pytorch-image-models/blob/HEAD/timm/models/rexnet.py
+# The file is modified by deeplite from the original implementation on Dec 22, 2022
+# Code implementation refactoring
 
 import torch
 import torch.nn as nn
