@@ -1,5 +1,6 @@
 # Code credit: https://github.com/Bobo-y/flexible-yolov5
-# The file is modified by deeplite from the original implementation on Jan 4, 2023
+# The file is modified by Deeplite Inc. from the original implementation on Jan 4, 2023
+
 import math
 
 import torch.nn as nn
