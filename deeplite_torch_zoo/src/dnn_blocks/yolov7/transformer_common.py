@@ -1,6 +1,6 @@
 # Taken from:
 # https://github.com/WongKinYiu/yolov7/blob/HEAD/models/common.py
-# The file is modified by deeplite from the original implementation on Nov 29, 2022
+# The file is modified by Deeplite Inc. from the original implementation on Nov 29, 2022
 # Refactoring (subset from the aforementioned source file)
 
 import numpy as np
