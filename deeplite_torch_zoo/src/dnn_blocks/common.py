@@ -2,6 +2,8 @@
 
 # Code taken from:
 # - https://github.com/ultralytics/yolov5/
+# The file is modified by Deeplite Inc. from the original implementation on Mar 21, 2023
+# Code refactoring
 
 import torch
 import torch.nn as nn

@@ -1,4 +1,6 @@
 # Taken from https://github.com/WongKinYiu/yolov7/blob/HEAD/models/common.py
+# The file is modified by Deeplite Inc. from the original implementation on Dec 22, 2022
+# Blocks implementation refactoring
 
 import torch
 import torch.nn as nn

@@ -1,5 +1,7 @@
 # Taken from:
 # - https://github.com/WongKinYiu/yolov7/blob/HEAD/models/common.py
+# The file is modified by Deeplite Inc. from the original implementation on Feb 23, 2023
+# Refactoring block implementation
 
 import warnings
 
