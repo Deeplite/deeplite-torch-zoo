@@ -144,7 +144,7 @@ def profile(model, img_size=224, in_ch=3, verbose=False, fuse=True):
         model_size_mb = model_stats.to_megabytes(model_stats.total_param_bytes)
         model_mparams = model_stats.total_params / 1e6
 
-        macs = profile_macs(model.to('cpu'), torch.randn(1, *img_size))
+        macs = profile_macs(model.to('cuda'), torch.randn(1, *img_size).to('cuda'))
         model_gmacs = macs / 1e9
 
     model.to(device)

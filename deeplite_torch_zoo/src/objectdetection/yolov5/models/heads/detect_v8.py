@@ -60,6 +60,8 @@ class DetectV8(nn.Module):
     anchors = torch.empty(0)  # init
     strides = torch.empty(0)  # init
 
+    no_post_processing = False  # don't export bbox decoding ops
+
     def __init__(self, nc=80, ch=(), act='relu'):  # detection layer
         super().__init__()
         self.nc = nc  # number of classes
@@ -78,7 +80,7 @@ class DetectV8(nn.Module):
         shape = x[0].shape  # BCHW
         for i in range(self.nl):
             x[i] = torch.cat((self.cv2[i](x[i]), self.cv3[i](x[i])), 1)
-        if self.training:
+        if self.training or self.no_post_processing:
             return x
         elif self.dynamic or self.shape != shape:
             self.anchors, self.strides = (x.transpose(0, 1) for x in make_anchors(x, self.stride, 0.5))
