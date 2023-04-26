@@ -16,15 +16,15 @@ AUGMENTATION
         * https://github.com/DeepVoltaire/AutoAugment
         * Copyright (c) 2018 Philip Popien
         * MIT License
-    
+
     This product includes software from the Cutout project
         * https://github.com/uoguelph-mlrg/Cutout
         * Educational Community License, Version 2.0 (ECL-2.0)
-    
+
     This product includes software from the robustness project
         * https://github.com/hendrycks/robustness/blob/master/LICENSE
         * Apache License v2.0
-    
+
 
 CIFAR100
 
@@ -42,8 +42,8 @@ Imagenet
 MNIST
 
     This product includes software from the ----- project
-        * 
-        * 
+        *
+        *
 
 MobileNet
 
@@ -55,19 +55,6 @@ MobileNet
 
 ====================================== DETECTION ========================================
 
-
-SSD
-
-    This product includes software from the NVIDIA's DeepLearningExamples project
-        * https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD
-        * Licensed under the Apache 2.0
-    
-    This product includes software from the pytorch-ssd project
-        * https://github.com/qfgaohao/pytorch-ssd
-        * Copyright (c) 2019 Hao Gao
-        * Licensed under the MIT License;
-
-
 YOLOV3
 
     This product includes software from the Yolov3 project
@@ -76,13 +63,13 @@ YOLOV3
         * GNU General Public License v3.0
 
 
-YOLOV5   
-    
+YOLOV5
+
     This product includes software from the Yolov5 project
         * https://github.com/ultralytics/yolov5
         * Copyright (c) 2007 Free Software Foundation, Inc.
         * GNU General Public License v3.0
-    
+
     This product includes software from the yoloair project
         * https://github.com/iscyy/yoloair
         * Copyright (c) 2007 Free Software Foundation, Inc.
@@ -102,21 +89,21 @@ DNN Blocks
         * https://github.com/WongKinYiu/yolov7
         * Copyright (c) Free Software Foundation, Inc.
         * GNU General Public License v3.0
-    
+
     This product includes software from the yolor project
         * https://github.com/WongKinYiu/yolor
         * Copyright (c) Free Software Foundation, Inc.
         * GNU General Public License v3.0
-    
+
     This product includes software from the  pytorch-image-models project
         * https://github.com/huggingface/pytorch-image-models
         * Licensed under the Apache 2.0
 
     This product includes software from the --- project
-        * 
+        *
         * Copyright (c) 2018 Ryuichiro Hataya
         * MIT License
-    
+
     This product includes software from the RepLKNet-pytorch project
         * https://github.com/DingXiaoH/RepLKNet-pytorch
         * Copyright (c) 2022 Xiaohan Ding
@@ -126,21 +113,21 @@ DNN Blocks
         * https://github.com/osmr/imgclsmob
         * Copyright (c) 2018-2021 Oleg Sémery
         * MIT License
-    
+
     This product includes software from the ml-mobileone project
         * https://github.com/apple/ml-mobileone
         * Copyright (C) 2022 Apple Inc.
-    
+
     This product includes software from the efficientnetv2.pytorch project
         * https://github.com/d-li14/efficientnetv2.pytorch
         * Copyright (c) 2021 Duo Li
         * MIT License
-    
+
     This product includes software from the efficientnetv2.pytorch project
         * https://github.com/huawei-noah/Efficient-AI-Backbones
-        * Copyright (c) 2020. Huawei Technologies Co., Ltd. 
+        * Copyright (c) 2020. Huawei Technologies Co., Ltd.
         * Apache License v2.0
-    
+
 ================================ SEGMENTATION ================================
 
 UNet
@@ -165,7 +152,7 @@ Deeplab
         * Licensed under the MIT License;
 
 UNet_scse
-    
+
     This product includes software from the pytorch-segmentation project
         * https://github.com/nyoki-mtl/pytorch-segmentation
         * Copyright (c) 2019 Hiroki Taniai.

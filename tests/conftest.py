@@ -1,7 +1,6 @@
 import contextlib
 from abc import ABC, abstractmethod
 
-import numpy as np
 import pytest
 import torch
 from torch.utils.data import Dataset
@@ -46,35 +45,6 @@ class VocYoloFake(FakeDataset):
     def __len__(self):
         return self.num_samples
 
-
-class VocSSDFake(FakeDataset):
-    def __init__(self, num_samples=2, num_classes=None, img_size=224, device="cuda"):
-        super(VocSSDFake, self).__init__(
-            num_samples=num_samples,
-            num_classes=num_classes,
-            img_size=img_size,
-            device=device,
-        )
-        self.classes = ['mock'] * num_classes
-
-    def __getitem__(self, idx):
-        img = torch.rand(3, self.img_size, self.img_size, dtype=torch.float32).to(
-            self.device
-        )
-        bboxes = torch.zeros(2, 6)
-        labels = torch.zeros(2, 1)
-        return img, bboxes, labels
-
-    def __len__(self):
-        return self.num_samples
-
-    def get_annotation(self, idx):
-        bboxes = np.zeros((2, 6))
-        labels = np.zeros((2, 1))
-        is_difficult = np.zeros((2, 1))
-        return idx, (bboxes, labels, is_difficult)
-
-
 class SegmentationFake(FakeDataset):
     def __init__(self, num_samples=2, num_classes=None, img_size=224, device="cpu"):
         super(SegmentationFake, self).__init__(
@@ -104,13 +74,6 @@ class SegmentationFake(FakeDataset):
 @pytest.fixture()
 def mock_segmentation_dataloader():
     dataset = SegmentationFake(num_classes=21)
-    dataloader = get_dataloader(dataset=dataset)
-    yield dataloader
-
-
-@pytest.fixture()
-def mock_ssd_dataloader():
-    dataset = VocSSDFake(num_classes=20)
     dataloader = get_dataloader(dataset=dataset)
     yield dataloader
 

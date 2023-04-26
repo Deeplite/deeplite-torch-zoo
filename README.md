@@ -247,7 +247,6 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 ## Credit
 
 ### Object Detection
-- The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
 - The implementation of yolov3-voc: [Peterisfar/YOLOV3](https://github.com/Peterisfar/YOLOV3/)
 - The implementation of yolov3: [ultralytics/yolov3](https://github.com/ultralytics/yolov3)
 - The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
@@ -286,4 +285,3 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - Cutout implementation: [uoguelph-mlrg/Cutout](https://github.com/uoguelph-mlrg/Cutout)
 - Robustness measurement image distortions: [hendrycks/robustness](https://github.com/hendrycks/robustness)
 - Registry implementation: [openvinotoolkit/openvino/tools/pot](https://github.com/openvinotoolkit/openvino/blob/master/tools/pot)
-- [PyTorch/Detection/SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)

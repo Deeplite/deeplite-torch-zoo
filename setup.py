@@ -1,12 +1,7 @@
-import os
 import pathlib
 import sys
-from subprocess import check_call
 
 from setuptools import find_packages, setup
-from setuptools.command.develop import develop
-from setuptools.command.install import install
-from setuptools.command.sdist import sdist
 
 with open('LICENSE.md') as f:
     license = f.read()
@@ -20,7 +15,7 @@ HERE = pathlib.Path(__file__).parent
 
 INSTALL_REQUIRES = [
     "setuptools<65.6.0",
-    "torch>=1.4, <=1.8.1",
+    "torch>=1.4, <=2.0.0",
     "opencv-python<=4.6.0.66",
     "scipy>=1.4.1",
     "numpy==1.19.5",
@@ -28,8 +23,6 @@ INSTALL_REQUIRES = [
     "Cython==0.29.30",
     "tqdm==4.46.0",
     "albumentations==1.0.3",
-    "pretrainedmodels==0.7.4",
-    "torchfcn==1.9.7",
     "tensorboardX==2.4.1",
     "pyvww==0.1.1",
     "timm==0.5.4",
@@ -42,6 +35,7 @@ INSTALL_REQUIRES = [
     "pandas",
 ]
 
+
 python_version = sys.version_info
 if python_version < (3, 7, 0):
     INSTALL_REQUIRES.append("torchinfo==1.5.4")
@@ -49,67 +43,9 @@ else:
     INSTALL_REQUIRES.append("torchinfo==1.7.2")
 
 
-def create_init_files_in_submodules():
-    submodules_init = [
-        "deeplite_torch_zoo/src/objectdetection/ssd/repo/__init__.py",
-        "deeplite_torch_zoo/src/segmentation/deeplab/repo/__init__.py",
-        "deeplite_torch_zoo/src/segmentation/unet_scse/repo/__init__.py",
-        "deeplite_torch_zoo/src/segmentation/unet_scse/repo/src/losses/__init__.py"
-    ]
-    for _f in submodules_init:
-        if not os.path.exists(_f):
-            with open(_f, 'w'):
-                pass
-
-def gitcmd_update_submodules():
-    ''' Check if the package is being deployed as a git repository. If so, recursively
-        update all dependencies.
-
-        @returns True if the package is a git repository and the modules were updated.
-            False otherwise.
-    '''
-    if os.path.exists(os.path.join(HERE, '.git')):
-        check_call(['git', 'submodule', 'update', '--init', '--recursive'])
-        return True
-
-    return False
-
-
-class gitcmd_develop(develop):
-    ''' Specialized packaging class that runs git submodule update --init --recursive
-        as part of the update/install procedure.
-    '''
-    def run(self):
-        gitcmd_update_submodules()
-        develop.run(self)
-
-
-class gitcmd_install(install):
-    ''' Specialized packaging class that runs git submodule update --init --recursive
-        as part of the update/install procedure.
-    '''
-    def run(self):
-        gitcmd_update_submodules()
-        create_init_files_in_submodules()
-        install.run(self)
-
-
-class gitcmd_sdist(sdist):
-    ''' Specialized packaging class that runs git submodule update --init --recursive
-        as part of the update/install procedure;.
-    '''
-    def run(self):
-        gitcmd_update_submodules()
-        sdist.run(self)
-
 setup(
-    cmdclass={
-        'develop': gitcmd_develop,
-        'install': gitcmd_install,
-        'sdist': gitcmd_sdist,
-    },
     name="deeplite-torch-zoo",
-    version="1.2.8",
+    version="2.0.0",
     description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
     long_description=long_description,
     long_description_content_type="text/markdown",

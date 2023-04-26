@@ -16,14 +16,7 @@ TEST_NUM_CLASSES = 42
 
 BLACKLIST = ('yolo5_6sa', 'yolo3_tiny', 'yolo_fdresnet18x0.25', 'yolo_fdresnet18x0.5')
 
-DETECTION_MODEL_TESTS = [
-    ('mb1_ssd', 'voc', {'num_classes': 20}, [(3000, ), (3000, 4)], MOCK_VOC_PATH, True),
-    ('mb2_ssd_lite', 'voc', {'num_classes': 20}, [(3000, ), (3000, 4)], MOCK_VOC_PATH, True),
-    ('mb2_ssd', 'voc', {'num_classes': 20}, [(3000, ), (3000, 4)], MOCK_VOC_PATH, True),
-    ('resnet18_ssd', 'voc', {'num_classes': 20}, [(8732, ), (8732, 4)], MOCK_VOC_PATH, True),
-    ('resnet34_ssd', 'voc', {'num_classes': 20}, [(8732, ), (8732, 4)], MOCK_VOC_PATH, True),
-    ('resnet50_ssd', 'voc', {'num_classes': 20}, [(8732, ), (8732, 4)], MOCK_VOC_PATH, True),
-]
+DETECTION_MODEL_TESTS = []
 
 
 for model_name in get_models_by_dataset('voc'):

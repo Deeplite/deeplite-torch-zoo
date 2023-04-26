@@ -1,5 +1,2 @@
-from .yolo import *
-from .ssd import *
-from .segmentation import *
-from .rcnn import *
-from .classification import *
+from .classification import *  # pylint: disable=unused-import
+from .yolo import *  # pylint: disable=unused-import

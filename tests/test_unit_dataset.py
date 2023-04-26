@@ -20,12 +20,6 @@ from deeplite_torch_zoo.wrappers.datasets.classification.mnist import get_mnist
 from deeplite_torch_zoo.wrappers.datasets.classification.tiny_imagenet import \
     get_tinyimagenet
 from deeplite_torch_zoo.wrappers.datasets.classification.vww import get_vww
-from deeplite_torch_zoo.wrappers.datasets.objectdetection.mask_rcnn import \
-    get_coco_for_fasterrcnn_resnet50_fpn
-from deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd import \
-    create_coco_datasets as ccd_ssd
-from deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd import \
-    create_widerface_datasets as cwd_ssd
 from deeplite_torch_zoo.wrappers.datasets.objectdetection.yolo import \
     create_coco_datasets as ccd_yolo
 from deeplite_torch_zoo.wrappers.datasets.objectdetection.yolo import \
@@ -147,21 +141,6 @@ def test_unit_mnist(*args):
 @mock.patch("deeplite_torch_zoo.wrappers.datasets.classification.tiny_imagenet.get_dataloader", get_dataloader)
 def test_unit_tinyimagenet(*args):
     get_tinyimagenet('', x=1, y=2)
-
-
-@mock.patch("deeplite_torch_zoo.wrappers.datasets.objectdetection.mask_rcnn.CocoDetectionBoundingBox")
-@mock.patch("deeplite_torch_zoo.wrappers.datasets.utils.get_dataloader", get_dataloader)
-def test_unit_mask_rcnn(*args):
-    get_coco_for_fasterrcnn_resnet50_fpn('', x=1, y=2)
-
-
-@mock.patch("deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd.TrainAugmentation")
-@mock.patch("deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd.MatchPrior")
-@mock.patch("deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd.WiderFace")
-@mock.patch("deeplite_torch_zoo.wrappers.datasets.objectdetection.ssd.CocoDetectionBoundingBox")
-def test_unit_ssd(*args):
-    ccd_ssd('', config=mock.MagicMock(), train_ann_file='', train_dir='', val_ann_file='', val_dir='')
-    cwd_ssd('', config=mock.MagicMock())
 
 
 @mock.patch("deeplite_torch_zoo.wrappers.datasets.objectdetection.yolo.CocoDetectionBoundingBox")
