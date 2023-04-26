@@ -1,5 +1,7 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 # This file contains experimental modules
+# The file is modified by Deeplite Inc. from the original implementation on Mar 21, 2023
+# Some DNN blocks are moved from common to experimental
 
 import functools
 import math

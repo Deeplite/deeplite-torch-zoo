@@ -1,5 +1,6 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
-
+# The file is modified by Deeplite Inc. from the original implementation on Feb 20, 2023
+# The evaluator has changed in order to support dataloader as a parameter instead of data path
 import time
 
 import numpy as np

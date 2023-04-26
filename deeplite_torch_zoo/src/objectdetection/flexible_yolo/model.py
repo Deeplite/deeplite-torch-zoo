@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # Code credit: https://github.com/Bobo-y/flexible-yolov5
+# The file is modified by Deeplite Inc. from the original implementation on Jan 4, 2023
+# FlexibleYOLO has been refactored
 
 import math
 from copy import deepcopy

@@ -1,4 +1,6 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# The file is modified by Deeplite Inc. from the original implementation on Feb 23, 2023
+# Some functions are moved from loss file to utils file
 
 import math
 

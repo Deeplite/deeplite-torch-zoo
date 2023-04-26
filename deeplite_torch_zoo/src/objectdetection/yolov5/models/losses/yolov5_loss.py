@@ -1,4 +1,7 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# The file is modified by Deeplite Inc. from the original implementation on Feb 24, 2023
+# Make it more general for different yolo versions
+# Add Compatibility to our engine
 
 from copy import copy
 
