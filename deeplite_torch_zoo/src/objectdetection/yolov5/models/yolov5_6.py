@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 HEAD_NAME_MAP = {
-    'v8': 'DetectV8',
+    'v8': DetectV8,
 }
 
 class YOLOModel(nn.Module):
@@ -49,7 +49,7 @@ class YOLOModel(nn.Module):
                 self.yaml = yaml.safe_load(f)  # model dict
 
         if custom_head is not None:
-            self.yaml['head'][-1][2] = HEAD_NAME_MAP[custom_head]
+            self.yaml['head'][-1][2] = str(HEAD_NAME_MAP[custom_head])
 
         # Define model
         self.nc = nc
