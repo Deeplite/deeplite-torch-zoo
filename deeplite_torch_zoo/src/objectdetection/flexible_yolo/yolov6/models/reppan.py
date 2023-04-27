@@ -767,7 +767,6 @@ class CSPRepBiFPANNeck(nn.Module):
         pan_out0 = self.Rep_n4(p_concat_layer2)
 
         outputs = [pan_out2, pan_out1, pan_out0]
-
         return outputs
 
 

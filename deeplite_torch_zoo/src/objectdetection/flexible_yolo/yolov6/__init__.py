@@ -51,8 +51,9 @@ def build_network(config, channels=3):
         neck = NECK(
             channels_list=channels_list,
             num_repeats=num_repeat,
-            block=block
+            block=block,
         )
 
-    head_channels = (channels_list[6], channels_list[8], channels_list[10])
+    chx = [6, 8, 10] # if num_layers == 3 else [8, 9, 10, 11]
+    head_channels = [channels_list[ch_idx] for ch_idx in chx]
     return backbone, neck, head_channels

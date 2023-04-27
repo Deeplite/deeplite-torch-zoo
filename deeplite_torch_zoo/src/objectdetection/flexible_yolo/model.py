@@ -13,12 +13,14 @@ from deeplite_torch_zoo.src.objectdetection.flexible_yolo.yolov6 import \
     build_network
 from deeplite_torch_zoo.src.objectdetection.flexible_yolo.yolov6.config import \
     Config
+from deeplite_torch_zoo.src.objectdetection.flexible_yolo.yolov6.layers.common import \
+    RepVGGBlock
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect import \
     Detect
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect_v8 import \
     DetectV8
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import (
-    HEAD_NAME_MAP, YOLOModel)
+    HEAD_NAME_MAP, Conv, DWConv, RepConv, YOLOModel, fuse_conv_and_bn)
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.torch_utils import \
     initialize_weights
 
@@ -98,6 +100,20 @@ class FlexibleYOLO(YOLOModel):
             m.grid = list(map(fn, m.grid))
             if isinstance(m.anchor_grid, list):
                 m.anchor_grid = list(map(fn, m.anchor_grid))
+        return self
+
+    def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
+        print('Fusing layers... ')
+        for m in self.modules():
+            if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
+                m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
+                delattr(m, 'bn')  # remove batchnorm
+                m.forward = m.forward_fuse  # update forward
+            if isinstance(m, RepConv):
+                m.fuse_repvgg_block()
+            if isinstance(m, RepVGGBlock):
+                m.switch_to_deploy()
+        self.info()
         return self
 
 
