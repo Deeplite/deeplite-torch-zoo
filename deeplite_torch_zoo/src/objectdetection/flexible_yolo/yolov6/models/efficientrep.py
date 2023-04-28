@@ -1,8 +1,8 @@
 from torch import nn
 
 from deeplite_torch_zoo.src.objectdetection.flexible_yolo.yolov6.layers.common import (
-    CSPSPPF, SPPF, BepC3, ConvWrapper, RepBlock, RepVGGBlock, SimCSPSPPF,
-    SimSPPF)
+    CSPSPPF, SPPF, BepC3, ConvBNHS, ConvBNSiLU, Lite_EffiBlockS1,
+    Lite_EffiBlockS2, MBLABlock, RepBlock, RepVGGBlock, SimCSPSPPF, SimSPPF)
 
 
 class EfficientRep(nn.Module):
@@ -78,9 +78,9 @@ class EfficientRep(nn.Module):
             )
         )
 
-        channel_merge_layer = SPPF if block == ConvWrapper else SimSPPF
+        channel_merge_layer = SPPF if block == ConvBNSiLU else SimSPPF
         if cspsppf:
-            channel_merge_layer = CSPSPPF if block == ConvWrapper else SimCSPSPPF
+            channel_merge_layer = CSPSPPF if block == ConvBNSiLU else SimCSPSPPF
 
         self.ERBlock_5 = nn.Sequential(
             block(
@@ -261,12 +261,21 @@ class CSPBepBackbone(nn.Module):
         block=RepVGGBlock,
         csp_e=float(1)/2,
         fuse_P2=False,
-        cspsppf=False
+        cspsppf=False,
+        stage_block_type="BepC3"
     ):
         super().__init__()
 
         assert channels_list is not None
         assert num_repeats is not None
+
+        if stage_block_type == "BepC3":
+            stage_block = BepC3
+        elif stage_block_type == "MBLABlock":
+            stage_block = MBLABlock
+        else:
+            raise NotImplementedError
+
         self.fuse_P2 = fuse_P2
 
         self.stem = block(
@@ -283,7 +292,7 @@ class CSPBepBackbone(nn.Module):
                 kernel_size=3,
                 stride=2
             ),
-            BepC3(
+            stage_block(
                 in_channels=channels_list[1],
                 out_channels=channels_list[1],
                 n=num_repeats[1],
@@ -299,7 +308,7 @@ class CSPBepBackbone(nn.Module):
                 kernel_size=3,
                 stride=2
             ),
-            BepC3(
+            stage_block(
                 in_channels=channels_list[2],
                 out_channels=channels_list[2],
                 n=num_repeats[2],
@@ -315,7 +324,7 @@ class CSPBepBackbone(nn.Module):
                 kernel_size=3,
                 stride=2
             ),
-            BepC3(
+            stage_block(
                 in_channels=channels_list[3],
                 out_channels=channels_list[3],
                 n=num_repeats[3],
@@ -324,9 +333,9 @@ class CSPBepBackbone(nn.Module):
             )
         )
 
-        channel_merge_layer = SPPF if block == ConvWrapper else SimSPPF
+        channel_merge_layer = SPPF if block == ConvBNSiLU else SimSPPF
         if cspsppf:
-            channel_merge_layer = CSPSPPF if block == ConvWrapper else SimCSPSPPF
+            channel_merge_layer = CSPSPPF if block == ConvBNSiLU else SimCSPSPPF
 
         self.ERBlock_5 = nn.Sequential(
             block(
@@ -335,7 +344,7 @@ class CSPBepBackbone(nn.Module):
                 kernel_size=3,
                 stride=2,
             ),
-            BepC3(
+            stage_block(
                 in_channels=channels_list[4],
                 out_channels=channels_list[4],
                 n=num_repeats[4],
@@ -441,9 +450,9 @@ class CSPBepBackbone_P6(nn.Module):
             )
         )
 
-        channel_merge_layer = SPPF if block == ConvWrapper else SimSPPF
+        channel_merge_layer = SPPF if block == ConvBNSiLU else SimSPPF
         if cspsppf:
-            channel_merge_layer = CSPSPPF if block == ConvWrapper else SimCSPSPPF
+            channel_merge_layer = CSPSPPF if block == ConvBNSiLU else SimCSPSPPF
 
         self.ERBlock_5 = nn.Sequential(
             block(
@@ -498,3 +507,68 @@ class CSPBepBackbone_P6(nn.Module):
 
         return tuple(outputs)
 
+class Lite_EffiBackbone(nn.Module):
+    def __init__(self,
+                 in_channels,
+                 mid_channels,
+                 out_channels,
+                 num_repeat=[1, 3, 7, 3]
+    ):
+        super().__init__()
+        out_channels[0]=24
+        self.conv_0 = ConvBNHS(in_channels=in_channels,
+                             out_channels=out_channels[0],
+                             kernel_size=3,
+                             stride=2,
+                             padding=1)
+
+        self.lite_effiblock_1 = self.build_block(num_repeat[0],
+                                                 out_channels[0],
+                                                 mid_channels[1],
+                                                 out_channels[1])
+
+        self.lite_effiblock_2 = self.build_block(num_repeat[1],
+                                                 out_channels[1],
+                                                 mid_channels[2],
+                                                 out_channels[2])
+
+        self.lite_effiblock_3 = self.build_block(num_repeat[2],
+                                                 out_channels[2],
+                                                 mid_channels[3],
+                                                 out_channels[3])
+
+        self.lite_effiblock_4 = self.build_block(num_repeat[3],
+                                                 out_channels[3],
+                                                 mid_channels[4],
+                                                 out_channels[4])
+
+    def forward(self, x):
+        outputs = []
+        x = self.conv_0(x)
+        x = self.lite_effiblock_1(x)
+        x = self.lite_effiblock_2(x)
+        outputs.append(x)
+        x = self.lite_effiblock_3(x)
+        outputs.append(x)
+        x = self.lite_effiblock_4(x)
+        outputs.append(x)
+        return tuple(outputs)
+
+    @staticmethod
+    def build_block(num_repeat, in_channels, mid_channels, out_channels):
+        block_list = nn.Sequential()
+        for i in range(num_repeat):
+            if i == 0:
+                block = Lite_EffiBlockS2(
+                            in_channels=in_channels,
+                            mid_channels=mid_channels,
+                            out_channels=out_channels,
+                            stride=2)
+            else:
+                block = Lite_EffiBlockS1(
+                            in_channels=out_channels,
+                            mid_channels=mid_channels,
+                            out_channels=out_channels,
+                            stride=1)
+            block_list.add_module(str(i), block)
+        return block_list
