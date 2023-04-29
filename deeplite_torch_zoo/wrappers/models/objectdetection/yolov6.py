@@ -17,23 +17,38 @@ CHECKPOINT_STORAGE_URL = 'http://download.deeplite.ai/zoo/models/'
 
 model_urls = {}
 
-model_configs = {
-    'yolo6n': 'yolov6n.py',
+DATASET_LIST = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
+
+YOLOV6_CONFIGS = {
     'yolo6s': 'yolov6s.py',
     'yolo6m': 'yolov6m.py',
     'yolo6l': 'yolov6l.py',
 }
 
 
+DEFAULT_MODEL_SCALES = {
+  # [depth, width]
+  'd33w25': [0.33, 0.25],
+  'd33w5': [0.33, 0.50],
+  'd6w75': [0.6, 0.75],
+  'd1w1': [1.00, 1.00],
+  'd1w5': [1.0, 0.5],
+  'd1w25': [1.0, 0.25],
+  'd1w75': [1.0, 0.75],
+  'd33w1': [0.33, 1.0],
+  'd33w75': [0.33, 0.75],
+  'd6w1': [0.6, 1.0],
+  'd6w5': [0.6, 0.5],
+  'd6w25': [0.6, 0.25],
+}
+
+
 def yolov6(
-    model_name='yolo6n', dataset_name='voc', pretrained=False, num_classes=20,
+    model_name='yolo6n', config_path=None, dataset_name='voc', pretrained=False, num_classes=20,
     progress=True, device='cuda', **kwargs
 ):
-    config_key = model_name
-    config_path = get_project_root() / CFG_PATH / model_configs[config_key]
-
     model = YOLOv6(
-        model_config=str(config_path),
+        model_config=config_path,
         nc=num_classes,
         **kwargs
     )
@@ -46,7 +61,7 @@ def yolov6(
     return model.to(device)
 
 
-def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
+def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes, config_path, **default_kwargs):
     model_wrapper_fn = yolov6
     has_checkpoint = True
     if f"{model_name}_{dataset_name}" not in model_urls:
@@ -55,24 +70,39 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection', has_checkpoint=has_checkpoint)
     def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device='cuda', **kwargs):
+        default_kwargs.update(**kwargs)
         return model_wrapper_fn(
             model_name=model_name,
+            config_path=config_path,
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
             progress=progress,
             device=device,
-            **kwargs
+            **default_kwargs
         )
     wrapper_func.__name__ = wrapper_name
     return wrapper_func
 
 
-model_list = list(model_configs.keys())
-datasets = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
+def get_model_scales(model_key):
+    scale_dict = DEFAULT_MODEL_SCALES
+    param_names = ('depth_mul', 'width_mul')
+    return {cfg_name: dict(zip(param_names, param_cfg)) for cfg_name, param_cfg in scale_dict.items()}
 
-for dataset_tag, n_classes in datasets:
-    for model_tag in model_list:
+
+full_model_dict = {}
+for model_key in YOLOV6_CONFIGS:
+    for cfg_name, param_dict in get_model_scales(model_key).items():
+        full_model_dict[f'{model_key}-{cfg_name}'] = {
+            'params': param_dict,
+            'config': get_project_root() / CFG_PATH / YOLOV6_CONFIGS[model_key]
+        }
+
+
+for dataset_tag, n_classes in DATASET_LIST:
+    for model_tag, model_dict in full_model_dict.items():
         name = '_'.join([model_tag, dataset_tag])
-        globals()[name] = make_wrapper_func(name, model_tag, dataset_tag, n_classes)
+        globals()[name] = make_wrapper_func(name, model_tag, dataset_tag, n_classes,
+                                                model_dict['config'], **model_dict['params'])
         __all__.append(name)

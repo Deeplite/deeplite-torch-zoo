@@ -118,7 +118,7 @@ class FlexibleYOLO(YOLOModel):
 
 
 class YOLOv6(FlexibleYOLO):
-    def __init__(self, model_config, nc=80, custom_head=None):
+    def __init__(self, model_config, nc=80, custom_head=None, width_mul=None, depth_mul=None):
         """
         :param model_config:
         """
@@ -141,6 +141,11 @@ class YOLOv6(FlexibleYOLO):
         cfg = Config.fromfile(model_config)
         if not hasattr(cfg, 'training_mode'):
             setattr(cfg, 'training_mode', 'repvgg')
+
+        if width_mul is not None:
+            cfg.model.width_multiple = width_mul
+        if depth_mul is not None:
+            cfg.model.depth_multiple = depth_mul
 
         self.backbone, self.neck, channel_counts = build_network(cfg)
 

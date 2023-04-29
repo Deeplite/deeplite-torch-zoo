@@ -278,12 +278,18 @@ class RepVGGBlock(nn.Module):
             return 0, 0
         if isinstance(branch, ConvModule):
             kernel = branch.conv.weight
-            bias = branch.conv.bias
-            return kernel, bias
-        elif isinstance(branch, nn.BatchNorm2d):
-            if not hasattr(self, 'id_tensor'):
+            running_mean = branch.bn.running_mean
+            running_var = branch.bn.running_var
+            gamma = branch.bn.weight
+            beta = branch.bn.bias
+            eps = branch.bn.eps
+        else:
+            assert isinstance(branch, nn.BatchNorm2d)
+            if not hasattr(self, "id_tensor"):
                 input_dim = self.in_channels // self.groups
-                kernel_value = np.zeros((self.in_channels, input_dim, 3, 3), dtype=np.float32)
+                kernel_value = np.zeros(
+                    (self.in_channels, input_dim, 3, 3), dtype=np.float32
+                )
                 for i in range(self.in_channels):
                     kernel_value[i, i % input_dim, 1, 1] = 1
                 self.id_tensor = torch.from_numpy(kernel_value).to(branch.weight.device)
@@ -293,9 +299,9 @@ class RepVGGBlock(nn.Module):
             gamma = branch.weight
             beta = branch.bias
             eps = branch.eps
-            std = (running_var + eps).sqrt()
-            t = (gamma / std).reshape(-1, 1, 1, 1)
-            return kernel * t, beta - running_mean * gamma / std
+        std = (running_var + eps).sqrt()
+        t = (gamma / std).reshape(-1, 1, 1, 1)
+        return kernel * t, beta - running_mean * gamma / std
 
     def switch_to_deploy(self):
         if hasattr(self, 'rbr_reparam'):

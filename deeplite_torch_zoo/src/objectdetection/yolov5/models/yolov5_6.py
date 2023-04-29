@@ -7,7 +7,6 @@ from copy import deepcopy
 from pathlib import Path
 
 import torch
-
 from deeplite_torch_zoo.src.dnn_blocks import *
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
@@ -49,7 +48,7 @@ class YOLOModel(nn.Module):
                 self.yaml = yaml.safe_load(f)  # model dict
 
         if custom_head is not None:
-            self.yaml['head'][-1][2] = str(HEAD_NAME_MAP[custom_head])
+            self.yaml['head'][-1][2] = HEAD_NAME_MAP[custom_head].__name__
 
         # Define model
         self.nc = nc
