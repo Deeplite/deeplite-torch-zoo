@@ -4,6 +4,7 @@ import cv2
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch import utils
+import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset as BaseDataset
 import albumentations as albu
