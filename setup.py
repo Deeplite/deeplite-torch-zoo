@@ -40,6 +40,7 @@ INSTALL_REQUIRES = [
     "Wand==0.6.11",
     "pytz",
     "pandas",
+    "segmentation_models_pytorch==0.3.2",
 ]
 
 python_version = sys.version_info
