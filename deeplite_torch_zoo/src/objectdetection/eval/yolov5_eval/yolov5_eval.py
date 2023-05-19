@@ -86,7 +86,7 @@ def evaluate(
 
     metric_fn = MetricBuilder.build_evaluation_metric(
         "map_2d",
-        async_mode=True,
+        async_mode=False,
         num_classes=num_classes
     )
 
