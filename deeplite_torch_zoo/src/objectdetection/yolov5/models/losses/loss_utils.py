@@ -5,7 +5,6 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
-
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
     xyxy2cxcywh
 
@@ -43,12 +42,12 @@ def get_yolov5_targets(raw_targets, labels_length, img_size, device):
 class FocalLoss(nn.Module):
     # Wraps focal loss around existing loss_fcn(), i.e. criteria = FocalLoss(nn.BCEWithLogitsLoss(), gamma=1.5)
     def __init__(self, loss_fcn, gamma=1.5, alpha=0.25):
-        super(FocalLoss, self).__init__()
+        super().__init__()
         self.loss_fcn = loss_fcn  # must be nn.BCEWithLogitsLoss()
         self.gamma = gamma
         self.alpha = alpha
         self.reduction = loss_fcn.reduction
-        self.loss_fcn.reduction = "none"  # required to apply FL to each element
+        self.loss_fcn.reduction = 'none'  # required to apply FL to each element
 
     def forward(self, pred, true):
         loss = self.loss_fcn(pred, true)
@@ -61,70 +60,56 @@ class FocalLoss(nn.Module):
         alpha_factor = true * self.alpha + (1 - true) * (1 - self.alpha)
         modulating_factor = (1.0 - p_t) ** self.gamma
         loss *= alpha_factor * modulating_factor
-        if self.reduction == "mean":
+
+        if self.reduction == 'mean':
             return loss.mean()
-        elif self.reduction == "sum":
+        elif self.reduction == 'sum':
             return loss.sum()
         else:  # 'none'
             return loss
 
 
-def smooth_BCE(
-    eps=0.1,
-):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
+def smooth_BCE(eps=0.1):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
     # return positive, negative label smoothing BCE targets
     return 1.0 - 0.5 * eps, 0.5 * eps
 
 
-def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=1e-9):
-    # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
-    box2 = box2.T
+def bbox_iou(box1, box2, xywh=True, GIoU=False, DIoU=False, CIoU=False, eps=1e-7):
+    # Returns Intersection over Union (IoU) of box1(1,4) to box2(n,4)
 
     # Get the coordinates of bounding boxes
-    if x1y1x2y2:  # x1, y1, x2, y2 = box1
-        b1_x1, b1_y1, b1_x2, b1_y2 = box1[0], box1[1], box1[2], box1[3]
-        b2_x1, b2_y1, b2_x2, b2_y2 = box2[0], box2[1], box2[2], box2[3]
-    else:  # transform from xywh to xyxy
-        b1_x1, b1_x2 = box1[0] - box1[2] / 2, box1[0] + box1[2] / 2
-        b1_y1, b1_y2 = box1[1] - box1[3] / 2, box1[1] + box1[3] / 2
-        b2_x1, b2_x2 = box2[0] - box2[2] / 2, box2[0] + box2[2] / 2
-        b2_y1, b2_y2 = box2[1] - box2[3] / 2, box2[1] + box2[3] / 2
+    if xywh:  # transform from xywh to xyxy
+        (x1, y1, w1, h1), (x2, y2, w2, h2) = box1.chunk(4, -1), box2.chunk(4, -1)
+        w1_, h1_, w2_, h2_ = w1 / 2, h1 / 2, w2 / 2, h2 / 2
+        b1_x1, b1_x2, b1_y1, b1_y2 = x1 - w1_, x1 + w1_, y1 - h1_, y1 + h1_
+        b2_x1, b2_x2, b2_y1, b2_y2 = x2 - w2_, x2 + w2_, y2 - h2_, y2 + h2_
+    else:  # x1, y1, x2, y2 = box1
+        b1_x1, b1_y1, b1_x2, b1_y2 = box1.chunk(4, -1)
+        b2_x1, b2_y1, b2_x2, b2_y2 = box2.chunk(4, -1)
+        w1, h1 = b1_x2 - b1_x1, (b1_y2 - b1_y1).clamp(eps)
+        w2, h2 = b2_x2 - b2_x1, (b2_y2 - b2_y1).clamp(eps)
 
     # Intersection area
-    inter = (torch.min(b1_x2, b2_x2) - torch.max(b1_x1, b2_x1)).clamp(0) * (
-        torch.min(b1_y2, b2_y2) - torch.max(b1_y1, b2_y1)
-    ).clamp(0)
+    inter = (b1_x2.minimum(b2_x2) - b1_x1.maximum(b2_x1)).clamp(0) * \
+            (b1_y2.minimum(b2_y2) - b1_y1.maximum(b2_y1)).clamp(0)
 
     # Union Area
-    w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + eps
-    w2, h2 = b2_x2 - b2_x1, b2_y2 - b2_y1 + eps
     union = w1 * h1 + w2 * h2 - inter + eps
 
+    # IoU
     iou = inter / union
-    if GIoU or DIoU or CIoU:
-        cw = torch.max(b1_x2, b2_x2) - torch.min(
-            b1_x1, b2_x1
-        )  # convex (smallest enclosing box) width
-        ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
+    if CIoU or DIoU or GIoU:
+        cw = b1_x2.maximum(b2_x2) - b1_x1.minimum(b2_x1)  # convex (smallest enclosing box) width
+        ch = b1_y2.maximum(b2_y2) - b1_y1.minimum(b2_y1)  # convex height
         if CIoU or DIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
             c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
-            rho2 = (
-                (b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2
-                + (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2
-            ) / 4  # center distance squared
-            if DIoU:
-                return iou - rho2 / c2  # DIoU
-            elif (
-                CIoU
-            ):  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
-                v = (4 / math.pi ** 2) * torch.pow(
-                    torch.atan(w2 / h2) - torch.atan(w1 / h1), 2
-                )
+            rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 + (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center dist ** 2
+            if CIoU:  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
+                v = (4 / math.pi ** 2) * (torch.atan(w2 / h2) - torch.atan(w1 / h1)).pow(2)
                 with torch.no_grad():
-                    alpha = v / ((1 + eps) - iou + v)
+                    alpha = v / (v - iou + (1 + eps))
                 return iou - (rho2 / c2 + v * alpha)  # CIoU
-        else:  # GIoU https://arxiv.org/pdf/1902.09630.pdf
-            c_area = cw * ch + eps  # convex area
-            return iou - (c_area - union) / c_area  # GIoU
-    else:
-        return iou  # IoU
+            return iou - rho2 / c2  # DIoU
+        c_area = cw * ch + eps  # convex area
+        return iou - (c_area - union) / c_area  # GIoU https://arxiv.org/pdf/1902.09630.pdf
+    return iou  # IoU

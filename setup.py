@@ -15,6 +15,7 @@ HERE = pathlib.Path(__file__).parent
 
 INSTALL_REQUIRES = [
     "setuptools<65.6.0",
+    "urllib3==1.26.6",
     "torch>=1.4, <=2.0.0",
     "opencv-python<=4.6.0.66",
     "scipy>=1.4.1",

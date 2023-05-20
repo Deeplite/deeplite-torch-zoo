@@ -53,7 +53,7 @@ model_kwargs = {
 
 def flexible_yolo(
     model_name='yolo_resnet18', dataset_name='voc', num_classes=20,
-    pretrained=False, progress=True, device='cuda'
+    pretrained=False, progress=True, device='cuda', **kwargs
 ):
     config_key = model_name
     config_path = get_project_root() / CFG_PATH / model_configs[config_key]
@@ -65,6 +65,7 @@ def flexible_yolo(
         nc=num_classes,
         backbone_kwargs=backbone_kwargs,
         neck_kwargs=neck_kwargs,
+        **kwargs
     )
     if pretrained:
         if f"{model_name}_{dataset_name}" not in model_urls:
@@ -83,7 +84,7 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
 
     @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
         task_type='object_detection', has_checkpoint=has_checkpoint)
-    def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device='cuda'):
+    def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device='cuda', **kwargs):
         return model_wrapper_fn(
             model_name=model_name,
             dataset_name=dataset_name,
@@ -91,6 +92,7 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
             pretrained=pretrained,
             progress=progress,
             device=device,
+            **kwargs
         )
     wrapper_func.__name__ = wrapper_name
     return wrapper_func

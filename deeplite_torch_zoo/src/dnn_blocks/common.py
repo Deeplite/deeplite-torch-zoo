@@ -15,6 +15,7 @@ except:
         def forward(self, x):
             return x * torch.nn.functional.softplus(x).tanh()
 
+from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
 
 ACT_TYPE_MAP = {
     'relu': nn.ReLU(inplace=True),
@@ -51,6 +52,7 @@ def round_channels(channels, divisor=8):
     return rounded_channels
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class ConvBnAct(nn.Module):
     # Standard convolution-batchnorm-activation block
     def __init__(
@@ -116,6 +118,7 @@ class ConvBnAct(nn.Module):
         return out
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class DWConv(ConvBnAct):
     # Depth-wise convolution class
     def __init__(
@@ -136,45 +139,32 @@ class DWConv(ConvBnAct):
         )
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class GhostConv(nn.Module):
-    # Ghost Convolution block https://github.com/huawei-noah/ghostnet
-    def __init__(
-        self,
-        c1,
-        c2,
-        k=1,
-        s=1,
-        g=1,
-        act='relu',
-        dw_k=3,
-        dw_s=1,
-        residual=False,
-        shrink_factor=2,
-    ):  # ch_in, ch_out, kernel, stride, groups
-        super().__init__()
-        c_ = int(c2 / shrink_factor)  # hidden channels
-        self.single_conv = False
-        dw_c = c_ * (shrink_factor - 1)
-        if dw_c + c_ != c2:
-            self.cv1 = ConvBnAct(c1, c2, k, s, act=act, g=g)
-            self.single_conv = True
-            return
+    # Ghost Convolution https://github.com/huawei-noah/ghostnet
+    def __init__(self, c1, c2, k=1, s=1, g=1, dw_k=5,
+                 dw_s=1, act='relu', shrink_factor=0.5, residual=False):  # ch_in, ch_out, kernel, stride, groups
+        super(GhostConv, self).__init__()
+        c_ = c2 // 2  # hidden channels
 
-        self.cv1 = ConvBnAct(c1, c_, k, s, act=act, g=g)
-        self.cv2 = ConvBnAct(c_, dw_c, dw_k, dw_s, act=act, g=c_)
         self.residual = residual
+        self.single_conv = False
+        if c_ < 2:
+            self.single_conv = True
+            self.cv1 = ConvBnAct(c1, c2, k, s, p=None, g=g, act=act)
+        else:
+            self.cv1 = ConvBnAct(c1, c_, k, s, p=None, g=g, act=act)
+            self.cv2 = ConvBnAct(c_, c_, dw_k, dw_s, p=None, g=c_, act=act)
 
     def forward(self, x):
+        y = self.cv1(x)
         if self.single_conv:
-            return self.cv1(x)
-        if not self.residual:
-            y = self.cv1(x)
-            return torch.cat((y, self.cv2(y)), 1)
-        else:
-            y = self.cv1(x)
-            return x + torch.cat((y, self.cv2(y)), 1)
+            return y
+        return torch.cat([y, self.cv2(y)], 1) if not self.residual \
+            else x + torch.cat([y, self.cv2(y)], 1)
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class Focus(nn.Module):
     # Focus wh information into c-space
     def __init__(

@@ -18,6 +18,7 @@ def yolo_eval_voc(
     progressbar=False,
     subclasses=None,
     num_classes=None,
+    v8_eval=False,
     **kwargs
 ):
     model.to(device)
@@ -29,6 +30,7 @@ def yolo_eval_voc(
         eval_style=eval_style,
         map_iou_thresh=iou_thresh,
         num_classes=num_classes,
+        v8_eval=v8_eval,
     )
     return ap_dict
 

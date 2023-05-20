@@ -50,6 +50,7 @@ def get_model_by_name(
     progress=False,
     fp16=False,
     device="cuda",
+    **kwargs
 ):
     """
     Tries to find a matching model creation wrapper function in the registry and uses it to create a new model object
@@ -65,7 +66,7 @@ def get_model_by_name(
     model_func = MODEL_WRAPPER_REGISTRY.get(
         model_name=model_name.lower(), dataset_name=dataset_name
     )
-    model = model_func(pretrained=pretrained, progress=progress, device=device)
+    model = model_func(pretrained=pretrained, progress=progress, device=device, **kwargs)
     return model.half() if fp16 else model
 
 
@@ -117,7 +118,7 @@ def create_model(
     return model.half() if fp16 else model
 
 
-def profile(model, img_size=224, in_ch=3, verbose=False):
+def profile(model, img_size=224, in_ch=3, verbose=False, fuse=True):
     """
     Do model profiling to calculate the MAC count, the number of parameters and weight size of the model.
     The torchprofile package is used to calculate MACs, which is jit-based and
@@ -135,12 +136,15 @@ def profile(model, img_size=224, in_ch=3, verbose=False):
     if not isinstance(img_size, tuple):
         img_size = (in_ch, img_size, img_size)
 
+    if fuse and hasattr(model, 'fuse'):
+        model = model.fuse()
+
     with switch_train_mode(model, is_training=False):
         model_stats = summary(model, input_size=(1, *img_size), verbose=verbose)
         model_size_mb = model_stats.to_megabytes(model_stats.total_param_bytes)
         model_mparams = model_stats.total_params / 1e6
 
-        macs = profile_macs(model.to('cpu'), torch.randn(1, *img_size))
+        macs = profile_macs(model.to('cpu'), torch.randn(1, *img_size).to('cpu'))
         model_gmacs = macs / 1e9
 
     model.to(device)

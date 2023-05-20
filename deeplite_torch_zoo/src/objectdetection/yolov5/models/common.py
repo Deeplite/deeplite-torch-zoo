@@ -3,29 +3,28 @@
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, autopad
+from deeplite_torch_zoo.src.dnn_blocks.common import autopad
 
+try:
+    from pytorch_wavelets import DWTForward
 
-class Focus(nn.Module):
-    # Focus wh information into c-space
-    def __init__(
-        self, c1, c2, k=1, s=1, p=None, g=1, act='hswish',
-    ):  # ch_in, ch_out, kernel, stride, padding, groups
-        super(Focus, self).__init__()
-        self.conv = ConvBnAct(c1 * 4, c2, k, s, p, g, act=act)
+    class DWT(nn.Module):
+        def __init__(self):
+            super(DWT, self).__init__()
+            self.xfm = DWTForward(J=1, wave='db1', mode='zero')
 
-    def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
-        return self.conv(
-            torch.cat(
-                [
-                    x[..., ::2, ::2],
-                    x[..., 1::2, ::2],
-                    x[..., ::2, 1::2],
-                    x[..., 1::2, 1::2],
-                ],
-                1,
-            )
-        )
+        def forward(self, x):
+            b,c,w,h = x.shape
+            yl, yh = self.xfm(x)
+            return torch.cat([yl/2., yh[0].view(b,-1,w//2,h//2)/2.+.5], 1)
+except:
+
+    class DWT(nn.Module): # use ReOrg instead
+        def __init__(self):
+            super(DWT, self).__init__()
+
+        def forward(self, x):
+            return torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
 
 
 class Concat(nn.Module):
@@ -110,6 +109,14 @@ class SP(nn.Module):
         return self.m(x)
 
 
+class ReOrg(nn.Module):
+    def __init__(self):
+        super(ReOrg, self).__init__()
+
+    def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
+        return torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
+
+
 class ImplicitA(nn.Module):
     def __init__(self, channel, mean=0., std=.02):
         super(ImplicitA, self).__init__()
@@ -134,3 +141,37 @@ class ImplicitM(nn.Module):
 
     def forward(self, x):
         return self.implicit * x
+
+
+class Shortcut(nn.Module):
+    def __init__(self, dimension=0):
+        super(Shortcut, self).__init__()
+        self.d = dimension
+
+    def forward(self, x):
+        return x[0]+x[1]
+
+
+class Chuncat(nn.Module):
+    def __init__(self, dimension=1):
+        super(Chuncat, self).__init__()
+        self.d = dimension
+
+    def forward(self, x):
+        x1 = []
+        x2 = []
+        for xi in x:
+            xi1, xi2 = xi.chunk(2, self.d)
+            x1.append(xi1)
+            x2.append(xi2)
+        return torch.cat(x1+x2, self.d)
+
+
+class Foldcut(nn.Module):
+    def __init__(self, dimension=0):
+        super(Foldcut, self).__init__()
+        self.d = dimension
+
+    def forward(self, x):
+        x1, x2 = x.chunk(2, self.d)
+        return x1+x2

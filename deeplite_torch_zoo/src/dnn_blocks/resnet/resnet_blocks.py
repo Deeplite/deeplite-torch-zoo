@@ -24,31 +24,38 @@ class ResNetBottleneck(nn.Module):
         act='relu',
         se_ratio=None,
         channel_divisor=1,
-        mid_channels=None
+        mid_channels=None,
+        shortcut=True,
     ) -> None:
         super().__init__()
 
         self.resize_identity = (c1 != c2) or (stride != 1)
         c_ = mid_channels if mid_channels is not None else round_channels(e * c1, channel_divisor)
+        self.shortcut = shortcut
 
         self.conv1 = ConvBnAct(c1, c_, 1, act=act)
         self.conv2 = ConvBnAct(c_, c_, k, stride, g=groups, d=dilation, act=act)
         self.conv3 = ConvBnAct(c_, c2, 1, act=False)
         self.act = get_activation(act)
         self.se = SELayer(c2, reduction=se_ratio) if se_ratio else nn.Identity()
-        self.identity_conv = ConvBnAct(c1, c2, 1, stride, act=False)
+        if self.resize_identity:
+            self.identity_conv = ConvBnAct(c1, c2, 1, stride, act=False)
 
     def forward(self, x: Tensor) -> Tensor:
-        if self.resize_identity:
-            identity = self.identity_conv(x)
-        else:
-            identity = x
+        if self.shortcut:
+            if self.resize_identity:
+                identity = self.identity_conv(x)
+            else:
+                identity = x
 
         out = self.conv1(x)
         out = self.conv2(out)
         out = self.conv3(out)
         out = self.se(out)
-        out += identity
+
+        if self.shortcut:
+            out += identity
+
         out = self.act(out)
 
         return out
@@ -99,7 +106,7 @@ class ResNeXtBottleneck(ResNetBottleneck):
         e: float = 1.0,
         k: int = 3,
         stride: int = 1,
-        groups: int = 1,
+        groups: int = 32,
         dilation: int = 1,
         act='relu',
         se_ratio=None,

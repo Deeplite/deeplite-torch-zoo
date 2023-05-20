@@ -6,8 +6,10 @@ import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import autopad, get_activation
+from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class RepConv(nn.Module):
     # Represented convolution
     # https://arxiv.org/abs/2101.03697
@@ -132,7 +134,7 @@ class RepConv(nn.Module):
     def fuse_repvgg_block(self):
         if self.deploy:
             return
-        print(f"RepConv.fuse_repvgg_block")
+        print(f"executing RepConv.fuse_repvgg_block")
 
         self.rbr_dense = self.fuse_conv_bn(self.rbr_dense[0], self.rbr_dense[1])
 
