@@ -4,11 +4,11 @@ from collections import namedtuple
 
 from deeplite_torch_zoo.src.objectdetection.datasets.coco import \
     CocoDetectionBoundingBox
+from deeplite_torch_zoo.src.objectdetection.datasets.coco.transforms import (
+    default_transform_fn, random_transform_fn)
 from deeplite_torch_zoo.src.objectdetection.datasets.coco_config import (
     COCO_DATA_CATEGORIES, COCO_MISSING_IDS)
 from deeplite_torch_zoo.src.objectdetection.datasets.lisa import LISA
-from deeplite_torch_zoo.src.objectdetection.datasets.transforms import (
-    default_transform_fn, random_transform_fn)
 from deeplite_torch_zoo.src.objectdetection.datasets.voc import VocDataset
 from deeplite_torch_zoo.src.objectdetection.datasets.voc_utils import \
     prepare_yolo_voc_data

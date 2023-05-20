@@ -1,3 +1,2 @@
-from .classification import *
-from .objectdetection import *
-from .segmentation import *
+from .classification import *  # pylint: disable=unused-import
+from .objectdetection import *  # pylint: disable=unused-import

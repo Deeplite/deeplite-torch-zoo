@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ACT_TYPE_MAP, ConvBnAct
-from deeplite_torch_zoo.src.dnn_blocks.yolo_blocks import (YOLOBottleneck,
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import (YOLOBottleneck,
                                                            YOLOGhostBottleneck)
 from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import YOLOSPP
 from deeplite_torch_zoo.src.registries import (EXPANDABLE_BLOCKS,

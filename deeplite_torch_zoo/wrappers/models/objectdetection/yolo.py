@@ -106,21 +106,19 @@ CUSTOM_MODEL_SCALES = {
     'yolo8': V8_MODEL_SCALES
 }
 
-def get_model_scales(model_key):
-    scale_dict = DEFAULT_MODEL_SCALES
-    if model_key in CUSTOM_MODEL_SCALES:
-        scale_dict = CUSTOM_MODEL_SCALES[model_key]
+def get_model_scales(_model_key):
+    scale_dict = CUSTOM_MODEL_SCALES.get(_model_key, DEFAULT_MODEL_SCALES)
     param_names = ('depth_mul', 'width_mul', 'max_channels')
     return {cfg_name: dict(zip(param_names, param_cfg)) for cfg_name, param_cfg in scale_dict.items()}
 
 
 full_model_dict = {}
-for model_key in YOLO_CONFIGS:
+for model_key, config_name in YOLO_CONFIGS.items():
     for cfg_name, param_dict in get_model_scales(model_key).items():
         for activation_fn_tag, act_fn_name in ACT_FN_TAGS.items():
             full_model_dict[f'{model_key}{cfg_name}{activation_fn_tag}'] = {
                 'params': {**param_dict, 'activation_type': act_fn_name},
-                'config': get_project_root() / CFG_PATH / YOLO_CONFIGS[model_key]
+                'config': get_project_root() / CFG_PATH / config_name
             }
 
 

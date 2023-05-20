@@ -85,18 +85,18 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes, confi
     return wrapper_func
 
 
-def get_model_scales(model_key):
+def get_model_scales():
     scale_dict = DEFAULT_MODEL_SCALES
     param_names = ('depth_mul', 'width_mul')
     return {cfg_name: dict(zip(param_names, param_cfg)) for cfg_name, param_cfg in scale_dict.items()}
 
 
 full_model_dict = {}
-for model_key in YOLOV6_CONFIGS:
-    for cfg_name, param_dict in get_model_scales(model_key).items():
+for model_key, config_name in YOLOV6_CONFIGS.items():
+    for cfg_name, param_dict in get_model_scales().items():
         full_model_dict[f'{model_key}-{cfg_name}'] = {
             'params': param_dict,
-            'config': get_project_root() / CFG_PATH / YOLOV6_CONFIGS[model_key]
+            'config': get_project_root() / CFG_PATH / config_name
         }
 
 

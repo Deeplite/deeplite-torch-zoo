@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 from pycocotools.cocoeval import COCOeval
 from tqdm import tqdm
 
@@ -87,45 +86,3 @@ class YoloCOCOEvaluator(COCOEvaluator):
                 ]
             )
         return results
-
-
-class SSDCOCOEvaluator(COCOEvaluator):
-    def __init__(self, model, dataset, gt=None, net="ssd", predictor=None, img_size=300):
-        super().__init__(
-            model=model,
-            dataset=dataset,
-            net=net,
-            img_size=img_size,
-            gt=gt,
-        )
-        self.predictor = predictor
-
-    def process_image(self, img, img_id):
-        boxes, labels, probs = self.predictor.predict(img)
-        results = []
-        for bbox, label, prob in zip(boxes, labels, probs):
-            xmin, ymin, xmax, ymax = bbox
-            results.append(
-                [
-                    img_id,
-                    xmin,
-                    ymin,
-                    xmax - xmin,
-                    ymax - ymin,
-                    prob,
-                    self.dataset.add_coco_empty_category(label) - 1,
-                ]
-            )
-        return results
-
-
-def ssd_eval_coco(model, data_loader, gt=None, predictor=None, device="cuda", net="ssd"):
-    model.to(device)
-    with torch.no_grad():
-        return SSDCOCOEvaluator(
-            model,
-            data_loader.dataset,
-            gt=gt,
-            predictor=predictor,
-            net=net
-        ).evaluate()

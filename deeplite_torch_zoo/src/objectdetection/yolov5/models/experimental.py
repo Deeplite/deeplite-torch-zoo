@@ -5,6 +5,7 @@ import math
 
 import torch
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.dnn_blocks.common import GhostConv, get_activation
 from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
 

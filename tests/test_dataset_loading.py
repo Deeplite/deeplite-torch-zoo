@@ -135,21 +135,6 @@ def test_imagenet1000_dataset():
 
 
 @pytest.mark.local
-def test_voc0712_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root=str(DATASETS_ROOT / "VOCdevkit"),
-        dataset_name="voc",
-        model_name="vgg16_ssd",
-        batch_size=BATCH_SIZE,
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  130
-    assert test_len ==  39
-
-
-@pytest.mark.local
 def test_voc_yolo_dataset():
     BATCH_SIZE = 128
     datasplit = get_data_splits_by_name(

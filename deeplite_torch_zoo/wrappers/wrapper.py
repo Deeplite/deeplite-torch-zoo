@@ -136,7 +136,7 @@ def profile(model, img_size=224, in_ch=3, verbose=False, fuse=True):
     if not isinstance(img_size, tuple):
         img_size = (in_ch, img_size, img_size)
 
-    if fuse:
+    if fuse and hasattr(model, 'fuse'):
         model = model.fuse()
 
     with switch_train_mode(model, is_training=False):
@@ -144,7 +144,7 @@ def profile(model, img_size=224, in_ch=3, verbose=False, fuse=True):
         model_size_mb = model_stats.to_megabytes(model_stats.total_param_bytes)
         model_mparams = model_stats.total_params / 1e6
 
-        macs = profile_macs(model.to('cuda'), torch.randn(1, *img_size).to('cuda'))
+        macs = profile_macs(model.to('cpu'), torch.randn(1, *img_size).to('cpu'))
         model_gmacs = macs / 1e9
 
     model.to(device)

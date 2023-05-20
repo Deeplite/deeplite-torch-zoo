@@ -10,14 +10,14 @@ import torch
 from deeplite_torch_zoo.src.dnn_blocks import *
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
-from deeplite_torch_zoo.src.dnn_blocks.repvgg_blocks import RepConv
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.repvgg_blocks import RepConv
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.common import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.experimental import *
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect import \
     Detect
 from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detect_v8 import \
     DetectV8
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.detectx import \
+from deeplite_torch_zoo.src.objectdetection.yolov5.models.heads.yolox.detectx import \
     DetectX
 from deeplite_torch_zoo.src.objectdetection.yolov5.utils.general import \
     make_divisible

@@ -247,13 +247,13 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 ## Credit
 
 ### Object Detection
-- The implementation of mb-ssd models: [qfgaohao/pytorch-ssd](https://github.com/qfgaohao/pytorch-ssd)
-- The implementation of resnet-ssd: [Nvidia-SSD](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/Detection/SSD)
 - The implementation of yolov3-voc: [Peterisfar/YOLOV3](https://github.com/Peterisfar/YOLOV3/)
+- The implementation of yolov3: [ultralytics/yolov3](https://github.com/ultralytics/yolov3)
 - The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
 - The implementation of flexible-yolov5: [Bobo-y/flexible-yolov5](https://github.com/Bobo-y/flexible-yolov5)
 - The implementation of yolov7: [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
-- The implementation of yolox: [jizhishutong/YOLOU](https://github.com/jizhishutong/YOLOU)
+- The implementation of yolox: [iscyy/yoloair](https://github.com/iscyy/yoloair)
+- [westerndigitalcorporation/YOLOv3-in-PyTorch](https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch)
 
 ### Segmentation
 - The implementation of deeplab: [pytorch-deeplab-xception](https://github.com/jfzhang95/pytorch-deeplab-xception)
@@ -276,5 +276,12 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - [DingXiaoH/RepLKNet-pytorch](https://github.com/DingXiaoH/RepLKNet-pytorch)
 - [huawei-noah/Efficient-AI-Backbones](https://github.com/huawei-noah/Efficient-AI-Backbones)
 
+
 ### Misc
 - mAP metric calculation code: [bes-dev/mean_average_precision](https://github.com/bes-dev/mean_average_precision)
+- torchvision dataset implementations: [pytorch/vision](https://github.com/pytorch/vision)
+- MLP implementation: [aaron-xichen/pytorch-playground](https://github.com/aaron-xichen/pytorch-playground)
+- AutoAugment implementation: [DeepVoltaire/AutoAugment](https://github.com/DeepVoltaire/AutoAugment)
+- Cutout implementation: [uoguelph-mlrg/Cutout](https://github.com/uoguelph-mlrg/Cutout)
+- Robustness measurement image distortions: [hendrycks/robustness](https://github.com/hendrycks/robustness)
+- Registry implementation: [openvinotoolkit/openvino/tools/pot](https://github.com/openvinotoolkit/openvino/blob/master/tools/pot)

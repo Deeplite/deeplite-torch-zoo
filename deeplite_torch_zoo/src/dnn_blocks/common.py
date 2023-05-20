@@ -2,9 +2,8 @@
 
 # Code taken from:
 # - https://github.com/ultralytics/yolov5/
-# - https://github.com/osmr/imgclsmob
-# - https://github.com/huggingface/pytorch-image-models/
-
+# The file is modified by Deeplite Inc. from the original implementation on Mar 21, 2023
+# Code refactoring
 
 import torch
 import torch.nn as nn
@@ -47,19 +46,6 @@ def autopad(k, p=None, d=1):  # kernel, padding, dilation
 
 
 def round_channels(channels, divisor=8):
-    """
-    Round weighted channel number (make divisible operation).
-    Parameters:
-    ----------
-    channels : int or float
-        Original number of channels.
-    divisor : int, default 8
-        Alignment value.
-    Returns:
-    -------
-    int
-        Weighted number of channels.
-    """
     rounded_channels = max(int(channels + divisor / 2.0) // divisor * divisor, divisor)
     if float(rounded_channels) < 0.9 * channels:
         rounded_channels += divisor
@@ -263,91 +249,3 @@ class RobustConv2(nn.Module):
         if self.gamma is not None:
             x = x.mul(self.gamma.reshape(1, -1, 1, 1))
         return x
-
-
-def drop_path(
-    x, drop_prob: float = 0.0, training: bool = False, scale_by_keep: bool = True
-):
-    """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
-
-    This is the same as the DropConnect impl I created for EfficientNet, etc networks, however,
-    the original name is misleading as 'Drop Connect' is a different form of dropout in a separate paper...
-    See discussion: https://github.com/tensorflow/tpu/issues/494#issuecomment-532968956 ... I've opted for
-    changing the layer and argument names to 'drop path' rather than mix DropConnect as a layer name and use
-    'survival rate' as the argument.
-
-    """
-    if drop_prob == 0.0 or not training:
-        return x
-    keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (
-        x.ndim - 1
-    )  # work with diff dim tensors, not just 2D ConvNets
-    random_tensor = x.new_empty(shape).bernoulli_(keep_prob)
-    if keep_prob > 0.0 and scale_by_keep:
-        random_tensor.div_(keep_prob)
-    return x * random_tensor
-
-
-class DropPath(nn.Module):
-    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
-
-    def __init__(self, drop_prob: float = 0.0, scale_by_keep: bool = True):
-        super(DropPath, self).__init__()
-        self.drop_prob = drop_prob
-        self.scale_by_keep = scale_by_keep
-
-    def forward(self, x):
-        return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
-
-    def extra_repr(self):
-        return f'drop_prob={round(self.drop_prob,3):0.3f}'
-
-
-def channel_shuffle(x, groups):
-    """
-    Channel shuffle operation from 'ShuffleNet: An Extremely Efficient Convolutional Neural
-    Network for Mobile Devices,' https://arxiv.org/abs/1707.01083.
-    Parameters:
-    ----------
-    x : Tensor
-        Input tensor.
-    groups : int
-        Number of groups.
-    Returns:
-    -------
-    Tensor
-        Resulted tensor.
-    """
-    batch, channels, height, width = x.size()
-    # assert (channels % groups == 0)
-    channels_per_group = channels // groups
-    x = x.view(batch, groups, channels_per_group, height, width)
-    x = torch.transpose(x, 1, 2).contiguous()
-    x = x.view(batch, channels, height, width)
-    return x
-
-
-class ChannelShuffle(nn.Module):
-    """
-    Channel shuffle layer. This is a wrapper over the same operation. It is designed to save the number of groups.
-    Parameters:
-    ----------
-    channels : int
-        Number of channels.
-    groups : int
-        Number of groups.
-    """
-
-    def __init__(self, channels, groups):
-        super(ChannelShuffle, self).__init__()
-        if channels % groups != 0:
-            raise ValueError("channels must be divisible by groups")
-        self.groups = groups
-
-    def forward(self, x):
-        return channel_shuffle(x, self.groups)
-
-    def __repr__(self):
-        s = "{name}(groups={groups})"
-        return s.format(name=self.__class__.__name__, groups=self.groups)
