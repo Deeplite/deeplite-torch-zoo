@@ -5,7 +5,7 @@ import pytest
 import torch
 from torch.utils.data import Dataset
 
-from deeplite_torch_zoo.wrappers.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import get_dataloader
 
 
 class FakeDataset(ABC, Dataset):

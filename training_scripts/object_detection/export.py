@@ -75,7 +75,7 @@ from utils.general import (Profile, check_img_size, check_version, colorstr,
                            file_size, get_default_args, print_args)
 from utils.torch_utils import select_device, smart_inference_mode
 
-from deeplite_torch_zoo.src.objectdetection.yolov5.models.yolov5_6 import (
+from deeplite_torch_zoo.src.object_detection.yolov5.models.yolov5 import (
     Detect, YOLOModel)
 
 MACOS = platform.system() == 'Darwin'  # macOS environment
@@ -328,7 +328,7 @@ def export_saved_model(model,
     from tensorflow.python.framework.convert_to_constants import \
         convert_variables_to_constants_v2
 
-    from deeplite_torch_zoo.src.objectdetection.yolov5.models.tf import TFModel
+    from deeplite_torch_zoo.src.object_detection.yolov5.models.tf import TFModel
 
     print(f'\n{prefix} starting export with tensorflow {tf.__version__}...')
     f = str(file).replace('.pt', '_saved_model')

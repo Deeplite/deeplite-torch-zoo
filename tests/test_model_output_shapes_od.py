@@ -5,7 +5,7 @@ import torch
 
 from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_model_by_name, get_models_by_dataset)
-from deeplite_torch_zoo.wrappers.registries import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 MOCK_DATASETS_PATH = Path('tests/fixture/datasets')
 MOCK_VOC_PATH = MOCK_DATASETS_PATH / 'VOCdevkit'

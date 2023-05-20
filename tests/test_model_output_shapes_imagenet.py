@@ -3,7 +3,7 @@ import torch
 
 from deeplite_torch_zoo import (create_model, get_model_by_name,
                                 get_models_by_dataset)
-from deeplite_torch_zoo.wrappers.models.classification.impl_model_names import (
+from deeplite_torch_zoo.api.models.classification.impl_model_names import (
     FIXED_SIZE_INPUT_MODELS, INPLACE_ABN_MODELS)
 
 TEST_BATCH_SIZE = 2

@@ -1,5 +1,5 @@
 from deeplite_torch_zoo import get_eval_function, list_models
-from deeplite_torch_zoo.wrappers.eval import *
+from deeplite_torch_zoo.api.eval import *
 
 classification_eval_list = (classification_eval, )
 

@@ -238,7 +238,7 @@ def test_yolov4x_voc():
 
 
 @pytest.mark.slow
-def test_yolov5_6s_voc():
+def test_yolov5s_voc():
     model = get_model_by_name(
         model_name="yolo5_6s",
         dataset_name="voc",
