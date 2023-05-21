@@ -13,18 +13,21 @@ from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
 from deeplite_torch_zoo.src.dnn_blocks.yolov7.repvgg_blocks import RepConv
 from deeplite_torch_zoo.src.object_detection.yolov5.models.common import *
 from deeplite_torch_zoo.src.object_detection.yolov5.models.experimental import *
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect import \
-    Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect_v8 import \
-    DetectV8
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.yolox.detectx import \
-    DetectX
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.general import \
-    make_divisible
+from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect import Detect
+from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect_v8 import (
+    DetectV8,
+)
+from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.yolox.detectx import (
+    DetectX,
+)
+from deeplite_torch_zoo.src.object_detection.yolov5.utils.general import make_divisible
 from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import (
-    fuse_conv_and_bn, initialize_weights, model_info, scale_img)
-from deeplite_torch_zoo.src.registries import (EXPANDABLE_BLOCKS,
-                                               VARIABLE_CHANNEL_BLOCKS)
+    fuse_conv_and_bn,
+    initialize_weights,
+    model_info,
+    scale_img,
+)
+from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNEL_BLOCKS
 
 logger = logging.getLogger(__name__)
 
@@ -33,16 +36,28 @@ HEAD_NAME_MAP = {
     'v8': DetectV8,
 }
 
+
 class YOLOModel(nn.Module):
     # YOLOv5 version 6 taken from commit 15e8c4c15bff0 at https://github.com/ultralytics/yolov5
-    def __init__(self, cfg='yolov5s.yaml', ch=3, nc=None, anchors=None,
-                 activation_type=None, depth_mul=None, width_mul=None,
-                 channel_divisor=8, max_channels=None, custom_head=None):
+    def __init__(
+        self,
+        cfg='yolov5s.yaml',
+        ch=3,
+        nc=None,
+        anchors=None,
+        activation_type=None,
+        depth_mul=None,
+        width_mul=None,
+        channel_divisor=8,
+        max_channels=None,
+        custom_head=None,
+    ):
         super().__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
         else:  # is *.yaml
             import yaml  # for torch hub
+
             self.yaml_file = Path(cfg).name
             with open(cfg, encoding='ascii', errors='ignore') as f:
                 self.yaml = yaml.safe_load(f)  # model dict
@@ -75,7 +90,9 @@ class YOLOModel(nn.Module):
         if isinstance(m, Detect):
             s = 256  # 2x min stride
             m.inplace = self.inplace
-            m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])
+            m.stride = torch.tensor(
+                [s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))]
+            )
             m.anchors /= m.stride.view(-1, 1, 1)
 
             self.stride = m.stride
@@ -83,12 +100,14 @@ class YOLOModel(nn.Module):
         if isinstance(m, DetectX):
             m.inplace = self.inplace
             self.stride = torch.tensor(m.stride)
-            m.initialize_biases()     # only run once
+            m.initialize_biases()  # only run once
         if isinstance(m, DetectV8):
             s = 256  # 2x min stride
             m.inplace = self.inplace
             forward = lambda x: self.forward(x)
-            m.stride = torch.tensor([s / x.shape[-2] for x in forward(torch.zeros(1, ch, s, s))])  # forward
+            m.stride = torch.tensor(
+                [s / x.shape[-2] for x in forward(torch.zeros(1, ch, s, s))]
+            )  # forward
             self.stride = m.stride
             m.bias_init()  # only run once
 
@@ -100,7 +119,9 @@ class YOLOModel(nn.Module):
     def forward(self, x, augment=False, profile=False, visualize=False):
         if augment:
             return self._forward_augment(x)  # augmented inference, None
-        return self._forward_once(x, profile, visualize)  # single-scale inference, train
+        return self._forward_once(
+            x, profile, visualize
+        )  # single-scale inference, train
 
     def _forward_augment(self, x):
         img_size = x.shape[-2:]  # height, width
@@ -120,7 +141,11 @@ class YOLOModel(nn.Module):
         y, dt = [], []  # outputs
         for m in self.model:
             if m.f != -1:  # if not from previous layer
-                x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]  # from earlier layers
+                x = (
+                    y[m.f]
+                    if isinstance(m.f, int)
+                    else [x if j == -1 else y[j] for j in m.f]
+                )  # from earlier layers
             if profile:
                 self._profile_one_layer(m, x, dt)
             x = m(x)  # run
@@ -136,7 +161,11 @@ class YOLOModel(nn.Module):
             elif flips == 3:
                 p[..., 0] = img_size[1] - p[..., 0]  # de-flip lr
         else:
-            x, y, wh = p[..., 0:1] / scale, p[..., 1:2] / scale, p[..., 2:4] / scale  # de-scale
+            x, y, wh = (
+                p[..., 0:1] / scale,
+                p[..., 1:2] / scale,
+                p[..., 2:4] / scale,
+            )  # de-scale
             if flips == 2:
                 y = img_size[0] - y  # de-flip ud
             elif flips == 3:
@@ -147,22 +176,30 @@ class YOLOModel(nn.Module):
     def _clip_augmented(self, y):
         # Clip YOLOv5 augmented inference tails
         nl = self.model[-1].nl  # number of detection layers (P3-P5)
-        g = sum(4 ** x for x in range(nl))  # grid points
+        g = sum(4**x for x in range(nl))  # grid points
         e = 1  # exclude layer count
-        i = (y[0].shape[1] // g) * sum(4 ** x for x in range(e))  # indices
+        i = (y[0].shape[1] // g) * sum(4**x for x in range(e))  # indices
         y[0] = y[0][:, :-i]  # large
         i = (y[-1].shape[1] // g) * sum(4 ** (nl - 1 - x) for x in range(e))  # indices
         y[-1] = y[-1][:, i:]  # small
         return y
 
-    def _initialize_biases(self, cf=None):  # initialize biases into Detect(), cf is class frequency
+    def _initialize_biases(
+        self, cf=None
+    ):  # initialize biases into Detect(), cf is class frequency
         # https://arxiv.org/abs/1708.02002 section 3.3
         # cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1.
         m = self.model[-1]  # Detect() module
         for mi, s in zip(m.m, m.stride):  # from
             b = mi.bias.view(m.na, -1)  # conv.bias(255) to (3,85)
-            b.data[:, 4] += math.log(8 / (640 / s) ** 2)  # obj (8 objects per 640 image)
-            b.data[:, 5:] += math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())  # cls
+            b.data[:, 4] += math.log(
+                8 / (640 / s) ** 2
+            )  # obj (8 objects per 640 image)
+            b.data[:, 5:] += (
+                math.log(0.6 / (m.nc - 0.999999))
+                if cf is None
+                else torch.log(cf / cf.sum())
+            )  # cls
             mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
 
     def _print_biases(self):
@@ -170,7 +207,9 @@ class YOLOModel(nn.Module):
         for mi in m.m:  # from
             b = mi.bias.detach().view(m.na, -1).T  # conv.bias(255) to (3,85)
             logger.info(
-                ('%6g Conv2d.bias:' + '%10.3g' * 6) % (mi.weight.shape[1], *b[:5].mean(1).tolist(), b[5:].mean()))
+                ('%6g Conv2d.bias:' + '%10.3g' * 6)
+                % (mi.weight.shape[1], *b[:5].mean(1).tolist(), b[5:].mean())
+            )
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
         logger.info('Fusing layers... ')
@@ -180,7 +219,7 @@ class YOLOModel(nn.Module):
                 delattr(m, 'bn')  # remove batchnorm
                 m.forward = m.forward_fuse  # update forward
             if isinstance(m, RepConv):
-                #print(f" fuse_repvgg_block")
+                # print(f" fuse_repvgg_block")
                 m.fuse_repvgg_block()
         self.info()
         return self
@@ -200,19 +239,35 @@ class YOLOModel(nn.Module):
         return self
 
 
-def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_channels=None, yolo_channel_divisor=8):
-    logger.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
+def parse_model(
+    d,
+    ch,
+    activation_type,
+    depth_mul=None,
+    width_mul=None,
+    max_channels=None,
+    yolo_channel_divisor=8,
+):
+    logger.info(
+        f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}"
+    )
 
     anchors, nc = d['anchors'], d['nc']
     gd = depth_mul
     gw = width_mul
-    activation_type = activation_type if activation_type is not None else d['activation_type']
+    activation_type = (
+        activation_type if activation_type is not None else d['activation_type']
+    )
 
-    na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
+    na = (
+        (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors
+    )  # number of anchors
     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
 
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
-    for i, (f, n, m, args) in enumerate(d['backbone'] + d['head']):  # from, number, module, args
+    for i, (f, n, m, args) in enumerate(
+        d['backbone'] + d['head']
+    ):  # from, number, module, args
         try:
             m = eval(m) if isinstance(m, str) else m  # eval strings
         except:
@@ -262,12 +317,25 @@ def parse_model(d, ch, activation_type, depth_mul=None, width_mul=None, max_chan
         if 'act' in inspect.signature(m).parameters:
             kwargs.update({'act': activation_type})
 
-        m_ = nn.Sequential(*(m(*args, **kwargs) for _ in range(n))) if n > 1 else m(*args, **kwargs)  # module
+        m_ = (
+            nn.Sequential(*(m(*args, **kwargs) for _ in range(n)))
+            if n > 1
+            else m(*args, **kwargs)
+        )  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
         np = sum(x.numel() for x in m_.parameters())  # number params
-        m_.i, m_.f, m_.type, m_.np = i, f, t, np  # attach index, 'from' index, type, number params
-        logger.info(f'{i:>3}{str(f):>18}{n_:>3}{np:10.0f}  {t:<40}{str(args):<30}')  # print
-        save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
+        m_.i, m_.f, m_.type, m_.np = (
+            i,
+            f,
+            t,
+            np,
+        )  # attach index, 'from' index, type, number params
+        logger.info(
+            f'{i:>3}{str(f):>18}{n_:>3}{np:10.0f}  {t:<40}{str(args):<30}'
+        )  # print
+        save.extend(
+            x % i for x in ([f] if isinstance(f, int) else f) if x != -1
+        )  # append to savelist
         layers.append(m_)
         if i == 0:
             ch = []

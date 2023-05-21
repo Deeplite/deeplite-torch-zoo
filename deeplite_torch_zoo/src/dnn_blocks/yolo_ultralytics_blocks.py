@@ -5,11 +5,12 @@ import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ACT_TYPE_MAP, ConvBnAct
-from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import (YOLOBottleneck,
-                                                           YOLOGhostBottleneck)
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import (
+    YOLOBottleneck,
+    YOLOGhostBottleneck,
+)
 from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import YOLOSPP
-from deeplite_torch_zoo.src.registries import (EXPANDABLE_BLOCKS,
-                                               VARIABLE_CHANNEL_BLOCKS)
+from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNEL_BLOCKS
 
 
 @VARIABLE_CHANNEL_BLOCKS.register()
@@ -55,14 +56,28 @@ class YOLOC3(nn.Module):
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC2(nn.Module):
     # CSP Bottleneck with 2 convolutions
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'):  # ch_in, ch_out, number, shortcut, groups, expansion
+    def __init__(
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+    ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         self.c = int(c2 * e)  # hidden channels
         self.cv1 = ConvBnAct(c1, 2 * self.c, 1, 1, act=act)
         self.cv2 = ConvBnAct(2 * self.c, c2, 1, act=act)  # optional act=FReLU(c2)
         # self.attention = ChannelAttention(2 * self.c)  # or SpatialAttention()
-        self.m = nn.Sequential(*(YOLOBottleneck(self.c, self.c, shortcut=shortcut, g=g,
-                                                k=((3, 3), (3, 3)), e=1.0, act=act) for _ in range(n)))
+        self.m = nn.Sequential(
+            *(
+                YOLOBottleneck(
+                    self.c,
+                    self.c,
+                    shortcut=shortcut,
+                    g=g,
+                    k=((3, 3), (3, 3)),
+                    e=1.0,
+                    act=act,
+                )
+                for _ in range(n)
+            )
+        )
 
     def forward(self, x):
         a, b = self.cv1(x).chunk(2, 1)
@@ -73,13 +88,25 @@ class YOLOC2(nn.Module):
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC2f(nn.Module):
     # CSP Bottleneck with 2 convolutions
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='relu'):  # ch_in, ch_out, number, shortcut, groups, expansion
+    def __init__(
+        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='relu'
+    ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         self.c = int(c2 * e)  # hidden channels
         self.cv1 = ConvBnAct(c1, 2 * self.c, 1, 1, act=act)
         self.cv2 = ConvBnAct((2 + n) * self.c, c2, 1, act=act)  # optional act=FReLU(c2)
-        self.m = nn.ModuleList(YOLOBottleneck(self.c, self.c, shortcut=shortcut,
-                                                g=g, k=((3, 3), (3, 3)), e=1.0, act=act) for _ in range(n))
+        self.m = nn.ModuleList(
+            YOLOBottleneck(
+                self.c,
+                self.c,
+                shortcut=shortcut,
+                g=g,
+                k=((3, 3), (3, 3)),
+                e=1.0,
+                act=act,
+            )
+            for _ in range(n)
+        )
 
     def forward(self, x):
         y = list(self.cv1(x).chunk(2, 1))
@@ -113,8 +140,20 @@ class YOLOC3x(YOLOC3):
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'):
         super().__init__(c1, c2, n, shortcut, g, e, act)
         self.c_ = int(c2 * e)
-        self.m = nn.Sequential(*(YOLOBottleneck(self.c_, self.c_, shortcut=shortcut,
-                                                g=g, k=((1, 3), (3, 1)), e=1, act=act) for _ in range(n)))
+        self.m = nn.Sequential(
+            *(
+                YOLOBottleneck(
+                    self.c_,
+                    self.c_,
+                    shortcut=shortcut,
+                    g=g,
+                    k=((1, 3), (3, 1)),
+                    e=1,
+                    act=act,
+                )
+                for _ in range(n)
+            )
+        )
 
 
 @EXPANDABLE_BLOCKS.register()
@@ -124,7 +163,9 @@ class YOLOC3Ghost(YOLOC3):
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'):
         super().__init__(c1, c2, n, shortcut, g, e, act)
         c_ = int(c2 * e)  # hidden channels
-        self.m = nn.Sequential(*(YOLOGhostBottleneck(c_, c_, act=act) for _ in range(n)))
+        self.m = nn.Sequential(
+            *(YOLOGhostBottleneck(c_, c_, act=act) for _ in range(n))
+        )
 
 
 @VARIABLE_CHANNEL_BLOCKS.register()
@@ -147,7 +188,9 @@ class YOLOCrossConv(nn.Module):
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC4(nn.Module):
     # CSP Bottleneck with 4 convolutions aka old C3
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'):  # ch_in, ch_out, number, shortcut, groups, expansion
+    def __init__(
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'
+    ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         Conv_ = functools.partial(ConvBnAct, act=act)
         CrossConv_ = functools.partial(YOLOCrossConv, act=act)
@@ -183,7 +226,9 @@ class YOLOC3TR(YOLOC3):
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3SPP(YOLOC3):
     # C3 module with SPP()
-    def __init__(self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5, act='hardswish'):
+    def __init__(
+        self, c1, c2, k=(5, 9, 13), n=1, shortcut=True, g=1, e=0.5, act='hardswish'
+    ):
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         SPP_ = functools.partial(YOLOSPP, act=act)
         c_ = int(c2 * e)
@@ -219,7 +264,9 @@ class YOLOTransformerBlock(nn.Module):
         if c1 != c2:
             self.conv = Conv_(c1, c2)
         self.linear = nn.Linear(c2, c2)  # learnable position embedding
-        self.tr = nn.Sequential(*(TransformerLayer(c2, num_heads) for _ in range(num_layers)))
+        self.tr = nn.Sequential(
+            *(TransformerLayer(c2, num_heads) for _ in range(num_layers))
+        )
         self.c2 = c2
 
     def forward(self, x):
@@ -227,7 +274,12 @@ class YOLOTransformerBlock(nn.Module):
             x = self.conv(x)
         b, _, w, h = x.shape
         p = x.flatten(2).unsqueeze(0).transpose(0, 3).squeeze(3)
-        return self.tr(p + self.linear(p)).unsqueeze(3).transpose(0, 3).reshape(b, self.c2, w, h)
+        return (
+            self.tr(p + self.linear(p))
+            .unsqueeze(3)
+            .transpose(0, 3)
+            .reshape(b, self.c2, w, h)
+        )
 
 
 @VARIABLE_CHANNEL_BLOCKS.register()

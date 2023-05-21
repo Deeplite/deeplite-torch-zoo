@@ -5,7 +5,11 @@ import math
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules.common import (
-    C3, C3TR, SPPF, Conv)
+    C3,
+    C3TR,
+    SPPF,
+    Conv,
+)
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -20,11 +24,12 @@ class YOLOv5(nn.Module):
         self.version = version
         self.with_c3tr = with_C3TR
         gains = {
-                'n': {'gd': 0.33, 'gw': 0.25},
-                's': {'gd': 0.33, 'gw': 0.5},
-                'm': {'gd': 0.67, 'gw': 0.75},
-                'l': {'gd': 1, 'gw': 1},
-                'x': {'gd': 1.33, 'gw': 1.25}}
+            'n': {'gd': 0.33, 'gw': 0.25},
+            's': {'gd': 0.33, 'gw': 0.5},
+            'm': {'gd': 0.67, 'gw': 0.75},
+            'l': {'gd': 1, 'gw': 1},
+            'x': {'gd': 1.33, 'gw': 1.25},
+        }
 
         self.gd = gains[self.version.lower()]['gd']  # depth gain
         self.gw = gains[self.version.lower()]['gw']  # width gain
@@ -35,7 +40,7 @@ class YOLOv5(nn.Module):
 
         self.C1 = Conv(3, self.channels_out[0], 6, 2, 2)
 
-        self.C2  = Conv(self.channels_out[0], self.channels_out[1], k=3, s=2)
+        self.C2 = Conv(self.channels_out[0], self.channels_out[1], k=3, s=2)
         self.conv1 = C3(self.channels_out[1], self.channels_out[2], self.get_depth(3))
 
         self.C3 = Conv(self.channels_out[2], self.channels_out[3], 3, 2)
@@ -47,17 +52,27 @@ class YOLOv5(nn.Module):
         self.C5 = Conv(self.channels_out[6], self.channels_out[7], 3, 2)
 
         if self.with_c3tr:
-            self.conv4 = C3TR(self.channels_out[7], self.channels_out[8], self.get_depth(3))
+            self.conv4 = C3TR(
+                self.channels_out[7], self.channels_out[8], self.get_depth(3)
+            )
         else:
-            self.conv4 = C3(self.channels_out[7], self.channels_out[8], self.get_depth(3))
+            self.conv4 = C3(
+                self.channels_out[7], self.channels_out[8], self.get_depth(3)
+            )
 
         self.sppf = SPPF(self.channels_out[8], self.channels_out[9], 5)
 
-        self.out_shape = [self.channels_out[3], self.channels_out[5], self.channels_out[9]]
+        self.out_shape = [
+            self.channels_out[3],
+            self.channels_out[5],
+            self.channels_out[9],
+        ]
 
-        LOGGER.info("Backbone output channel: C3 {}, C4 {}, C5(SPPF) {}".format(self.channels_out[3],
-                                                                    self.channels_out[5],
-                                                                    self.channels_out[9]))
+        LOGGER.info(
+            "Backbone output channel: C3 {}, C4 {}, C5(SPPF) {}".format(
+                self.channels_out[3], self.channels_out[5], self.channels_out[9]
+            )
+        )
 
     def forward(self, x):
         c1 = self.C1(x)

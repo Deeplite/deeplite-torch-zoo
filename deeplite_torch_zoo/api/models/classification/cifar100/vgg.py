@@ -13,9 +13,7 @@ from deeplite_torch_zoo.src.classification.cifar_models.vgg import VGG
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 
-__all__ = [
-    "vgg19_cifar100"
-]
+__all__ = ["vgg19_cifar100"]
 
 model_urls = {
     "vgg19": "http://download.deeplite.ai/zoo/models/vgg19-cifar100-6d791de492a133b6.pth",
@@ -42,6 +40,8 @@ def vgg16(pretrained=False, progress=True, device='cuda'):
     return _vgg("vgg16", pretrained, progress, device=device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='vgg19', dataset_name='cifar100', task_type='classification')
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='vgg19', dataset_name='cifar100', task_type='classification'
+)
 def vgg19_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
     return _vgg("vgg19", pretrained, progress, num_classes=num_classes, device=device)

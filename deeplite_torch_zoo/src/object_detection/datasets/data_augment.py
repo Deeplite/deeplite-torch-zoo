@@ -43,7 +43,9 @@ class AugmentHSV(object):
     def __call__(self, img, bboxes):
         # HSV color-space augmentation
         if self.hgain or self.sgain or self.vgain:
-            r = np.random.uniform(-1, 1, 3) * [self.hgain, self.sgain, self.vgain] + 1  # random gains
+            r = (
+                np.random.uniform(-1, 1, 3) * [self.hgain, self.sgain, self.vgain] + 1
+            )  # random gains
             hue, sat, val = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
             dtype = img.dtype  # uint8
 
@@ -52,7 +54,9 @@ class AugmentHSV(object):
             lut_sat = np.clip(x * r[1], 0, 255).astype(dtype)
             lut_val = np.clip(x * r[2], 0, 255).astype(dtype)
 
-            im_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val)))
+            im_hsv = cv2.merge(
+                (cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val))
+            )
             cv2.cvtColor(im_hsv, cv2.COLOR_HSV2BGR, dst=img)
         return img, bboxes
 
@@ -64,15 +68,20 @@ class Albumentations:
         try:
             import albumentations as A
 
-            self.transform = A.Compose([
-                A.Blur(p=0.01),
-                A.MedianBlur(p=0.01),
-                A.ToGray(p=0.01),
-                A.CLAHE(p=0.01),
-                A.RandomBrightnessContrast(p=0.0),
-                A.RandomGamma(p=0.0),
-                A.ImageCompression(quality_lower=75, p=0.0)],
-                bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels']))
+            self.transform = A.Compose(
+                [
+                    A.Blur(p=0.01),
+                    A.MedianBlur(p=0.01),
+                    A.ToGray(p=0.01),
+                    A.CLAHE(p=0.01),
+                    A.RandomBrightnessContrast(p=0.0),
+                    A.RandomGamma(p=0.0),
+                    A.ImageCompression(quality_lower=75, p=0.0),
+                ],
+                bbox_params=A.BboxParams(
+                    format='pascal_voc', label_fields=['class_labels']
+                ),
+            )
         except ImportError:  # package not installed, skip
             pass
         except Exception as e:
@@ -80,8 +89,18 @@ class Albumentations:
 
     def __call__(self, img, bboxes, p=1.0):
         if self.transform and random.random() < p:
-            new = self.transform(image=img, bboxes=bboxes[:, :-1], class_labels=bboxes[:, -1])  # transformed
-            img, bboxes = new['image'], np.array([[*b, c] for b, c in zip(new['bboxes'], new['class_labels'], )])
+            new = self.transform(
+                image=img, bboxes=bboxes[:, :-1], class_labels=bboxes[:, -1]
+            )  # transformed
+            img, bboxes = new['image'], np.array(
+                [
+                    [*b, c]
+                    for b, c in zip(
+                        new['bboxes'],
+                        new['class_labels'],
+                    )
+                ]
+            )
         return img, bboxes
 
 
@@ -210,8 +229,17 @@ class LabelSmooth(object):
         return onehot * (1 - self.delta) + self.delta * 1.0 / num_classes
 
 
-def random_perspective(im, targets=(), segments=(), degrees=10, translate=.1, scale=.1, shear=10, perspective=0.0,
-                       border=(0, 0)):
+def random_perspective(
+    im,
+    targets=(),
+    segments=(),
+    degrees=10,
+    translate=0.1,
+    scale=0.1,
+    shear=10,
+    perspective=0.0,
+    border=(0, 0),
+):
     # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(.1, .1), scale=(.9, 1.1), shear=(-10, 10))
     # targets = [cls, xyxy]
 
@@ -243,16 +271,24 @@ def random_perspective(im, targets=(), segments=(), degrees=10, translate=.1, sc
 
     # Translation
     T = np.eye(3)
-    T[0, 2] = random.uniform(0.5 - translate, 0.5 + translate) * width  # x translation (pixels)
-    T[1, 2] = random.uniform(0.5 - translate, 0.5 + translate) * height  # y translation (pixels)
+    T[0, 2] = (
+        random.uniform(0.5 - translate, 0.5 + translate) * width
+    )  # x translation (pixels)
+    T[1, 2] = (
+        random.uniform(0.5 - translate, 0.5 + translate) * height
+    )  # y translation (pixels)
 
     # Combined rotation matrix
     M = T @ S @ R @ P @ C  # order of operations (right to left) is IMPORTANT
     if (border[0] != 0) or (border[1] != 0) or (M != np.eye(3)).any():  # image changed
         if perspective:
-            im = cv2.warpPerspective(im, M, dsize=(width, height), borderValue=(114, 114, 114))
+            im = cv2.warpPerspective(
+                im, M, dsize=(width, height), borderValue=(114, 114, 114)
+            )
         else:  # affine
-            im = cv2.warpAffine(im, M[:2], dsize=(width, height), borderValue=(114, 114, 114))
+            im = cv2.warpAffine(
+                im, M[:2], dsize=(width, height), borderValue=(114, 114, 114)
+            )
 
     # Visualize
     # import matplotlib.pyplot as plt
@@ -265,9 +301,13 @@ def random_perspective(im, targets=(), segments=(), degrees=10, translate=.1, sc
     if n:
         new = np.zeros((n, 4))
         xy = np.ones((n * 4, 3))
-        xy[:, :2] = targets[:, [0, 1, 2, 3, 0, 3, 2, 1]].reshape(n * 4, 2)  # x1y1, x2y2, x1y2, x2y1
+        xy[:, :2] = targets[:, [0, 1, 2, 3, 0, 3, 2, 1]].reshape(
+            n * 4, 2
+        )  # x1y1, x2y2, x1y2, x2y1
         xy = xy @ M.T  # transform
-        xy = (xy[:, :2] / xy[:, 2:3] if perspective else xy[:, :2]).reshape(n, 8)  # perspective rescale or affine
+        xy = (xy[:, :2] / xy[:, 2:3] if perspective else xy[:, :2]).reshape(
+            n, 8
+        )  # perspective rescale or affine
 
         # create new boxes
         x = xy[:, [0, 2, 4, 6]]
@@ -286,16 +326,30 @@ def random_perspective(im, targets=(), segments=(), degrees=10, translate=.1, sc
     return im, targets
 
 
-def box_candidates(box1, box2, wh_thr=2, ar_thr=20, area_thr=0.1, eps=1e-16):  # box1(4,n), box2(4,n)
+def box_candidates(
+    box1, box2, wh_thr=2, ar_thr=20, area_thr=0.1, eps=1e-16
+):  # box1(4,n), box2(4,n)
     # Compute candidate boxes: box1 before augment, box2 after augment, wh_thr (pixels), aspect_ratio_thr, area_ratio
     w1, h1 = box1[2] - box1[0], box1[3] - box1[1]
     w2, h2 = box2[2] - box2[0], box2[3] - box2[1]
     ar = np.maximum(w2 / (h2 + eps), h2 / (w2 + eps))  # aspect ratio
-    return (w2 > wh_thr) & (h2 > wh_thr) & (w2 * h2 / (w1 * h1 + eps) > area_thr) & (ar < ar_thr)  # candidates
+    return (
+        (w2 > wh_thr)
+        & (h2 > wh_thr)
+        & (w2 * h2 / (w1 * h1 + eps) > area_thr)
+        & (ar < ar_thr)
+    )  # candidates
 
 
-def letterbox(im, new_shape=(640, 640), color=(114, 114, 114),
-    auto=True, scaleFill=False, scaleup=True, stride=32):
+def letterbox(
+    im,
+    new_shape=(640, 640),
+    color=(114, 114, 114),
+    auto=True,
+    scaleFill=False,
+    scaleup=True,
+    stride=32,
+):
     # Resize and pad image while meeting stride-multiple constraints
     shape = im.shape[:2]  # current shape [height, width]
     if isinstance(new_shape, int):
@@ -324,5 +378,7 @@ def letterbox(im, new_shape=(640, 640), color=(114, 114, 114),
         im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-    im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+    im = cv2.copyMakeBorder(
+        im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color
+    )  # add border
     return im, ratio, (dw, dh)

@@ -8,8 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from deeplite_torch_zoo.src.dnn_blocks.common import (get_activation,
-                                                      round_channels)
+from deeplite_torch_zoo.src.dnn_blocks.common import get_activation, round_channels
 from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
 
 
@@ -19,30 +18,29 @@ class DFCModule(nn.Module):
         self.downscale = downscale
         self.gate_fn = nn.Sigmoid()
         self.short_conv = nn.Sequential(
-                nn.Conv2d(c1, c2, k, s, k // 2, bias=False),
-                nn.BatchNorm2d(c2),
-                nn.Conv2d(
-                    c2,
-                    c2,
-                    kernel_size=(1, dfc_k),
-                    stride=1,
-                    padding=(0, 2),
-                    groups=c2,
-                    bias=False,
-                ),
-                nn.BatchNorm2d(c2),
-                nn.Conv2d(
-                    c2,
-                    c2,
-                    kernel_size=(dfc_k, 1),
-                    stride=1,
-                    padding=(2, 0),
-                    groups=c2,
-                    bias=False,
-                ),
-                nn.BatchNorm2d(c2),
-            )
-
+            nn.Conv2d(c1, c2, k, s, k // 2, bias=False),
+            nn.BatchNorm2d(c2),
+            nn.Conv2d(
+                c2,
+                c2,
+                kernel_size=(1, dfc_k),
+                stride=1,
+                padding=(0, 2),
+                groups=c2,
+                bias=False,
+            ),
+            nn.BatchNorm2d(c2),
+            nn.Conv2d(
+                c2,
+                c2,
+                kernel_size=(dfc_k, 1),
+                stride=1,
+                padding=(2, 0),
+                groups=c2,
+                bias=False,
+            ),
+            nn.BatchNorm2d(c2),
+        )
 
     def forward(self, x):
         res = F.avg_pool2d(x, kernel_size=2, stride=2) if self.downscale else x
@@ -129,7 +127,7 @@ class GhostBottleneckV2(nn.Module):
             self.bn_dw = nn.BatchNorm2d(mid_chs)
 
         # Squeeze-and-excitation
-        self.se = SELayer(mid_chs, reduction=1/se_ratio) if has_se else nn.Identity()
+        self.se = SELayer(mid_chs, reduction=1 / se_ratio) if has_se else nn.Identity()
         self.ghost2 = GhostModuleV2(mid_chs, c2, act=False, mode='original')
 
         # shortcut

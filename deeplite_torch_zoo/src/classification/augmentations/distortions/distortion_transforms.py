@@ -2,10 +2,12 @@ import numpy as np
 from PIL import Image as PILImage
 from torchvision import transforms
 
-from deeplite_torch_zoo.src.classification.augmentations.augs import \
-    get_vanilla_transforms
-from deeplite_torch_zoo.src.classification.augmentations.distortions import \
-    DISTORTION_REGISTRY
+from deeplite_torch_zoo.src.classification.augmentations.augs import (
+    get_vanilla_transforms,
+)
+from deeplite_torch_zoo.src.classification.augmentations.distortions import (
+    DISTORTION_REGISTRY,
+)
 
 
 def generate_distortion_fn(distortion_name, severity):

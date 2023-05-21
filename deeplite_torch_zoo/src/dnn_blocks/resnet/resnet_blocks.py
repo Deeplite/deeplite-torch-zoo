@@ -3,10 +3,13 @@
 import torch.nn as nn
 from torch import Tensor
 
-from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
-                                                      GhostConv,
-                                                      get_activation,
-                                                      round_channels)
+from deeplite_torch_zoo.src.dnn_blocks.common import (
+    ConvBnAct,
+    DWConv,
+    GhostConv,
+    get_activation,
+    round_channels,
+)
 from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
 
 
@@ -30,7 +33,11 @@ class ResNetBottleneck(nn.Module):
         super().__init__()
 
         self.resize_identity = (c1 != c2) or (stride != 1)
-        c_ = mid_channels if mid_channels is not None else round_channels(e * c1, channel_divisor)
+        c_ = (
+            mid_channels
+            if mid_channels is not None
+            else round_channels(e * c1, channel_divisor)
+        )
         self.shortcut = shortcut
 
         self.conv1 = ConvBnAct(c1, c_, 1, act=act)
@@ -112,20 +119,38 @@ class ResNeXtBottleneck(ResNetBottleneck):
         se_ratio=None,
     ):
         super(ResNeXtBottleneck, self).__init__(
-            c1, c2, e, k, stride, groups,
-            dilation, act, se_ratio, channel_divisor=groups)
+            c1,
+            c2,
+            e,
+            k,
+            stride,
+            groups,
+            dilation,
+            act,
+            se_ratio,
+            channel_divisor=groups,
+        )
 
 
 class GhostBottleneck(nn.Module):
     # Ghost Bottleneck as described in https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=3, s=1, shrink_factor=2):  # ch_in, ch_out, kernel, stride
+    def __init__(
+        self, c1, c2, k=3, s=1, shrink_factor=2
+    ):  # ch_in, ch_out, kernel, stride
         super(GhostBottleneck, self).__init__()
         c_ = c2 // 2
-        self.conv = nn.Sequential(GhostConv(c1, c_, 1, 1, shrink_factor=shrink_factor),  # pw
-                                  DWConv(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
-                                  GhostConv(c_, c2, 1, 1, act=False, shrink_factor=shrink_factor))  # pw-linear
-        self.shortcut = nn.Sequential(DWConv(c1, c1, k, s, act=False),
-                                      ConvBnAct(c1, c2, 1, 1, act=False)) if s == 2 else nn.Identity()
+        self.conv = nn.Sequential(
+            GhostConv(c1, c_, 1, 1, shrink_factor=shrink_factor),  # pw
+            DWConv(c_, c_, k, s, act=False) if s == 2 else nn.Identity(),  # dw
+            GhostConv(c_, c2, 1, 1, act=False, shrink_factor=shrink_factor),
+        )  # pw-linear
+        self.shortcut = (
+            nn.Sequential(
+                DWConv(c1, c1, k, s, act=False), ConvBnAct(c1, c2, 1, 1, act=False)
+            )
+            if s == 2
+            else nn.Identity()
+        )
 
     def forward(self, x):
         return self.conv(x) + self.shortcut(x)

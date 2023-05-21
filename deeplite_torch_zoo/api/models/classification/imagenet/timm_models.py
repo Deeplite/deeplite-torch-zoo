@@ -3,12 +3,19 @@ from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 
 def make_wrapper_func(wrapper_fn_name, model_name_key):
-    @MODEL_WRAPPER_REGISTRY.register(model_name=model_name_key, dataset_name='imagenet',
-        task_type='classification')
-    @MODEL_WRAPPER_REGISTRY.register(model_name=model_name_key, dataset_name='food101',
-        task_type='classification', has_checkpoint=False)
+    @MODEL_WRAPPER_REGISTRY.register(
+        model_name=model_name_key, dataset_name='imagenet', task_type='classification'
+    )
+    @MODEL_WRAPPER_REGISTRY.register(
+        model_name=model_name_key,
+        dataset_name='food101',
+        task_type='classification',
+        has_checkpoint=False,
+    )
     def wrapper_func(pretrained=False, progress=True, device="cuda", num_classes=1000):
-        model = timm.create_model(model_name_key, pretrained=pretrained, num_classes=num_classes)
+        model = timm.create_model(
+            model_name_key, pretrained=pretrained, num_classes=num_classes
+        )
         return model.to(device)
 
     wrapper_func.__name__ = wrapper_fn_name

@@ -27,12 +27,14 @@ import numpy as np
 import pandas as pd
 from .utils import *
 
+
 class MeanAveragePrecision2d(MetricBase):
-    """ Mean Average Precision for object detection.
+    """Mean Average Precision for object detection.
 
     Arguments:
         num_classes (int): number of classes.
     """
+
     def __init__(self, num_classes):
         self.num_classes = num_classes
         self._init()
@@ -42,7 +44,7 @@ class MeanAveragePrecision2d(MetricBase):
         self._init()
 
     def add(self, preds, gt):
-        """ Add sample to evaluation.
+        """Add sample to evaluation.
 
         Arguments:
             preds (np.array): predicted boxes.
@@ -61,12 +63,14 @@ class MeanAveragePrecision2d(MetricBase):
             preds_c = preds[preds[:, 4] == c]
             if preds_c.shape[0] > 0:
                 match_table = compute_match_table(preds_c, gt_c, self.imgs_counter)
-                self.match_table[c] = pd.concat([self.match_table[c], match_table], axis=0, join='outer')
+                self.match_table[c] = pd.concat(
+                    [self.match_table[c], match_table], axis=0, join='outer'
+                )
         self.imgs_counter = self.imgs_counter + 1
         self.class_counter = np.concatenate((self.class_counter, class_counter), axis=0)
 
     def value(self, iou_thresholds=[0.5], recall_thresholds=None, mpolicy="greedy"):
-        """ Evaluate Mean Average Precision.
+        """Evaluate Mean Average Precision.
 
         Arguments:
             iou_thresholds (list of float): IOU thresholds.
@@ -123,8 +127,10 @@ class MeanAveragePrecision2d(MetricBase):
         metric["mAP"] = aps.mean(axis=1).mean(axis=0)
         return metric
 
-    def _evaluate_class(self, class_id, iou_threshold, recall_thresholds, mpolicy="greedy"):
-        """ Evaluate class.
+    def _evaluate_class(
+        self, class_id, iou_threshold, recall_thresholds, mpolicy="greedy"
+    ):
+        """Evaluate class.
 
         Arguments:
             class_id (int): index of evaluated class.
@@ -140,7 +146,9 @@ class MeanAveragePrecision2d(MetricBase):
             precision (np.array)
             recall (np.array)
         """
-        table = self.match_table[class_id].sort_values(by=['confidence'], ascending=False)
+        table = self.match_table[class_id].sort_values(
+            by=['confidence'], ascending=False
+        )
         matched_ind = {}
         nd = len(table)
         tp = np.zeros(nd, dtype=np.float64)
@@ -156,14 +164,16 @@ class MeanAveragePrecision2d(MetricBase):
                 order,
                 matched_ind[img_id],
                 iou_threshold,
-                mpolicy
+                mpolicy,
             )
             if res == 'tp':
                 tp[d] = 1
                 matched_ind[img_id].append(idx)
             elif res == 'fp':
                 fp[d] = 1
-        precision, recall = compute_precision_recall(tp, fp, self.class_counter[:, class_id].sum())
+        precision, recall = compute_precision_recall(
+            tp, fp, self.class_counter[:, class_id].sum()
+        )
         if recall_thresholds is None:
             average_precision = compute_average_precision(precision, recall)
         else:
@@ -173,7 +183,7 @@ class MeanAveragePrecision2d(MetricBase):
         return average_precision, precision, recall
 
     def _init(self):
-        """ Initialize internal state."""
+        """Initialize internal state."""
         self.imgs_counter = 0
         self.class_counter = np.zeros((0, self.num_classes), dtype=np.int32)
         columns = ['img_id', 'confidence', 'iou', 'difficult', 'crowd']

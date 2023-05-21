@@ -1,12 +1,17 @@
 import numpy as np
 
-from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.yolov5_eval import \
-    evaluate
+from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.yolov5_eval import (
+    evaluate,
+)
 from deeplite_torch_zoo.api.registries import EVAL_WRAPPER_REGISTRY
 
 
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='voc07')
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='voc')
+@EVAL_WRAPPER_REGISTRY.register(
+    task_type='object_detection', model_type='yolo', dataset_type='voc07'
+)
+@EVAL_WRAPPER_REGISTRY.register(
+    task_type='object_detection', model_type='yolo', dataset_type='voc'
+)
 def yolo_eval_voc(
     model,
     test_dataloader,
@@ -35,7 +40,9 @@ def yolo_eval_voc(
     return ap_dict
 
 
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='coco')
+@EVAL_WRAPPER_REGISTRY.register(
+    task_type='object_detection', model_type='yolo', dataset_type='coco'
+)
 def yolo_eval_coco(
     model,
     test_dataloader,

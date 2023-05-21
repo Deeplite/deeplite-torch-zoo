@@ -10,20 +10,24 @@
 
 
 from deeplite_torch_zoo.utils import load_pretrained_weights
-from deeplite_torch_zoo.src.classification.cifar_models.preact_resnet import PreActResNet, PreActBlock, PreActBottleneck
+from deeplite_torch_zoo.src.classification.cifar_models.preact_resnet import (
+    PreActResNet,
+    PreActBlock,
+    PreActBottleneck,
+)
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 
-__all__ = [
-    "pre_act_resnet18_cifar100"
-]
+__all__ = ["pre_act_resnet18_cifar100"]
 
 model_urls = {
     "pre_act_resnet18": "http://download.deeplite.ai/zoo/models/pre_act_resnet18-cifar100-1c4d1dc76ee9c6f6.pth",
 }
 
 
-def _pre_act_resnet(arch, block, layers,  num_classes=100, pretrained=False, progress=True, device='cuda'):
+def _pre_act_resnet(
+    arch, block, layers, num_classes=100, pretrained=False, progress=True, device='cuda'
+):
     model = PreActResNet(block, layers, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
@@ -31,8 +35,12 @@ def _pre_act_resnet(arch, block, layers,  num_classes=100, pretrained=False, pro
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='pre_act_resnet18', dataset_name='cifar100', task_type='classification')
-def pre_act_resnet18_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='pre_act_resnet18', dataset_name='cifar100', task_type='classification'
+)
+def pre_act_resnet18_cifar100(
+    pretrained=False, progress=True, num_classes=100, device='cuda'
+):
     return _pre_act_resnet(
         "pre_act_resnet18",
         PreActBlock,

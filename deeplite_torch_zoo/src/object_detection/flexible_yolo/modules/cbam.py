@@ -4,7 +4,6 @@ import torch.nn.functional as F
 
 
 class CBAM(nn.Module):
-
     def __init__(self, n_channels_in, reduction_ratio, kernel_size):
         super(CBAM, self).__init__()
         self.n_channels_in = n_channels_in
@@ -28,8 +27,12 @@ class SpatialAttention(nn.Module):
         self.kernel_size = kernel_size
 
         assert kernel_size % 2 == 1, "Odd kernel size required"
-        self.conv = nn.Conv2d(in_channels=2, out_channels=1, kernel_size=kernel_size,
-                              padding=int((kernel_size - 1) / 2))
+        self.conv = nn.Conv2d(
+            in_channels=2,
+            out_channels=1,
+            kernel_size=kernel_size,
+            padding=int((kernel_size - 1) / 2),
+        )
 
     def forward(self, x):
         max_pool = self.agg_channel(x, "max")
@@ -63,7 +66,7 @@ class ChannelAttention(nn.Module):
         self.bottleneck = nn.Sequential(
             nn.Linear(self.n_channels_in, self.middle_layer_size),
             nn.ReLU(),
-            nn.Linear(self.middle_layer_size, self.n_channels_in)
+            nn.Linear(self.middle_layer_size, self.n_channels_in),
         )
 
     def forward(self, x):

@@ -36,8 +36,9 @@ from PIL import ImageFile
 from pycocotools.coco import COCO
 from torchvision.datasets import CocoDetection
 
-from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.coco.utils import \
-    xywh_to_xyxy
+from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.coco.utils import (
+    xywh_to_xyxy,
+)
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -109,7 +110,7 @@ class CocoDetectionBoundingBox(CocoDetection):
             label_tensor,
             label_tensor.size(0),
             self.ids[index],
-            shape
+            shape,
         )
 
     def collate_img_label_fn(self, sample):
@@ -184,20 +185,30 @@ class SubsampledCOCO(COCO):
         :return:
         """
         # load dataset
-        self.dataset,self.anns,self.cats,self.imgs = dict(),dict(),dict(),dict()
+        self.dataset, self.anns, self.cats, self.imgs = dict(), dict(), dict(), dict()
         self.imgToAnns, self.catToImgs = defaultdict(list), defaultdict(list)
         if not annotation_file == None:
             LOGGER.info('loading annotations into memory...')
             tic = time.time()
             dataset = json.load(open(annotation_file, 'r'))
-            assert type(dataset)==dict, 'annotation file format {} not supported'.format(type(dataset))
-            LOGGER.info('Done (t={:0.2f}s)'.format(time.time()- tic))
+            assert (
+                type(dataset) == dict
+            ), 'annotation file format {} not supported'.format(type(dataset))
+            LOGGER.info('Done (t={:0.2f}s)'.format(time.time() - tic))
             self.dataset = dataset
-            self.dataset['categories'] = [cat for cat in self.dataset['categories']
-                if cat['name'] in subsample_categories]
+            self.dataset['categories'] = [
+                cat
+                for cat in self.dataset['categories']
+                if cat['name'] in subsample_categories
+            ]
             category_ids = [cat['id'] for cat in self.dataset['categories']]
-            self.dataset['annotations'] = [ann for ann in self.dataset['annotations'] if
-                ann['category_id'] in category_ids]
+            self.dataset['annotations'] = [
+                ann
+                for ann in self.dataset['annotations']
+                if ann['category_id'] in category_ids
+            ]
             image_ids = [ann['image_id'] for ann in self.dataset['annotations']]
-            self.dataset['images'] = [img for img in self.dataset['images'] if img['id'] in image_ids]
+            self.dataset['images'] = [
+                img for img in self.dataset['images'] if img['id'] in image_ids
+            ]
             self.createIndex()

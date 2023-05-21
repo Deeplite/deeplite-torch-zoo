@@ -9,7 +9,11 @@
 """
 
 from deeplite_torch_zoo.utils import load_pretrained_weights
-from deeplite_torch_zoo.src.classification.cifar_models.resnet import ResNet, BasicBlock, Bottleneck
+from deeplite_torch_zoo.src.classification.cifar_models.resnet import (
+    ResNet,
+    BasicBlock,
+    Bottleneck,
+)
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 
@@ -24,8 +28,9 @@ model_urls = {
 }
 
 
-
-def _resnet(arch, block, layers, num_classes=100, pretrained=False, progress=True, device='cuda'):
+def _resnet(
+    arch, block, layers, num_classes=100, pretrained=False, progress=True, device='cuda'
+):
     model = ResNet(block, layers, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
@@ -33,33 +38,64 @@ def _resnet(arch, block, layers, num_classes=100, pretrained=False, progress=Tru
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='resnet18', dataset_name='cifar100', task_type='classification')
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='resnet18', dataset_name='cifar100', task_type='classification'
+)
 def resnet18_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
     return _resnet(
-        "resnet18", BasicBlock, [2, 2, 2, 2], num_classes=num_classes, pretrained=pretrained, progress=progress, device=device
+        "resnet18",
+        BasicBlock,
+        [2, 2, 2, 2],
+        num_classes=num_classes,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
     )
 
 
 def resnet34(pretrained=False, progress=True, device='cuda'):
     return _resnet(
-        "resnet34", BasicBlock, [3, 4, 6, 3], pretrained=pretrained, progress=progress, device=device
+        "resnet34",
+        BasicBlock,
+        [3, 4, 6, 3],
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
     )
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='resnet50', dataset_name='cifar100', task_type='classification')
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='resnet50', dataset_name='cifar100', task_type='classification'
+)
 def resnet50_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
     return _resnet(
-        "resnet50", Bottleneck, [3, 4, 6, 3], num_classes=num_classes, pretrained=pretrained, progress=progress, device=device
+        "resnet50",
+        Bottleneck,
+        [3, 4, 6, 3],
+        num_classes=num_classes,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
     )
 
 
 def resnet101(pretrained=False, progress=True, device='cuda'):
     return _resnet(
-        "resnet34", Bottleneck, [3, 4, 23, 3], pretrained=pretrained, progress=progress, device=device
+        "resnet34",
+        Bottleneck,
+        [3, 4, 23, 3],
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
     )
 
 
 def resnet152(pretrained=False, progress=True, device='cuda'):
     return _resnet(
-        "resnet34", Bottleneck, [3, 8, 36, 3], pretrained=pretrained, progress=progress, device=device
+        "resnet34",
+        Bottleneck,
+        [3, 8, 36, 3],
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
     )

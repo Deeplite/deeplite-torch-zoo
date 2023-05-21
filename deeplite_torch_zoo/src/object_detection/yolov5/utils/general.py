@@ -21,8 +21,9 @@ import torch
 import yaml
 from tqdm import tqdm
 
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import \
-    init_seeds as init_torch_seeds
+from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import (
+    init_seeds as init_torch_seeds,
+)
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -801,8 +802,8 @@ def plot_wh_methods():  # from utils.general import *; plot_wh_methods()
 
     fig = plt.figure(figsize=(6, 3), dpi=150)
     plt.plot(x, ya, ".-", label="YOLOv3")
-    plt.plot(x, yb ** 2, ".-", label="YOLOv5 ^2")
-    plt.plot(x, yb ** 1.6, ".-", label="YOLOv5 ^1.6")
+    plt.plot(x, yb**2, ".-", label="YOLOv5 ^2")
+    plt.plot(x, yb**1.6, ".-", label="YOLOv5 ^1.6")
     plt.xlim(left=-4, right=4)
     plt.ylim(bottom=0, top=6)
     plt.xlabel("input")
@@ -839,7 +840,7 @@ def plot_images(
 
     bs, _, h, w = images.shape  # batch size, _, height, width
     bs = min(bs, max_subplots)  # limit plot images
-    ns = np.ceil(bs ** 0.5)  # number of subplots (square)
+    ns = np.ceil(bs**0.5)  # number of subplots (square)
 
     # Check if we should resize
     scale_factor = max_size / max(h, w)
@@ -1229,7 +1230,7 @@ def nms(bboxes, score_threshold, iou_threshold, sigma=0.3, method="nms", max_det
                 iou_mask = iou > iou_threshold
                 weight[iou_mask] = 0.0
             if method == "soft-nms":
-                weight = np.exp(-(1.0 * iou ** 2 / sigma))
+                weight = np.exp(-(1.0 * iou**2 / sigma))
             cls_bboxes[:, 4] = cls_bboxes[:, 4] * weight
             score_mask = cls_bboxes[:, 4] > score_threshold
             cls_bboxes = cls_bboxes[score_mask]

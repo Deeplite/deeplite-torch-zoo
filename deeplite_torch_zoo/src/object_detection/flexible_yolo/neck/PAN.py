@@ -5,7 +5,10 @@ import math
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules.common import (
-    C3, Concat, Conv)
+    C3,
+    Concat,
+    Conv,
+)
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -26,7 +29,9 @@ class PAN(nn.Module):
     P5 --->  PP5
     """
 
-    def __init__(self, ch=[256, 256, 512], channel_outs=[256, 512, 512, 1024], version='s'):
+    def __init__(
+        self, ch=[256, 256, 512], channel_outs=[256, 512, 512, 1024], version='s'
+    ):
         super(PAN, self).__init__()
         self.version = str(version)
         self.channels_outs = channel_outs
@@ -35,7 +40,7 @@ class PAN(nn.Module):
             's': {'gd': 0.33, 'gw': 0.5},
             'm': {'gd': 0.67, 'gw': 0.75},
             'l': {'gd': 1, 'gw': 1},
-            'x': {'gd': 1.33, 'gw': 1.25}
+            'x': {'gd': 1.33, 'gw': 1.25},
         }
 
         if self.version.lower() in gains:
@@ -52,16 +57,34 @@ class PAN(nn.Module):
         self.P4_size = ch[1]
         self.P5_size = ch[2]
 
-        self.convP3 = Conv(self.P3_size,  self.channels_outs[0], 3, 2)
-        self.P4 = C3(self.channels_outs[0] + self.P4_size, self.channels_outs[1], self.get_depth(3), False)
+        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, 2)
+        self.P4 = C3(
+            self.channels_outs[0] + self.P4_size,
+            self.channels_outs[1],
+            self.get_depth(3),
+            False,
+        )
 
         self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, 2)
-        self.P5 = C3(self.channels_outs[2] + self.P5_size, self.channels_outs[3], self.get_depth(3), False)
+        self.P5 = C3(
+            self.channels_outs[2] + self.P5_size,
+            self.channels_outs[3],
+            self.get_depth(3),
+            False,
+        )
 
         self.concat = Concat()
         self.out_shape = [self.P3_size, self.channels_outs[2], self.channels_outs[3]]
-        LOGGER.info("PAN input channel size: P3 {}, P4 {}, P5 {}".format(self.P3_size, self.P4_size, self.P5_size))
-        LOGGER.info("PAN output channel size: PP3 {}, PP4 {}, PP5 {}".format(self.P3_size, self.channels_outs[2], self.channels_outs[3]))
+        LOGGER.info(
+            "PAN input channel size: P3 {}, P4 {}, P5 {}".format(
+                self.P3_size, self.P4_size, self.P5_size
+            )
+        )
+        LOGGER.info(
+            "PAN output channel size: PP3 {}, PP4 {}, PP5 {}".format(
+                self.P3_size, self.channels_outs[2], self.channels_outs[3]
+            )
+        )
 
     def get_depth(self, n):
         return max(round(n * self.gd), 1) if n > 1 else n

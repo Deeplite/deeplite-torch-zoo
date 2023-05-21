@@ -26,8 +26,9 @@ from .metric_base import MetricBase
 from multiprocessing import Process, Queue
 from multiprocessing.managers import BaseManager
 
+
 def create_metric_fn(metric_type, *args, **kwargs):
-    """ Create multiprocessing version of metric function.
+    """Create multiprocessing version of metric function.
 
     Arguments:
         metric_type (dtype): type of metric function.
@@ -44,7 +45,7 @@ def create_metric_fn(metric_type, *args, **kwargs):
 
 
 class MetricMultiprocessing(MetricBase):
-    """ Implements parallelism at the metric level.
+    """Implements parallelism at the metric level.
 
     This container provides an asynchronous interface for the
     metric class using multiprocessing. It provides functionality
@@ -55,6 +56,7 @@ class MetricMultiprocessing(MetricBase):
         metric_type (dtype): type of metric function.
         *args, **kwargs: metric specific arguments.
     """
+
     def __init__(self, metric_type, *args, **kwargs):
         super().__init__()
         self.metric_fn = create_metric_fn(metric_type, *args, **kwargs)
@@ -63,7 +65,7 @@ class MetricMultiprocessing(MetricBase):
         self.is_start = False
 
     def add(self, preds, gt):
-        """ Add sample to evaluation.
+        """Add sample to evaluation.
         Asynchronous wrapper for 'add' method.
 
         Arguments:
@@ -79,7 +81,7 @@ class MetricMultiprocessing(MetricBase):
         self.queue.put((preds, gt))
 
     def value(self, *args, **kwargs):
-        """ Evaluate Metric.
+        """Evaluate Metric.
         Asynchronous wrapper for 'value' method.
 
         Arguments:
@@ -93,23 +95,23 @@ class MetricMultiprocessing(MetricBase):
         return self.metric_fn.value(*args, **kwargs)
 
     def reset(self):
-        """ Reset stored data.
+        """Reset stored data.
         Asynchronous wrapper for 'reset' method.
         """
         self._reset_proc()
         self.metric_fn.reset()
 
     def start(self):
-        """ Start child process."""
+        """Start child process."""
         self._init_proc()
 
     def stop(self):
-        """ Stop child process."""
+        """Stop child process."""
         self._reset_proc()
 
     @staticmethod
     def _proc_loop(metric_fn, queue):
-        """ Body of multiprocessing add."""
+        """Body of multiprocessing add."""
         while True:
             preds, gt = queue.get()
             if preds is None and gt is None:
@@ -117,20 +119,18 @@ class MetricMultiprocessing(MetricBase):
             metric_fn.add(preds, gt)
 
     def _init_proc(self):
-        """ Initialize child process."""
+        """Initialize child process."""
         if self.queue is None:
             self.queue = Queue()
         if self.proc is None:
             self.proc = Process(
-                target=self._proc_loop,
-                args=[self.metric_fn, self.queue],
-                daemon=True
+                target=self._proc_loop, args=[self.metric_fn, self.queue], daemon=True
             )
             self.proc.start()
         self.is_start = True
 
     def _reset_proc(self):
-        """ Reset child process."""
+        """Reset child process."""
         if self.proc is not None:
             self.add(None, None)
             self.proc.join()

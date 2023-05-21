@@ -6,7 +6,10 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules import (
-    CBAM, DropBlock2D, LinearScheduler)
+    CBAM,
+    DropBlock2D,
+    LinearScheduler,
+)
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -27,14 +30,17 @@ def constant_init(module, constant, bias=0):
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=1, bias=False)
+    return nn.Conv2d(
+        in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False
+    )
 
 
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, cbam=False, dcn=False):
+    def __init__(
+        self, inplanes, planes, stride=1, downsample=None, cbam=False, dcn=False
+    ):
         super(BasicBlock, self).__init__()
         self.with_dcn = dcn
         self.conv1 = conv3x3(inplanes, planes, stride)
@@ -48,12 +54,18 @@ class BasicBlock(nn.Module):
             # deformable_groups = dcn.get('deformable_groups', 1)
             deformable_groups = 1
             offset_channels = 18
-            self.conv2_offset = nn.Conv2d(planes, deformable_groups * offset_channels, kernel_size=3, padding=1)
-            self.conv2 = DeformConv2d(planes, planes, kernel_size=3, padding=1, bias=False)
+            self.conv2_offset = nn.Conv2d(
+                planes, deformable_groups * offset_channels, kernel_size=3, padding=1
+            )
+            self.conv2 = DeformConv2d(
+                planes, planes, kernel_size=3, padding=1, bias=False
+            )
         self.bn2 = nn.BatchNorm2d(planes)
         self.use_cbam = cbam
         if self.use_cbam:
-            self.cbam = CBAM(n_channels_in=self.expansion * planes, reduction_ratio=1, kernel_size=3)
+            self.cbam = CBAM(
+                n_channels_in=self.expansion * planes, reduction_ratio=1, kernel_size=3
+            )
         self.downsample = downsample
         self.stride = stride
 
@@ -87,20 +99,33 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, cbam=False, dcn=False):
+    def __init__(
+        self, inplanes, planes, stride=1, downsample=None, cbam=False, dcn=False
+    ):
         super(Bottleneck, self).__init__()
         self.with_dcn = dcn
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         if not self.with_dcn:
-            self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+            self.conv2 = nn.Conv2d(
+                planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
+            )
         else:
             # deformable_groups = dcn.get('deformable_groups', 1)
             deformable_groups = 1
             from torchvision.ops import DeformConv2d
+
             offset_channels = 18
-            self.conv2_offset = nn.Conv2d(planes, deformable_groups * offset_channels, stride=stride, kernel_size=3, padding=1)
-            self.conv2 = DeformConv2d(planes, planes, kernel_size=3, padding=1, stride=stride, bias=False)
+            self.conv2_offset = nn.Conv2d(
+                planes,
+                deformable_groups * offset_channels,
+                stride=stride,
+                kernel_size=3,
+                padding=1,
+            )
+            self.conv2 = DeformConv2d(
+                planes, planes, kernel_size=3, padding=1, stride=stride, bias=False
+            )
 
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
@@ -110,7 +135,9 @@ class Bottleneck(nn.Module):
         self.stride = stride
         self.use_cbam = cbam
         if self.use_cbam:
-            self.cbam = CBAM(n_channels_in=self.expansion * planes, reduction_ratio=1, kernel_size=3)
+            self.cbam = CBAM(
+                n_channels_in=self.expansion * planes, reduction_ratio=1, kernel_size=3
+            )
 
     def forward(self, x):
         residual = x
@@ -144,14 +171,30 @@ class Bottleneck(nn.Module):
 
 
 class Resnet(nn.Module):
-    def __init__(self, block, layers, cbam=False, dcn=False, drop_prob=0,
-        base_channels=64, width=0.25, first_block_downsampling=False):
+    def __init__(
+        self,
+        block,
+        layers,
+        cbam=False,
+        dcn=False,
+        drop_prob=0,
+        base_channels=64,
+        width=0.25,
+        first_block_downsampling=False,
+    ):
         super(Resnet, self).__init__()
         self.inplanes = int(base_channels * width)
         self.dcn = dcn
         self.cbam = cbam
         self.drop = drop_prob != 0
-        self.conv1 = nn.Conv2d(3, int(base_channels * width), kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(
+            3,
+            int(base_channels * width),
+            kernel_size=7,
+            stride=2,
+            padding=3,
+            bias=False,
+        )
         self.bn1 = nn.BatchNorm2d(int(base_channels * width))
         self.relu = nn.ReLU(inplace=True)
         self.out_channels = []
@@ -159,15 +202,23 @@ class Resnet(nn.Module):
         if self.drop:
             self.dropblock = LinearScheduler(
                 DropBlock2D(drop_prob=drop_prob, block_size=5),
-                start_value=0.,
+                start_value=0.0,
                 stop_value=drop_prob,
-                nr_steps=5e3
+                nr_steps=5e3,
             )
         ch = int(base_channels * width)
-        self.layer1 = self._make_layer(block, ch, layers[0], stride=1 if not first_block_downsampling else 2)
-        self.layer2 = self._make_layer(block, ch * 2, layers[1], stride=2, cbam=self.cbam)
-        self.layer3 = self._make_layer(block, ch * 4, layers[2], stride=2, cbam=self.cbam, dcn=dcn)
-        self.layer4 = self._make_layer(block, ch * 8, layers[3], stride=2, cbam=self.cbam, dcn=dcn)
+        self.layer1 = self._make_layer(
+            block, ch, layers[0], stride=1 if not first_block_downsampling else 2
+        )
+        self.layer2 = self._make_layer(
+            block, ch * 2, layers[1], stride=2, cbam=self.cbam
+        )
+        self.layer3 = self._make_layer(
+            block, ch * 4, layers[2], stride=2, cbam=self.cbam, dcn=dcn
+        )
+        self.layer4 = self._make_layer(
+            block, ch * 8, layers[3], stride=2, cbam=self.cbam, dcn=dcn
+        )
 
         if self.dcn is not None:
             for m in self.modules():
@@ -175,16 +226,24 @@ class Resnet(nn.Module):
                     if hasattr(m, 'conv2_offset'):
                         constant_init(m.conv2_offset, 0)
 
-        self.out_shape = (self.out_channels[0] * 2,
-                          self.out_channels[1] * 2,
-                          self.out_channels[2] * 2)
+        self.out_shape = (
+            self.out_channels[0] * 2,
+            self.out_channels[1] * 2,
+            self.out_channels[2] * 2,
+        )
 
-        LOGGER.info("Backbone output channel: C3 {}, C4 {}, C5 {}".format(self.out_channels[0] * 2, self.out_channels[1] * 2, self.out_channels[2] * 2))
+        LOGGER.info(
+            "Backbone output channel: C3 {}, C4 {}, C5 {}".format(
+                self.out_channels[0] * 2,
+                self.out_channels[1] * 2,
+                self.out_channels[2] * 2,
+            )
+        )
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
+                m.weight.data.normal_(0, math.sqrt(2.0 / n))
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
@@ -195,8 +254,13 @@ class Resnet(nn.Module):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes * block.expansion,
-                          kernel_size=1, stride=stride, bias=False),
+                nn.Conv2d(
+                    self.inplanes,
+                    planes * block.expansion,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
                 nn.BatchNorm2d(planes * block.expansion),
             )
 
@@ -238,7 +302,9 @@ def resnet18(pretrained=False, **kwargs):
     """
     model = Resnet(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet18'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['resnet18'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -249,7 +315,9 @@ def resnet34(pretrained=False, **kwargs):
     """
     model = Resnet(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet34'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['resnet34'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -260,7 +328,9 @@ def resnet50(pretrained=False, **kwargs):
     """
     model = Resnet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet50'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['resnet50'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -271,7 +341,9 @@ def resnet101(pretrained=False, **kwargs):
     """
     model = Resnet(Bottleneck, [3, 4, 23, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet101'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['resnet101'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -282,7 +354,9 @@ def resnet152(pretrained=False, **kwargs):
     """
     model = Resnet(Bottleneck, [3, 8, 36, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet152'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['resnet152'], model_dir='.'), strict=False
+        )
     return model
 
 

@@ -1,17 +1,26 @@
 from pathlib import Path
 
 import deeplite_torch_zoo
-from deeplite_torch_zoo.api.models.object_detection.yolo_helpers import \
-    make_wrapper_func
+from deeplite_torch_zoo.api.models.object_detection.yolo_helpers import (
+    make_wrapper_func,
+)
 
 __all__ = []
+
 
 def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
+
 CFG_PATH = "deeplite_torch_zoo/src/object_detection/yolov5/configs/model_configs"
 
-DATASET_LIST = [('person_detection', 1), ('voc', 20), ('coco', 80), ('voc07', 20), ('custom_person_detection', 1)]
+DATASET_LIST = [
+    ('person_detection', 1),
+    ('voc', 20),
+    ('coco', 80),
+    ('voc07', 20),
+    ('custom_person_detection', 1),
+]
 
 YOLO_CONFIGS = {
     'yolo3': 'yolo3/yolov3.yaml',
@@ -58,7 +67,7 @@ YOLO_CONFIGS = {
     'yolox': 'yolox/yolox.yaml',
     ############################
     'yolo-r50-csp-': 'misc/r50-csp.yaml',
-    'yolo-x50-csp-': 'misc/x50-csp.yaml', # to be fixed
+    'yolo-x50-csp-': 'misc/x50-csp.yaml',  # to be fixed
     ############################
     'yolo-picodet-': 'picodet/yolo-picodet.yaml',
     'yolo5-lite-c-': 'yololite/yolov5_lite_c.yaml',
@@ -68,21 +77,21 @@ YOLO_CONFIGS = {
 ACT_FN_TAGS = {'': None, '_relu': 'relu', '_hswish': 'hardswish'}
 
 DEFAULT_MODEL_SCALES = {
-  # [depth, width, max_channels]
-  'n': [0.33, 0.25, 1024],
-  's': [0.33, 0.50, 1024],
-  'm': [0.67, 0.75, 1024],
-  'l': [1.00, 1.00, 1024],
-  'x': [1.00, 1.25, 1024],
-  't': [0.25, 0.25, 1024],
-  'd1w5': [1.0, 0.5, 1024],
-  'd1w25': [1.0, 0.25, 1024],
-  'd1w75': [1.0, 0.75, 1024],
-  'd33w1': [0.33, 1.0, 1024],
-  'd33w75': [0.33, 0.75, 1024],
-  'd67w1': [0.67, 1.0, 1024],
-  'd67w5': [0.67, 0.5, 1024],
-  'd67w25': [0.67, 0.25, 1024],
+    # [depth, width, max_channels]
+    'n': [0.33, 0.25, 1024],
+    's': [0.33, 0.50, 1024],
+    'm': [0.67, 0.75, 1024],
+    'l': [1.00, 1.00, 1024],
+    'x': [1.00, 1.25, 1024],
+    't': [0.25, 0.25, 1024],
+    'd1w5': [1.0, 0.5, 1024],
+    'd1w25': [1.0, 0.25, 1024],
+    'd1w75': [1.0, 0.75, 1024],
+    'd33w1': [0.33, 1.0, 1024],
+    'd33w75': [0.33, 0.75, 1024],
+    'd67w1': [0.67, 1.0, 1024],
+    'd67w5': [0.67, 0.5, 1024],
+    'd67w25': [0.67, 0.25, 1024],
 }
 
 V8_MODEL_SCALES = {
@@ -102,14 +111,16 @@ V8_MODEL_SCALES = {
     'd67w25': [0.67, 0.25, 768],
 }
 
-CUSTOM_MODEL_SCALES = {
-    'yolo8': V8_MODEL_SCALES
-}
+CUSTOM_MODEL_SCALES = {'yolo8': V8_MODEL_SCALES}
+
 
 def get_model_scales(_model_key):
     scale_dict = CUSTOM_MODEL_SCALES.get(_model_key, DEFAULT_MODEL_SCALES)
     param_names = ('depth_mul', 'width_mul', 'max_channels')
-    return {cfg_name: dict(zip(param_names, param_cfg)) for cfg_name, param_cfg in scale_dict.items()}
+    return {
+        cfg_name: dict(zip(param_names, param_cfg))
+        for cfg_name, param_cfg in scale_dict.items()
+    }
 
 
 full_model_dict = {}
@@ -118,13 +129,19 @@ for model_key, config_name in YOLO_CONFIGS.items():
         for activation_fn_tag, act_fn_name in ACT_FN_TAGS.items():
             full_model_dict[f'{model_key}{cfg_name}{activation_fn_tag}'] = {
                 'params': {**param_dict, 'activation_type': act_fn_name},
-                'config': get_project_root() / CFG_PATH / config_name
+                'config': get_project_root() / CFG_PATH / config_name,
             }
 
 
 for dataset_tag, n_classes in DATASET_LIST:
     for model_tag, model_dict in full_model_dict.items():
         name = '_'.join([model_tag, dataset_tag])
-        globals()[name] = make_wrapper_func(name, model_tag, dataset_tag, n_classes,
-                                                model_dict['config'], **model_dict['params'])
+        globals()[name] = make_wrapper_func(
+            name,
+            model_tag,
+            dataset_tag,
+            n_classes,
+            model_dict['config'],
+            **model_dict['params'],
+        )
         __all__.append(name)

@@ -13,9 +13,7 @@ from deeplite_torch_zoo.src.classification.cifar_models.resnext import ResNeXt
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 
-__all__ = [
-    "resnext29_2x64d_cifar100"
-]
+__all__ = ["resnext29_2x64d_cifar100"]
 
 model_urls = {
     "resnext29_2x64d": "http://download.deeplite.ai/zoo/models/resnext29_2x64d-cifar100-f6ba33baf30048d1.pth",
@@ -23,7 +21,14 @@ model_urls = {
 
 
 def _resnext(
-    arch, num_blocks, cardinality, bottleneck_width, num_classes=100, pretrained=False, progress=True, device='cuda'
+    arch,
+    num_blocks,
+    cardinality,
+    bottleneck_width,
+    num_classes=100,
+    pretrained=False,
+    progress=True,
+    device='cuda',
 ):
     model = ResNeXt(
         num_blocks=num_blocks,
@@ -37,8 +42,12 @@ def _resnext(
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='resnext29_2x64d', dataset_name='cifar100', task_type='classification')
-def resnext29_2x64d_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='resnext29_2x64d', dataset_name='cifar100', task_type='classification'
+)
+def resnext29_2x64d_cifar100(
+    pretrained=False, progress=True, num_classes=100, device='cuda'
+):
     return _resnext(
         "resnext29_2x64d",
         num_classes=num_classes,

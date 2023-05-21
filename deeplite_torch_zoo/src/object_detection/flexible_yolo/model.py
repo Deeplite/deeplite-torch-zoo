@@ -5,30 +5,42 @@ import yaml
 from addict import Dict
 from torch import nn
 
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.backbone import \
-    build_backbone
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.neck import \
-    build_neck
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6 import \
-    build_network
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.config import \
-    Config
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import \
-    RepVGGBlock
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect import \
-    Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect_v8 import \
-    DetectV8
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.backbone import (
+    build_backbone,
+)
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.neck import build_neck
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6 import build_network
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.config import Config
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (
+    RepVGGBlock,
+)
+from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect import Detect
+from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect_v8 import (
+    DetectV8,
+)
 from deeplite_torch_zoo.src.object_detection.yolov5.models.yolov5 import (
-    HEAD_NAME_MAP, Conv, DWConv, RepConv, YOLOModel, fuse_conv_and_bn)
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import \
-    initialize_weights
+    HEAD_NAME_MAP,
+    Conv,
+    DWConv,
+    RepConv,
+    YOLOModel,
+    fuse_conv_and_bn,
+)
+from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import (
+    initialize_weights,
+)
 from deeplite_torch_zoo.utils import LOGGER
 
 
 class FlexibleYOLO(YOLOModel):
-    def __init__(self, model_config, nc=None,
-                    backbone_kwargs=None, neck_kwargs=None, custom_head=None):
+    def __init__(
+        self,
+        model_config,
+        nc=None,
+        backbone_kwargs=None,
+        neck_kwargs=None,
+        custom_head=None,
+    ):
         """
         :param model_config:
         """
@@ -70,7 +82,9 @@ class FlexibleYOLO(YOLOModel):
 
         if isinstance(self.detection, Detect):
             s = 256  # 2x min stride
-            self.detection.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, 3, s, s))])
+            self.detection.stride = torch.tensor(
+                [s / x.shape[-2] for x in self.forward(torch.zeros(1, 3, s, s))]
+            )
             self.detection.anchors /= self.detection.stride.view(-1, 1, 1)
 
             self.stride = self.detection.stride
@@ -79,7 +93,9 @@ class FlexibleYOLO(YOLOModel):
             s = 256  # 2x min stride
             # self.detection.inplace = self.inplace
             forward = lambda x: self.forward(x)
-            self.detection.stride = torch.tensor([s / x.shape[-2] for x in forward(torch.zeros(1, 3, s, s))])  # forward
+            self.detection.stride = torch.tensor(
+                [s / x.shape[-2] for x in forward(torch.zeros(1, 3, s, s))]
+            )  # forward
             self.stride = self.detection.stride
             self.detection.bias_init()  # only run once
 
@@ -119,7 +135,9 @@ class FlexibleYOLO(YOLOModel):
 
 
 class YOLOv6(FlexibleYOLO):
-    def __init__(self, model_config, nc=80, custom_head=None, width_mul=None, depth_mul=None):
+    def __init__(
+        self, model_config, nc=80, custom_head=None, width_mul=None, depth_mul=None
+    ):
         """
         :param model_config:
         """
@@ -127,12 +145,11 @@ class YOLOv6(FlexibleYOLO):
 
         head_config = {
             'nc': nc,
-            'anchors':
-                (
-                 [10,13, 16,30, 33,23],
-                 [30,61, 62,45, 59,119],
-                 [116,90, 156,198, 373,326]
-                )
+            'anchors': (
+                [10, 13, 16, 30, 33, 23],
+                [30, 61, 62, 45, 59, 119],
+                [116, 90, 156, 198, 373, 326],
+            ),
         }
 
         head_cls = Detect
@@ -160,7 +177,9 @@ class YOLOv6(FlexibleYOLO):
 
         if isinstance(self.detection, Detect):
             s = 256  # 2x min stride
-            self.detection.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, 3, s, s))])
+            self.detection.stride = torch.tensor(
+                [s / x.shape[-2] for x in self.forward(torch.zeros(1, 3, s, s))]
+            )
             self.detection.anchors /= self.detection.stride.view(-1, 1, 1)
 
             self.stride = self.detection.stride
@@ -169,7 +188,9 @@ class YOLOv6(FlexibleYOLO):
             s = 256  # 2x min stride
             # self.detection.inplace = self.inplace
             forward = lambda x: self.forward(x)
-            self.detection.stride = torch.tensor([s / x.shape[-2] for x in forward(torch.zeros(1, 3, s, s))])  # forward
+            self.detection.stride = torch.tensor(
+                [s / x.shape[-2] for x in forward(torch.zeros(1, 3, s, s))]
+            )  # forward
             self.stride = self.detection.stride
             self.detection.bias_init()  # only run once
 

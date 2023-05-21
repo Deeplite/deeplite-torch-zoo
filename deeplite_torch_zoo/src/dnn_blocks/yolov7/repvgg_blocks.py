@@ -31,10 +31,14 @@ class RepConv(nn.Module):
         self.act = get_activation(act)
 
         if deploy:
-            self.rbr_reparam = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=True)
+            self.rbr_reparam = nn.Conv2d(
+                c1, c2, k, s, autopad(k, p), groups=g, bias=True
+            )
 
         else:
-            self.rbr_identity = (nn.BatchNorm2d(num_features=c1) if c2 == c1 and s == 1 else None)
+            self.rbr_identity = (
+                nn.BatchNorm2d(num_features=c1) if c2 == c1 and s == 1 else None
+            )
 
             self.rbr_dense = nn.Sequential(
                 nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False),
@@ -110,7 +114,6 @@ class RepConv(nn.Module):
         )
 
     def fuse_conv_bn(self, conv, bn):
-
         std = (bn.running_var + bn.eps).sqrt()
         bias = bn.bias - bn.running_mean * bn.weight / std
 
@@ -118,15 +121,17 @@ class RepConv(nn.Module):
         weights = conv.weight * t
 
         bn = nn.Identity()
-        conv = nn.Conv2d(in_channels=conv.in_channels,
-                         out_channels=conv.out_channels,
-                         kernel_size=conv.kernel_size,
-                         stride=conv.stride,
-                         padding=conv.padding,
-                         dilation=conv.dilation,
-                         groups=conv.groups,
-                         bias=True,
-                         padding_mode=conv.padding_mode)
+        conv = nn.Conv2d(
+            in_channels=conv.in_channels,
+            out_channels=conv.out_channels,
+            kernel_size=conv.kernel_size,
+            stride=conv.stride,
+            padding=conv.padding,
+            dilation=conv.dilation,
+            groups=conv.groups,
+            bias=True,
+            padding_mode=conv.padding_mode,
+        )
 
         conv.weight = torch.nn.Parameter(weights)
         conv.bias = torch.nn.Parameter(bias)
@@ -144,38 +149,55 @@ class RepConv(nn.Module):
         weight_1x1_expanded = torch.nn.functional.pad(self.rbr_1x1.weight, [1, 1, 1, 1])
 
         # Fuse self.rbr_identity
-        if (isinstance(self.rbr_identity, nn.BatchNorm2d) or isinstance(self.rbr_identity, nn.modules.batchnorm.SyncBatchNorm)):
+        if isinstance(self.rbr_identity, nn.BatchNorm2d) or isinstance(
+            self.rbr_identity, nn.modules.batchnorm.SyncBatchNorm
+        ):
             # print(f"fuse: rbr_identity == BatchNorm2d or SyncBatchNorm")
             identity_conv_1x1 = nn.Conv2d(
-                    in_channels=self.in_channels,
-                    out_channels=self.out_channels,
-                    kernel_size=1,
-                    stride=1,
-                    padding=0,
-                    groups=self.groups,
-                    bias=False)
-            identity_conv_1x1.weight.data = identity_conv_1x1.weight.data.to(self.rbr_1x1.weight.data.device)
-            identity_conv_1x1.weight.data = identity_conv_1x1.weight.data.squeeze().squeeze()
+                in_channels=self.in_channels,
+                out_channels=self.out_channels,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                groups=self.groups,
+                bias=False,
+            )
+            identity_conv_1x1.weight.data = identity_conv_1x1.weight.data.to(
+                self.rbr_1x1.weight.data.device
+            )
+            identity_conv_1x1.weight.data = (
+                identity_conv_1x1.weight.data.squeeze().squeeze()
+            )
             # print(f" identity_conv_1x1.weight = {identity_conv_1x1.weight.shape}")
             identity_conv_1x1.weight.data.fill_(0.0)
             identity_conv_1x1.weight.data.fill_diagonal_(1.0)
-            identity_conv_1x1.weight.data = identity_conv_1x1.weight.data.unsqueeze(2).unsqueeze(3)
+            identity_conv_1x1.weight.data = identity_conv_1x1.weight.data.unsqueeze(
+                2
+            ).unsqueeze(3)
             # print(f" identity_conv_1x1.weight = {identity_conv_1x1.weight.shape}")
 
             identity_conv_1x1 = self.fuse_conv_bn(identity_conv_1x1, self.rbr_identity)
             bias_identity_expanded = identity_conv_1x1.bias
-            weight_identity_expanded = torch.nn.functional.pad(identity_conv_1x1.weight, [1, 1, 1, 1])
+            weight_identity_expanded = torch.nn.functional.pad(
+                identity_conv_1x1.weight, [1, 1, 1, 1]
+            )
         else:
             # print(f"fuse: rbr_identity != BatchNorm2d, rbr_identity = {self.rbr_identity}")
-            bias_identity_expanded = torch.nn.Parameter( torch.zeros_like(rbr_1x1_bias) )
-            weight_identity_expanded = torch.nn.Parameter( torch.zeros_like(weight_1x1_expanded) )
+            bias_identity_expanded = torch.nn.Parameter(torch.zeros_like(rbr_1x1_bias))
+            weight_identity_expanded = torch.nn.Parameter(
+                torch.zeros_like(weight_1x1_expanded)
+            )
 
-        #print(f"self.rbr_1x1.weight = {self.rbr_1x1.weight.shape}, ")
-        #print(f"weight_1x1_expanded = {weight_1x1_expanded.shape}, ")
-        #print(f"self.rbr_dense.weight = {self.rbr_dense.weight.shape}, ")
+        # print(f"self.rbr_1x1.weight = {self.rbr_1x1.weight.shape}, ")
+        # print(f"weight_1x1_expanded = {weight_1x1_expanded.shape}, ")
+        # print(f"self.rbr_dense.weight = {self.rbr_dense.weight.shape}, ")
 
-        self.rbr_dense.weight = torch.nn.Parameter(self.rbr_dense.weight + weight_1x1_expanded + weight_identity_expanded)
-        self.rbr_dense.bias = torch.nn.Parameter(self.rbr_dense.bias + rbr_1x1_bias + bias_identity_expanded)
+        self.rbr_dense.weight = torch.nn.Parameter(
+            self.rbr_dense.weight + weight_1x1_expanded + weight_identity_expanded
+        )
+        self.rbr_dense.bias = torch.nn.Parameter(
+            self.rbr_dense.bias + rbr_1x1_bias + bias_identity_expanded
+        )
 
         self.rbr_reparam = self.rbr_dense
         self.deploy = True

@@ -9,7 +9,9 @@
 """
 
 from deeplite_torch_zoo.src.classification.cifar_models.densenet import (
-    Bottleneck, DenseNet)
+    Bottleneck,
+    DenseNet,
+)
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
@@ -22,7 +24,16 @@ model_urls = {
 }
 
 
-def _densenet(arch, block, layers, growth_rate=32, pretrained=False, num_classes=100, progress=True, device='cuda'):
+def _densenet(
+    arch,
+    block,
+    layers,
+    growth_rate=32,
+    pretrained=False,
+    num_classes=100,
+    progress=True,
+    device='cuda',
+):
     model = DenseNet(block, layers, growth_rate, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
@@ -31,8 +42,12 @@ def _densenet(arch, block, layers, growth_rate=32, pretrained=False, num_classes
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='densenet121', dataset_name='cifar100', task_type='classification')
-def densenet121_cifar100(pretrained=False, num_classes=100, progress=True, device='cuda'):
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='densenet121', dataset_name='cifar100', task_type='classification'
+)
+def densenet121_cifar100(
+    pretrained=False, num_classes=100, progress=True, device='cuda'
+):
     return _densenet(
         "densenet121",
         Bottleneck,

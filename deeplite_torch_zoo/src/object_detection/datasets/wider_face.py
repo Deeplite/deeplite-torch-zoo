@@ -11,8 +11,7 @@ import torch
 
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_default as cfg
 from deeplite_torch_zoo.src.object_detection.datasets.data_augment import Resize
-from deeplite_torch_zoo.src.object_detection.datasets.dataset import \
-    DLZooDataset
+from deeplite_torch_zoo.src.object_detection.datasets.dataset import DLZooDataset
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -63,8 +62,9 @@ class WiderFace(DLZooDataset):
         """
 
         get_img_fn = lambda img_index: self.__parse_annotation(self.img_info[img_index])
-        img, bboxes, img_id = self._load_mixup(item, get_img_fn,
-            len(self.img_info), p=cfg.TRAIN['mixup'])
+        img, bboxes, img_id = self._load_mixup(
+            item, get_img_fn, len(self.img_info), p=cfg.TRAIN['mixup']
+        )
 
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()
@@ -131,7 +131,11 @@ class WiderFace(DLZooDataset):
         return img_path
 
     def parse_train_val_annotations_file(self) -> None:
-        filename = "wider_face_train_bbx_gt.txt" if self.split == "train" else "wider_face_val_bbx_gt.txt"
+        filename = (
+            "wider_face_train_bbx_gt.txt"
+            if self.split == "train"
+            else "wider_face_val_bbx_gt.txt"
+        )
         filepath = os.path.join(self.root, "wider_face_split", filename)
 
         with open(filepath, "r") as f:
@@ -140,10 +144,10 @@ class WiderFace(DLZooDataset):
             while i < len(lines):
                 labels = []
                 img_path = self._parse_file_name(lines[i])
-                _num_boxes = int(lines[i+1].rstrip())
+                _num_boxes = int(lines[i + 1].rstrip())
                 num_boxes = max(1, _num_boxes)
                 i = i + 2
-                bboxes_lines = lines[i: i+num_boxes]
+                bboxes_lines = lines[i : i + num_boxes]
                 i = i + num_boxes
                 for bbox_line in bboxes_lines:
                     line_split = bbox_line.rstrip().split(" ")
@@ -164,19 +168,25 @@ class WiderFace(DLZooDataset):
                 if _num_boxes == 0 or valid_boxes <= 0:
                     continue
 
-                self.img_info.append({
-                    "img_path": img_path,
-                    "annotations": {"bbox": labels[:, 0:4],  # xmin, ymin, xmax, ymax
-                                    "blur": labels[:, 4],
-                                    "expression": labels[:, 5],
-                                    "illumination": labels[:, 6],
-                                    "invalid": _invalid,
-                                    "occlusion": labels[:, 8],
-                                    "pose": labels[:, 9]}
-                })
+                self.img_info.append(
+                    {
+                        "img_path": img_path,
+                        "annotations": {
+                            "bbox": labels[:, 0:4],  # xmin, ymin, xmax, ymax
+                            "blur": labels[:, 4],
+                            "expression": labels[:, 5],
+                            "illumination": labels[:, 6],
+                            "invalid": _invalid,
+                            "occlusion": labels[:, 8],
+                            "pose": labels[:, 9],
+                        },
+                    }
+                )
 
     def parse_test_annotations_file(self) -> None:
-        filepath = os.path.join(self.root, "wider_face_split", "wider_face_test_filelist.txt")
+        filepath = os.path.join(
+            self.root, "wider_face_split", "wider_face_test_filelist.txt"
+        )
         filepath = abspath(expanduser(filepath))
         with open(filepath, "r") as f:
             lines = f.readlines()

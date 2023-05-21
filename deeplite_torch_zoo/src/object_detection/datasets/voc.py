@@ -10,12 +10,18 @@ import torch
 
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_voc as cfg
 from deeplite_torch_zoo.src.object_detection.datasets.data_augment import Resize
-from deeplite_torch_zoo.src.object_detection.datasets.dataset import \
-    DLZooDataset
+from deeplite_torch_zoo.src.object_detection.datasets.dataset import DLZooDataset
 
 
 class VocDataset(DLZooDataset):
-    def __init__(self, annotation_path, anno_file_type, augment=False, img_size=416, class_names=None):
+    def __init__(
+        self,
+        annotation_path,
+        anno_file_type,
+        augment=False,
+        img_size=416,
+        class_names=None,
+    ):
         super().__init__(cfg.TRAIN, img_size, augment)
 
         self.annotation_path = annotation_path
@@ -25,8 +31,10 @@ class VocDataset(DLZooDataset):
 
         if class_names is not None:
             if class_names != self.classes:
-                raise RuntimeError(f'Classes in the val datatset and class_names.txt are not the same: '
-                    '{class_names} vs. {self.classes}')
+                raise RuntimeError(
+                    f'Classes in the val datatset and class_names.txt are not the same: '
+                    '{class_names} vs. {self.classes}'
+                )
 
         self.__annotations = self.__load_annotations(anno_file_type)
         if anno_file_type == "train":
@@ -45,14 +53,18 @@ class VocDataset(DLZooDataset):
             bboxes of shape nx6, where n is number of labels in the image and x1,y1,x2,y2, class_id and confidence.
         """
 
-        get_img_fn = lambda img_index: self.__parse_annotation(self.__annotations[img_index])
+        get_img_fn = lambda img_index: self.__parse_annotation(
+            self.__annotations[img_index]
+        )
         if self._do_augment and random.random() < cfg.TRAIN['mosaic']:
             shape = None
-            img, bboxes, img_id = self._load_mosaic(item, get_img_fn,
-                len(self.__annotations))
+            img, bboxes, img_id = self._load_mosaic(
+                item, get_img_fn, len(self.__annotations)
+            )
         elif self._do_augment and cfg.TRAIN['mixup'] > 0:
-            img, bboxes, img_id, shape = self._load_mixup(item, get_img_fn,
-                len(self.__annotations), p=cfg.TRAIN['mixup'])
+            img, bboxes, img_id, shape = self._load_mixup(
+                item, get_img_fn, len(self.__annotations), p=cfg.TRAIN['mixup']
+            )
         else:
             img, bboxes, img_id, shape = get_img_fn(item)
             img = img.transpose(2, 0, 1)
@@ -90,7 +102,6 @@ class VocDataset(DLZooDataset):
         return image_tensor, label_tensor, length_tensor, shape_tensor
 
     def __load_annotations(self, anno_type):
-
         assert anno_type in [
             "train",
             "test",

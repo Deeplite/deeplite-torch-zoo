@@ -11,7 +11,7 @@ class HSwish(nn.Module):
 
 
 class HardSigmoid(nn.Module):
-    def __init__(self, slope=.2, offset=.5):
+    def __init__(self, slope=0.2, offset=0.5):
         super().__init__()
         self.slope = slope
         self.offset = offset
@@ -24,11 +24,26 @@ class HardSigmoid(nn.Module):
 
 
 class ConvBNACT(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, act=None):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride=1,
+        padding=0,
+        groups=1,
+        act=None,
+    ):
         super().__init__()
-        self.conv = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                              stride=stride, padding=padding, groups=groups,
-                              bias=False)
+        self.conv = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            groups=groups,
+            bias=False,
+        )
         self.bn = nn.BatchNorm2d(out_channels)
         if act == 'relu':
             self.act = nn.ReLU()
@@ -50,9 +65,19 @@ class SEBlock(nn.Module):
         super().__init__()
         num_mid_filter = out_channels // ratio
         self.pool = nn.AdaptiveAvgPool2d(1)
-        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=num_mid_filter, kernel_size=1, bias=True)
+        self.conv1 = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=num_mid_filter,
+            kernel_size=1,
+            bias=True,
+        )
         self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=num_mid_filter, kernel_size=1, out_channels=out_channels, bias=True)
+        self.conv2 = nn.Conv2d(
+            in_channels=num_mid_filter,
+            kernel_size=1,
+            out_channels=out_channels,
+            bias=True,
+        )
         self.relu2 = HardSigmoid()
 
     def forward(self, x):
@@ -65,21 +90,47 @@ class SEBlock(nn.Module):
 
 
 class ResidualUnit(nn.Module):
-    def __init__(self, num_in_filter, num_mid_filter, num_out_filter, stride, kernel_size, act=None, use_se=False):
+    def __init__(
+        self,
+        num_in_filter,
+        num_mid_filter,
+        num_out_filter,
+        stride,
+        kernel_size,
+        act=None,
+        use_se=False,
+    ):
         super().__init__()
-        self.conv0 = ConvBNACT(in_channels=num_in_filter, out_channels=num_mid_filter, kernel_size=1, stride=1,
-                               padding=0, act=act)
+        self.conv0 = ConvBNACT(
+            in_channels=num_in_filter,
+            out_channels=num_mid_filter,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            act=act,
+        )
 
-        self.conv1 = ConvBNACT(in_channels=num_mid_filter, out_channels=num_mid_filter, kernel_size=kernel_size,
-                               stride=stride,
-                               padding=int((kernel_size - 1) // 2), act=act, groups=num_mid_filter)
+        self.conv1 = ConvBNACT(
+            in_channels=num_mid_filter,
+            out_channels=num_mid_filter,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=int((kernel_size - 1) // 2),
+            act=act,
+            groups=num_mid_filter,
+        )
         if use_se:
             self.se = SEBlock(in_channels=num_mid_filter, out_channels=num_mid_filter)
         else:
             self.se = None
 
-        self.conv2 = ConvBNACT(in_channels=num_mid_filter, out_channels=num_out_filter, kernel_size=1, stride=1,
-                               padding=0)
+        self.conv2 = ConvBNACT(
+            in_channels=num_mid_filter,
+            out_channels=num_out_filter,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+        )
         self.not_add = num_in_filter != num_out_filter or stride != 1
 
     def forward(self, x):
@@ -144,25 +195,31 @@ class MobileNetV3(nn.Module):
             self.cls_ch_squeeze = 576
             self.cls_ch_expand = 1280
         else:
-            raise NotImplementedError("mode[" + model_name +
-                                      "_model] is not implemented!")
+            raise NotImplementedError(
+                "mode[" + model_name + "_model] is not implemented!"
+            )
 
         supported_scale = [0.35, 0.5, 0.75, 1.0, 1.25]
-        assert self.scale in supported_scale, \
-            "supported scale are {} but input scale is {}".format(supported_scale, self.scale)
+        assert (
+            self.scale in supported_scale
+        ), "supported scale are {} but input scale is {}".format(
+            supported_scale, self.scale
+        )
 
         scale = self.scale
         inplanes = self.inplanes
         cfg = self.cfg
         cls_ch_squeeze = self.cls_ch_squeeze
         # conv1
-        self.conv1 = ConvBNACT(in_channels=in_channels,
-                               out_channels=self.make_divisible(inplanes * scale),
-                               kernel_size=3,
-                               stride=2,
-                               padding=1,
-                               groups=1,
-                               act='hard_swish')
+        self.conv1 = ConvBNACT(
+            in_channels=in_channels,
+            out_channels=self.make_divisible(inplanes * scale),
+            kernel_size=3,
+            stride=2,
+            padding=1,
+            groups=1,
+            act='hard_swish',
+        )
         i = 0
         inplanes = self.make_divisible(inplanes * scale)
         self.stages = nn.ModuleList()
@@ -173,13 +230,15 @@ class MobileNetV3(nn.Module):
                 self.out_channels.append(inplanes)
                 self.stages.append(nn.Sequential(*block_list))
                 block_list = []
-            block = ResidualUnit(num_in_filter=inplanes,
-                                 num_mid_filter=self.make_divisible(scale * layer_cfg[1]),
-                                 num_out_filter=self.make_divisible(scale * layer_cfg[2]),
-                                 act=layer_cfg[4],
-                                 stride=layer_cfg[5],
-                                 kernel_size=layer_cfg[0],
-                                 use_se=layer_cfg[3])
+            block = ResidualUnit(
+                num_in_filter=inplanes,
+                num_mid_filter=self.make_divisible(scale * layer_cfg[1]),
+                num_out_filter=self.make_divisible(scale * layer_cfg[2]),
+                act=layer_cfg[4],
+                stride=layer_cfg[5],
+                kernel_size=layer_cfg[0],
+                use_se=layer_cfg[3],
+            )
             block_list.append(block)
             inplanes = self.make_divisible(scale * layer_cfg[2])
             i += 1
@@ -191,11 +250,14 @@ class MobileNetV3(nn.Module):
             stride=1,
             padding=0,
             groups=1,
-            act='hard_swish')
+            act='hard_swish',
+        )
         self.out_channels.append(self.make_divisible(scale * cls_ch_squeeze))
-        self.out_shape = [self.out_channels[-3],
-                          self.out_channels[-2],
-                          self.out_channels[-1]]
+        self.out_shape = [
+            self.out_channels[-3],
+            self.out_channels[-2],
+            self.out_channels[-1],
+        ]
 
     def make_divisible(self, v, divisor=8, min_value=None):
         if min_value is None:

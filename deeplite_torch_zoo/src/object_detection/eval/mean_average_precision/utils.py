@@ -25,13 +25,15 @@ SOFTWARE.
 import numpy as np
 import pandas as pd
 
+
 def sort_by_col(array, idx=1):
     """Sort np.array by column."""
     order = np.argsort(array[:, idx])[::-1]
     return array[order]
 
+
 def compute_precision_recall(tp, fp, n_positives):
-    """ Compute Preision/Recall.
+    """Compute Preision/Recall.
 
     Arguments:
         tp (np.array): true positives array.
@@ -48,8 +50,9 @@ def compute_precision_recall(tp, fp, n_positives):
     precision = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
     return precision, recall
 
+
 def compute_average_precision(precision, recall):
-    """ Compute Avearage Precision by all points.
+    """Compute Avearage Precision by all points.
 
     Arguments:
         precision (np.array): precision values.
@@ -58,16 +61,19 @@ def compute_average_precision(precision, recall):
     Returns:
         average_precision (np.array)
     """
-    precision = np.concatenate(([0.], precision, [0.]))
-    recall = np.concatenate(([0.], recall, [1.]))
+    precision = np.concatenate(([0.0], precision, [0.0]))
+    recall = np.concatenate(([0.0], recall, [1.0]))
     for i in range(precision.size - 1, 0, -1):
         precision[i - 1] = np.maximum(precision[i - 1], precision[i])
     ids = np.where(recall[1:] != recall[:-1])[0]
     average_precision = np.sum((recall[ids + 1] - recall[ids]) * precision[ids + 1])
     return average_precision
 
-def compute_average_precision_with_recall_thresholds(precision, recall, recall_thresholds):
-    """ Compute Avearage Precision by specific points.
+
+def compute_average_precision_with_recall_thresholds(
+    precision, recall, recall_thresholds
+):
+    """Compute Avearage Precision by specific points.
 
     Arguments:
         precision (np.array): precision values.
@@ -77,26 +83,28 @@ def compute_average_precision_with_recall_thresholds(precision, recall, recall_t
     Returns:
         average_precision (np.array)
     """
-    average_precision = 0.
+    average_precision = 0.0
     for t in recall_thresholds:
         p = np.max(precision[recall >= t]) if np.sum(recall >= t) != 0 else 0
         average_precision = average_precision + p / recall_thresholds.size
     return average_precision
 
+
 def compute_iou(pred, gt):
-    """ Calculates IoU (Jaccard index) of two sets of bboxes:
-            IOU = pred ∩ gt / (area(pred) + area(gt) - pred ∩ gt)
+    """Calculates IoU (Jaccard index) of two sets of bboxes:
+        IOU = pred ∩ gt / (area(pred) + area(gt) - pred ∩ gt)
 
-        Parameters:
-            Coordinates of bboxes are supposed to be in the following form: [x1, y1, x2, y2]
-            pred (np.array): predicted bboxes
-            gt (np.array): ground truth bboxes
+    Parameters:
+        Coordinates of bboxes are supposed to be in the following form: [x1, y1, x2, y2]
+        pred (np.array): predicted bboxes
+        gt (np.array): ground truth bboxes
 
-        Return value:
-            iou (np.array): intersection over union
+    Return value:
+        iou (np.array): intersection over union
     """
+
     def get_box_area(box):
-        return (box[:, 2] - box[:, 0] + 1.) * (box[:, 3] - box[:, 1] + 1.)
+        return (box[:, 2] - box[:, 0] + 1.0) * (box[:, 3] - box[:, 1] + 1.0)
 
     _gt = np.tile(gt, (pred.shape[0], 1))
     _pred = np.repeat(pred, gt.shape[0], axis=0)
@@ -106,16 +114,17 @@ def compute_iou(pred, gt):
     ixmax = np.minimum(_gt[:, 2], _pred[:, 2])
     iymax = np.minimum(_gt[:, 3], _pred[:, 3])
 
-    width = np.maximum(ixmax - ixmin + 1., 0)
-    height = np.maximum(iymax - iymin + 1., 0)
+    width = np.maximum(ixmax - ixmin + 1.0, 0)
+    height = np.maximum(iymax - iymin + 1.0, 0)
 
     intersection_area = width * height
     union_area = get_box_area(_gt) + get_box_area(_pred) - intersection_area
     iou = (intersection_area / union_area).reshape(pred.shape[0], gt.shape[0])
     return iou
 
+
 def compute_match_table(preds, gt, img_id):
-    """ Compute match table.
+    """Compute match table.
 
     Arguments:
         preds (np.array): predicted boxes.
@@ -133,6 +142,7 @@ def compute_match_table(preds, gt, img_id):
     Output format:
         match_table: [img_id, confidence, iou, difficult, crowd]
     """
+
     def _tile(arr, nreps, axis=0):
         return np.repeat(arr, nreps, axis=axis).reshape(nreps, -1).tolist()
 
@@ -152,8 +162,9 @@ def compute_match_table(preds, gt, img_id):
         match_table["crowd"] = _empty_array_2d(preds.shape[0])
     return pd.DataFrame(match_table, columns=list(match_table.keys()))
 
+
 def row_to_vars(row):
-    """ Convert row of pd.DataFrame to variables.
+    """Convert row of pd.DataFrame to variables.
 
     Arguments:
         row (pd.DataFrame): row
@@ -174,8 +185,11 @@ def row_to_vars(row):
     order = np.argsort(iou)[::-1]
     return img_id, conf, iou, difficult, crowd, order
 
-def check_box(iou, difficult, crowd, order, matched_ind, iou_threshold, mpolicy="greedy"):
-    """ Check box for tp/fp/ignore.
+
+def check_box(
+    iou, difficult, crowd, order, matched_ind, iou_threshold, mpolicy="greedy"
+):
+    """Check box for tp/fp/ignore.
 
     Arguments:
         iou (np.array): iou between predicted box and gt boxes.

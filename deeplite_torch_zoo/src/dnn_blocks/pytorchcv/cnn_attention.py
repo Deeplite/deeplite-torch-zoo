@@ -4,8 +4,7 @@ from functools import partial
 
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.common import (get_activation,
-                                                      round_channels)
+from deeplite_torch_zoo.src.dnn_blocks.common import get_activation, round_channels
 
 
 class SELayer(nn.Module):
@@ -29,20 +28,26 @@ class SELayer(nn.Module):
     out_activation : function, or str, or nn.Module, default 'sigmoid'
         Activation function after the last convolution.
     """
-    def __init__(self,
-                 channels,
-                 reduction=16,
-                 mid_channels=None,
-                 round_mid=False,
-                 use_conv=True,
-                 mid_activation='relu',
-                 out_activation='hsigmoid',
-                 norm_layer=None):
+
+    def __init__(
+        self,
+        channels,
+        reduction=16,
+        mid_channels=None,
+        round_mid=False,
+        use_conv=True,
+        mid_activation='relu',
+        out_activation='hsigmoid',
+        norm_layer=None,
+    ):
         super(SELayer, self).__init__()
         self.use_conv = use_conv
         if mid_channels is None:
-            mid_channels = channels // reduction if not round_mid \
+            mid_channels = (
+                channels // reduction
+                if not round_mid
                 else round_channels(float(channels) / reduction)
+            )
 
         mid_channels += 1
 
@@ -54,11 +59,10 @@ class SELayer(nn.Module):
                 kernel_size=1,
                 stride=1,
                 groups=1,
-                bias=True)
+                bias=True,
+            )
         else:
-            self.fc1 = nn.Linear(
-                in_features=channels,
-                out_features=mid_channels)
+            self.fc1 = nn.Linear(in_features=channels, out_features=mid_channels)
 
         self.bn = norm_layer(mid_channels) if norm_layer else nn.Identity()
         self.activ = get_activation(mid_activation)
@@ -70,12 +74,10 @@ class SELayer(nn.Module):
                 kernel_size=1,
                 stride=1,
                 groups=1,
-                bias=True)
-        else:
-            self.fc2 = nn.Linear(
-                in_features=mid_channels,
-                out_features=channels
+                bias=True,
             )
+        else:
+            self.fc2 = nn.Linear(in_features=mid_channels, out_features=channels)
         self.sigmoid = get_activation(out_activation)
 
     def forward(self, x):

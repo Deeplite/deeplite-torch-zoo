@@ -11,9 +11,11 @@ import torch.nn as nn
 try:
     from mish_cuda import MishCuda as Mish
 except:
+
     class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
         def forward(self, x):
             return x * torch.nn.functional.softplus(x).tanh()
+
 
 from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
 
@@ -39,7 +41,9 @@ def get_activation(activation_name):
 def autopad(k, p=None, d=1):  # kernel, padding, dilation
     # Pad to 'same' shape outputs
     if d > 1:
-        k = d * (k - 1) + 1 if isinstance(k, int) else [d * (x - 1) + 1 for x in k]  # actual kernel-size
+        k = (
+            d * (k - 1) + 1 if isinstance(k, int) else [d * (x - 1) + 1 for x in k]
+        )  # actual kernel-size
     if p is None:
         p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
     return p
@@ -142,8 +146,19 @@ class DWConv(ConvBnAct):
 @VARIABLE_CHANNEL_BLOCKS.register()
 class GhostConv(nn.Module):
     # Ghost Convolution https://github.com/huawei-noah/ghostnet
-    def __init__(self, c1, c2, k=1, s=1, g=1, dw_k=5,
-                 dw_s=1, act='relu', shrink_factor=0.5, residual=False):  # ch_in, ch_out, kernel, stride, groups
+    def __init__(
+        self,
+        c1,
+        c2,
+        k=1,
+        s=1,
+        g=1,
+        dw_k=5,
+        dw_s=1,
+        act='relu',
+        shrink_factor=0.5,
+        residual=False,
+    ):  # ch_in, ch_out, kernel, stride, groups
         super(GhostConv, self).__init__()
         c_ = c2 // 2  # hidden channels
 
@@ -160,8 +175,11 @@ class GhostConv(nn.Module):
         y = self.cv1(x)
         if self.single_conv:
             return y
-        return torch.cat([y, self.cv2(y)], 1) if not self.residual \
+        return (
+            torch.cat([y, self.cv2(y)], 1)
+            if not self.residual
             else x + torch.cat([y, self.cv2(y)], 1)
+        )
 
 
 @VARIABLE_CHANNEL_BLOCKS.register()

@@ -1,5 +1,7 @@
 from deeplite_torch_zoo.src.classification.mobilenets.mobilenetv3 import (
-    mobilenetv3_large, mobilenetv3_small)
+    mobilenetv3_large,
+    mobilenetv3_small,
+)
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
@@ -11,7 +13,9 @@ model_urls = {
 }
 
 
-def _mobilenetv3_vww(arch="small", pretrained=False, progress=True, num_classes=2, device='cuda'):
+def _mobilenetv3_vww(
+    arch="small", pretrained=False, progress=True, num_classes=2, device='cuda'
+):
     if arch == "small":
         model = mobilenetv3_small(num_classes=num_classes)
     elif arch == "large":
@@ -24,11 +28,31 @@ def _mobilenetv3_vww(arch="small", pretrained=False, progress=True, num_classes=
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='mobilenetv3_small', dataset_name='vww', task_type='classification')
-def mobilenetv3_small_vww(pretrained=False, progress=True, num_classes=2, device='cuda'):
-    return _mobilenetv3_vww(arch="small", pretrained=pretrained, progress=progress, num_classes=num_classes, device=device)
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='mobilenetv3_small', dataset_name='vww', task_type='classification'
+)
+def mobilenetv3_small_vww(
+    pretrained=False, progress=True, num_classes=2, device='cuda'
+):
+    return _mobilenetv3_vww(
+        arch="small",
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        device=device,
+    )
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='mobilenetv3_large', dataset_name='vww', task_type='classification')
-def mobilenetv3_large_vww(pretrained=False, progress=True, num_classes=2, device='cuda'):
-    return _mobilenetv3_vww(arch="large", pretrained=pretrained, progress=progress, num_classes=num_classes, device=device)
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='mobilenetv3_large', dataset_name='vww', task_type='classification'
+)
+def mobilenetv3_large_vww(
+    pretrained=False, progress=True, num_classes=2, device='cuda'
+):
+    return _mobilenetv3_vww(
+        arch="large",
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        device=device,
+    )

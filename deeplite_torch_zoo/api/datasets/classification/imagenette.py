@@ -3,12 +3,13 @@ from os.path import expanduser
 from pathlib import Path
 
 import PIL.Image
-from torchvision.datasets.utils import (download_and_extract_archive,
-                                        verify_str_arg)
+from torchvision.datasets.utils import download_and_extract_archive, verify_str_arg
 from torchvision.datasets.vision import VisionDataset
 
 from deeplite_torch_zoo.src.classification.augmentations.augs import (
-    get_imagenet_transforms, get_vanilla_transforms)
+    get_imagenet_transforms,
+    get_vanilla_transforms,
+)
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
 from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
 

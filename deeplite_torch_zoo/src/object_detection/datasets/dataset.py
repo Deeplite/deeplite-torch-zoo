@@ -6,8 +6,13 @@ import numpy as np
 from torch.utils.data import Dataset
 
 from deeplite_torch_zoo.src.object_detection.datasets.data_augment import (
-    AugmentHSV, Mixup, RandomHorizontalFlip, RandomVerticalFlip, Resize,
-    random_perspective)
+    AugmentHSV,
+    Mixup,
+    RandomHorizontalFlip,
+    RandomVerticalFlip,
+    Resize,
+    random_perspective,
+)
 
 
 class DLZooDataset(Dataset):
@@ -18,18 +23,23 @@ class DLZooDataset(Dataset):
         self._do_augment = augment
 
     def _augment(self, img, bboxes):
-        img, bboxes = random_perspective(img, bboxes,
+        img, bboxes = random_perspective(
+            img,
+            bboxes,
             degrees=self._hyp_cfg['degrees'],
             translate=self._hyp_cfg['translate'],
             scale=self._hyp_cfg['scale'],
             shear=self._hyp_cfg['shear'],
-            perspective=self._hyp_cfg['perspective'])
+            perspective=self._hyp_cfg['perspective'],
+        )
         transforms = [
             RandomHorizontalFlip(p=self._hyp_cfg['fliplr']),
             RandomVerticalFlip(p=self._hyp_cfg['flipud']),
-            AugmentHSV(hgain=self._hyp_cfg['hsv_h'],
-                       sgain=self._hyp_cfg['hsv_s'],
-                       vgain=self._hyp_cfg['hsv_v']),
+            AugmentHSV(
+                hgain=self._hyp_cfg['hsv_h'],
+                sgain=self._hyp_cfg['hsv_s'],
+                vgain=self._hyp_cfg['hsv_v'],
+            ),
         ]
         for transform in transforms:
             img, bboxes = transform(np.copy(img), np.copy(bboxes))
@@ -51,8 +61,12 @@ class DLZooDataset(Dataset):
         bboxes4 = []
         s = self._img_size
         mosaic_border = [-s // 2, -s // 2]
-        yc, xc = (int(random.uniform(-x, 2 * s + x)) for x in mosaic_border)  # mosaic center x, y
-        indices = [item] + random.choices(range(0, num_images), k=3)  # 3 additional image indices
+        yc, xc = (
+            int(random.uniform(-x, 2 * s + x)) for x in mosaic_border
+        )  # mosaic center x, y
+        indices = [item] + random.choices(
+            range(0, num_images), k=3
+        )  # 3 additional image indices
         random.shuffle(indices)
 
         for i, index in enumerate(indices):
@@ -62,9 +76,21 @@ class DLZooDataset(Dataset):
 
             # place img in img4
             if i == 0:  # top left
-                img4 = np.full((s * 2, s * 2, img.shape[2]), 114.0, dtype=np.float32) #114, dtype=np.uint8)  # base image with 4 tiles
-                x1a, y1a, x2a, y2a = max(xc - w, 0), max(yc - h, 0), xc, yc  # xmin, ymin, xmax, ymax (large image)
-                x1b, y1b, x2b, y2b = w - (x2a - x1a), h - (y2a - y1a), w, h  # xmin, ymin, xmax, ymax (small image)
+                img4 = np.full(
+                    (s * 2, s * 2, img.shape[2]), 114.0, dtype=np.float32
+                )  # 114, dtype=np.uint8)  # base image with 4 tiles
+                x1a, y1a, x2a, y2a = (
+                    max(xc - w, 0),
+                    max(yc - h, 0),
+                    xc,
+                    yc,
+                )  # xmin, ymin, xmax, ymax (large image)
+                x1b, y1b, x2b, y2b = (
+                    w - (x2a - x1a),
+                    h - (y2a - y1a),
+                    w,
+                    h,
+                )  # xmin, ymin, xmax, ymax (small image)
             elif i == 1:  # top right
                 x1a, y1a, x2a, y2a = xc, max(yc - h, 0), min(xc + w, s * 2), yc
                 x1b, y1b, x2b, y2b = 0, h - (y2a - y1a), min(w, x2a - x1a), h
@@ -93,9 +119,7 @@ class DLZooDataset(Dataset):
         bboxes4 = np.clip(bboxes4, 0, img4.shape[0])
 
         if resize_to_original_size:
-            img4, bboxes4 = Resize((s, s), True, False)(
-                np.copy(img4), np.copy(bboxes4)
-            )
+            img4, bboxes4 = Resize((s, s), True, False)(np.copy(img4), np.copy(bboxes4))
 
         img4 = img4.transpose(2, 0, 1)  # HWC->CHW
         return img4, bboxes4, img_id

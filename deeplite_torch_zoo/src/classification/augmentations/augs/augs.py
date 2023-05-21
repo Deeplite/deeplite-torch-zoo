@@ -2,8 +2,10 @@
 
 import numpy as np
 import torch
-from timm.data.transforms_factory import (transforms_imagenet_eval,
-                                          transforms_imagenet_train)
+from timm.data.transforms_factory import (
+    transforms_imagenet_eval,
+    transforms_imagenet_train,
+)
 from torchvision import transforms
 
 DEFAULT_CROP_PCT = 0.875
@@ -17,7 +19,7 @@ def get_imagenet_transforms(
     std=IMAGENET_DEFAULT_STD,
     crop_pct=DEFAULT_CROP_PCT,
     scale=(0.08, 1.0),  # Random resize scale
-    ratio=(3./4., 4./3.),  # Random resize aspect ratio
+    ratio=(3.0 / 4.0, 4.0 / 3.0),  # Random resize aspect ratio
     hflip=0.5,
     vflip=0.0,
     color_jitter=0.4,  # Color jitter factor
@@ -67,7 +69,9 @@ def get_vanilla_transforms(
     train_transforms = [
         transforms.RandomResizedCrop(img_size),
         transforms.RandomHorizontalFlip(hflip),
-        transforms.ColorJitter(brightness=jitter, contrast=jitter, saturation=jitter, hue=0),
+        transforms.ColorJitter(
+            brightness=jitter, contrast=jitter, saturation=jitter, hue=0
+        ),
     ]
     if add_train_transforms is not None:
         train_transforms.append(add_train_transforms)
@@ -100,6 +104,7 @@ class Cutout:
         n_holes (int): Number of patches to cut out of each image.
         length (int): The length (in pixels) of each square patch.
     """
+
     def __init__(self, n_holes, length):
         self.n_holes = n_holes
         self.length = length
@@ -125,7 +130,7 @@ class Cutout:
             x1 = np.clip(x - self.length // 2, 0, w)
             x2 = np.clip(x + self.length // 2, 0, w)
 
-            mask[y1: y2, x1: x2] = 0.
+            mask[y1:y2, x1:x2] = 0.0
 
         mask = torch.from_numpy(mask)
         mask = mask.expand_as(img)

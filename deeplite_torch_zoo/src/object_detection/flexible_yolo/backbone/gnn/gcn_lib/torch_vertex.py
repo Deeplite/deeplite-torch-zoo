@@ -14,9 +14,10 @@ class MRConv2d(nn.Module):
     """
     Max-Relative Graph Convolution (Paper: https://arxiv.org/abs/1904.03751) for dense data type
     """
+
     def __init__(self, in_channels, out_channels, act='relu', norm=None, bias=True):
         super(MRConv2d, self).__init__()
-        self.nn = BasicConv([in_channels*2, out_channels], act, norm, bias)
+        self.nn = BasicConv([in_channels * 2, out_channels], act, norm, bias)
 
     def forward(self, x, edge_index, y=None):
         x_i = batched_index_select(x, edge_index[1])
@@ -34,6 +35,7 @@ class EdgeConv2d(nn.Module):
     """
     Edge convolution layer (with activation, batch normalization) for dense data type
     """
+
     def __init__(self, in_channels, out_channels, act='relu', norm=None, bias=True):
         super(EdgeConv2d, self).__init__()
         self.nn = BasicConv([in_channels * 2, out_channels], act, norm, bias)
@@ -44,7 +46,9 @@ class EdgeConv2d(nn.Module):
             x_j = batched_index_select(y, edge_index[0])
         else:
             x_j = batched_index_select(x, edge_index[0])
-        max_value, _ = torch.max(self.nn(torch.cat([x_i, x_j - x_i], dim=1)), -1, keepdim=True)
+        max_value, _ = torch.max(
+            self.nn(torch.cat([x_i, x_j - x_i], dim=1)), -1, keepdim=True
+        )
         return max_value
 
 
@@ -52,10 +56,11 @@ class GraphSAGE(nn.Module):
     """
     GraphSAGE Graph Convolution (Paper: https://arxiv.org/abs/1706.02216) for dense data type
     """
+
     def __init__(self, in_channels, out_channels, act='relu', norm=None, bias=True):
         super(GraphSAGE, self).__init__()
         self.nn1 = BasicConv([in_channels, in_channels], act, norm, bias)
-        self.nn2 = BasicConv([in_channels*2, out_channels], act, norm, bias)
+        self.nn2 = BasicConv([in_channels * 2, out_channels], act, norm, bias)
 
     def forward(self, x, edge_index, y=None):
         if y is not None:
@@ -70,6 +75,7 @@ class GINConv2d(nn.Module):
     """
     GIN Graph Convolution (Paper: https://arxiv.org/abs/1810.00826) for dense data type
     """
+
     def __init__(self, in_channels, out_channels, act='relu', norm=None, bias=True):
         super(GINConv2d, self).__init__()
         self.nn = BasicConv([in_channels, out_channels], act, norm, bias)
@@ -89,7 +95,10 @@ class GraphConv2d(nn.Module):
     """
     Static graph convolution layer
     """
-    def __init__(self, in_channels, out_channels, conv='edge', act='relu', norm=None, bias=True):
+
+    def __init__(
+        self, in_channels, out_channels, conv='edge', act='relu', norm=None, bias=True
+    ):
         super(GraphConv2d, self).__init__()
         if conv == 'edge':
             self.gconv = EdgeConv2d(in_channels, out_channels, act, norm, bias)
@@ -110,20 +119,37 @@ class DyGraphConv2d(GraphConv2d):
     """
     Dynamic graph convolution layer
     """
-    def __init__(self, in_channels, out_channels, kernel_size=9, dilation=1, conv='edge', act='relu',
-                 norm=None, bias=True, stochastic=False, epsilon=0.0, r=1):
-        super(DyGraphConv2d, self).__init__(in_channels, out_channels, conv, act, norm, bias)
+
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size=9,
+        dilation=1,
+        conv='edge',
+        act='relu',
+        norm=None,
+        bias=True,
+        stochastic=False,
+        epsilon=0.0,
+        r=1,
+    ):
+        super(DyGraphConv2d, self).__init__(
+            in_channels, out_channels, conv, act, norm, bias
+        )
         self.k = kernel_size
         self.d = dilation
         self.r = r
-        self.dilated_knn_graph = DenseDilatedKnnGraph(kernel_size, dilation, stochastic, epsilon)
+        self.dilated_knn_graph = DenseDilatedKnnGraph(
+            kernel_size, dilation, stochastic, epsilon
+        )
 
     def forward(self, x, relative_pos=None):
         B, C, H, W = x.shape
         y = None
         if self.r > 1:
             y = F.avg_pool2d(x, self.r, self.r)
-            y = y.reshape(B, C, -1, 1).contiguous()            
+            y = y.reshape(B, C, -1, 1).contiguous()
         x = x.reshape(B, C, -1, 1).contiguous()
         edge_index = self.dilated_knn_graph(x, y, relative_pos)
         x = super(DyGraphConv2d, self).forward(x, edge_index, y)
@@ -134,8 +160,23 @@ class Grapher(nn.Module):
     """
     Grapher module with graph convolution and fc layers
     """
-    def __init__(self, in_channels, kernel_size=9, dilation=1, conv='edge', act='relu', norm=None,
-                 bias=True,  stochastic=False, epsilon=0.0, r=1, n=196, drop_path=0.0, relative_pos=False):
+
+    def __init__(
+        self,
+        in_channels,
+        kernel_size=9,
+        dilation=1,
+        conv='edge',
+        act='relu',
+        norm=None,
+        bias=True,
+        stochastic=False,
+        epsilon=0.0,
+        r=1,
+        n=196,
+        drop_path=0.0,
+        relative_pos=False,
+    ):
         super(Grapher, self).__init__()
         self.channels = in_channels
         self.n = n
@@ -144,21 +185,43 @@ class Grapher(nn.Module):
             nn.Conv2d(in_channels, in_channels, 1, stride=1, padding=0),
             nn.BatchNorm2d(in_channels),
         )
-        self.graph_conv = DyGraphConv2d(in_channels, in_channels * 2, kernel_size, dilation, conv,
-                              act, norm, bias, stochastic, epsilon, r)
+        self.graph_conv = DyGraphConv2d(
+            in_channels,
+            in_channels * 2,
+            kernel_size,
+            dilation,
+            conv,
+            act,
+            norm,
+            bias,
+            stochastic,
+            epsilon,
+            r,
+        )
         self.fc2 = nn.Sequential(
             nn.Conv2d(in_channels * 2, in_channels, 1, stride=1, padding=0),
             nn.BatchNorm2d(in_channels),
         )
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.relative_pos = None
         if relative_pos:
             print('using relative_pos')
-            relative_pos_tensor = torch.from_numpy(np.float32(get_2d_relative_pos_embed(in_channels,
-                int(n**0.5)))).unsqueeze(0).unsqueeze(1)
+            relative_pos_tensor = (
+                torch.from_numpy(
+                    np.float32(get_2d_relative_pos_embed(in_channels, int(n**0.5)))
+                )
+                .unsqueeze(0)
+                .unsqueeze(1)
+            )
             relative_pos_tensor = F.interpolate(
-                    relative_pos_tensor, size=(n, n//(r*r)), mode='bicubic', align_corners=False)
-            self.relative_pos = nn.Parameter(-relative_pos_tensor.squeeze(1), requires_grad=False)
+                relative_pos_tensor,
+                size=(n, n // (r * r)),
+                mode='bicubic',
+                align_corners=False,
+            )
+            self.relative_pos = nn.Parameter(
+                -relative_pos_tensor.squeeze(1), requires_grad=False
+            )
 
     def _get_relative_pos(self, relative_pos, H, W):
         if relative_pos is None or H * W == self.n:
@@ -166,7 +229,9 @@ class Grapher(nn.Module):
         else:
             N = H * W
             N_reduced = N // (self.r * self.r)
-            return F.interpolate(relative_pos.unsqueeze(0), size=(N, N_reduced), mode="bicubic").squeeze(0)
+            return F.interpolate(
+                relative_pos.unsqueeze(0), size=(N, N_reduced), mode="bicubic"
+            ).squeeze(0)
 
     def forward(self, x):
         _tmp = x

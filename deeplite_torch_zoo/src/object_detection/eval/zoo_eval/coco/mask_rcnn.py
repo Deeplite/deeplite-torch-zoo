@@ -3,7 +3,9 @@ from .coco_evaluator import COCOEvaluator
 
 
 class RCNNCOCOEvaluator(COCOEvaluator):
-    def __init__(self, model, dataset, gt=None, net="rcnn", predictor=None, img_size=418):
+    def __init__(
+        self, model, dataset, gt=None, net="rcnn", predictor=None, img_size=418
+    ):
         super().__init__(
             model=model,
             dataset=dataset,
@@ -13,7 +15,9 @@ class RCNNCOCOEvaluator(COCOEvaluator):
         )
 
     def _tensorize(self, img):
-        return torch.tensor(img.transpose(2, 0, 1) / 255.0, dtype=torch.float, device=self.device)
+        return torch.tensor(
+            img.transpose(2, 0, 1) / 255.0, dtype=torch.float, device=self.device
+        )
 
     def process_image(self, img, img_id):
         img = self._tensorize(img)
@@ -38,4 +42,3 @@ class RCNNCOCOEvaluator(COCOEvaluator):
                 ]
             )
         return results
-

@@ -10,7 +10,9 @@ model_urls = {
 }
 
 
-def _resnet_imagenet10(arch, pretrained=False, progress=True, num_classes=10, device='cuda'):
+def _resnet_imagenet10(
+    arch, pretrained=False, progress=True, num_classes=10, device='cuda'
+):
     model = torchvision.models.resnet18(num_classes=num_classes)
 
     if pretrained:
@@ -19,6 +21,14 @@ def _resnet_imagenet10(arch, pretrained=False, progress=True, num_classes=10, de
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='resnet18', dataset_name='imagenet10', task_type='classification')
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='resnet18', dataset_name='imagenet10', task_type='classification'
+)
 def resnet18_imagenet10(pretrained=False, progress=True, num_classes=10, device='cuda'):
-    return _resnet_imagenet10("resnet18", pretrained=pretrained, progress=progress, num_classes=num_classes, device=device)
+    return _resnet_imagenet10(
+        "resnet18",
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        device=device,
+    )

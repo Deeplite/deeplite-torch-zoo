@@ -1,4 +1,3 @@
-
 from torchvision import models
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
@@ -12,8 +11,12 @@ model_urls = {
 }
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='mobilenet_v2', dataset_name='tinyimagenet', task_type='classification')
-def mobilenet_v2_tinyimagenet(pretrained=False, progress=True, num_classes=100, device="cuda"):
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='mobilenet_v2', dataset_name='tinyimagenet', task_type='classification'
+)
+def mobilenet_v2_tinyimagenet(
+    pretrained=False, progress=True, num_classes=100, device="cuda"
+):
     model = models.mobilenet_v2(num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls['mobilenet_v2']

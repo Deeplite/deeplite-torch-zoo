@@ -37,15 +37,37 @@ from deeplite_torch_zoo.utils import LOGGER
 #     but can be used in other model (such as EfficientDet).
 
 # Parameters for the entire model (stem, all blocks, and head)
-GlobalParams = collections.namedtuple('GlobalParams', [
-    'width_coefficient', 'depth_coefficient', 'image_size', 'dropout_rate',
-    'num_classes', 'batch_norm_momentum', 'batch_norm_epsilon',
-    'drop_connect_rate', 'depth_divisor', 'min_depth', 'include_top'])
+GlobalParams = collections.namedtuple(
+    'GlobalParams',
+    [
+        'width_coefficient',
+        'depth_coefficient',
+        'image_size',
+        'dropout_rate',
+        'num_classes',
+        'batch_norm_momentum',
+        'batch_norm_epsilon',
+        'drop_connect_rate',
+        'depth_divisor',
+        'min_depth',
+        'include_top',
+    ],
+)
 
 # Parameters for an individual model block
-BlockArgs = collections.namedtuple('BlockArgs', [
-    'num_repeat', 'kernel_size', 'stride', 'expand_ratio',
-    'input_filters', 'output_filters', 'se_ratio', 'id_skip'])
+BlockArgs = collections.namedtuple(
+    'BlockArgs',
+    [
+        'num_repeat',
+        'kernel_size',
+        'stride',
+        'expand_ratio',
+        'input_filters',
+        'output_filters',
+        'se_ratio',
+        'id_skip',
+    ],
+)
 
 # Set GlobalParams and BlockArgs's defaults
 GlobalParams.__new__.__defaults__ = (None,) * len(GlobalParams._fields)
@@ -72,6 +94,7 @@ class SwishImplementation(torch.autograd.Function):
         sigmoid_i = torch.sigmoid(i)
         return grad_output * (sigmoid_i * (1 + i * (1 - sigmoid_i)))
 
+
 class MemoryEfficientSwish(nn.Module):
     def forward(self, x):
         return SwishImplementation.apply(x)
@@ -97,10 +120,10 @@ def round_filters(filters, global_params):
     divisor = global_params.depth_divisor
     min_depth = global_params.min_depth
     filters *= multiplier
-    min_depth = min_depth or divisor # pay attention to this line when using min_depth
+    min_depth = min_depth or divisor  # pay attention to this line when using min_depth
     # follow the formula transferred from official TensorFlow implementation
     new_filters = max(min_depth, int(filters + divisor / 2) // divisor * divisor)
-    if new_filters < 0.9 * filters: # prevent rounding by more than 10%
+    if new_filters < 0.9 * filters:  # prevent rounding by more than 10%
         new_filters += divisor
     return int(new_filters)
 
@@ -144,7 +167,9 @@ def drop_connect(inputs, p, training):
 
     # generate binary_tensor mask according to probability (p for 0, 1-p for 1)
     random_tensor = keep_prob
-    random_tensor += torch.rand([batch_size, 1, 1, 1], dtype=inputs.dtype, device=inputs.device)
+    random_tensor += torch.rand(
+        [batch_size, 1, 1, 1], dtype=inputs.dtype, device=inputs.device
+    )
     binary_tensor = torch.floor(random_tensor)
 
     output = inputs / keep_prob * binary_tensor
@@ -193,6 +218,7 @@ def calculate_output_image_size(input_image_size, stride):
 # Only when stride equals 1, can the output size be the same as input size.
 # Don't be confused by their function names ! ! !
 
+
 def get_same_padding_conv2d(image_size=None):
     """Chooses static padding if you have specified an image size, and dynamic padding otherwise.
        Static padding is necessary for ONNX exporting of models.
@@ -211,7 +237,7 @@ def get_same_padding_conv2d(image_size=None):
 
 class Conv2dDynamicSamePadding(nn.Conv2d):
     """2D Convolutions like TensorFlow, for a dynamic image size.
-       The padding is operated in forward function by calculating dynamically.
+    The padding is operated in forward function by calculating dynamically.
     """
 
     # Tips for 'SAME' mode padding.
@@ -226,30 +252,61 @@ class Conv2dDynamicSamePadding(nn.Conv2d):
     # If o equals i, i = floor((i+p-((k-1)*d+1))/s+1),
     # => p = (i-1)*s+((k-1)*d+1)-i
 
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, dilation=1, groups=1, bias=True):
-        super().__init__(in_channels, out_channels, kernel_size, stride, 0, dilation, groups, bias)
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride=1,
+        dilation=1,
+        groups=1,
+        bias=True,
+    ):
+        super().__init__(
+            in_channels, out_channels, kernel_size, stride, 0, dilation, groups, bias
+        )
         self.stride = self.stride if len(self.stride) == 2 else [self.stride[0]] * 2
 
     def forward(self, x):
         ih, iw = x.size()[-2:]
         kh, kw = self.weight.size()[-2:]
         sh, sw = self.stride
-        oh, ow = math.ceil(ih / sh), math.ceil(iw / sw) # change the output size according to stride ! ! !
+        oh, ow = math.ceil(ih / sh), math.ceil(
+            iw / sw
+        )  # change the output size according to stride ! ! !
         pad_h = max((oh - 1) * self.stride[0] + (kh - 1) * self.dilation[0] + 1 - ih, 0)
         pad_w = max((ow - 1) * self.stride[1] + (kw - 1) * self.dilation[1] + 1 - iw, 0)
         if pad_h > 0 or pad_w > 0:
-            x = F.pad(x, [pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2])
-        return F.conv2d(x, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
+            x = F.pad(
+                x, [pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2]
+            )
+        return F.conv2d(
+            x,
+            self.weight,
+            self.bias,
+            self.stride,
+            self.padding,
+            self.dilation,
+            self.groups,
+        )
 
 
 class Conv2dStaticSamePadding(nn.Conv2d):
     """2D Convolutions like TensorFlow's 'SAME' mode, with the given input image size.
-       The padding mudule is calculated in construction function, then used in forward.
+    The padding mudule is calculated in construction function, then used in forward.
     """
 
     # With the same calculation as Conv2dDynamicSamePadding
 
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, image_size=None, **kwargs):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride=1,
+        image_size=None,
+        **kwargs
+    ):
         super().__init__(in_channels, out_channels, kernel_size, stride, **kwargs)
         self.stride = self.stride if len(self.stride) == 2 else [self.stride[0]] * 2
 
@@ -262,14 +319,23 @@ class Conv2dStaticSamePadding(nn.Conv2d):
         pad_h = max((oh - 1) * self.stride[0] + (kh - 1) * self.dilation[0] + 1 - ih, 0)
         pad_w = max((ow - 1) * self.stride[1] + (kw - 1) * self.dilation[1] + 1 - iw, 0)
         if pad_h > 0 or pad_w > 0:
-            self.static_padding = nn.ZeroPad2d((pad_w // 2, pad_w - pad_w // 2,
-                                                pad_h // 2, pad_h - pad_h // 2))
+            self.static_padding = nn.ZeroPad2d(
+                (pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2)
+            )
         else:
             self.static_padding = nn.Identity()
 
     def forward(self, x):
         x = self.static_padding(x)
-        x = F.conv2d(x, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
+        x = F.conv2d(
+            x,
+            self.weight,
+            self.bias,
+            self.stride,
+            self.padding,
+            self.dilation,
+            self.groups,
+        )
         return x
 
 
@@ -291,14 +357,30 @@ def get_same_padding_maxPool2d(image_size=None):
 
 class MaxPool2dDynamicSamePadding(nn.MaxPool2d):
     """2D MaxPooling like TensorFlow's 'SAME' mode, with a dynamic image size.
-       The padding is operated in forward function by calculating dynamically.
+    The padding is operated in forward function by calculating dynamically.
     """
 
-    def __init__(self, kernel_size, stride, padding=0, dilation=1, return_indices=False, ceil_mode=False):
-        super().__init__(kernel_size, stride, padding, dilation, return_indices, ceil_mode)
+    def __init__(
+        self,
+        kernel_size,
+        stride,
+        padding=0,
+        dilation=1,
+        return_indices=False,
+        ceil_mode=False,
+    ):
+        super().__init__(
+            kernel_size, stride, padding, dilation, return_indices, ceil_mode
+        )
         self.stride = [self.stride] * 2 if isinstance(self.stride, int) else self.stride
-        self.kernel_size = [self.kernel_size] * 2 if isinstance(self.kernel_size, int) else self.kernel_size
-        self.dilation = [self.dilation] * 2 if isinstance(self.dilation, int) else self.dilation
+        self.kernel_size = (
+            [self.kernel_size] * 2
+            if isinstance(self.kernel_size, int)
+            else self.kernel_size
+        )
+        self.dilation = (
+            [self.dilation] * 2 if isinstance(self.dilation, int) else self.dilation
+        )
 
     def forward(self, x):
         ih, iw = x.size()[-2:]
@@ -308,20 +390,36 @@ class MaxPool2dDynamicSamePadding(nn.MaxPool2d):
         pad_h = max((oh - 1) * self.stride[0] + (kh - 1) * self.dilation[0] + 1 - ih, 0)
         pad_w = max((ow - 1) * self.stride[1] + (kw - 1) * self.dilation[1] + 1 - iw, 0)
         if pad_h > 0 or pad_w > 0:
-            x = F.pad(x, [pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2])
-        return F.max_pool2d(x, self.kernel_size, self.stride, self.padding,
-                            self.dilation, self.ceil_mode, self.return_indices)
+            x = F.pad(
+                x, [pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2]
+            )
+        return F.max_pool2d(
+            x,
+            self.kernel_size,
+            self.stride,
+            self.padding,
+            self.dilation,
+            self.ceil_mode,
+            self.return_indices,
+        )
+
 
 class MaxPool2dStaticSamePadding(nn.MaxPool2d):
     """2D MaxPooling like TensorFlow's 'SAME' mode, with the given input image size.
-       The padding mudule is calculated in construction function, then used in forward.
+    The padding mudule is calculated in construction function, then used in forward.
     """
 
     def __init__(self, kernel_size, stride, image_size=None, **kwargs):
         super().__init__(kernel_size, stride, **kwargs)
         self.stride = [self.stride] * 2 if isinstance(self.stride, int) else self.stride
-        self.kernel_size = [self.kernel_size] * 2 if isinstance(self.kernel_size, int) else self.kernel_size
-        self.dilation = [self.dilation] * 2 if isinstance(self.dilation, int) else self.dilation
+        self.kernel_size = (
+            [self.kernel_size] * 2
+            if isinstance(self.kernel_size, int)
+            else self.kernel_size
+        )
+        self.dilation = (
+            [self.dilation] * 2 if isinstance(self.dilation, int) else self.dilation
+        )
 
         # Calculate padding based on image size and save it
         assert image_size is not None
@@ -332,14 +430,23 @@ class MaxPool2dStaticSamePadding(nn.MaxPool2d):
         pad_h = max((oh - 1) * self.stride[0] + (kh - 1) * self.dilation[0] + 1 - ih, 0)
         pad_w = max((ow - 1) * self.stride[1] + (kw - 1) * self.dilation[1] + 1 - iw, 0)
         if pad_h > 0 or pad_w > 0:
-            self.static_padding = nn.ZeroPad2d((pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2))
+            self.static_padding = nn.ZeroPad2d(
+                (pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2)
+            )
         else:
             self.static_padding = nn.Identity()
 
     def forward(self, x):
         x = self.static_padding(x)
-        x = F.max_pool2d(x, self.kernel_size, self.stride, self.padding,
-                         self.dilation, self.ceil_mode, self.return_indices)
+        x = F.max_pool2d(
+            x,
+            self.kernel_size,
+            self.stride,
+            self.padding,
+            self.dilation,
+            self.ceil_mode,
+            self.return_indices,
+        )
         return x
 
 
@@ -354,9 +461,10 @@ class MaxPool2dStaticSamePadding(nn.MaxPool2d):
 # url_map and url_map_advprop: Dicts of url_map for pretrained weights
 # load_pretrained_weights: A function to load pretrained weights
 
+
 class BlockDecoder(object):
     """Block Decoder for readability,
-       straight from the official TensorFlow repository.
+    straight from the official TensorFlow repository.
     """
 
     @staticmethod
@@ -381,8 +489,9 @@ class BlockDecoder(object):
                 options[key] = value
 
         # Check stride
-        assert (('s' in options and len(options['s']) == 1) or
-                (len(options['s']) == 2 and options['s'][0] == options['s'][1]))
+        assert ('s' in options and len(options['s']) == 1) or (
+            len(options['s']) == 2 and options['s'][0] == options['s'][1]
+        )
 
         return BlockArgs(
             num_repeat=int(options['r']),
@@ -392,7 +501,8 @@ class BlockDecoder(object):
             input_filters=int(options['i']),
             output_filters=int(options['o']),
             se_ratio=float(options['se']) if 'se' in options else None,
-            id_skip=('noskip' not in block_string))
+            id_skip=('noskip' not in block_string),
+        )
 
     @staticmethod
     def _encode_block_string(block):
@@ -410,7 +520,7 @@ class BlockDecoder(object):
             's%d%d' % (block.strides[0], block.strides[1]),
             'e%s' % block.expand_ratio,
             'i%d' % block.input_filters,
-            'o%d' % block.output_filters
+            'o%d' % block.output_filters,
         ]
         if 0 < block.se_ratio <= 1:
             args.append('se%s' % block.se_ratio)
@@ -475,8 +585,15 @@ def efficientnet_params(model_name):
     return params_dict[model_name]
 
 
-def efficientnet(width_coefficient=None, depth_coefficient=None, image_size=None,
-                 dropout_rate=0.2, drop_connect_rate=0.2, num_classes=1000, include_top=True):
+def efficientnet(
+    width_coefficient=None,
+    depth_coefficient=None,
+    image_size=None,
+    dropout_rate=0.2,
+    drop_connect_rate=0.2,
+    num_classes=1000,
+    include_top=True,
+):
     """Create BlockArgs and GlobalParams for efficientnet model.
 
     Args:
@@ -511,7 +628,6 @@ def efficientnet(width_coefficient=None, depth_coefficient=None, image_size=None
         depth_coefficient=depth_coefficient,
         image_size=image_size,
         dropout_rate=dropout_rate,
-
         num_classes=num_classes,
         batch_norm_momentum=0.99,
         batch_norm_epsilon=1e-3,
@@ -538,9 +654,12 @@ def get_model_params(model_name, override_params):
         w, d, s, p = efficientnet_params(model_name)
         # note: all models have drop connect rate = 0.2
         blocks_args, global_params = efficientnet(
-            width_coefficient=w, depth_coefficient=d, dropout_rate=p, image_size=s)
+            width_coefficient=w, depth_coefficient=d, dropout_rate=p, image_size=s
+        )
     else:
-        raise NotImplementedError('model name is not pre-defined: {}'.format(model_name))
+        raise NotImplementedError(
+            'model name is not pre-defined: {}'.format(model_name)
+        )
     if override_params:
         # ValueError will be raised here if override_params has fields not included in global_params.
         global_params = global_params._replace(**override_params)
@@ -577,7 +696,9 @@ url_map_advprop = {
 # TODO: add the petrained weights url map of 'efficientnet-l2'
 
 
-def load_pretrained_weights(model, model_name, weights_path=None, load_fc=True, advprop=False):
+def load_pretrained_weights(
+    model, model_name, weights_path=None, load_fc=True, advprop=False
+):
     """Loads pretrained weights from weights path or download using url.
 
     Args:
@@ -599,13 +720,18 @@ def load_pretrained_weights(model, model_name, weights_path=None, load_fc=True, 
 
     if load_fc:
         ret = model.load_state_dict(state_dict, strict=False)
-        assert not ret.missing_keys, 'Missing keys when loading pretrained weights: {}'.format(ret.missing_keys)
+        assert (
+            not ret.missing_keys
+        ), 'Missing keys when loading pretrained weights: {}'.format(ret.missing_keys)
     else:
         state_dict.pop('_fc.weight')
         state_dict.pop('_fc.bias')
         ret = model.load_state_dict(state_dict, strict=False)
         assert set(ret.missing_keys) == set(
-            ['_fc.weight', '_fc.bias']), 'Missing keys when loading pretrained weights: {}'.format(ret.missing_keys)
-    assert not ret.unexpected_keys, 'Missing keys when loading pretrained weights: {}'.format(ret.unexpected_keys)
+            ['_fc.weight', '_fc.bias']
+        ), 'Missing keys when loading pretrained weights: {}'.format(ret.missing_keys)
+    assert (
+        not ret.unexpected_keys
+    ), 'Missing keys when loading pretrained weights: {}'.format(ret.unexpected_keys)
 
     LOGGER.info('Loaded pretrained weights for {}'.format(model_name))

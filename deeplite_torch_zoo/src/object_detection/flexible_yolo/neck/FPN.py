@@ -5,7 +5,10 @@ import math
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules.common import (
-    C3, Concat, Conv)
+    C3,
+    Concat,
+    Conv,
+)
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -27,6 +30,7 @@ class PyramidFeatures(nn.Module):
     V          | up2
     C5 --->    P5
     """
+
     def __init__(self, ch=[256, 512, 1024], channel_outs=[512, 256, 256], version='s'):
         super(PyramidFeatures, self).__init__()
 
@@ -41,7 +45,7 @@ class PyramidFeatures(nn.Module):
             's': {'gd': 0.33, 'gw': 0.5},
             'm': {'gd': 0.67, 'gw': 0.75},
             'l': {'gd': 1, 'gw': 1},
-            'x': {'gd': 1.33, 'gw': 1.25}
+            'x': {'gd': 1.33, 'gw': 1.25},
         }
 
         self.gd = 0.33
@@ -56,17 +60,38 @@ class PyramidFeatures(nn.Module):
 
         self.P5 = Conv(self.C5_size, self.channels_outs[0], 1, 1)
         self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
-        self.conv1 = C3(self.channels_outs[0] + self.C4_size, self.channels_outs[0], self.get_depth(3), False)
+        self.conv1 = C3(
+            self.channels_outs[0] + self.C4_size,
+            self.channels_outs[0],
+            self.get_depth(3),
+            False,
+        )
 
         self.P4 = Conv(self.channels_outs[0], self.channels_outs[1], 1, 1)
         self.P4_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
 
-        self.P3 = C3(self.channels_outs[1] + self.C3_size, self.channels_outs[1], self.get_depth(3), False)
+        self.P3 = C3(
+            self.channels_outs[1] + self.C3_size,
+            self.channels_outs[1],
+            self.get_depth(3),
+            False,
+        )
 
-        self.out_shape = (self.channels_outs[2], self.channels_outs[1], self.channels_outs[0])
-        LOGGER.info("FPN input channel size: C3 {}, C4 {}, C5 {}".format(self.C3_size, self.C4_size, self.C5_size))
-        LOGGER.info("FPN output channel size: P3 {}, P4 {}, P5 {}".format(self.channels_outs[2], self.channels_outs[1],
-                                                                    self.channels_outs[0]))
+        self.out_shape = (
+            self.channels_outs[2],
+            self.channels_outs[1],
+            self.channels_outs[0],
+        )
+        LOGGER.info(
+            "FPN input channel size: C3 {}, C4 {}, C5 {}".format(
+                self.C3_size, self.C4_size, self.C5_size
+            )
+        )
+        LOGGER.info(
+            "FPN output channel size: P3 {}, P4 {}, P5 {}".format(
+                self.channels_outs[2], self.channels_outs[1], self.channels_outs[0]
+            )
+        )
 
     def get_depth(self, n):
         return max(round(n * self.gd), 1) if n > 1 else n

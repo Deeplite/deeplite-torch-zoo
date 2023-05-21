@@ -26,19 +26,20 @@ from .adapter import AdapterDefault
 from .mean_average_precision_2d import MeanAveragePrecision2d
 from .multiprocessing import MetricMultiprocessing
 
-metrics_dict = {
-    'map_2d': MeanAveragePrecision2d
-}
+metrics_dict = {'map_2d': MeanAveragePrecision2d}
+
 
 class MetricBuilder:
     @staticmethod
     def get_metrics_list():
-        """ Get evaluation metrics list."""
+        """Get evaluation metrics list."""
         return list(metrics_dict.keys())
 
     @staticmethod
-    def build_evaluation_metric(metric_type, async_mode=False, adapter_type=AdapterDefault, *args, **kwargs):
-        """ Build evaluation metric.
+    def build_evaluation_metric(
+        metric_type, async_mode=False, adapter_type=AdapterDefault, *args, **kwargs
+    ):
+        """Build evaluation metric.
 
         Arguments:
             metric_type (str): type of evaluation metric.
@@ -52,5 +53,7 @@ class MetricBuilder:
         if not async_mode:
             metric_fn = metrics_dict[metric_type](*args, **kwargs)
         else:
-            metric_fn = MetricMultiprocessing(metrics_dict[metric_type], *args, **kwargs)
+            metric_fn = MetricMultiprocessing(
+                metrics_dict[metric_type], *args, **kwargs
+            )
         return adapter_type(metric_fn)

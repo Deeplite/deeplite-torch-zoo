@@ -9,8 +9,7 @@ import numpy as np
 import torch
 
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_lisa as lisa_cfg
-from deeplite_torch_zoo.src.object_detection.datasets.dataset import \
-    DLZooDataset
+from deeplite_torch_zoo.src.object_detection.datasets.dataset import DLZooDataset
 
 
 class LISA(DLZooDataset):
@@ -115,8 +114,9 @@ class LISA(DLZooDataset):
             img_org, bboxes_org = self._get_image(i)
             return img_org, bboxes_org, bboxes_org.shape[0], 0
 
-        img, bboxes = self._load_mixup(i, self._get_image,
-            len(self.images), p= lisa_cfg.TRAIN['mixup'])
+        img, bboxes = self._load_mixup(
+            i, self._get_image, len(self.images), p=lisa_cfg.TRAIN['mixup']
+        )
         img = torch.from_numpy(img).float()
         bboxes = torch.from_numpy(bboxes).float()
 
@@ -155,4 +155,3 @@ class LISA(DLZooDataset):
         length_tensor = torch.tensor(lengths)
         img_ids_tensor = torch.stack(img_ids)
         return image_tensor, label_tensor, length_tensor, img_ids_tensor
-

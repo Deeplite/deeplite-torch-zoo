@@ -51,14 +51,18 @@ class Ensemble(nn.ModuleList):
 
 class DWConvTranspose2d(nn.ConvTranspose2d):
     # Depth-wise transpose convolution
-    def __init__(self, c1, c2, k=1, s=1, p1=0, p2=0):  # ch_in, ch_out, kernel, stride, padding, padding_out
+    def __init__(
+        self, c1, c2, k=1, s=1, p1=0, p2=0
+    ):  # ch_in, ch_out, kernel, stride, padding, padding_out
         super().__init__(c1, c2, k, s, p1, p2, groups=math.gcd(c1, c2))
 
 
 def attempt_load(weights, device=None, inplace=True, fuse=True):
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
     from deeplite_torch_zoo.src.object_detection.yolov5.models.yolov5 import (
-        Detect, YOLOModel)
+        Detect,
+        YOLOModel,
+    )
 
     model = Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
@@ -68,16 +72,26 @@ def attempt_load(weights, device=None, inplace=True, fuse=True):
 
         # Model compatibility updates
         if not hasattr(ckpt, 'stride'):
-            ckpt.stride = torch.tensor([32.])
+            ckpt.stride = torch.tensor([32.0])
         if hasattr(ckpt, 'names') and isinstance(ckpt.names, (list, tuple)):
             ckpt.names = dict(enumerate(ckpt.names))  # convert to dict
 
-        model.append(ckpt.fuse().eval() if fuse and hasattr(ckpt, 'fuse') else ckpt.eval())  # model in eval mode
+        model.append(
+            ckpt.fuse().eval() if fuse and hasattr(ckpt, 'fuse') else ckpt.eval()
+        )  # model in eval mode
 
     # Module compatibility updates
     for m in model.modules():
         t = type(m)
-        if t in (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, YOLOModel):
+        if t in (
+            nn.Hardswish,
+            nn.LeakyReLU,
+            nn.ReLU,
+            nn.ReLU6,
+            nn.SiLU,
+            Detect,
+            YOLOModel,
+        ):
             m.inplace = inplace  # torch 1.7.0 compatibility
             if t is Detect and not isinstance(m.anchor_grid, list):
                 delattr(m, 'anchor_grid')
@@ -93,13 +107,18 @@ def attempt_load(weights, device=None, inplace=True, fuse=True):
     LOGGER.info(f'Ensemble created with {weights}\n')
     for k in 'names', 'nc', 'yaml':
         setattr(model, k, getattr(model[0], k))
-    model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride  # max stride
-    assert all(model[0].nc == m.nc for m in model), f'Models have different class counts: {[m.nc for m in model]}'
+    model.stride = model[
+        torch.argmax(torch.tensor([m.stride.max() for m in model])).int()
+    ].stride  # max stride
+    assert all(
+        model[0].nc == m.nc for m in model
+    ), f'Models have different class counts: {[m.nc for m in model]}'
     return model
 
 
 # PicoDet blocks
 # -------------------------------------------------------------------------
+
 
 @VARIABLE_CHANNEL_BLOCKS.register()
 class DWConvblock(nn.Module):
@@ -108,10 +127,19 @@ class DWConvblock(nn.Module):
     def __init__(self, in_channels, out_channels, k, s, act='relu'):
         super(DWConvblock, self).__init__()
         self.p = k // 2
-        self.conv1 = nn.Conv2d(in_channels, in_channels, kernel_size=k, stride=s, padding=self.p, groups=in_channels,
-                               bias=False)
+        self.conv1 = nn.Conv2d(
+            in_channels,
+            in_channels,
+            kernel_size=k,
+            stride=s,
+            padding=self.p,
+            groups=in_channels,
+            bias=False,
+        )
         self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv2 = nn.Conv2d(
+            in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False
+        )
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.act = get_activation(act)
 
@@ -127,8 +155,9 @@ class DWConvblock(nn.Module):
 
 @VARIABLE_CHANNEL_BLOCKS.register()
 class CBH(nn.Module):
-    def __init__(self, num_channels, num_filters,
-                    filter_size, stride, num_groups=1, act='hswish'):
+    def __init__(
+        self, num_channels, num_filters, filter_size, stride, num_groups=1, act='hswish'
+    ):
         super().__init__()
         self.conv = nn.Conv2d(
             num_channels,
@@ -137,7 +166,8 @@ class CBH(nn.Module):
             stride,
             padding=(filter_size - 1) // 2,
             groups=num_groups,
-            bias=False)
+            bias=False,
+        )
         self.bn = nn.BatchNorm2d(num_filters)
         self.act = get_activation(act)
 
@@ -169,8 +199,7 @@ def channel_shuffle(x, groups):
     channels_per_group = num_channels // groups
 
     # reshape
-    x = x.view(batchsize, groups,
-               channels_per_group, height, width)
+    x = x.view(batchsize, groups, channels_per_group, height, width)
 
     x = torch.transpose(x, 1, 2).contiguous()
 
@@ -189,14 +218,16 @@ class ES_SEModule(nn.Module):
             out_channels=channel // reduction,
             kernel_size=1,
             stride=1,
-            padding=0)
+            padding=0,
+        )
         self.relu = nn.ReLU()
         self.conv2 = nn.Conv2d(
             in_channels=channel // reduction,
             out_channels=channel,
             kernel_size=1,
             stride=1,
-            padding=0)
+            padding=0,
+        )
         self.hardsigmoid = nn.Hardsigmoid()
 
     def forward(self, x):
@@ -224,22 +255,45 @@ class ES_Bottleneck(nn.Module):
 
         if self.stride > 1:
             self.branch1 = nn.Sequential(
-                self.depthwise_conv(inp, inp, kernel_size=3, stride=self.stride, padding=1),
+                self.depthwise_conv(
+                    inp, inp, kernel_size=3, stride=self.stride, padding=1
+                ),
                 nn.BatchNorm2d(inp),
-                nn.Conv2d(inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.Conv2d(
+                    inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False
+                ),
                 nn.BatchNorm2d(branch_features),
                 get_activation(act),
             )
 
         self.branch2 = nn.Sequential(
-            nn.Conv2d(inp if (self.stride > 1) else branch_features,
-                      branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(
+                inp if (self.stride > 1) else branch_features,
+                branch_features,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                bias=False,
+            ),
             nn.BatchNorm2d(branch_features),
             get_activation(act),
-            self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
+            self.depthwise_conv(
+                branch_features,
+                branch_features,
+                kernel_size=3,
+                stride=self.stride,
+                padding=1,
+            ),
             nn.BatchNorm2d(branch_features),
             ES_SEModule(branch_features),
-            nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(
+                branch_features,
+                branch_features,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                bias=False,
+            ),
             nn.BatchNorm2d(branch_features),
             get_activation(act),
         )
@@ -247,7 +301,14 @@ class ES_Bottleneck(nn.Module):
         self.branch3 = nn.Sequential(
             GhostConv(branch_features, branch_features, 3, 1, act=act),
             ES_SEModule(branch_features),
-            nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(
+                branch_features,
+                branch_features,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                bias=False,
+            ),
             nn.BatchNorm2d(branch_features),
             get_activation(act),
         )
@@ -259,7 +320,6 @@ class ES_Bottleneck(nn.Module):
             nn.BatchNorm2d(oup),
             get_activation(act),
         )
-
 
     @staticmethod
     def depthwise_conv(i, o, kernel_size=3, stride=1, padding=0, bias=False):
@@ -284,6 +344,7 @@ class ES_Bottleneck(nn.Module):
 # YoloLite blocks
 # -------------------------------------------------------------------------
 
+
 class LC_SEModule(nn.Module):
     def __init__(self, channel, reduction=4):
         super().__init__()
@@ -293,14 +354,16 @@ class LC_SEModule(nn.Module):
             out_channels=channel // reduction,
             kernel_size=1,
             stride=1,
-            padding=0)
+            padding=0,
+        )
         self.relu = nn.ReLU()
         self.conv2 = nn.Conv2d(
             in_channels=channel // reduction,
             out_channels=channel,
             kernel_size=1,
             stride=1,
-            padding=0)
+            padding=0,
+        )
         # self.SiLU = nn.SiLU()
         # self.hardsigmoid = nn.Hardsigmoid()
         self.act = nn.Hardswish()
@@ -320,7 +383,9 @@ class LC_SEModule(nn.Module):
 
 @VARIABLE_CHANNEL_BLOCKS.register()
 class LC_Block(nn.Module):
-    def __init__(self, num_channels, num_filters, stride, dw_size, use_se=False, act='hswish'):
+    def __init__(
+        self, num_channels, num_filters, stride, dw_size, use_se=False, act='hswish'
+    ):
         super().__init__()
         self.use_se = use_se
         self.dw_conv = CBH(
@@ -329,7 +394,8 @@ class LC_Block(nn.Module):
             filter_size=dw_size,
             stride=stride,
             num_groups=num_channels,
-            act=act)
+            act=act,
+        )
         if use_se:
             self.se = LC_SEModule(num_channels)
         self.pw_conv = CBH(
@@ -337,7 +403,8 @@ class LC_Block(nn.Module):
             filter_size=1,
             num_filters=num_filters,
             stride=1,
-            act=act)
+            act=act,
+        )
 
     def forward(self, x):
         x = self.dw_conv(x)
@@ -349,7 +416,9 @@ class LC_Block(nn.Module):
 
 @VARIABLE_CHANNEL_BLOCKS.register()
 class Dense(nn.Module):
-    def __init__(self, num_channels, num_filters, filter_size, dropout_prob, act='hswish'):
+    def __init__(
+        self, num_channels, num_filters, filter_size, dropout_prob, act='hswish'
+    ):
         super().__init__()
         # self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.dense_conv = nn.Conv2d(
@@ -358,7 +427,8 @@ class Dense(nn.Module):
             kernel_size=filter_size,
             stride=1,
             padding=0,
-            bias=False)
+            bias=False,
+        )
         self.act = get_activation(act)
         self.dropout = nn.Dropout(p=dropout_prob)
         # self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
@@ -386,7 +456,9 @@ class conv_bn_relu_maxpool(nn.Module):
             nn.BatchNorm2d(c2),
             get_activation(act),
         )
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+        self.maxpool = nn.MaxPool2d(
+            kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False
+        )
 
     def forward(self, x):
         return self.maxpool(self.conv(x))
@@ -406,21 +478,44 @@ class Shuffle_Block(nn.Module):
 
         if self.stride > 1:
             self.branch1 = nn.Sequential(
-                self.depthwise_conv(inp, inp, kernel_size=3, stride=self.stride, padding=1),
+                self.depthwise_conv(
+                    inp, inp, kernel_size=3, stride=self.stride, padding=1
+                ),
                 nn.BatchNorm2d(inp),
-                nn.Conv2d(inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.Conv2d(
+                    inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False
+                ),
                 nn.BatchNorm2d(branch_features),
                 get_activation(act),
             )
 
         self.branch2 = nn.Sequential(
-            nn.Conv2d(inp if (self.stride > 1) else branch_features,
-                      branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(
+                inp if (self.stride > 1) else branch_features,
+                branch_features,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                bias=False,
+            ),
             nn.BatchNorm2d(branch_features),
             get_activation(act),
-            self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
+            self.depthwise_conv(
+                branch_features,
+                branch_features,
+                kernel_size=3,
+                stride=self.stride,
+                padding=1,
+            ),
             nn.BatchNorm2d(branch_features),
-            nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(
+                branch_features,
+                branch_features,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                bias=False,
+            ),
             nn.BatchNorm2d(branch_features),
             get_activation(act),
         )

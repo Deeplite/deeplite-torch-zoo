@@ -22,7 +22,9 @@ model_urls = {
 }
 
 
-def _shufflenetv2(arch, net_size=1, pretrained=False, num_classes=100, progress=True, device='cuda'):
+def _shufflenetv2(
+    arch, net_size=1, pretrained=False, num_classes=100, progress=True, device='cuda'
+):
     model = ShuffleNetV2(net_size, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
@@ -30,8 +32,17 @@ def _shufflenetv2(arch, net_size=1, pretrained=False, num_classes=100, progress=
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='shufflenet_v2_1_0', dataset_name='cifar100', task_type='classification')
-def shufflenet_v2_1_0_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='shufflenet_v2_1_0', dataset_name='cifar100', task_type='classification'
+)
+def shufflenet_v2_1_0_cifar100(
+    pretrained=False, progress=True, num_classes=100, device='cuda'
+):
     return _shufflenetv2(
-        "shufflenet_v2", net_size=1, num_classes=num_classes, pretrained=pretrained, progress=progress, device=device
+        "shufflenet_v2",
+        net_size=1,
+        num_classes=num_classes,
+        pretrained=pretrained,
+        progress=progress,
+        device=device,
     )

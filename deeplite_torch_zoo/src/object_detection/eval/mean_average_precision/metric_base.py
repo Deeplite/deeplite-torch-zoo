@@ -22,16 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+
 class MetricBase:
-    """ Implements base interface for evaluation metrics."""
+    """Implements base interface for evaluation metrics."""
+
     def add(self, *args, **kwargs):
-        """ Add sample to metric."""
+        """Add sample to metric."""
         raise NotImplemented
 
     def value(self, *args, **kwargs):
-        """ Get metric value."""
+        """Get metric value."""
         raise NotImplemented
 
     def reset(self):
-        """ Reset internal state of metric."""
+        """Reset internal state of metric."""
         raise NotImplemented

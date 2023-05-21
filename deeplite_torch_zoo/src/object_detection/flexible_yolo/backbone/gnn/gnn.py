@@ -10,7 +10,14 @@ from deeplite_torch_zoo.utils import LOGGER
 
 
 class FFN(nn.Module):
-    def __init__(self, in_features, hidden_features=None, out_features=None, act='relu', drop_path=0.0):
+    def __init__(
+        self,
+        in_features,
+        hidden_features=None,
+        out_features=None,
+        act='relu',
+        drop_path=0.0,
+    ):
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -23,7 +30,7 @@ class FFN(nn.Module):
             nn.Conv2d(hidden_features, out_features, 1, stride=1, padding=0),
             nn.BatchNorm2d(out_features),
         )
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
     def forward(self, x):
         shortcut = x
@@ -31,20 +38,21 @@ class FFN(nn.Module):
         x = self.act(x)
         x = self.fc2(x)
         x = self.drop_path(x) + shortcut
-        return x#.reshape(B, C, N, 1)
+        return x  # .reshape(B, C, N, 1)
 
 
 class Stem(nn.Module):
-    """ Image to Visual Embedding
+    """Image to Visual Embedding
     Overlap: https://arxiv.org/pdf/2106.13797.pdf
     """
+
     def __init__(self, in_dim=3, out_dim=768, act='relu'):
         super().__init__()
         self.convs = nn.Sequential(
-            nn.Conv2d(in_dim, out_dim//2, 3, stride=2, padding=1),
-            nn.BatchNorm2d(out_dim//2),
+            nn.Conv2d(in_dim, out_dim // 2, 3, stride=2, padding=1),
+            nn.BatchNorm2d(out_dim // 2),
             act_layer(act),
-            nn.Conv2d(out_dim//2, out_dim, 3, stride=2, padding=1),
+            nn.Conv2d(out_dim // 2, out_dim, 3, stride=2, padding=1),
             nn.BatchNorm2d(out_dim),
             act_layer(act),
             nn.Conv2d(out_dim, out_dim, 3, stride=1, padding=1),
@@ -57,8 +65,8 @@ class Stem(nn.Module):
 
 
 class Downsample(nn.Module):
-    """ Convolution-based downsample
-    """
+    """Convolution-based downsample"""
+
     def __init__(self, in_dim=3, out_dim=768):
         super().__init__()
         self.conv = nn.Sequential(
@@ -72,7 +80,21 @@ class Downsample(nn.Module):
 
 
 class DeepGCN(torch.nn.Module):
-    def __init__(self, num_k=9, conv='mr', bias=True, epsilon=0.2, stochastic=True, act='gelu', norm = 'batch', emb_dims=1024, drop_path=0.0, blocks=[2, 2, 6, 2], channels=[48, 96, 240, 384], img_size=[640, 640]):
+    def __init__(
+        self,
+        num_k=9,
+        conv='mr',
+        bias=True,
+        epsilon=0.2,
+        stochastic=True,
+        act='gelu',
+        norm='batch',
+        emb_dims=1024,
+        drop_path=0.0,
+        blocks=[2, 2, 6, 2],
+        channels=[48, 96, 240, 384],
+        img_size=[640, 640],
+    ):
         super(DeepGCN, self).__init__()
         num_k = num_k
         act = act
@@ -87,12 +109,16 @@ class DeepGCN(torch.nn.Module):
         self.n_blocks = sum(self.blocks)
         channels = channels
         reduce_ratios = [4, 2, 1, 1]
-        dpr = [x.item() for x in torch.linspace(0, drop_path, self.n_blocks)]  # stochastic depth decay rule
-        num_knn = [int(x.item()) for x in torch.linspace(num_k, num_k, self.n_blocks)]  # number of knn's k
+        dpr = [
+            x.item() for x in torch.linspace(0, drop_path, self.n_blocks)
+        ]  # stochastic depth decay rule
+        num_knn = [
+            int(x.item()) for x in torch.linspace(num_k, num_k, self.n_blocks)
+        ]  # number of knn's k
         max_dilation = 49 // max(num_knn)
         h, w = img_size[0], img_size[1]
         self.stem = Stem(out_dim=channels[0], act=act)
-        self.pos_embed = nn.Parameter(torch.zeros(1, channels[0], h//4, w//4))
+        self.pos_embed = nn.Parameter(torch.zeros(1, channels[0], h // 4, w // 4))
 
         HW = h // 4 * w // 4
 
@@ -100,21 +126,33 @@ class DeepGCN(torch.nn.Module):
         idx = 0
         for i in range(len(blocks)):
             if i > 0:
-                self.backbone.append(Downsample(channels[i-1], channels[i]))
+                self.backbone.append(Downsample(channels[i - 1], channels[i]))
                 HW = HW // 4
             for j in range(blocks[i]):
                 self.backbone += [
-                    Seq(Grapher(channels[i], num_knn[idx], min(idx // 4 + 1, max_dilation), conv, act, norm,
-                                    bias, stochastic, epsilon, reduce_ratios[i], n=HW, drop_path=dpr[idx],
-                                    relative_pos=True),
-                          FFN(channels[i], channels[i] * 4, act=act, drop_path=dpr[idx])
-                         )]
+                    Seq(
+                        Grapher(
+                            channels[i],
+                            num_knn[idx],
+                            min(idx // 4 + 1, max_dilation),
+                            conv,
+                            act,
+                            norm,
+                            bias,
+                            stochastic,
+                            epsilon,
+                            reduce_ratios[i],
+                            n=HW,
+                            drop_path=dpr[idx],
+                            relative_pos=True,
+                        ),
+                        FFN(channels[i], channels[i] * 4, act=act, drop_path=dpr[idx]),
+                    )
+                ]
                 idx += 1
         self.backbone = Seq(*self.backbone)
         self.model_init()
-        self.out_shape = [channels[-3],
-                          channels[-2],
-                          channels[-1]]
+        self.out_shape = [channels[-3], channels[-2], channels[-1]]
         LOGGER.info(self.out_shape)
 
     def model_init(self):
@@ -133,14 +171,13 @@ class DeepGCN(torch.nn.Module):
         for i in range(len(self.backbone)):
             x = self.backbone[i](x)
             if i == sum(self.blocks[:2]):
-                c3  = x
+                c3 = x
             if i == sum(self.blocks[:3]) + 1:
                 c4 = x
         return c3, c4, x
 
 
 def tiny_gnn(pretrained=False, **kwargs):
-
     # default params
     # num_k = 9 # neighbor num (default:9)
     # conv = 'mr' # graph conv layer {edge, mr}
@@ -161,7 +198,6 @@ def tiny_gnn(pretrained=False, **kwargs):
 
 
 def small_gnn(pretrained=False, **kwargs):
-
     # default params
     # num_k = 9 # neighbor num (default:9)
     # conv = 'mr' # graph conv layer {edge, mr}
@@ -182,7 +218,6 @@ def small_gnn(pretrained=False, **kwargs):
 
 
 def medium_gnn(pretrained=False, **kwargs):
-
     # default params
     # num_k = 9 # neighbor num (default:9)
     # conv = 'mr' # graph conv layer {edge, mr}
@@ -197,7 +232,6 @@ def medium_gnn(pretrained=False, **kwargs):
     # blocks = [2,2,16,2] # number of basic blocks in the backbone
     # channels = [96, 182, 384, 768] # number of channels of deep features
     # emb_dims = 1024 # Dimension of embeddings
-
 
     model = DeepGCN(**kwargs)
     return model

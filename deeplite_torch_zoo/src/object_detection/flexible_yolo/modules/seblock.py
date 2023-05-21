@@ -4,12 +4,24 @@ import torch.nn.functional as F
 
 #   https://openaccess.thecvf.com/content_cvpr_2018/html/Hu_Squeeze-and-Excitation_Networks_CVPR_2018_paper.html
 
-class SEBlock(nn.Module):
 
+class SEBlock(nn.Module):
     def __init__(self, input_channels, internal_neurons):
         super(SEBlock, self).__init__()
-        self.down = nn.Conv2d(in_channels=input_channels, out_channels=internal_neurons, kernel_size=1, stride=1, bias=True)
-        self.up = nn.Conv2d(in_channels=internal_neurons, out_channels=input_channels, kernel_size=1, stride=1, bias=True)
+        self.down = nn.Conv2d(
+            in_channels=input_channels,
+            out_channels=internal_neurons,
+            kernel_size=1,
+            stride=1,
+            bias=True,
+        )
+        self.up = nn.Conv2d(
+            in_channels=internal_neurons,
+            out_channels=input_channels,
+            kernel_size=1,
+            stride=1,
+            bias=True,
+        )
         self.input_channels = input_channels
 
     def forward(self, inputs):

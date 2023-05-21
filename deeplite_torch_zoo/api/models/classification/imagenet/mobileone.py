@@ -1,5 +1,4 @@
-from deeplite_torch_zoo.src.classification.imagenet_models.mobileone import \
-    mobileone
+from deeplite_torch_zoo.src.classification.imagenet_models.mobileone import mobileone
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
@@ -16,12 +15,11 @@ MODEL_URLS = {
 MODEL_VARIANTS = ('s0', 's1', 's2', 's3', 's4')
 
 
-def get_mobileone(model_name, num_classes=1000, pretrained=False, progress=True, device='cuda'):
-
+def get_mobileone(
+    model_name, num_classes=1000, pretrained=False, progress=True, device='cuda'
+):
     model = mobileone(
-        num_classes=num_classes,
-        inference_mode=False,
-        variant=model_name.split('_')[1]
+        num_classes=num_classes, inference_mode=False, variant=model_name.split('_')[1]
     )
 
     if pretrained:
@@ -31,10 +29,18 @@ def get_mobileone(model_name, num_classes=1000, pretrained=False, progress=True,
     return model.to(device)
 
 
-def make_wrapper_func(wrapper_name, model_name, dataset_name='imagenet', num_classes=1000):
-    @MODEL_WRAPPER_REGISTRY.register(model_name=model_name, dataset_name=dataset_name,
-        task_type='classification', has_checkpoint=True)
-    def wrapper_func(pretrained=False, num_classes=num_classes, progress=True, device='cuda'):
+def make_wrapper_func(
+    wrapper_name, model_name, dataset_name='imagenet', num_classes=1000
+):
+    @MODEL_WRAPPER_REGISTRY.register(
+        model_name=model_name,
+        dataset_name=dataset_name,
+        task_type='classification',
+        has_checkpoint=True,
+    )
+    def wrapper_func(
+        pretrained=False, num_classes=num_classes, progress=True, device='cuda'
+    ):
         return get_mobileone(
             model_name=model_name,
             num_classes=num_classes,
@@ -42,6 +48,7 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name='imagenet', num_cla
             progress=progress,
             device=device,
         )
+
     wrapper_func.__name__ = wrapper_name
     return wrapper_func
 

@@ -36,7 +36,7 @@ IMPL_MODEL_NAMES = {
         'shufflenet_v2_x0_5',
         'shufflenet_v2_x1_0',
         'shufflenet_v2_x1_5',
-        'shufflenet_v2_x2_0'
+        'shufflenet_v2_x2_0',
     ],
     'pytorchcv': [
         'alexnet',
@@ -495,8 +495,8 @@ IMPL_MODEL_NAMES = {
         'resnetd152b',
         'fastseresnet101b',
         'octresnet10_ad2',
-        'octresnet50b_ad2'
-    ]
+        'octresnet50b_ad2',
+    ],
 }
 
 
@@ -511,7 +511,7 @@ INPLACE_ABN_MODELS = [
     'tresnet_m_miil_in21k',
     'tresnet_v2_l',
     'tresnet_xl_448',
-    'tresnet_xl'
+    'tresnet_xl',
 ]
 
 
@@ -602,5 +602,5 @@ FIXED_SIZE_INPUT_MODELS = [
     'volo_d3_448',
     'volo_d4_448',
     'volo_d5_448',
-    'volo_d5_512'
+    'volo_d5_512',
 ]

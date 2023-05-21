@@ -19,9 +19,16 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
 
     with open(anno_path, "a") as f:
         for image_id in tqdm(image_ids):
-            image_paths = [file for file in Path(os.path.join(data_path, "JPEGImages")).glob(f'*{image_id}*')]
+            image_paths = [
+                file
+                for file in Path(os.path.join(data_path, "JPEGImages")).glob(
+                    f'*{image_id}*'
+                )
+            ]
             if len(image_paths) > 1:
-                raise RuntimeError(f'More than one file matched with image id {image_id}')
+                raise RuntimeError(
+                    f'More than one file matched with image id {image_id}'
+                )
             annotation = str(image_paths[0])
             label_path = os.path.join(data_path, "Annotations", image_id + ".xml")
             root = ET.parse(label_path).getroot()
@@ -29,9 +36,7 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
             for obj in objects:
                 if obj.find("difficult"):
                     difficult = obj.find("difficult").text.strip()
-                    if (not use_difficult_bbox) and (
-                        int(difficult) == 1
-                    ):  # difficult
+                    if (not use_difficult_bbox) and (int(difficult) == 1):  # difficult
                         continue
                 bbox = obj.find("bndbox")
                 name = obj.find("name").text.lower().strip()
@@ -47,7 +52,9 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
     return len(image_ids), class_names
 
 
-def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, train_test_split):
+def prepare_voc_data(
+    train_data_paths, test_data_paths, data_root_annotation, train_test_split
+):
     LOGGER.info("Preparing VOC dataset for YOLO. Onetime process...")
     train_annotation_path = os.path.join(
         str(data_root_annotation), "train_annotation.txt"
@@ -61,9 +68,7 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, tr
     if os.path.exists(test_annotation_path):
         os.remove(test_annotation_path)
 
-    class_names_file_path = os.path.join(
-        str(data_root_annotation), "class_names.txt"
-    )
+    class_names_file_path = os.path.join(str(data_root_annotation), "class_names.txt")
     if os.path.exists(class_names_file_path):
         os.remove(class_names_file_path)
 
@@ -98,26 +103,46 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, tr
     with open(class_names_file_path, 'w') as f:
         f.write(' '.join(sorted(list(class_names_train))))
 
-    LOGGER.info(f"The number of images for train and test are: \
-            train : {len_train} | test : {len_test}. The number of classes is {len(class_names_train)}".format(len_train, len_test))
+    LOGGER.info(
+        f"The number of images for train and test are: \
+            train : {len_train} | test : {len_test}. The number of classes is {len(class_names_train)}".format(
+            len_train, len_test
+        )
+    )
 
 
-def prepare_yolo_voc_data(vockit_data_root, annotation_path, standard_voc_format=True, is_07_subset=False):
-
+def prepare_yolo_voc_data(
+    vockit_data_root, annotation_path, standard_voc_format=True, is_07_subset=False
+):
     Path(annotation_path).mkdir(parents=True, exist_ok=True)
 
     train_anno_path = os.path.join(str(annotation_path), "train_annotation.txt")
     test_anno_path = os.path.join(str(annotation_path), "test_annotation.txt")
 
     if standard_voc_format:
-        train_data_paths = [os.path.join(vockit_data_root, "VOC2007"),
-                os.path.join(vockit_data_root, "VOC2012")] if not is_07_subset \
-                    else [os.path.join(vockit_data_root, "VOC2007"),]
-        test_data_paths = [os.path.join(vockit_data_root, "VOC2007"),]
+        train_data_paths = (
+            [
+                os.path.join(vockit_data_root, "VOC2007"),
+                os.path.join(vockit_data_root, "VOC2012"),
+            ]
+            if not is_07_subset
+            else [
+                os.path.join(vockit_data_root, "VOC2007"),
+            ]
+        )
+        test_data_paths = [
+            os.path.join(vockit_data_root, "VOC2007"),
+        ]
     else:
-        train_data_paths, test_data_paths = [vockit_data_root,], [vockit_data_root,]
+        train_data_paths, test_data_paths = [
+            vockit_data_root,
+        ], [
+            vockit_data_root,
+        ]
 
     train_test_split = ('trainval', 'test') if not is_07_subset else ('train', 'val')
 
     if not (os.path.exists(train_anno_path) and os.path.exists(test_anno_path)):
-        prepare_voc_data(train_data_paths, test_data_paths, annotation_path, train_test_split)
+        prepare_voc_data(
+            train_data_paths, test_data_paths, annotation_path, train_test_split
+        )

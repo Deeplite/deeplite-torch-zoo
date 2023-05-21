@@ -52,7 +52,7 @@ class MLP(Seq):
 
 
 class BasicConv(Seq):
-    def __init__(self, channels, act='relu', norm=None, bias=True, drop=0.):
+    def __init__(self, channels, act='relu', norm=None, bias=True, drop=0.0):
         m = []
         for i in range(1, len(channels)):
             m.append(Conv2d(channels[i - 1], channels[i], 1, bias=bias, groups=4))
@@ -92,11 +92,18 @@ def batched_index_select(x, idx):
     """
     batch_size, num_dims, num_vertices_reduced = x.shape[:3]
     _, num_vertices, k = idx.shape
-    idx_base = torch.arange(0, batch_size, device=idx.device).view(-1, 1, 1) * num_vertices_reduced
+    idx_base = (
+        torch.arange(0, batch_size, device=idx.device).view(-1, 1, 1)
+        * num_vertices_reduced
+    )
     idx = idx + idx_base
     idx = idx.contiguous().view(-1)
 
     x = x.transpose(2, 1)
     feature = x.contiguous().view(batch_size * num_vertices_reduced, -1)[idx, :]
-    feature = feature.view(batch_size, num_vertices, k, num_dims).permute(0, 3, 1, 2).contiguous()
+    feature = (
+        feature.view(batch_size, num_vertices, k, num_dims)
+        .permute(0, 3, 1, 2)
+        .contiguous()
+    )
     return feature

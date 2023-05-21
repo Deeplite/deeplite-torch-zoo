@@ -8,7 +8,10 @@ from torch import nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct
 from deeplite_torch_zoo.src.dnn_blocks.yolov7.transformer_common import (
-    SwinTransformerLayer, SwinTransformerLayer_v2, TransformerLayer)
+    SwinTransformerLayer,
+    SwinTransformerLayer_v2,
+    TransformerLayer,
+)
 
 
 class TransformerBlock(nn.Module):
@@ -19,7 +22,9 @@ class TransformerBlock(nn.Module):
         if c1 != c2:
             self.conv = ConvBnAct(c1, c2, act=act)
         self.linear = nn.Linear(c2, c2)  # learnable position embedding
-        self.tr = nn.Sequential(*[TransformerLayer(c2, num_heads) for _ in range(num_layers)])
+        self.tr = nn.Sequential(
+            *[TransformerLayer(c2, num_heads) for _ in range(num_layers)]
+        )
         self.c2 = c2
 
     def forward(self, x):
@@ -48,8 +53,17 @@ class SwinTransformerBlock(nn.Module):
             self.conv = ConvBnAct(c1, c2, act=act)
 
         # remove input_resolution
-        self.blocks = nn.Sequential(*[SwinTransformerLayer(dim=c2, num_heads=num_heads, window_size=window_size,
-                                 shift_size=0 if (i % 2 == 0) else window_size // 2) for i in range(num_layers)])
+        self.blocks = nn.Sequential(
+            *[
+                SwinTransformerLayer(
+                    dim=c2,
+                    num_heads=num_heads,
+                    window_size=window_size,
+                    shift_size=0 if (i % 2 == 0) else window_size // 2,
+                )
+                for i in range(num_layers)
+            ]
+        )
 
     def forward(self, x):
         if self.conv is not None:
@@ -66,8 +80,17 @@ class SwinTransformer2Block(nn.Module):
             self.conv = ConvBnAct(c1, c2, act=act)
 
         # remove input_resolution
-        self.blocks = nn.Sequential(*[SwinTransformerLayer_v2(dim=c2, num_heads=num_heads, window_size=window_size,
-                                 shift_size=0 if (i % 2 == 0) else window_size // 2) for i in range(num_layers)])
+        self.blocks = nn.Sequential(
+            *[
+                SwinTransformerLayer_v2(
+                    dim=c2,
+                    num_heads=num_heads,
+                    window_size=window_size,
+                    shift_size=0 if (i % 2 == 0) else window_size // 2,
+                )
+                for i in range(num_layers)
+            ]
+        )
 
     def forward(self, x):
         if self.conv is not None:

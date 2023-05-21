@@ -5,7 +5,9 @@ import torch
 
 from deeplite_torch_zoo.src.object_detection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.object_detection.yolov5.utils.general import (
-    nms, post_process)
+    nms,
+    post_process,
+)
 
 
 class Evaluator(object):

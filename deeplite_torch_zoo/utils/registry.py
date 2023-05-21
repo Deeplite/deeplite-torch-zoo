@@ -221,7 +221,6 @@ class EvaluatorWrapperRegistry(Registry):
         return wrap
 
     def get(self, task_type, model_name, dataset_name):
-
         model_type = extract_model_type(model_name)
         dataset_type = extract_dataset_type(dataset_name)
 
@@ -253,10 +252,14 @@ class RegistryStorage:
         self.registries = {}
         for r in regs:
             if r.name in self.registries:
-                raise RuntimeError(f'There are more than one registry with the name "{r.name}"')
+                raise RuntimeError(
+                    f'There are more than one registry with the name "{r.name}"'
+                )
             self.registries[r.name] = r
 
     def get(self, registry_name: str) -> Registry:
         if registry_name not in self.registries:
-            raise RuntimeError(f'Cannot find registry with registry_name "{registry_name}"')
+            raise RuntimeError(
+                f'Cannot find registry with registry_name "{registry_name}"'
+            )
         return self.registries[registry_name]

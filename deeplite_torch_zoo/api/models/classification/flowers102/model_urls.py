@@ -1,4 +1,3 @@
-
 model_urls = {
     'adv_inception_v3': 'adv_inception_v3_flowers102_9007_5287b17777f9cb6c.pt',
     'alexnetb': 'alexnetb_flowers102_4664_d7186c4c51bae57f.pt',
@@ -656,5 +655,5 @@ model_urls = {
     'xcit_tiny_12_p8_384_dist': 'xcit_tiny_12_p8_384_dist_flowers102_8354_fbbf55b576a82674.pt',
     'xcit_tiny_24_p16_224': 'xcit_tiny_24_p16_224_flowers102_8736_a1dd51f8483dab80.pt',
     'xcit_tiny_24_p16_224_dist': 'xcit_tiny_24_p16_224_dist_flowers102_9141_ffc093acf59d21e8.pt',
-    'xcit_tiny_24_p16_384_dist': 'xcit_tiny_24_p16_384_dist_flowers102_8825_8e2856e4f45f3fd8.pt'
+    'xcit_tiny_24_p16_384_dist': 'xcit_tiny_24_p16_384_dist_flowers102_8825_8e2856e4f45f3fd8.pt',
 }

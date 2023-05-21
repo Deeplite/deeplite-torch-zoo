@@ -6,7 +6,7 @@ class MobileNetV1(nn.Module):
         super(MobileNetV1, self).__init__()
 
         def conv_bn(inp, oup, stride):
-            oup = int(oup*width_mult)
+            oup = int(oup * width_mult)
             return nn.Sequential(
                 nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
                 nn.BatchNorm2d(oup),
@@ -14,7 +14,7 @@ class MobileNetV1(nn.Module):
             )
 
         def conv_dw(inp, oup, stride):
-            inp, oup = int(inp * width_mult), int(oup*width_mult)
+            inp, oup = int(inp * width_mult), int(oup * width_mult)
             return nn.Sequential(
                 nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
                 nn.BatchNorm2d(inp),

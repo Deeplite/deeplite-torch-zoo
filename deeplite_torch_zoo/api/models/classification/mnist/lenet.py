@@ -18,8 +18,6 @@ model_urls = {
 }
 
 
-
-
 def _lenet_mnist(arch, pretrained=False, progress=True, num_classes=10, device="cuda"):
     model = LeNet5(output=num_classes)
 
@@ -29,8 +27,14 @@ def _lenet_mnist(arch, pretrained=False, progress=True, num_classes=10, device="
     return model.to(device)
 
 
-@MODEL_WRAPPER_REGISTRY.register(model_name='lenet5', dataset_name='mnist', task_type='classification')
+@MODEL_WRAPPER_REGISTRY.register(
+    model_name='lenet5', dataset_name='mnist', task_type='classification'
+)
 def lenet5_mnist(pretrained=False, progress=True, num_classes=10, device="cuda"):
     return _lenet_mnist(
-        "lenet5", pretrained=pretrained, progress=progress, num_classes=num_classes, device=device
+        "lenet5",
+        pretrained=pretrained,
+        progress=progress,
+        num_classes=num_classes,
+        device=device,
     )

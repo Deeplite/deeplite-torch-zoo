@@ -14,11 +14,20 @@ __all__ = ["get_mnist"]
 
 
 @DATA_WRAPPER_REGISTRY.register(dataset_name="mnist")
-def get_mnist(data_root="", batch_size=128, num_workers=4, fp16=False, download=True,
-    device="cuda", distributed=False, **kwargs):
-
+def get_mnist(
+    data_root="",
+    batch_size=128,
+    num_workers=4,
+    fp16=False,
+    download=True,
+    device="cuda",
+    distributed=False,
+    **kwargs,
+):
     if kwargs:
-        LOGGER.warning(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+        LOGGER.warning(
+            f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!"
+        )
 
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
@@ -41,10 +50,24 @@ def get_mnist(data_root="", batch_size=128, num_workers=4, fp16=False, download=
         ),
     )
 
-    train_loader = get_dataloader(train_dataset, batch_size=batch_size, num_workers=num_workers,
-        fp16=fp16, distributed=distributed, shuffle=not distributed, device=device)
+    train_loader = get_dataloader(
+        train_dataset,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        fp16=fp16,
+        distributed=distributed,
+        shuffle=not distributed,
+        device=device,
+    )
 
-    test_loader = get_dataloader(test_dataset, batch_size=batch_size, num_workers=num_workers,
-        fp16=fp16, distributed=distributed, shuffle=False, device=device)
+    test_loader = get_dataloader(
+        test_dataset,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        fp16=fp16,
+        distributed=distributed,
+        shuffle=False,
+        device=device,
+    )
 
     return {"train": train_loader, "test": test_loader}

@@ -14,17 +14,28 @@ try:
             self.xfm = DWTForward(J=1, wave='db1', mode='zero')
 
         def forward(self, x):
-            b,c,w,h = x.shape
+            b, c, w, h = x.shape
             yl, yh = self.xfm(x)
-            return torch.cat([yl/2., yh[0].view(b,-1,w//2,h//2)/2.+.5], 1)
+            return torch.cat(
+                [yl / 2.0, yh[0].view(b, -1, w // 2, h // 2) / 2.0 + 0.5], 1
+            )
+
 except:
 
-    class DWT(nn.Module): # use ReOrg instead
+    class DWT(nn.Module):  # use ReOrg instead
         def __init__(self):
             super(DWT, self).__init__()
 
         def forward(self, x):
-            return torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
+            return torch.cat(
+                [
+                    x[..., ::2, ::2],
+                    x[..., 1::2, ::2],
+                    x[..., ::2, 1::2],
+                    x[..., 1::2, 1::2],
+                ],
+                1,
+            )
 
 
 class Concat(nn.Module):
@@ -70,7 +81,12 @@ class Contract(nn.Module):
         self.gain = gain
 
     def forward(self, x):
-        b, c, h, w = x.size()  # assert (h / s == 0) and (W / s == 0), 'Indivisible gain'
+        (
+            b,
+            c,
+            h,
+            w,
+        ) = x.size()  # assert (h / s == 0) and (W / s == 0), 'Indivisible gain'
         s = self.gain
         x = x.view(b, c, h // s, s, w // s, s)  # x(1,64,40,2,40,2)
         x = x.permute(0, 3, 5, 1, 2, 4).contiguous()  # x(1,2,2,64,40,40)
@@ -86,9 +102,9 @@ class Expand(nn.Module):
     def forward(self, x):
         b, c, h, w = x.size()  # assert C / s ** 2 == 0, 'Indivisible gain'
         s = self.gain
-        x = x.view(b, s, s, c // s ** 2, h, w)  # x(1,2,2,16,80,80)
+        x = x.view(b, s, s, c // s**2, h, w)  # x(1,2,2,16,80,80)
         x = x.permute(0, 3, 4, 1, 5, 2).contiguous()  # x(1,16,80,2,80,2)
-        return x.view(b, c // s ** 2, h * s, w * s)  # x(1,16,160,160)
+        return x.view(b, c // s**2, h * s, w * s)  # x(1,16,160,160)
 
 
 class MP(nn.Module):
@@ -114,11 +130,19 @@ class ReOrg(nn.Module):
         super(ReOrg, self).__init__()
 
     def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
-        return torch.cat([x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]], 1)
+        return torch.cat(
+            [
+                x[..., ::2, ::2],
+                x[..., 1::2, ::2],
+                x[..., ::2, 1::2],
+                x[..., 1::2, 1::2],
+            ],
+            1,
+        )
 
 
 class ImplicitA(nn.Module):
-    def __init__(self, channel, mean=0., std=.02):
+    def __init__(self, channel, mean=0.0, std=0.02):
         super(ImplicitA, self).__init__()
         self.channel = channel
         self.mean = mean
@@ -131,7 +155,7 @@ class ImplicitA(nn.Module):
 
 
 class ImplicitM(nn.Module):
-    def __init__(self, channel, mean=0., std=.02):
+    def __init__(self, channel, mean=0.0, std=0.02):
         super(ImplicitM, self).__init__()
         self.channel = channel
         self.mean = mean
@@ -149,7 +173,7 @@ class Shortcut(nn.Module):
         self.d = dimension
 
     def forward(self, x):
-        return x[0]+x[1]
+        return x[0] + x[1]
 
 
 class Chuncat(nn.Module):
@@ -164,7 +188,7 @@ class Chuncat(nn.Module):
             xi1, xi2 = xi.chunk(2, self.d)
             x1.append(xi1)
             x2.append(xi2)
-        return torch.cat(x1+x2, self.d)
+        return torch.cat(x1 + x2, self.d)
 
 
 class Foldcut(nn.Module):
@@ -174,4 +198,4 @@ class Foldcut(nn.Module):
 
     def forward(self, x):
         x1, x2 = x.chunk(2, self.d)
-        return x1+x2
+        return x1 + x2

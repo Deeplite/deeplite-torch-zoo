@@ -24,19 +24,21 @@ SOFTWARE.
 
 import numpy as np
 
+
 class AdapterBase:
-    """ Arguments Adapter for Metric.
+    """Arguments Adapter for Metric.
 
     Arguments:
         metric_fn (MetricBase): metric function.
         value_config (dict): arguments of self..value(...) method.
     """
+
     def __init__(self, metric_fn, value_config=None):
         self.metric_fn = metric_fn
         self.value_config = value_config
 
     def add(self, preds, gt):
-        """ Add sample to evaluation.
+        """Add sample to evaluation.
 
         Arguments:
             preds (np.array): predicted boxes.
@@ -48,7 +50,7 @@ class AdapterBase:
         return self.metric_fn.add(preds, gt)
 
     def value(self, *args, **kwargs):
-        """ Evaluate Metric.
+        """Evaluate Metric.
 
         Arguments:
             *args, **kwargs: metric specific arguments.
@@ -62,12 +64,11 @@ class AdapterBase:
             return self.metric_fn.value(*args, **kwargs)
 
     def reset(self):
-        """ Reset stored data.
-        """
+        """Reset stored data."""
         return self.metric_fn.reset()
 
     def _check_empty(self, preds, gt):
-        """ Check empty arguments
+        """Check empty arguments
 
         Arguments:
             preds (np.array): predicted boxes.
@@ -84,14 +85,14 @@ class AdapterBase:
         return preds, gt
 
     def _preds_adapter(self, preds):
-        """ Preds adapter method.
+        """Preds adapter method.
 
         Should be implemented in child class.
         """
         raise NotImplemented
 
     def _gt_adapter(self, gt):
-        """ Gt adapter method.
+        """Gt adapter method.
 
         Should be implemented in child class.
         """
@@ -99,8 +100,8 @@ class AdapterBase:
 
 
 class AdapterDefault(AdapterBase):
-    """ Default implementation of adapter class.
-    """
+    """Default implementation of adapter class."""
+
     def _preds_adapter(self, preds):
         return preds
 

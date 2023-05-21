@@ -10,9 +10,11 @@ import deeplite_torch_zoo.api.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.api.eval  # pylint: disable=unused-import
 import deeplite_torch_zoo.api.models  # pylint: disable=unused-import
 from deeplite_torch_zoo.utils import switch_train_mode, LOGGER
-from deeplite_torch_zoo.api.registries import (DATA_WRAPPER_REGISTRY,
-                                                    EVAL_WRAPPER_REGISTRY,
-                                                    MODEL_WRAPPER_REGISTRY)
+from deeplite_torch_zoo.api.registries import (
+    DATA_WRAPPER_REGISTRY,
+    EVAL_WRAPPER_REGISTRY,
+    MODEL_WRAPPER_REGISTRY,
+)
 
 __all__ = [
     "get_data_splits_by_name",
@@ -37,8 +39,9 @@ def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
        'test' : test_data_loader
     }
     """
-    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(dataset_name=dataset_name,
-        model_name=model_name)
+    data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(
+        dataset_name=dataset_name, model_name=model_name
+    )
     data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
     return data_split
 
@@ -50,7 +53,7 @@ def get_model_by_name(
     progress=False,
     fp16=False,
     device="cuda",
-    **kwargs
+    **kwargs,
 ):
     """
     Tries to find a matching model creation wrapper function in the registry and uses it to create a new model object
@@ -66,13 +69,16 @@ def get_model_by_name(
     model_func = MODEL_WRAPPER_REGISTRY.get(
         model_name=model_name.lower(), dataset_name=dataset_name
     )
-    model = model_func(pretrained=pretrained, progress=progress, device=device, **kwargs)
+    model = model_func(
+        pretrained=pretrained, progress=progress, device=device, **kwargs
+    )
     return model.half() if fp16 else model
 
 
 def get_eval_function(model_name, dataset_name):
-    task_type = MODEL_WRAPPER_REGISTRY.get_task_type(model_name=model_name,
-        dataset_name=dataset_name)
+    task_type = MODEL_WRAPPER_REGISTRY.get_task_type(
+        model_name=model_name, dataset_name=dataset_name
+    )
     eval_function = EVAL_WRAPPER_REGISTRY.get(
         task_type=task_type, model_name=model_name, dataset_name=dataset_name
     )
@@ -151,8 +157,13 @@ def profile(model, img_size=224, in_ch=3, verbose=False, fuse=True):
     return {'GMACs': model_gmacs, 'size_Mb': model_size_mb, 'Mparams': model_mparams}
 
 
-def list_models(filter='', print_table=True, return_list=False,
-    task_type_filter=None, include_no_checkpoint=False):
+def list_models(
+    filter='',
+    print_table=True,
+    return_list=False,
+    task_type_filter=None,
+    include_no_checkpoint=False,
+):
     """
     A helper function to list all existing models or dataset calls
     It takes a `model_name` or a `dataset_name` as a filter and
@@ -205,5 +216,8 @@ def list_models(filter='', print_table=True, return_list=False,
 
 
 def get_models_by_dataset(dataset_name):
-    return [model_key.model_name for model_key in list_models(dataset_name, return_list=True, print_table=False)
-            if model_key.dataset_name == dataset_name]
+    return [
+        model_key.model_name
+        for model_key in list_models(dataset_name, return_list=True, print_table=False)
+        if model_key.dataset_name == dataset_name
+    ]

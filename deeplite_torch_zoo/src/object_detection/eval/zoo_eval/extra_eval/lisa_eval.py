@@ -21,8 +21,7 @@ import torch
 
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_lisa as lisa_cfg
 from deeplite_torch_zoo.src.object_detection.datasets.lisa import LISA
-from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.evaluator import \
-    Evaluator
+from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.evaluator import Evaluator
 from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.metrics import MAP
 from deeplite_torch_zoo.api.registries import EVAL_WRAPPER_REGISTRY
 from deeplite_torch_zoo.utils import LOGGER
@@ -39,8 +38,7 @@ class Demo(Evaluator):
         net="yolov3",
         img_size=448,
     ):
-        super(Demo, self).__init__(
-            model=model, img_size=img_size)
+        super(Demo, self).__init__(model=model, img_size=img_size)
 
         self.data_root = data_root
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -56,7 +54,6 @@ class Demo(Evaluator):
         avg_loss = 0
         iter_ = 1
         for img_idx, (img_path) in enumerate(self.filelist):
-
             image = cv2.imread(img_path)
             bboxes_prd = self.get_bbox(image)
 
@@ -74,26 +71,24 @@ class LISAEval(Evaluator):
     """docstring for LISAEval"""
 
     def __init__(self, model, data_root, visiual=False, net="yolov3", img_size=448):
-        super(LISAEval, self).__init__(
-            model=model, img_size=img_size, net=net
-        )
+        super(LISAEval, self).__init__(model=model, img_size=img_size, net=net)
 
         self.dataset = val_dataset = LISA(data_root, _set="valid")
         self.data_root = data_root
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def evaluate(self):
-
         self.model.eval()
         self.model.cuda()
         results = []
         start = time.time()
         avg_loss = 0
         for img_idx, (img_path) in enumerate(self.dataset.images):
-
             image = cv2.imread("{}/{}".format(self.data_root, img_path))
             label = self.dataset.objects[img_idx]
-            LOGGER.info("Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r")
+            LOGGER.info(
+                "Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r"
+            )
             bboxes_prd = self.get_bbox(image)
             if len(bboxes_prd) == 0:
                 bboxes_prd = np.zeros((0, 6))
@@ -128,9 +123,12 @@ class LISAEval(Evaluator):
         return ap  # Average Precision  (AP) @[ IoU=050 ]
 
 
-@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection', model_type='yolo', dataset_type='lisa')
-def yolo_eval_lisa(model, data_root, device="cuda", net="yolov3", img_size=448, **kwargs):
-
+@EVAL_WRAPPER_REGISTRY.register(
+    task_type='object_detection', model_type='yolo', dataset_type='lisa'
+)
+def yolo_eval_lisa(
+    model, data_root, device="cuda", net="yolov3", img_size=448, **kwargs
+):
     mAP = 0
     result = {}
     model.to(device)

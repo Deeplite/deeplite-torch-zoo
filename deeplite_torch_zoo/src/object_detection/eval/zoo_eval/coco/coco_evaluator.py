@@ -2,8 +2,7 @@ import numpy as np
 from pycocotools.cocoeval import COCOeval
 from tqdm import tqdm
 
-from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.evaluator import \
-    Evaluator
+from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.evaluator import Evaluator
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -18,9 +17,7 @@ class COCOEvaluator(Evaluator):
         gt=None,
         progressbar=False,
     ):
-        super(COCOEvaluator, self).__init__(
-            model=model, img_size=img_size
-        )
+        super(COCOEvaluator, self).__init__(model=model, img_size=img_size)
         self.dataset = dataset
         self.progressbar = progressbar
 
@@ -51,8 +48,16 @@ class COCOEvaluator(Evaluator):
 
 
 class YoloCOCOEvaluator(COCOEvaluator):
-    def __init__(self, model, dataset, gt=None, visualize=False,
-        net="yolo3", img_size=448, progressbar=False):
+    def __init__(
+        self,
+        model,
+        dataset,
+        gt=None,
+        visualize=False,
+        net="yolo3",
+        img_size=448,
+        progressbar=False,
+    ):
         super().__init__(
             model=model,
             dataset=dataset,
@@ -64,7 +69,6 @@ class YoloCOCOEvaluator(COCOEvaluator):
         )
 
     def process_image(self, img, img_ind, multi_test=False, flip_test=False, **kwargs):
-
         bboxes_prd = self.get_bbox(img, multi_test, flip_test)
 
         results = []

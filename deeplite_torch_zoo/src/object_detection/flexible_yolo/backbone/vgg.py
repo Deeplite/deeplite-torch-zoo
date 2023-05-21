@@ -6,8 +6,15 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
 __all__ = [
-    'VGG', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16', 'vgg16_bn',
-    'vgg19_bn', 'vgg19',
+    'VGG',
+    'vgg11',
+    'vgg11_bn',
+    'vgg13',
+    'vgg13_bn',
+    'vgg16',
+    'vgg16_bn',
+    'vgg19_bn',
+    'vgg19',
 ]
 
 
@@ -22,24 +29,74 @@ model_urls = {
 cfg = {
     'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+    'D': [
+        64,
+        64,
+        'M',
+        128,
+        128,
+        'M',
+        256,
+        256,
+        256,
+        'M',
+        512,
+        512,
+        512,
+        'M',
+        512,
+        512,
+        512,
+        'M',
+    ],
+    'E': [
+        64,
+        64,
+        'M',
+        128,
+        128,
+        'M',
+        256,
+        256,
+        256,
+        256,
+        'M',
+        512,
+        512,
+        512,
+        512,
+        'M',
+        512,
+        512,
+        512,
+        512,
+        'M',
+    ],
 }
 
 
 class VGG(nn.Module):
-
     def __init__(self, cfg, batch_norm=False):
         super(VGG, self).__init__()
-        self.stage1, out_channels1 = make_layers(cfg[:cfg.index('M') + 1], in_channels=3, batch_norm=batch_norm)
-        cfg = cfg[cfg.index('M') + 1: ]
-        self.stage2, out_channels2 = make_layers(cfg[:cfg.index('M') + 1], in_channels=out_channels1, batch_norm=batch_norm)
-        cfg = cfg[cfg.index('M') + 1: ]
-        self.stage3, out_channels3 = make_layers(cfg[:cfg.index('M') + 1], in_channels=out_channels2, batch_norm=batch_norm)
-        cfg = cfg[cfg.index('M') + 1: ]
-        self.stage4, out_channels4 = make_layers(cfg[:cfg.index('M') + 1], in_channels=out_channels3, batch_norm=batch_norm)
-        cfg = cfg[cfg.index('M') + 1: ]
-        self.stage5, out_channels5 = make_layers(cfg[:cfg.index('M') + 1], in_channels=out_channels4, batch_norm=batch_norm)
+        self.stage1, out_channels1 = make_layers(
+            cfg[: cfg.index('M') + 1], in_channels=3, batch_norm=batch_norm
+        )
+        cfg = cfg[cfg.index('M') + 1 :]
+        self.stage2, out_channels2 = make_layers(
+            cfg[: cfg.index('M') + 1], in_channels=out_channels1, batch_norm=batch_norm
+        )
+        cfg = cfg[cfg.index('M') + 1 :]
+        self.stage3, out_channels3 = make_layers(
+            cfg[: cfg.index('M') + 1], in_channels=out_channels2, batch_norm=batch_norm
+        )
+        cfg = cfg[cfg.index('M') + 1 :]
+        self.stage4, out_channels4 = make_layers(
+            cfg[: cfg.index('M') + 1], in_channels=out_channels3, batch_norm=batch_norm
+        )
+        cfg = cfg[cfg.index('M') + 1 :]
+        self.stage5, out_channels5 = make_layers(
+            cfg[: cfg.index('M') + 1], in_channels=out_channels4, batch_norm=batch_norm
+        )
         self._initialize_weights()
         self.out_shape = [out_channels3, out_channels4, out_channels5]
 
@@ -55,7 +112,7 @@ class VGG(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
+                m.weight.data.normal_(0, math.sqrt(2.0 / n))
                 if m.bias is not None:
                     m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2d):
@@ -82,7 +139,6 @@ def make_layers(cfg, in_channels, batch_norm=False):
     return nn.Sequential(*layers), in_channels
 
 
-
 def vgg11(pretrained=False, **kwargs):
     """VGG 11-layer model (configuration "A")
     Args:
@@ -90,7 +146,9 @@ def vgg11(pretrained=False, **kwargs):
     """
     model = VGG(cfg['A'], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg11'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['vgg11'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -98,7 +156,9 @@ def vgg11_bn(pretrained=False, **kwargs):
     """VGG 11-layer model (configuration "A") with batch normalization"""
     model = VGG(cfg['A'], batch_norm=True, **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg11'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['vgg11'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -109,7 +169,9 @@ def vgg13(pretrained=False, **kwargs):
     """
     model = VGG(cfg['B'], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg13'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['vgg13'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -117,7 +179,9 @@ def vgg13_bn(pretrained=False, **kwargs):
     """VGG 13-layer model (configuration "B") with batch normalization"""
     model = VGG(cfg['B'], batch_norm=True, **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg13'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['vgg13'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -128,7 +192,9 @@ def vgg16(pretrained=False, **kwargs):
     """
     model = VGG(cfg['D'], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg16'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['vgg16'], model_dir='.'), strict=False
+        )
 
     return model
 
@@ -137,7 +203,9 @@ def vgg16_bn(pretrained=False, **kwargs):
     """VGG 16-layer model (configuration "D") with batch normalization"""
     model = VGG(cfg['D'], batch_norm=True, **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg16'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['vgg16'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -148,7 +216,9 @@ def vgg19(pretrained=False, **kwargs):
     """
     model = VGG(cfg['E'], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg19'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['vgg19'], model_dir='.'), strict=False
+        )
     return model
 
 
@@ -156,8 +226,11 @@ def vgg19_bn(pretrained=False, **kwargs):
     """VGG 19-layer model (configuration 'E') with batch normalization"""
     model = VGG(cfg['E'], batch_norm=True, **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['vgg19'], model_dir='.'), strict=False)
+        model.load_state_dict(
+            model_zoo.load_url(model_urls['vgg19'], model_dir='.'), strict=False
+        )
     return model
+
 
 def vgg(pretrained=False, **kwargs):
     version = str(kwargs.pop('version'))

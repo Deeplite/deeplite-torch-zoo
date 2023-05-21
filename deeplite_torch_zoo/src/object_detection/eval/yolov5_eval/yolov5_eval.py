@@ -6,11 +6,17 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from deeplite_torch_zoo.src.object_detection.eval.mean_average_precision import \
-    MetricBuilder
+from deeplite_torch_zoo.src.object_detection.eval.mean_average_precision import (
+    MetricBuilder,
+)
 from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.utils import (
-    box_iou, check_version, non_max_suppression)
-from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.v8_nms import non_max_suppression as non_max_suppression_v8
+    box_iou,
+    check_version,
+    non_max_suppression,
+)
+from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.v8_nms import (
+    non_max_suppression as non_max_suppression_v8,
+)
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -35,9 +41,15 @@ def process_batch(detections, labels, iouv):
     iou = box_iou(labels[:, 1:], detections[:, :4])
     correct_class = labels[:, 0:1] == detections[:, 5]
     for i in range(len(iouv)):
-        x = torch.where((iou >= iouv[i]) & correct_class)  # IoU > threshold and classes match
+        x = torch.where(
+            (iou >= iouv[i]) & correct_class
+        )  # IoU > threshold and classes match
         if x[0].shape[0]:
-            matches = torch.cat((torch.stack(x, 1), iou[x[0], x[1]][:, None]), 1).cpu().numpy()  # [label, detect, iou]
+            matches = (
+                torch.cat((torch.stack(x, 1), iou[x[0], x[1]][:, None]), 1)
+                .cpu()
+                .numpy()
+            )  # [label, detect, iou]
             if x[0].shape[0] > 1:
                 matches = matches[matches[:, 2].argsort()[::-1]]
                 matches = matches[np.unique(matches[:, 1], return_index=True)[1]]
@@ -49,19 +61,19 @@ def process_batch(detections, labels, iouv):
 
 @smart_inference_mode()
 def evaluate(
-        model,
-        dataloader,
-        num_classes=None,
-        conf_thres=0.001,  # confidence threshold
-        iou_thres=0.5,  # NMS IoU threshold
-        max_det=300,  # maximum detections per image
-        device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
-        single_cls=False,  # treat as single-class dataset
-        augment=False,  # augmented inference
-        half=False,  # use FP16 half-precision inference
-        eval_style='coco',
-        map_iou_thresh=0.5,
-        v8_eval=False,
+    model,
+    dataloader,
+    num_classes=None,
+    conf_thres=0.001,  # confidence threshold
+    iou_thres=0.5,  # NMS IoU threshold
+    max_det=300,  # maximum detections per image
+    device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
+    single_cls=False,  # treat as single-class dataset
+    augment=False,  # augmented inference
+    half=False,  # use FP16 half-precision inference
+    eval_style='coco',
+    map_iou_thresh=0.5,
+    v8_eval=False,
 ):
     if v8_eval:
         map_iou_thresh = np.arange(0.5, 1.0, 0.05)
@@ -70,7 +82,7 @@ def evaluate(
         num_classes = dataloader.dataset.num_classes
 
     # Initialize/load model and set device
-    device = next(model.parameters()).device # get model device, PyTorch model
+    device = next(model.parameters()).device  # get model device, PyTorch model
     half &= device.type != 'cpu'  # half precision only supported on CUDA
     model.half() if half else model.float()
 
@@ -78,16 +90,26 @@ def evaluate(
     model.eval()
     cuda = device.type != 'cpu'
 
-    names = model.names if hasattr(model, 'names') else model.module.names  # get class names
+    names = (
+        model.names if hasattr(model, 'names') else model.module.names
+    )  # get class names
     if isinstance(names, (list, tuple)):  # old format
         names = dict(enumerate(names))
-    s = ('%22s' + '%11s' * 6) % ('Class', 'Images', 'Instances', 'P', 'R', 'mAP50', 'mAP50-95')
-    pbar = tqdm(dataloader, desc=s, bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')  # progress bar
+    s = ('%22s' + '%11s' * 6) % (
+        'Class',
+        'Images',
+        'Instances',
+        'P',
+        'R',
+        'mAP50',
+        'mAP50-95',
+    )
+    pbar = tqdm(
+        dataloader, desc=s, bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}'
+    )  # progress bar
 
     metric_fn = MetricBuilder.build_evaluation_metric(
-        "map_2d",
-        async_mode=False,
-        num_classes=num_classes
+        "map_2d", async_mode=False, num_classes=num_classes
     )
 
     LOGGER.info('Inference on test set')
@@ -104,21 +126,25 @@ def evaluate(
 
         # NMS
         if not v8_eval:
-            preds = non_max_suppression(preds,
-                                        conf_thres,
-                                        iou_thres,
-                                        labels=[],
-                                        multi_label=True,
-                                        agnostic=single_cls,
-                                        max_det=max_det)
+            preds = non_max_suppression(
+                preds,
+                conf_thres,
+                iou_thres,
+                labels=[],
+                multi_label=True,
+                agnostic=single_cls,
+                max_det=max_det,
+            )
         else:
-            preds = non_max_suppression_v8(preds,
-                                        conf_thres,
-                                        iou_thres,
-                                        labels=[],
-                                        multi_label=True,
-                                        agnostic=single_cls,
-                                        max_det=max_det)
+            preds = non_max_suppression_v8(
+                preds,
+                conf_thres,
+                iou_thres,
+                labels=[],
+                multi_label=True,
+                agnostic=single_cls,
+                max_det=max_det,
+            )
 
         for i, pred in enumerate(preds):
             orig_shape = tuple(shapes[i].numpy())
@@ -155,8 +181,8 @@ def evaluate(
     if eval_style == 'coco':
         metrics = metric_fn.value(
             iou_thresholds=map_iou_thresh,
-            recall_thresholds=np.arange(0., 1.01, 0.01),
-            mpolicy='soft'
+            recall_thresholds=np.arange(0.0, 1.01, 0.01),
+            mpolicy='soft',
         )
     elif eval_style == 'voc':
         metrics = metric_fn.value(iou_thresholds=map_iou_thresh)

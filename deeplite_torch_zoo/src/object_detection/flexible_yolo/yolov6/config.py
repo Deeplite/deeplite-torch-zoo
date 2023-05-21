@@ -14,7 +14,6 @@ from addict import Dict
 
 
 class ConfigDict(Dict):
-
     def __missing__(self, name):
         raise KeyError(name)
 
@@ -22,8 +21,11 @@ class ConfigDict(Dict):
         try:
             value = super(ConfigDict, self).__getattr__(name)
         except KeyError:
-            ex = AttributeError("'{}' object has no attribute '{}'".format(
-                self.__class__.__name__, name))
+            ex = AttributeError(
+                "'{}' object has no attribute '{}'".format(
+                    self.__class__.__name__, name
+                )
+            )
         except Exception as e:
             ex = e
         else:
@@ -32,14 +34,12 @@ class ConfigDict(Dict):
 
 
 class Config(object):
-
     @staticmethod
     def _file2dict(filename):
         filename = str(filename)
         if filename.endswith('.py'):
             with tempfile.TemporaryDirectory() as temp_config_dir:
-                shutil.copyfile(filename,
-                                osp.join(temp_config_dir, '_tempconfig.py'))
+                shutil.copyfile(filename, osp.join(temp_config_dir, '_tempconfig.py'))
                 sys.path.insert(0, temp_config_dir)
                 mod = import_module('_tempconfig')
                 sys.path.pop(0)
@@ -67,8 +67,9 @@ class Config(object):
         if cfg_dict is None:
             cfg_dict = dict()
         elif not isinstance(cfg_dict, dict):
-            raise TypeError('cfg_dict must be a dict, but got {}'.format(
-                type(cfg_dict)))
+            raise TypeError(
+                'cfg_dict must be a dict, but got {}'.format(type(cfg_dict))
+            )
 
         super(Config, self).__setattr__('_cfg_dict', ConfigDict(cfg_dict))
         super(Config, self).__setattr__('_filename', filename)
@@ -90,8 +91,7 @@ class Config(object):
         return self._text
 
     def __repr__(self):
-        return 'Config (path: {}): {}'.format(self.filename,
-                                              self._cfg_dict.__repr__())
+        return 'Config (path: {}): {}'.format(self.filename, self._cfg_dict.__repr__())
 
     def __getattr__(self, name):
         return getattr(self._cfg_dict, name)
