@@ -12,6 +12,7 @@ from torch.cuda.amp import autocast
 from deeplite_torch_zoo.src.object_detection.yolov5.models.common import *
 from deeplite_torch_zoo.src.object_detection.yolov5.models.experimental import *
 from deeplite_torch_zoo.src.object_detection.yolov5.models.losses.yolox.yolox_loss import *
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class IOUloss(nn.Module):
@@ -356,13 +357,13 @@ class DetectX(nn.Module):
                         xy_shifts,
                     )
                 except RuntimeError:
-                    print(
+                    LOGGER.warning(
                         "OOM RuntimeError is raised due to the huge memory cost during label assignment. \
                            CPU mode is applied in this batch. If you want to avoid this issue, \
                            try to reduce the batch size or image size."
                     )
                     torch.cuda.empty_cache()
-                    print("------------CPU Mode for This Batch-------------")
+                    LOGGER.warning("------------CPU Mode for This Batch-------------")
                     _org_gt_bboxes_per_image = org_gt_bboxes_per_image.cpu().float()
                     _gt_bboxes_per_image = gt_bboxes_per_image.cpu().float()
                     _bboxes_preds_per_image = bboxes_preds_per_image.cpu().float()

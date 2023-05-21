@@ -10,8 +10,8 @@ from deeplite_torch_zoo.src.object_detection.eval.mean_average_precision import 
     MetricBuilder
 from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.utils import (
     box_iou, check_version, non_max_suppression)
-
-from .v8_nms import non_max_suppression as non_max_suppression_v8
+from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.v8_nms import non_max_suppression as non_max_suppression_v8
+from deeplite_torch_zoo.utils import LOGGER
 
 
 def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
@@ -90,7 +90,7 @@ def evaluate(
         num_classes=num_classes
     )
 
-    print('Inference on test set')
+    LOGGER.info('Inference on test set')
     for im, targets, _, shapes in pbar:
         if cuda:
             im = im.to(device, non_blocking=True)
@@ -150,7 +150,7 @@ def evaluate(
 
             metric_fn.add(p, gt)
 
-    print('Computing mAP value')
+    LOGGER.info('Computing mAP value')
     t1 = time.perf_counter()
     if eval_style == 'coco':
         metrics = metric_fn.value(
@@ -161,11 +161,10 @@ def evaluate(
     elif eval_style == 'voc':
         metrics = metric_fn.value(iou_thresholds=map_iou_thresh)
     t2 = time.perf_counter()
-    print(f'Finished in {t2 - t1} sec')
+    LOGGER.info(f'Finished in {t2 - t1} sec')
 
     APs = {'mAP': metrics['mAP']}
-
-    print(APs)
+    LOGGER.info(APs)
 
     if isinstance(map_iou_thresh, float):
         for cls_id, ap_dict in metrics[map_iou_thresh].items():

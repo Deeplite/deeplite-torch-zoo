@@ -24,6 +24,7 @@ from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.evaluator import \
     Evaluator
 from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.metrics import MAP
 from deeplite_torch_zoo.api.registries import EVAL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class WiderFaceEval(Evaluator):
@@ -47,7 +48,7 @@ class WiderFaceEval(Evaluator):
             img_path = _info["img_path"]
             image = cv2.imread(img_path)
 
-            print("Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r")
+            LOGGER.info("Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r")
             bboxes_prd = self.get_bbox(image)
             if len(bboxes_prd) == 0:
                 bboxes_prd = np.zeros((0, 6))
@@ -69,7 +70,7 @@ class WiderFaceEval(Evaluator):
         ap = mAP.accumlate()
         ap = ap[ap > 1e-6]
         _ap = np.mean(ap)
-        print("mAP = {:.3f}".format(_ap))
+        LOGGER.info("mAP = {:.3f}".format(_ap))
 
         return _ap  # Average Precision  (AP) @[ IoU=050 ]
 

@@ -13,6 +13,8 @@ import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_de
 from deeplite_torch_zoo.src.object_detection.datasets.data_augment import Resize
 from deeplite_torch_zoo.src.object_detection.datasets.dataset import \
     DLZooDataset
+from deeplite_torch_zoo.utils import LOGGER
+
 
 WF_CLASS_NAMES = {
     "BACKGROUND",
@@ -47,7 +49,7 @@ class WiderFace(DLZooDataset):
         else:
             self.parse_train_val_annotations_file()
 
-        print(f"{split}: {len(self.img_info)}")
+        LOGGER.info(f"{split}: {len(self.img_info)}")
         self.classes = WF_CLASS_NAMES
         self.num_classes = len(self.classes)
         if num_classes is not None:

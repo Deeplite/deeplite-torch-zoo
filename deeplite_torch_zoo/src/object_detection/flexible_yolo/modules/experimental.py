@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules.common import \
     Conv
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class Sum(nn.Module):
@@ -92,7 +93,7 @@ def attempt_load(weights, device=None, inplace=True, fuse=True):
 
     if len(model) == 1:
         return model[-1]  # return model
-    print(f'Ensemble created with {weights}\n')
+    LOGGER.info(f'Ensemble created with {weights}\n')
     for k in 'names', 'nc', 'yaml':
         setattr(model, k, getattr(model[0], k))
     model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride  # max stride

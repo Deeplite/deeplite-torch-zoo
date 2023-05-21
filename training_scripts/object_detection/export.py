@@ -63,6 +63,7 @@ import torch.nn as nn
 from torch.utils.mobile_optimizer import optimize_for_mobile
 
 from deeplite_torch_zoo import get_model_by_name
+from deeplite_torch_zoo.utils import LOGGER
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -109,10 +110,10 @@ def try_export(inner_func):
         try:
             with Profile() as dt:
                 f, model = inner_func(*args, **kwargs)
-            print(f'{prefix} export success ✅ {dt.t:.1f}s, saved as {f} ({file_size(f):.1f} MB)')
+            LOGGER.info(f'{prefix} export success ✅ {dt.t:.1f}s, saved as {f} ({file_size(f):.1f} MB)')
             return f, model
         except Exception as e:
-            print(f'{prefix} export failure ❌ {dt.t:.1f}s: {e}')
+            LOGGER.info(f'{prefix} export failure ❌ {dt.t:.1f}s: {e}')
             return None, None
 
     return outer_func
@@ -121,7 +122,7 @@ def try_export(inner_func):
 @try_export
 def export_torchscript(model, im, file, optimize, prefix=colorstr('TorchScript:')):
     # YOLOv5 TorchScript model export
-    print(f'\n{prefix} starting export with torch {torch.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with torch {torch.__version__}...')
     f = file.with_suffix('.torchscript')
 
     ts = torch.jit.trace(model, im, strict=False)
@@ -140,7 +141,7 @@ def export_onnx(model, im, file, opset, dynamic, simplify, no_post_processing=Fa
     check_requirements('onnx>=1.12.0')
     import onnx
 
-    print(f'\n{prefix} starting export with onnx {onnx.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with onnx {onnx.__version__}...')
     f = file.with_suffix('.onnx')
 
     output_names = ['output0'] if not no_post_processing else ['output0', 'output1', 'output2']
@@ -177,12 +178,12 @@ def export_onnx(model, im, file, opset, dynamic, simplify, no_post_processing=Fa
             check_requirements(('onnxruntime-gpu' if cuda else 'onnxruntime', 'onnx-simplifier>=0.4.1'))
             import onnxsim
 
-            print(f'{prefix} simplifying with onnx-simplifier {onnxsim.__version__}...')
+            LOGGER.info(f'{prefix} simplifying with onnx-simplifier {onnxsim.__version__}...')
             model_onnx, check = onnxsim.simplify(model_onnx)
             assert check, 'assert check failed'
             onnx.save(model_onnx, f)
         except Exception as e:
-            print(f'{prefix} simplifier failure: {e}')
+            LOGGER.info(f'{prefix} simplifier failure: {e}')
     return f, model_onnx
 
 
@@ -192,7 +193,7 @@ def export_openvino(file, metadata, half, prefix=colorstr('OpenVINO:')):
     check_requirements('openvino-dev')  # requires openvino-dev: https://pypi.org/project/openvino-dev/
     import openvino.inference_engine as ie
 
-    print(f'\n{prefix} starting export with openvino {ie.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with openvino {ie.__version__}...')
     f = str(file).replace('.pt', f'_openvino_model{os.sep}')
 
     args = [
@@ -214,7 +215,7 @@ def export_paddle(model, im, file, metadata, prefix=colorstr('PaddlePaddle:')):
     import x2paddle
     from x2paddle.convert import pytorch2paddle
 
-    print(f'\n{prefix} starting export with X2Paddle {x2paddle.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with X2Paddle {x2paddle.__version__}...')
     f = str(file).replace('.pt', f'_paddle_model{os.sep}')
 
     pytorch2paddle(module=model, save_dir=f, jit_type='trace', input_examples=[im])  # export
@@ -227,7 +228,7 @@ def export_coreml(model, im, file, int8, half, prefix=colorstr('CoreML:')):
     check_requirements('coremltools')
     import coremltools as ct
 
-    print(f'\n{prefix} starting export with coremltools {ct.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with coremltools {ct.__version__}...')
     f = file.with_suffix('.mlmodel')
 
     ts = torch.jit.trace(model, im, strict=False)  # TorchScript model
@@ -239,7 +240,7 @@ def export_coreml(model, im, file, int8, half, prefix=colorstr('CoreML:')):
                 warnings.filterwarnings('ignore', category=DeprecationWarning)  # suppress numpy==1.20 float warning
                 ct_model = ct.models.neural_network.quantization_utils.quantize_weights(ct_model, bits, mode)
         else:
-            print(f'{prefix} quantization only supported on macOS, skipping...')
+            LOGGER.info(f'{prefix} quantization only supported on macOS, skipping...')
     ct_model.save(f)
     return f, ct_model
 
@@ -265,7 +266,7 @@ def export_engine(model, im, file, half, dynamic, simplify, workspace=4, verbose
         export_onnx(model, im, file, 12, dynamic, simplify)  # opset 12
     onnx = file.with_suffix('.onnx')
 
-    print(f'\n{prefix} starting export with TensorRT {trt.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with TensorRT {trt.__version__}...')
     assert onnx.exists(), f'failed to export ONNX file: {onnx}'
     f = file.with_suffix('.engine')  # TensorRT engine file
     logger = trt.Logger(trt.Logger.INFO)
@@ -286,19 +287,19 @@ def export_engine(model, im, file, half, dynamic, simplify, workspace=4, verbose
     inputs = [network.get_input(i) for i in range(network.num_inputs)]
     outputs = [network.get_output(i) for i in range(network.num_outputs)]
     for inp in inputs:
-        print(f'{prefix} input "{inp.name}" with shape{inp.shape} {inp.dtype}')
+        LOGGER.info(f'{prefix} input "{inp.name}" with shape{inp.shape} {inp.dtype}')
     for out in outputs:
-        print(f'{prefix} output "{out.name}" with shape{out.shape} {out.dtype}')
+        LOGGER.info(f'{prefix} output "{out.name}" with shape{out.shape} {out.dtype}')
 
     if dynamic:
         if im.shape[0] <= 1:
-            print(f'{prefix} WARNING ⚠️ --dynamic model requires maximum --batch-size argument')
+            LOGGER.info(f'{prefix} WARNING ⚠️ --dynamic model requires maximum --batch-size argument')
         profile = builder.create_optimization_profile()
         for inp in inputs:
             profile.set_shape(inp.name, (1, *im.shape[1:]), (max(1, im.shape[0] // 2), *im.shape[1:]), im.shape)
         config.add_optimization_profile(profile)
 
-    print(f'{prefix} building FP{16 if builder.platform_has_fast_fp16 and half else 32} engine as {f}')
+    LOGGER.info(f'{prefix} building FP{16 if builder.platform_has_fast_fp16 and half else 32} engine as {f}')
     if builder.platform_has_fast_fp16 and half:
         config.set_flag(trt.BuilderFlag.FP16)
     with builder.build_engine(network, config) as engine, open(f, 'wb') as t:
@@ -330,7 +331,7 @@ def export_saved_model(model,
 
     from deeplite_torch_zoo.src.object_detection.yolov5.models.tf import TFModel
 
-    print(f'\n{prefix} starting export with tensorflow {tf.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with tensorflow {tf.__version__}...')
     f = str(file).replace('.pt', '_saved_model')
     batch_size, ch, *imgsz = list(im.shape)  # BCHW
 
@@ -366,7 +367,7 @@ def export_pb(keras_model, file, prefix=colorstr('TensorFlow GraphDef:')):
     from tensorflow.python.framework.convert_to_constants import \
         convert_variables_to_constants_v2
 
-    print(f'\n{prefix} starting export with tensorflow {tf.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with tensorflow {tf.__version__}...')
     f = file.with_suffix('.pb')
 
     m = tf.function(lambda x: keras_model(x))  # full model
@@ -382,7 +383,7 @@ def export_tflite(keras_model, im, file, int8, data, nms, agnostic_nms, prefix=c
     # YOLOv5 TensorFlow Lite export
     import tensorflow as tf
 
-    print(f'\n{prefix} starting export with tensorflow {tf.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with tensorflow {tf.__version__}...')
     batch_size, ch, *imgsz = list(im.shape)  # BCHW
     f = str(file) +  '-fp16.tflite'
 
@@ -419,7 +420,7 @@ def export_edgetpu(file, prefix=colorstr('Edge TPU:')):
     help_url = 'https://coral.ai/docs/edgetpu/compiler/'
     assert platform.system() == 'Linux', f'export only supported on Linux. See {help_url}'
     if subprocess.run(f'{cmd} >/dev/null', shell=True).returncode != 0:
-        print(f'\n{prefix} export requires Edge TPU compiler. Attempting install from {help_url}')
+        LOGGER.info(f'\n{prefix} export requires Edge TPU compiler. Attempting install from {help_url}')
         sudo = subprocess.run('sudo --version >/dev/null', shell=True).returncode == 0  # sudo installed on system
         for c in (
                 'curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -',
@@ -428,7 +429,7 @@ def export_edgetpu(file, prefix=colorstr('Edge TPU:')):
             subprocess.run(c if sudo else c.replace('sudo ', ''), shell=True, check=True)
     ver = subprocess.run(cmd, shell=True, capture_output=True, check=True).stdout.decode().split()[-1]
 
-    print(f'\n{prefix} starting export with Edge TPU compiler {ver}...')
+    LOGGER.info(f'\n{prefix} starting export with Edge TPU compiler {ver}...')
     f = str(file).replace('.pt', '-int8_edgetpu.tflite')  # Edge TPU model
     f_tfl = str(file).replace('.pt', '-int8.tflite')  # TFLite model
 
@@ -450,7 +451,7 @@ def export_tfjs(file, int8, prefix=colorstr('TensorFlow.js:')):
     check_requirements('tensorflowjs')
     import tensorflowjs as tfjs
 
-    print(f'\n{prefix} starting export with tensorflowjs {tfjs.__version__}...')
+    LOGGER.info(f'\n{prefix} starting export with tensorflowjs {tfjs.__version__}...')
     f = str(file).replace('.pt', '_web_model')  # js dir
     f_pb = file.with_suffix('.pb')  # *.pb path
     f_json = f'{f}/model.json'  # *.json path
@@ -605,7 +606,7 @@ def run(
         im, model = im.half(), model.half()  # to FP16
     if not no_post_processing:
         shape = tuple((y[0] if isinstance(y, tuple) else y).shape)  # model output shape
-        print(f"\n{colorstr('PyTorch:')} starting from {file} with output shape {shape} ({file_size(file):.1f} MB)")
+        LOGGER.info(f"\n{colorstr('PyTorch:')} starting from {file} with output shape {shape} ({file_size(file):.1f} MB)")
 
     metadata = {'stride': int(max(model.stride)), 'names': model.names}  # model metadata
 
@@ -655,7 +656,7 @@ def run(
         h = '--half' if half else ''  # --half FP16 inference arg
         s = '# WARNING ⚠️ ClassificationModel not yet supported for PyTorch Hub AutoShape inference' if cls else \
             '# WARNING ⚠️ SegmentationModel not yet supported for PyTorch Hub AutoShape inference' if seg else ''
-        print(f'\nExport complete ({time.time() - t_start:.1f}s)'
+        LOGGER.info(f'\nExport complete ({time.time() - t_start:.1f}s)'
                     f"\nResults saved to {colorstr('bold', file.parent.resolve())}"
                     f"\nDetect:          python {dir / ('detect.py' if det else 'predict.py')} --weights {f[-1]} {h}"
                     f"\nValidate:        python {dir / 'val.py'} --weights {f[-1]} {h}"

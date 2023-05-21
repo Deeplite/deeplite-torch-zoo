@@ -6,6 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo.utils import LOGGER
 
 
 def train(model, train_loader, optimizer, epoch, writer):
@@ -31,8 +32,8 @@ def train(model, train_loader, optimizer, epoch, writer):
 
     writer.add_scalar('train/avg_loss', avg_loss, epoch)
 
-    print(f"Epoch: {epoch}:")
-    print(f"Train Set: Average Loss: {avg_loss:.2f}")
+    LOGGER.info((f"Epoch: {epoch}:")
+    LOGGER.info((f"Train Set: Average Loss: {avg_loss:.2f}")
 
 
 def test(model, test_loader, epoch, writer):
@@ -56,7 +57,7 @@ def test(model, test_loader, epoch, writer):
 
     percentage_correct = 100.0 * correct / len(test_loader.dataset)
 
-    print(
+    LOGGER.info((
         "Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)".format(
             loss, correct, len(test_loader.dataset), percentage_correct
         )

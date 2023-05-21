@@ -12,7 +12,7 @@ def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
 
-CFG_PATH = 'deeplite_torch_zoo/src/objectdetection/flexible_yolo/yolov6/configs'
+CFG_PATH = 'deeplite_torch_zoo/src/object_detection/flexible_yolo/yolov6/configs'
 CHECKPOINT_STORAGE_URL = 'http://download.deeplite.ai/zoo/models/'
 
 model_urls = {}

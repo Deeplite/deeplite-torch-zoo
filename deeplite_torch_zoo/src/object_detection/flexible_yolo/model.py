@@ -23,6 +23,7 @@ from deeplite_torch_zoo.src.object_detection.yolov5.models.yolov5 import (
     HEAD_NAME_MAP, Conv, DWConv, RepConv, YOLOModel, fuse_conv_and_bn)
 from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import \
     initialize_weights
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class FlexibleYOLO(YOLOModel):
@@ -103,7 +104,7 @@ class FlexibleYOLO(YOLOModel):
         return self
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
-        print('Fusing layers... ')
+        LOGGER.info('Fusing layers... ')
         for m in self.modules():
             if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
                 m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv

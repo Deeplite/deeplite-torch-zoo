@@ -9,7 +9,7 @@ from torchprofile import profile_macs
 import deeplite_torch_zoo.api.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.api.eval  # pylint: disable=unused-import
 import deeplite_torch_zoo.api.models  # pylint: disable=unused-import
-from deeplite_torch_zoo.utils import switch_train_mode
+from deeplite_torch_zoo.utils import switch_train_mode, LOGGER
 from deeplite_torch_zoo.api.registries import (DATA_WRAPPER_REGISTRY,
                                                     EVAL_WRAPPER_REGISTRY,
                                                     MODEL_WRAPPER_REGISTRY)
@@ -199,7 +199,7 @@ def list_models(filter='', print_table=True, return_list=False,
         for model in rows:
             rows[model] = ', '.join(rows[model])
         table.add_rows([['Available models', 'Source datasets'], *rows.items()])
-        print(table.draw())
+        LOGGER.info(table.draw())
 
     return found_model_keys if return_list else None
 

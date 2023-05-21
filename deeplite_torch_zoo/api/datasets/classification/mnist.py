@@ -1,10 +1,14 @@
 import os
+import sys
 from os.path import expanduser
 
 import torchvision
+from torchvision import transforms
+
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
 from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
-from torchvision import transforms
+from deeplite_torch_zoo.utils import LOGGER
+
 
 __all__ = ["get_mnist"]
 
@@ -13,9 +17,8 @@ __all__ = ["get_mnist"]
 def get_mnist(data_root="", batch_size=128, num_workers=4, fp16=False, download=True,
     device="cuda", distributed=False, **kwargs):
 
-    if len(kwargs):
-        import sys
-        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+    if kwargs:
+        LOGGER.warning(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
 
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")

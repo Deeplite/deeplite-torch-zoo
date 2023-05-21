@@ -7,6 +7,8 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+from deeplite_torch_zoo.utils import LOGGER
+
 
 def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=False):
     class_names = []
@@ -46,7 +48,7 @@ def parse_voc_annotation(data_path, file_type, anno_path, use_difficult_bbox=Fal
 
 
 def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, train_test_split):
-    print("Preparing VOC dataset for YOLO. Onetime process...")
+    LOGGER.info("Preparing VOC dataset for YOLO. Onetime process...")
     train_annotation_path = os.path.join(
         str(data_root_annotation), "train_annotation.txt"
     )
@@ -96,7 +98,7 @@ def prepare_voc_data(train_data_paths, test_data_paths, data_root_annotation, tr
     with open(class_names_file_path, 'w') as f:
         f.write(' '.join(sorted(list(class_names_train))))
 
-    print(f"The number of images for train and test are: \
+    LOGGER.info(f"The number of images for train and test are: \
             train : {len_train} | test : {len_test}. The number of classes is {len(class_names_train)}".format(len_train, len_test))
 
 
@@ -119,19 +121,3 @@ def prepare_yolo_voc_data(vockit_data_root, annotation_path, standard_voc_format
 
     if not (os.path.exists(train_anno_path) and os.path.exists(test_anno_path)):
         prepare_voc_data(train_data_paths, test_data_paths, annotation_path, train_test_split)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--vockid_path",
-        type=str,
-        default="/neutrino/datasets/VOCdevkit/",
-        help="VOCKIT path",
-    )
-    parser.add_argument(
-        "--annotation_path", type=str, default="../data", help="Annotation data path"
-    )
-    args = parser.parse_args()
-
-    prepare_voc_data(args.vockid_path, args.annotation_path)

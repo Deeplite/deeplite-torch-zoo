@@ -25,6 +25,7 @@ from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.evaluator import \
     Evaluator
 from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.metrics import MAP
 from deeplite_torch_zoo.api.registries import EVAL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class Demo(Evaluator):
@@ -65,7 +66,7 @@ class Demo(Evaluator):
 
             path = "data/results/{:05}.jpg".format(iter_)
             iter_ = iter_ + 1
-            print(path)
+            LOGGER.info(path)
             cv2.imwrite(path, image)
 
 
@@ -92,7 +93,7 @@ class LISAEval(Evaluator):
 
             image = cv2.imread("{}/{}".format(self.data_root, img_path))
             label = self.dataset.objects[img_idx]
-            print("Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r")
+            LOGGER.info("Parsing batch: {}/{}".format(img_idx, len(self.dataset)), end="\r")
             bboxes_prd = self.get_bbox(image)
             if len(bboxes_prd) == 0:
                 bboxes_prd = np.zeros((0, 6))
@@ -107,7 +108,7 @@ class LISAEval(Evaluator):
             gt_labels = [self.dataset.label_map[_l] for _l in label["labels"]]
             gt = {"bboxes": gt_bboxes, "labels": gt_labels}
             results.append({"detections": detections, "gt": gt})
-        print("validation loss = {}".format(avg_loss))
+        LOGGER.info("validation loss = {}".format(avg_loss))
         # put your model in training mode back on
 
         mAP = MAP(results, self.dataset.num_classes)
@@ -116,13 +117,13 @@ class LISAEval(Evaluator):
         mAP_all_classes = np.mean(ap)
 
         for i in range(0, ap.shape[0]):
-            print("{:_>25}: {:.3f}".format(self.dataset.inv_map[i], ap[i]))
+            LOGGER.info("{:_>25}: {:.3f}".format(self.dataset.inv_map[i], ap[i]))
 
-        print("(All Classes) AP = {:.3f}".format(np.mean(ap)))
+        LOGGER.info("(All Classes) AP = {:.3f}".format(np.mean(ap)))
 
         ap = ap[ap > 1e-6]
         ap = np.mean(ap)
-        print("(Selected) AP = {:.3f}".format(ap))
+        LOGGER.info("(Selected) AP = {:.3f}".format(ap))
 
         return ap  # Average Precision  (AP) @[ IoU=050 ]
 

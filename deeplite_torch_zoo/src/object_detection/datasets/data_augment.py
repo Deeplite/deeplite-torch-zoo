@@ -5,6 +5,7 @@ import random
 
 import cv2
 import numpy as np
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class RandomHorizontalFlip(object):
@@ -75,7 +76,7 @@ class Albumentations:
         except ImportError:  # package not installed, skip
             pass
         except Exception as e:
-            print('albumentations: ' + f'{e}')
+            LOGGER.info('albumentations: ' + f'{e}')
 
     def __call__(self, img, bboxes, p=1.0):
         if self.transform and random.random() < p:

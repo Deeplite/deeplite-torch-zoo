@@ -513,12 +513,3 @@ def hrnet(pretrained=False, **kwargs):
         return hrnet32(pretrained, **kwargs)
     if version == '48':
         return hrnet48(pretrained, **kwargs)
-
-
-if __name__ == '__main__':
-    model = hrnet(pretrained=False, version='48')
-    x = torch.rand(1, 3, 640, 640)
-    y = model(x)
-    print(model.out_shape)
-    for item in y:
-        print(item.shape)

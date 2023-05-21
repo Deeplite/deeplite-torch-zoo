@@ -7,6 +7,8 @@ import torch.utils.model_zoo as model_zoo
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules import (
     CBAM, DropBlock2D, LinearScheduler)
+from deeplite_torch_zoo.utils import LOGGER
+
 
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
@@ -177,7 +179,7 @@ class Resnet(nn.Module):
                           self.out_channels[1] * 2,
                           self.out_channels[2] * 2)
 
-        print("backbone output channel: C3 {}, C4 {}, C5 {}".format(self.out_channels[0] * 2, self.out_channels[1] * 2, self.out_channels[2] * 2))
+        LOGGER.info("Backbone output channel: C3 {}, C4 {}, C5 {}".format(self.out_channels[0] * 2, self.out_channels[1] * 2, self.out_channels[2] * 2))
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):

@@ -1,4 +1,5 @@
 import os
+import sys
 
 from torchvision import datasets
 
@@ -6,6 +7,8 @@ from deeplite_torch_zoo.src.classification.augmentations.augs import \
     get_imagenet_transforms
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
 from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.utils import LOGGER
+
 
 __all__ = ["get_imagenet"]
 
@@ -17,9 +20,8 @@ def get_imagenet(data_root, batch_size=128, test_batch_size=None, img_size=224, 
     fp16=False, distributed=False, device="cuda", train_split='imagenet_training',
     val_split='imagenet_val', train_transforms=None, val_transforms=None, **kwargs):
 
-    if len(kwargs):
-        import sys
-        print(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
+    if kwargs:
+        LOGGER.warning(f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!")
 
     default_train_transforms, default_val_transforms = get_imagenet_transforms(img_size)
 

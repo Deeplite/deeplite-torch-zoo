@@ -4,6 +4,8 @@ import numpy as np
 import torch
 import torchvision
 
+from deeplite_torch_zoo.utils import LOGGER
+
 
 def box_iou(box1, box2, eps=1e-7):
     """
@@ -173,7 +175,7 @@ def non_max_suppression(
         if mps:
             output[xi] = output[xi].to(device)
         if (time.time() - t) > time_limit:
-            print(f'WARNING ⚠️ NMS time limit {time_limit:.3f}s exceeded')
+            LOGGER.warning(f'WARNING ⚠️ NMS time limit {time_limit:.3f}s exceeded')
             break  # time limit exceeded
 
     return output

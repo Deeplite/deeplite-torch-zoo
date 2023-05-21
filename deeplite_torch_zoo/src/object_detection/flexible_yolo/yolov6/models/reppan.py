@@ -4,6 +4,7 @@ from torch import nn
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (
     BepC3, BiFusion, BottleRep, ConvBNHS, ConvBNReLU, CSPBlock, DPBlock,
     MBLABlock, RepBlock, RepVGGBlock, Transpose)
+from deeplite_torch_zoo.utils import LOGGER
 
 
 # _QUANT=False
@@ -91,7 +92,7 @@ class RepPANNeck(nn.Module):
         )
 
     def upsample_enable_quant(self, num_bits, calib_method):
-        print("Insert fakequant after upsample")
+        LOGGER.info("Insert fakequant after upsample")
         # Insert fakequant after upsample op to build TensorRT engine
         from pytorch_quantization import nn as quant_nn
         from pytorch_quantization.tensor_quant import QuantDescriptor

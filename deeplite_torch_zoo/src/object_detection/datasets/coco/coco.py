@@ -38,6 +38,7 @@ from torchvision.datasets import CocoDetection
 
 from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.coco.utils import \
     xywh_to_xyxy
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class CocoDetectionBoundingBox(CocoDetection):
@@ -186,11 +187,11 @@ class SubsampledCOCO(COCO):
         self.dataset,self.anns,self.cats,self.imgs = dict(),dict(),dict(),dict()
         self.imgToAnns, self.catToImgs = defaultdict(list), defaultdict(list)
         if not annotation_file == None:
-            print('loading annotations into memory...')
+            LOGGER.info('loading annotations into memory...')
             tic = time.time()
             dataset = json.load(open(annotation_file, 'r'))
             assert type(dataset)==dict, 'annotation file format {} not supported'.format(type(dataset))
-            print('Done (t={:0.2f}s)'.format(time.time()- tic))
+            LOGGER.info('Done (t={:0.2f}s)'.format(time.time()- tic))
             self.dataset = dataset
             self.dataset['categories'] = [cat for cat in self.dataset['categories']
                 if cat['name'] in subsample_categories]

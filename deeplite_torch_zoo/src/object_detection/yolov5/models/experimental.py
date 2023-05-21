@@ -8,6 +8,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import GhostConv, get_activation
 from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class Sum(nn.Module):
@@ -89,7 +90,7 @@ def attempt_load(weights, device=None, inplace=True, fuse=True):
         return model[-1]
 
     # Return detection ensemble
-    print(f'Ensemble created with {weights}\n')
+    LOGGER.info(f'Ensemble created with {weights}\n')
     for k in 'names', 'nc', 'yaml':
         setattr(model, k, getattr(model[0], k))
     model.stride = model[torch.argmax(torch.tensor([m.stride.max() for m in model])).int()].stride  # max stride

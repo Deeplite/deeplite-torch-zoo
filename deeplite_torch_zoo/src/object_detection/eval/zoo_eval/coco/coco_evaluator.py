@@ -4,6 +4,7 @@ from tqdm import tqdm
 
 from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.evaluator import \
     Evaluator
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class COCOEvaluator(Evaluator):
@@ -42,7 +43,7 @@ class COCOEvaluator(Evaluator):
         E.evaluate()
         E.accumulate()
         E.summarize()
-        print("Current AP: {:.5f}".format(E.stats[0]))
+        LOGGER.info("Current AP: {:.5f}".format(E.stats[0]))
         return {"mAP": E.stats[0]}
 
     def process_image(self, img, **kwargs):

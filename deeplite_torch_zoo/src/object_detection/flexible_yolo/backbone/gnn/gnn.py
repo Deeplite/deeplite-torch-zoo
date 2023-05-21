@@ -6,7 +6,7 @@ from torch.nn import Sequential as Seq
 from timm.models.layers import DropPath
 
 from .gcn_lib import Grapher, act_layer
-
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class FFN(nn.Module):
@@ -39,7 +39,7 @@ class Stem(nn.Module):
     Overlap: https://arxiv.org/pdf/2106.13797.pdf
     """
     def __init__(self, in_dim=3, out_dim=768, act='relu'):
-        super().__init__()        
+        super().__init__()
         self.convs = nn.Sequential(
             nn.Conv2d(in_dim, out_dim//2, 3, stride=2, padding=1),
             nn.BatchNorm2d(out_dim//2),
@@ -60,7 +60,7 @@ class Downsample(nn.Module):
     """ Convolution-based downsample
     """
     def __init__(self, in_dim=3, out_dim=768):
-        super().__init__()        
+        super().__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(in_dim, out_dim, 3, stride=2, padding=1),
             nn.BatchNorm2d(out_dim),
@@ -87,7 +87,7 @@ class DeepGCN(torch.nn.Module):
         self.n_blocks = sum(self.blocks)
         channels = channels
         reduce_ratios = [4, 2, 1, 1]
-        dpr = [x.item() for x in torch.linspace(0, drop_path, self.n_blocks)]  # stochastic depth decay rule 
+        dpr = [x.item() for x in torch.linspace(0, drop_path, self.n_blocks)]  # stochastic depth decay rule
         num_knn = [int(x.item()) for x in torch.linspace(num_k, num_k, self.n_blocks)]  # number of knn's k
         max_dilation = 49 // max(num_knn)
         h, w = img_size[0], img_size[1]
@@ -115,7 +115,7 @@ class DeepGCN(torch.nn.Module):
         self.out_shape = [channels[-3],
                           channels[-2],
                           channels[-1]]
-        print(self.out_shape)
+        LOGGER.info(self.out_shape)
 
     def model_init(self):
         for m in self.modules():
@@ -140,7 +140,7 @@ class DeepGCN(torch.nn.Module):
 
 
 def tiny_gnn(pretrained=False, **kwargs):
-    
+
     # default params
     # num_k = 9 # neighbor num (default:9)
     # conv = 'mr' # graph conv layer {edge, mr}
@@ -232,11 +232,3 @@ def gnn(pretrained=False, **kwargs):
         return medium_gnn(pretrained, **kwargs)
     if version == 'big':
         return big_gnn(pretrained, **kwargs)
-
-
-if __name__ == '__main__':
-    model = gnn(pretrained=False, version ='small')
-    model.eval()
-    img = torch.rand(size=(1,3,640,640))
-    c3, c4, c5 = model(img)
-    print(c3.shape,c4.shape, c5.shape)

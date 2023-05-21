@@ -13,6 +13,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import get_activation
 from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class MobileOneBlock(nn.Module):
@@ -336,14 +337,16 @@ def _test_reparametrize_model(c1, c2, b=2, res=32):
     block = reparameterize_model(block)
     weight_count2 = _calc_width(block)
     output = block(input) # test forward pass after reparam
-    print (f"Weight Before and after reparameterization {weight_count1} -> {weight_count2}")
+    assert weight_count1 != weight_count2
+    LOGGER.info(f"Weight Before and after reparameterization {weight_count1} -> {weight_count2}")
 
     block = MobileOneBlockUnit(c1, c2, 3)
     weight_count1 = _calc_width(block)
     block = reparameterize_model(block)
     weight_count2 = _calc_width(block)
     output = block(input) # test forward pass after reparam
-    print (f"Weight Before and after reparameterization {weight_count1} -> {weight_count2}")
+    assert weight_count1 != weight_count2
+    LOGGER.info(f"Weight Before and after reparameterization {weight_count1} -> {weight_count2}")
 
 
 def _test_blocks(c1, c2, b=2, res=32):

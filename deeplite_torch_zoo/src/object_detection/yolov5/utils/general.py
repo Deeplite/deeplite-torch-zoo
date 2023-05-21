@@ -23,6 +23,8 @@ from tqdm import tqdm
 
 from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import \
     init_seeds as init_torch_seeds
+from deeplite_torch_zoo.utils import LOGGER
+
 
 # Set printoptions
 torch.set_printoptions(linewidth=320, precision=5, profile="long")
@@ -72,14 +74,14 @@ def check_git_status():
             "if [ -d .git ]; then git fetch && git status -uno; fi", shell=True
         ).decode("utf-8")
         if "Your branch is behind" in s:
-            print(s[s.find("Your branch is behind") : s.find("\n\n")] + "\n")
+            LOGGER.info(s[s.find("Your branch is behind") : s.find("\n\n")] + "\n")
 
 
 def check_img_size(img_size, s=32):
     # Verify img_size is a multiple of stride s
     new_size = make_divisible(img_size, int(s))  # ceil gs-multiple
     if new_size != img_size:
-        print(
+        LOGGER.info(
             "WARNING: --img-size %g must be multiple of max stride %g, updating to %g"
             % (img_size, s, new_size)
         )
@@ -92,7 +94,7 @@ def check_anchor_order(m):
     da = a[-1] - a[0]  # delta a
     ds = m.stride[-1] - m.stride[0]  # delta s
     if da.sign() != ds.sign():  # same order
-        print("Reversing anchor order")
+        LOGGER.info("Reversing anchor order")
         m.anchors[:] = m.anchors.flip(0)
         m.anchor_grid[:] = m.anchor_grid.flip(0)
 
@@ -115,9 +117,9 @@ def check_dataset(dict):
             os.path.abspath(x) for x in (val if isinstance(val, list) else [val])
         ]  # val path
         if not all(os.path.exists(x) for x in val):
-            print("\nWARNING: Dataset not found, nonexistant paths: %s" % [*val])
+            LOGGER.info("\nWARNING: Dataset not found, nonexistant paths: %s" % [*val])
             if s and len(s):  # download script
-                print("Downloading %s ..." % s)
+                LOGGER.info("Downloading %s ..." % s)
                 if s.startswith("http") and s.endswith(".zip"):  # URL
                     f = Path(s).name  # filename
                     if (
@@ -129,7 +131,7 @@ def check_dataset(dict):
                     r = os.system("unzip -q %s -d ../ && rm %s" % (f, f))  # unzip
                 else:  # bash script
                     r = os.system(s)
-                print(
+                LOGGER.info(
                     "Dataset autodownload %s\n" % ("success" if r == 0 else "failure")
                 )  # analyze return value
             else:
@@ -527,7 +529,7 @@ def non_max_suppression(
                 if redundant:
                     i = i[iou.sum(1) > 1]  # require redundancy
             except:  # possible CUDA error https://github.com/ultralytics/yolov3/issues/1139
-                print(x, i, x.shape, i.shape)
+                LOGGER.info(x, i, x.shape, i.shape)
 
         output[xi] = x[i]
         if (time.time() - t) > time_limit:
@@ -549,7 +551,7 @@ def strip_optimizer(
         p.requires_grad = False
     torch.save(x, s or f)
     mb = os.path.getsize(s or f) / 1e6  # filesize
-    print(
+    LOGGER.info(
         "Optimizer stripped from %s,%s %.1fMB"
         % (f, (" saved as %s," % s) if s else "", mb)
     )
@@ -563,7 +565,7 @@ def coco_class_count(path="../coco/labels/train2014/"):
     for i, file in enumerate(files):
         labels = np.loadtxt(file, dtype=np.float32).reshape(-1, 5)
         x += np.bincount(labels[:, 0].astype("int32"), minlength=nc)
-        print(i, len(files))
+        LOGGER.info(i, len(files))
 
 
 def coco_only_people(
@@ -574,7 +576,7 @@ def coco_only_people(
     for i, file in enumerate(files):
         labels = np.loadtxt(file, dtype=np.float32).reshape(-1, 5)
         if all(labels[:, 0] == 0):
-            print(labels.shape[0], file)
+            LOGGER.info(labels.shape[0], file)
 
 
 def crop_images_random(
@@ -635,7 +637,7 @@ def print_mutation(hyp, results, yaml_file="hyp_evolved.yaml", bucket=""):
     c = (
         "%10.4g" * len(results) % results
     )  # results (P, R, mAP@0.5, mAP@0.5:0.95, val_losses x 3)
-    print("\n%s\n%s\nEvolved fitness: %s\n" % (a, b, c))
+    LOGGER.info("\n%s\n%s\nEvolved fitness: %s\n" % (a, b, c))
 
     if bucket:
         os.system("gsutil cp gs://%s/evolve.txt ." % bucket)  # download evolve.txt
@@ -1086,9 +1088,9 @@ def plot_evolution(
         plt.title("%s = %.3g" % (k, mu), fontdict={"size": 9})  # limit to 40 characters
         if i % 5 != 0:
             plt.yticks([])
-        print("%15s: %.3g" % (k, mu))
+        LOGGER.info("%15s: %.3g" % (k, mu))
     plt.savefig("evolve.png", dpi=200)
-    print("\nPlot saved as evolve.png")
+    LOGGER.info("\nPlot saved as evolve.png")
 
 
 def plot_results_overlay(
@@ -1177,7 +1179,7 @@ def plot_results(
                 # if i in [5, 6, 7]:  # share train and val loss y axes
                 #     ax[i].get_shared_y_axes().join(ax[i], ax[i - 5])
         except Exception as e:
-            print("Warning: Plotting error for %s; %s" % (f, e))
+            LOGGER.info("Warning: Plotting error for %s; %s" % (f, e))
 
     fig.tight_layout()
     ax[1].legend()

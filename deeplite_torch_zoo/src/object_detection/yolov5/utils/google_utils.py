@@ -12,6 +12,8 @@ from pathlib import Path
 
 import torch
 
+from deeplite_torch_zoo.utils import LOGGER
+
 
 def gsutil_getsize(url=""):
     # gs://bucket/file size https://cloud.google.com/storage/docs/gsutil/commands/du
@@ -47,13 +49,13 @@ def attempt_download(weights):
 
         try:  # GitHub
             url = "https://github.com/ultralytics/yolov5/releases/download/v3.0/" + file
-            print("Downloading %s to %s..." % (url, weights))
+            LOGGER.info("Downloading %s to %s..." % (url, weights))
             torch.hub.download_url_to_file(url, weights)
             assert os.path.exists(weights) and os.path.getsize(weights) > 1e6  # check
         except Exception as e:  # GCP
-            print("Download error: %s" % e)
+            LOGGER.info("Download error: %s" % e)
             url = "https://storage.googleapis.com/ultralytics/yolov5/ckpt/" + file
-            print("Downloading %s to %s..." % (url, weights))
+            LOGGER.info("Downloading %s to %s..." % (url, weights))
             r = os.system(
                 "curl -L %s -o %s" % (url, weights)
             )  # torch.hub.download_url_to_file(url, weights)
@@ -64,8 +66,8 @@ def attempt_download(weights):
                 os.remove(weights) if os.path.exists(
                     weights
                 ) else None  # remove partial downloads
-                print("ERROR: Download failure: %s" % msg)
-            print("")
+                LOGGER.info("ERROR: Download failure: %s" % msg)
+            LOGGER.info("")
             return
 
 
@@ -73,7 +75,7 @@ def gdrive_download(id="1n_oKgR81BJtqk75b00eAjdv03qVCQn2f", name="coco128.zip"):
     # Downloads a file from Google Drive. from utils.google_utils import *; gdrive_download()
     t = time.time()
 
-    print(
+    LOGGER.info(
         "Downloading https://drive.google.com/uc?export=download&id=%s as %s... "
         % (id, name),
         end="",
@@ -100,16 +102,16 @@ def gdrive_download(id="1n_oKgR81BJtqk75b00eAjdv03qVCQn2f", name="coco128.zip"):
     # Error check
     if r != 0:
         os.remove(name) if os.path.exists(name) else None  # remove partial
-        print("Download error ")  # raise Exception('Download error')
+        LOGGER.info("Download error ")  # raise Exception('Download error')
         return r
 
     # Unzip if archive
     if name.endswith(".zip"):
-        print("unzipping... ", end="")
+        LOGGER.info("unzipping... ", end="")
         os.system("unzip -q %s" % name)  # unzip
         os.remove(name)  # remove zip to free space
 
-    print("Done (%.1fs)" % (time.time() - t))
+    LOGGER.info("Done (%.1fs)" % (time.time() - t))
     return r
 
 
@@ -131,7 +133,7 @@ def get_token(cookie="./cookie"):
 #
 #     blob.upload_from_filename(source_file_name)
 #
-#     print('File {} uploaded to {}.'.format(
+#     LOGGER.info('File {} uploaded to {}.'.format(
 #         source_file_name,
 #         destination_blob_name))
 #
@@ -144,6 +146,6 @@ def get_token(cookie="./cookie"):
 #
 #     blob.download_to_filename(destination_file_name)
 #
-#     print('Blob {} downloaded to {}.'.format(
+#     LOGGER.info('Blob {} downloaded to {}.'.format(
 #         source_blob_name,
 #         destination_file_name))

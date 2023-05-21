@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import autopad, get_activation
 from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
+from deeplite_torch_zoo.utils import LOGGER
 
 
 @VARIABLE_CHANNEL_BLOCKS.register()
@@ -134,7 +135,7 @@ class RepConv(nn.Module):
     def fuse_repvgg_block(self):
         if self.deploy:
             return
-        print(f"executing RepConv.fuse_repvgg_block")
+        LOGGER.info(f"Executing RepConv.fuse_repvgg_block")
 
         self.rbr_dense = self.fuse_conv_bn(self.rbr_dense[0], self.rbr_dense[1])
 

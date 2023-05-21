@@ -34,6 +34,8 @@ import torch
 from PIL import Image
 from torchvision import transforms as tv_tf
 from torchvision.transforms import functional as TF
+from deeplite_torch_zoo.utils import LOGGER
+
 
 # def default_transform_fn_old(padding, img_size):
 #     return tv_tf.Compose([tv_tf.Pad(padding, fill=(127, 127, 127)),
@@ -332,9 +334,7 @@ def _affine_transform_label(label, affine_matrix):
     xy_rb = xy_rb.dot(rotation.T) + translation.T
     xy_rt = xy_rt.dot(rotation.T) + translation.T
     xy_lb = xy_lb.dot(rotation.T) + translation.T
-    print("affine_matrix")
-    print(affine_matrix)
-    print(affine_matrix.shape)
+    LOGGER.info(f"affine_matrix, {affine_matrix}, {affine_matrix.shape}")
 
     x1 = np.minimum(xy_lt[:, 0], xy_lb[:, 0])
     y1 = np.minimum(xy_lt[:, 1], xy_rt[:, 1])

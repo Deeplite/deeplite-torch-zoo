@@ -12,6 +12,7 @@ import torch.nn.functional as F
 import torchvision.models as models
 
 logger = logging.getLogger(__name__)
+from deeplite_torch_zoo.utils import LOGGER
 
 
 def init_seeds(seed=0):
@@ -31,19 +32,19 @@ def select_device(id, force_cpu=False):
     device = torch.device("cuda:{}".format(id) if cuda else "cpu")
 
     if not cuda:
-        print("Using CPU")
+        LOGGER.info("Using CPU")
     if cuda:
         c = 1024 ** 2  # bytes to MB
         ng = torch.cuda.device_count()
         x = [torch.cuda.get_device_properties(i) for i in range(ng)]
-        print(
+        LOGGER.info(
             "Using CUDA device0 _CudaDeviceProperties(name='%s', total_memory=%dMB)"
             % (x[0].name, x[0].total_memory / c)
         )
         if ng > 0:
             # torch.cuda.set_device(0)  # OPTIONAL: Set GPU ID
             for i in range(1, ng):
-                print(
+                LOGGER.info(
                     "           device%g _CudaDeviceProperties(name='%s', total_memory=%dMB)"
                     % (i, x[i].name, x[i].total_memory / c)
                 )
@@ -102,12 +103,12 @@ def prune(model, amount=0.3):
     # Prune model to requested global sparsity
     import torch.nn.utils.prune as prune
 
-    print("Pruning model... ", end="")
+    LOGGER.info("Pruning model... ", end="")
     for name, m in model.named_modules():
         if isinstance(m, nn.Conv2d):
             prune.l1_unstructured(m, name="weight", amount=amount)  # prune
             prune.remove(m, "weight")  # make permanent
-    print(" %.3g global sparsity" % sparsity(model))
+    LOGGER.info(" %.3g global sparsity" % sparsity(model))
 
 
 def fuse_conv_and_bn(conv, bn):
@@ -139,10 +140,10 @@ def model_info(model, verbose=False, img_size=640):
     n_p = sum(x.numel() for x in model.parameters())  # number parameters
     n_g = sum(x.numel() for x in model.parameters() if x.requires_grad)  # number gradients
     if verbose:
-        print(f"{'layer':>5} {'name':>40} {'gradient':>9} {'parameters':>12} {'shape':>20} {'mu':>10} {'sigma':>10}")
+        LOGGER.info(f"{'layer':>5} {'name':>40} {'gradient':>9} {'parameters':>12} {'shape':>20} {'mu':>10} {'sigma':>10}")
         for i, (name, p) in enumerate(model.named_parameters()):
             name = name.replace('module_list.', '')
-            print('%5g %40s %9s %12g %20s %10.3g %10.3g' %
+            LOGGER.info('%5g %40s %9s %12g %20s %10.3g %10.3g' %
                   (i, name, p.requires_grad, p.numel(), list(p.shape), p.mean(), p.std()))
 
     try:  # FLOPs
@@ -169,7 +170,7 @@ def load_classifier(name="resnet101", n=2):
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
     for x in ["input_size", "input_space", "input_range", "mean", "std"]:
-        print(x + " =", eval(x))
+        LOGGER.info(x + " =", eval(x))
 
     # Reshape output to n classes
     filters = model.fc.weight.shape[1]

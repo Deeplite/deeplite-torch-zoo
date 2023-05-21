@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules import \
     SEBlock
+from deeplite_torch_zoo.utils import LOGGER
 
 
 def conv_bn(in_channels, out_channels, kernel_size, stride, padding, groups=1):
@@ -43,7 +44,7 @@ class RepVGGBlock(nn.Module):
             self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if out_channels == in_channels and stride == 1 else None
             self.rbr_dense = conv_bn(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups)
             self.rbr_1x1 = conv_bn(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=stride, padding=padding_11, groups=groups)
-            print('RepVGG Block, identity = ', self.rbr_identity)
+            LOGGER.info('RepVGG Block, identity = ', self.rbr_identity)
 
 
     def forward(self, inputs):

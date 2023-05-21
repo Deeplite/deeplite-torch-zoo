@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules.common import (
     C3, Concat, Conv)
+from deeplite_torch_zoo.utils import LOGGER
 
 
 def make_divisible(x, divisor):
@@ -59,8 +60,8 @@ class PAN(nn.Module):
 
         self.concat = Concat()
         self.out_shape = [self.P3_size, self.channels_outs[2], self.channels_outs[3]]
-        print("PAN input channel size: P3 {}, P4 {}, P5 {}".format(self.P3_size, self.P4_size, self.P5_size))
-        print("PAN output channel size: PP3 {}, PP4 {}, PP5 {}".format(self.P3_size, self.channels_outs[2], self.channels_outs[3]))
+        LOGGER.info("PAN input channel size: P3 {}, P4 {}, P5 {}".format(self.P3_size, self.P4_size, self.P5_size))
+        LOGGER.info("PAN output channel size: PP3 {}, PP4 {}, PP5 {}".format(self.P3_size, self.channels_outs[2], self.channels_outs[3]))
 
     def get_depth(self, n):
         return max(round(n * self.gd), 1) if n > 1 else n

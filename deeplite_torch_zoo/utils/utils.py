@@ -1,6 +1,7 @@
 import hashlib
 import os
 from contextlib import contextmanager
+import logging
 
 import torch
 from torch.hub import load_state_dict_from_url
@@ -8,6 +9,33 @@ from torch.hub import load_state_dict_from_url
 import deeplite_torch_zoo
 
 KB_IN_MB_COUNT = 1024
+LOGGING_NAME = 'deeplite-torch-zoo'
+
+
+def set_logging(name=LOGGING_NAME, verbose=True):
+    # sets up logging for the given name
+    rank = int(os.getenv('RANK', -1))  # rank in world for Multi-GPU trainings
+    level = logging.INFO if verbose and rank in {-1, 0} else logging.ERROR
+    logging.config.dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            name: {
+                'format': '%(message)s'}},
+        'handlers': {
+            name: {
+                'class': 'logging.StreamHandler',
+                'formatter': name,
+                'level': level,}},
+        'loggers': {
+            name: {
+                'level': level,
+                'handlers': [name],
+                'propagate': False,}}})
+
+
+set_logging(LOGGING_NAME)  # run before defining LOGGER
+LOGGER = logging.getLogger(LOGGING_NAME)  # define globally
 
 
 def generate_checkpoint_name(
@@ -70,7 +98,7 @@ def load_state_dict_partial(model, pretrained_dict):
     }  # pylint: disable=E1135, E1136
     model_dict.update(pretrained_dict)
     model.load_state_dict(model_dict)
-    print(f'Loaded {len(pretrained_dict)}/{len(model_dict)} modules')
+    LOGGER.info(f'Loaded {len(pretrained_dict)}/{len(model_dict)} modules')
 
 
 @contextmanager

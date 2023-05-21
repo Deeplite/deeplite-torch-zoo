@@ -14,6 +14,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.utils import model_zoo
+from deeplite_torch_zoo.utils import LOGGER
 
 
 ################################################################################
@@ -607,4 +608,4 @@ def load_pretrained_weights(model, model_name, weights_path=None, load_fc=True, 
             ['_fc.weight', '_fc.bias']), 'Missing keys when loading pretrained weights: {}'.format(ret.missing_keys)
     assert not ret.unexpected_keys, 'Missing keys when loading pretrained weights: {}'.format(ret.unexpected_keys)
 
-    print('Loaded pretrained weights for {}'.format(model_name))
+    LOGGER.info('Loaded pretrained weights for {}'.format(model_name))

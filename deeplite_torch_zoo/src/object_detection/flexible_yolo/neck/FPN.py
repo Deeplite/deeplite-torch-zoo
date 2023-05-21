@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules.common import (
     C3, Concat, Conv)
+from deeplite_torch_zoo.utils import LOGGER
 
 
 def make_divisible(x, divisor):
@@ -63,8 +64,8 @@ class PyramidFeatures(nn.Module):
         self.P3 = C3(self.channels_outs[1] + self.C3_size, self.channels_outs[1], self.get_depth(3), False)
 
         self.out_shape = (self.channels_outs[2], self.channels_outs[1], self.channels_outs[0])
-        print("FPN input channel size: C3 {}, C4 {}, C5 {}".format(self.C3_size, self.C4_size, self.C5_size))
-        print("FPN output channel size: P3 {}, P4 {}, P5 {}".format(self.channels_outs[2], self.channels_outs[1],
+        LOGGER.info("FPN input channel size: C3 {}, C4 {}, C5 {}".format(self.C3_size, self.C4_size, self.C5_size))
+        LOGGER.info("FPN output channel size: P3 {}, P4 {}, P5 {}".format(self.channels_outs[2], self.channels_outs[1],
                                                                     self.channels_outs[0]))
 
     def get_depth(self, n):

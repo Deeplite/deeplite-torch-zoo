@@ -6,6 +6,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules.common import (
     C3, C3TR, SPPF, Conv)
+from deeplite_torch_zoo.utils import LOGGER
 
 
 def make_divisible(x, divisor):
@@ -54,7 +55,7 @@ class YOLOv5(nn.Module):
 
         self.out_shape = [self.channels_out[3], self.channels_out[5], self.channels_out[9]]
 
-        print("backbone output channel: C3 {}, C4 {}, C5(SPPF) {}".format(self.channels_out[3],
+        LOGGER.info("Backbone output channel: C3 {}, C4 {}, C5(SPPF) {}".format(self.channels_out[3],
                                                                     self.channels_out[5],
                                                                     self.channels_out[9]))
 
