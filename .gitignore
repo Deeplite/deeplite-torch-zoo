@@ -131,15 +131,5 @@ dmypy.json
 
 .idea
 
-# Data and results dirs
-deeplite_torch_zoo/._data
-deeplite_torch_zoo/data/
-deeplite_torch_zoo/results/
-deeplite_torch_zoo/weight/
-deeplite_torch_zoo/weights/
-data/
-training_scripts/object_detection/models/
-training_scripts/object_detection/deeplite_torch_zoo/
 # Generated files
 ._*
-
