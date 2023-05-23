@@ -9,9 +9,9 @@ import torch
 import torch.nn.functional as F
 from torch.cuda.amp import autocast
 
-from deeplite_torch_zoo.src.object_detection.yolov5.models.common import *
-from deeplite_torch_zoo.src.object_detection.yolov5.models.experimental import *
-from deeplite_torch_zoo.src.object_detection.yolov5.models.losses.yolox.yolox_loss import *
+from deeplite_torch_zoo.src.object_detection.yolov5.common import *
+from deeplite_torch_zoo.src.object_detection.yolov5.experimental import *
+from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolox.yolox_loss import *
 from deeplite_torch_zoo.utils import LOGGER
 
 

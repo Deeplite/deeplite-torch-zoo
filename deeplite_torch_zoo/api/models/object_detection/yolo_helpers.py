@@ -1,6 +1,6 @@
 import urllib.parse as urlparse
 
-from deeplite_torch_zoo.src.object_detection.yolov5.models.yolov5 import YOLOModel
+from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import YOLOModel
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.api.models.object_detection.yolo_checkpoints import (
     CHECKPOINT_STORAGE_URL,

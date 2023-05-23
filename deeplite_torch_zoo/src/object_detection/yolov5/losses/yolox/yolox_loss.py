@@ -2,7 +2,7 @@
 
 import torch
 
-from deeplite_torch_zoo.src.object_detection.yolov5.models.losses.loss_utils import (
+from deeplite_torch_zoo.src.object_detection.yolov5.losses.loss_utils import (
     get_yolov5_targets,
     is_parallel,
 )

@@ -39,9 +39,9 @@ import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_fi
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
 from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_eval_function)
-from deeplite_torch_zoo.src.object_detection.yolov5.models.losses.yolov5_loss import \
+from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolov5_loss import \
     YoloV5Loss
-from deeplite_torch_zoo.src.object_detection.yolov5.models.losses.yolox.yolox_loss import \
+from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolox.yolox_loss import \
     ComputeXLoss
 
 LOGGER = logging.getLogger(__name__)

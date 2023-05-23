@@ -14,11 +14,11 @@ from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.config import 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (
     RepVGGBlock,
 )
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect import Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect_v8 import (
+from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
+from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect_v8 import (
     DetectV8,
 )
-from deeplite_torch_zoo.src.object_detection.yolov5.models.yolov5 import (
+from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
     HEAD_NAME_MAP,
     Conv,
     DWConv,
