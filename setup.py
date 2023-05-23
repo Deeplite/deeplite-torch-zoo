@@ -22,7 +22,7 @@ INSTALL_REQUIRES = [
     "numpy==1.19.5",
     "pycocotools==2.0.4",
     "Cython==0.29.30",
-    "tqdm==4.46.0",
+    "tqdm>=4.46.0",
     "albumentations==1.0.3",
     "tensorboardX==2.4.1",
     "pyvww==0.1.1",
@@ -34,6 +34,7 @@ INSTALL_REQUIRES = [
     "Wand==0.6.11",
     "pytz",
     "pandas",
+    "ultralytics==8.0.107",
 ]
 
 

@@ -12,7 +12,7 @@ def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
 
-CFG_PATH = "deeplite_torch_zoo/src/object_detection/yolov5/configs/model_configs"
+CFG_PATH = "deeplite_torch_zoo/src/object_detection/yolov5/configs"
 
 DATASET_LIST = [
     ('person_detection', 1),

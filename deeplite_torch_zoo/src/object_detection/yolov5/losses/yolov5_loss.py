@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_default
-from deeplite_torch_zoo.src.object_detection.yolov5.models.losses.loss_utils import (
+from deeplite_torch_zoo.src.object_detection.yolov5.losses.loss_utils import (
     FocalLoss,
     bbox_iou,
     de_parallel,

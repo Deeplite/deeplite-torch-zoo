@@ -5,7 +5,7 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.general import xyxy2cxcywh
+from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.utils import xyxy2cxcywh
 
 
 def is_parallel(model):

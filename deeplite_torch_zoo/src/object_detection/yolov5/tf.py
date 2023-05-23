@@ -20,13 +20,13 @@ import torch.nn as nn
 from tensorflow import keras
 
 from deeplite_torch_zoo.src.dnn_blocks.common import autopad, round_channels
-from deeplite_torch_zoo.src.object_detection.yolov5.models.experimental import (
+from deeplite_torch_zoo.src.object_detection.yolov5.experimental import (
     C3x,
     DWConvTranspose2d,
     MixConv2d,
 )
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect import Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.models.yolov5 import (
+from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
+from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
     C3,
     SPP,
     SPPF,

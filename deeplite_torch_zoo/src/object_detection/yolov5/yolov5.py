@@ -1,7 +1,6 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 
 import inspect
-import logging
 import math
 from copy import deepcopy
 from pathlib import Path
@@ -11,25 +10,24 @@ from deeplite_torch_zoo.src.dnn_blocks import *
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
 from deeplite_torch_zoo.src.dnn_blocks.yolov7.repvgg_blocks import RepConv
-from deeplite_torch_zoo.src.object_detection.yolov5.models.common import *
-from deeplite_torch_zoo.src.object_detection.yolov5.models.experimental import *
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect import Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.detect_v8 import (
+from deeplite_torch_zoo.src.object_detection.yolov5.common import *
+from deeplite_torch_zoo.src.object_detection.yolov5.experimental import *
+from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
+from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect_v8 import (
     DetectV8,
 )
-from deeplite_torch_zoo.src.object_detection.yolov5.models.heads.yolox.detectx import (
+from deeplite_torch_zoo.src.object_detection.yolov5.heads.yolox.detectx import (
     DetectX,
 )
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.general import make_divisible
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import (
+from deeplite_torch_zoo.utils import (
+    LOGGER,
     fuse_conv_and_bn,
     initialize_weights,
     model_info,
     scale_img,
+    make_divisible,
 )
 from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNEL_BLOCKS
-
-logger = logging.getLogger(__name__)
 
 
 HEAD_NAME_MAP = {
@@ -69,10 +67,10 @@ class YOLOModel(nn.Module):
         self.nc = nc
         ch = self.yaml['ch'] = self.yaml.get('ch', ch)  # input channels
         if nc and nc != self.yaml['nc']:
-            logger.info(f"Overriding model.yaml nc={self.yaml['nc']} with nc={nc}")
+            LOGGER.info(f"Overriding model.yaml nc={self.yaml['nc']} with nc={nc}")
             self.yaml['nc'] = nc  # override yaml value
         if anchors:
-            logger.info(f'Overriding model.yaml anchors with anchors={anchors}')
+            LOGGER.info(f'Overriding model.yaml anchors with anchors={anchors}')
             self.yaml['anchors'] = round(anchors)  # override yaml value
         self.model, self.save = parse_model(
             deepcopy(self.yaml),
@@ -86,6 +84,14 @@ class YOLOModel(nn.Module):
         self.names = [str(i) for i in range(self.yaml['nc'])]  # default names
         self.inplace = self.yaml.get('inplace', True)
 
+        self._init_head(ch)
+
+        # Init weights, biases
+        initialize_weights(self)
+        self._is_fused = False
+        self.info()
+
+    def _init_head(self, ch):
         m = self.model[-1]  # Detect()
         if isinstance(m, Detect):
             s = 256  # 2x min stride
@@ -110,11 +116,6 @@ class YOLOModel(nn.Module):
             )  # forward
             self.stride = m.stride
             m.bias_init()  # only run once
-
-        # Init weights, biases
-        initialize_weights(self)
-        self.info()
-        logger.info('')
 
     def forward(self, x, augment=False, profile=False, visualize=False):
         if augment:
@@ -206,13 +207,13 @@ class YOLOModel(nn.Module):
         m = self.model[-1]  # Detect() module
         for mi in m.m:  # from
             b = mi.bias.detach().view(m.na, -1).T  # conv.bias(255) to (3,85)
-            logger.info(
+            LOGGER.info(
                 ('%6g Conv2d.bias:' + '%10.3g' * 6)
                 % (mi.weight.shape[1], *b[:5].mean(1).tolist(), b[5:].mean())
             )
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
-        logger.info('Fusing layers... ')
+        LOGGER.info('Fusing layers... ')
         for m in self.model.modules():
             if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
                 m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
@@ -222,6 +223,7 @@ class YOLOModel(nn.Module):
                 # print(f" fuse_repvgg_block")
                 m.fuse_repvgg_block()
         self.info()
+        self._is_fused = True
         return self
 
     def info(self, verbose=False, img_size=640):  # print model information
@@ -238,6 +240,9 @@ class YOLOModel(nn.Module):
                 m.anchor_grid = list(map(fn, m.anchor_grid))
         return self
 
+    def is_fused(self):
+        return self._is_fused
+
 
 def parse_model(
     d,
@@ -248,7 +253,7 @@ def parse_model(
     max_channels=None,
     yolo_channel_divisor=8,
 ):
-    logger.info(
+    LOGGER.info(
         f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}"
     )
 
@@ -330,7 +335,7 @@ def parse_model(
             t,
             np,
         )  # attach index, 'from' index, type, number params
-        logger.info(
+        LOGGER.info(
             f'{i:>3}{str(f):>18}{n_:>3}{np:10.0f}  {t:<40}{str(args):<30}'
         )  # print
         save.extend(

@@ -1,14 +1,13 @@
-# Code credit: https://github.com/Bobo-y/flexible-yolov5
-
 import torch
-import yaml
-from addict import Dict
-from torch import nn
+import torch.nn as nn
 
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.backbone import (
-    build_backbone,
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.model import FlexibleYOLO
+
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6 import build_network
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.config import Config
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (
+    RepVGGBlock,
 )
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.neck import build_neck
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect_v8 import (
     DetectV8,
@@ -18,59 +17,52 @@ from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
     Conv,
     DWConv,
     RepConv,
-    YOLOModel,
     fuse_conv_and_bn,
 )
 from deeplite_torch_zoo.utils import initialize_weights, LOGGER
 
 
-class FlexibleYOLO(YOLOModel):
+
+class YOLOv6(FlexibleYOLO):
     def __init__(
-        self,
-        model_config,
-        nc=None,
-        backbone_kwargs=None,
-        neck_kwargs=None,
-        custom_head=None,
+        self, model_config, nc=80, custom_head=None, width_mul=None, depth_mul=None
     ):
         """
         :param model_config:
         """
         nn.Module.__init__(self)
 
+        head_config = {
+            'nc': nc,
+            'anchors': (
+                [10, 13, 16, 30, 33, 23],
+                [30, 61, 62, 45, 59, 119],
+                [116, 90, 156, 198, 373, 326],
+            ),
+        }
+
         head_cls = Detect
         if custom_head is not None:
             head_cls = HEAD_NAME_MAP[custom_head]
 
-        if type(model_config) is str:
-            model_config = yaml.load(open(model_config, 'r'), Loader=yaml.SafeLoader)
-        model_config = Dict(model_config)
-        if nc is not None:
-            model_config.head.nc = nc
+        cfg = Config.fromfile(model_config)
+        if not hasattr(cfg, 'training_mode'):
+            setattr(cfg, 'training_mode', 'repvgg')
 
-        if backbone_kwargs is not None:
-            model_config.backbone.update(Dict(backbone_kwargs))
+        if width_mul is not None:
+            cfg.model.width_multiple = width_mul
+        if depth_mul is not None:
+            cfg.model.depth_multiple = depth_mul
 
-        backbone_type = model_config.backbone.pop('type')
-        self.backbone = build_backbone(backbone_type, **model_config.backbone)
-        ch_in = self.backbone.out_shape
+        self.backbone, self.neck, channel_counts = build_network(cfg)
 
         self.necks = nn.ModuleList()
-        necks_config = model_config.neck
-        if neck_kwargs is not None:
-            necks_config.update(Dict(neck_kwargs))
-
-        for neck_name, neck_params in necks_config.items():
-            neck_params['ch'] = ch_in
-            neck = build_neck(neck_name, **neck_params)
-            ch_in = neck.out_shape
-            self.necks.append(neck)
-
-        model_config.head['ch'] = ch_in
+        self.necks.append(self.neck)
+        head_config['ch'] = channel_counts
 
         if head_cls != Detect:
-            model_config.head.pop('anchors')
-        self.detection = head_cls(**model_config.head)
+            head_config.pop('anchors')
+        self.detection = head_cls(**head_config)
 
         self._init_head()
 
@@ -124,9 +116,8 @@ class FlexibleYOLO(YOLOModel):
                 m.forward = m.forward_fuse  # update forward
             if isinstance(m, RepConv):
                 m.fuse_repvgg_block()
+            if isinstance(m, RepVGGBlock):
+                m.switch_to_deploy()
         self.info()
         self._is_fused = True
         return self
-
-    def is_fused(self):
-        return self._is_fused
