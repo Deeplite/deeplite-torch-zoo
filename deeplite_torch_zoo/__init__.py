@@ -8,3 +8,4 @@ from deeplite_torch_zoo.api import (  # pylint: disable=unused-import
     profile,
 )
 from deeplite_torch_zoo.utils import LOGGER  # pylint: disable=unused-import
+from deeplite_torch_zoo.src.object_detection.yolo_trainer import YOLO  # pylint: disable=unused-import
