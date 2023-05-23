@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from deeplite_torch_zoo.src.object_detection.datasets.data_augment import Resize
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.general import (
+from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.utils import (
     nms,
     post_process,
 )

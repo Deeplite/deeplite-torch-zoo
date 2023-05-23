@@ -1,12 +1,27 @@
 import hashlib
 import os
-from contextlib import contextmanager
+import random
+import math
 import logging.config
 
+from contextlib import contextmanager
+
+import numpy as np
 import torch
+import torchvision
+import torch.nn as nn
 from torch.hub import load_state_dict_from_url
 
+from ultralytics.yolo.utils.torch_utils import fuse_conv_and_bn, model_info, scale_img
+from ultralytics.yolo.utils.checks import check_version
+
 import deeplite_torch_zoo
+
+TORCHVISION_0_10 = check_version(torchvision.__version__, '0.10.0')
+TORCH_1_9 = check_version(torch.__version__, '1.9.0')
+TORCH_1_11 = check_version(torch.__version__, '1.11.0')
+TORCH_1_12 = check_version(torch.__version__, '1.12.0')
+TORCH_2_0 = check_version(torch.__version__, minimum='2.0')
 
 KB_IN_MB_COUNT = 1024
 LOGGING_NAME = 'deeplite-torch-zoo'
@@ -41,6 +56,22 @@ def set_logging(name=LOGGING_NAME, verbose=True):
 
 set_logging(LOGGING_NAME)  # run before defining LOGGER
 LOGGER = logging.getLogger(LOGGING_NAME)  # define globally
+
+
+def make_divisible(x, divisor):
+    """
+    Returns the nearest number that is divisible by the given divisor.
+
+    Args:
+        x (int): The number to make divisible.
+        divisor (int) or (torch.Tensor): The divisor.
+
+    Returns:
+        (int): The nearest number divisible by the divisor.
+    """
+    if isinstance(divisor, torch.Tensor):
+        divisor = int(divisor.max())  # to int
+    return math.ceil(x / divisor) * divisor
 
 
 def generate_checkpoint_name(
@@ -114,3 +145,34 @@ def switch_train_mode(model, is_training=False):
         yield
     finally:
         model.train(is_original_mode_training)
+
+
+def initialize_weights(model):
+    """Initialize model weights to random values."""
+    for m in model.modules():
+        t = type(m)
+        if t is nn.Conv2d:
+            pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        elif t is nn.BatchNorm2d:
+            m.eps = 1e-3
+            m.momentum = 0.03
+        elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU]:
+            m.inplace = True
+
+
+def init_seeds(seed=0, deterministic=False):
+    """Initialize random number generator (RNG) seeds https://pytorch.org/docs/stable/notes/randomness.html."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # for Multi-GPU, exception safe
+    # torch.backends.cudnn.benchmark = True  # AutoBatch problem https://github.com/ultralytics/yolov5/issues/9287
+    if deterministic:  # https://github.com/ultralytics/yolov5/pull/8213
+        if TORCH_2_0:
+            torch.use_deterministic_algorithms(True)
+            torch.backends.cudnn.deterministic = True
+            os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+            os.environ['PYTHONHASHSEED'] = str(seed)
+        else:
+            LOGGER.warning('WARNING ⚠️ Upgrade to torch>=2.0.0 for deterministic training.')

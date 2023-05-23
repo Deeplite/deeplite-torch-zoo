@@ -34,6 +34,7 @@ INSTALL_REQUIRES = [
     "Wand==0.6.11",
     "pytz",
     "pandas",
+    "ultralytics==8.0.107",
 ]
 
 

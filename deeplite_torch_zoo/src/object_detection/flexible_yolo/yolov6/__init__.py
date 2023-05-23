@@ -1,7 +1,7 @@
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import *
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.models.efficientrep import *
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.models.reppan import *
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.general import make_divisible
+from deeplite_torch_zoo.utils import make_divisible
 
 
 def build_network(config, channels=3):

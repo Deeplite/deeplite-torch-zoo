@@ -20,12 +20,12 @@ from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect_v8 import (
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.yolox.detectx import (
     DetectX,
 )
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.general import make_divisible
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import (
+from deeplite_torch_zoo.utils import (
     fuse_conv_and_bn,
     initialize_weights,
     model_info,
     scale_img,
+    make_divisible,
 )
 from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNEL_BLOCKS
 
@@ -86,6 +86,14 @@ class YOLOModel(nn.Module):
         self.names = [str(i) for i in range(self.yaml['nc'])]  # default names
         self.inplace = self.yaml.get('inplace', True)
 
+        self._init_head()
+
+        # Init weights, biases
+        initialize_weights(self)
+        self.info()
+        logger.info('')
+
+    def _init_head(self):
         m = self.model[-1]  # Detect()
         if isinstance(m, Detect):
             s = 256  # 2x min stride
@@ -110,11 +118,6 @@ class YOLOModel(nn.Module):
             )  # forward
             self.stride = m.stride
             m.bias_init()  # only run once
-
-        # Init weights, biases
-        initialize_weights(self)
-        self.info()
-        logger.info('')
 
     def forward(self, x, augment=False, profile=False, visualize=False):
         if augment:

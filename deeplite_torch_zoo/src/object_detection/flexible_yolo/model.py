@@ -26,10 +26,7 @@ from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
     YOLOModel,
     fuse_conv_and_bn,
 )
-from deeplite_torch_zoo.src.object_detection.yolov5.utils.torch_utils import (
-    initialize_weights,
-)
-from deeplite_torch_zoo.utils import LOGGER
+from deeplite_torch_zoo.utils import initialize_weights, LOGGER
 
 
 class FlexibleYOLO(YOLOModel):
