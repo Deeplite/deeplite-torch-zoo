@@ -1,7 +1,6 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 
 import inspect
-import logging
 import math
 from copy import deepcopy
 from pathlib import Path
@@ -21,6 +20,7 @@ from deeplite_torch_zoo.src.object_detection.yolov5.heads.yolox.detectx import (
     DetectX,
 )
 from deeplite_torch_zoo.utils import (
+    LOGGER,
     fuse_conv_and_bn,
     initialize_weights,
     model_info,
@@ -28,8 +28,6 @@ from deeplite_torch_zoo.utils import (
     make_divisible,
 )
 from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNEL_BLOCKS
-
-logger = logging.getLogger(__name__)
 
 
 HEAD_NAME_MAP = {
@@ -69,10 +67,10 @@ class YOLOModel(nn.Module):
         self.nc = nc
         ch = self.yaml['ch'] = self.yaml.get('ch', ch)  # input channels
         if nc and nc != self.yaml['nc']:
-            logger.info(f"Overriding model.yaml nc={self.yaml['nc']} with nc={nc}")
+            LOGGER.info(f"Overriding model.yaml nc={self.yaml['nc']} with nc={nc}")
             self.yaml['nc'] = nc  # override yaml value
         if anchors:
-            logger.info(f'Overriding model.yaml anchors with anchors={anchors}')
+            LOGGER.info(f'Overriding model.yaml anchors with anchors={anchors}')
             self.yaml['anchors'] = round(anchors)  # override yaml value
         self.model, self.save = parse_model(
             deepcopy(self.yaml),
@@ -91,7 +89,6 @@ class YOLOModel(nn.Module):
         # Init weights, biases
         initialize_weights(self)
         self.info()
-        logger.info('')
 
     def _init_head(self):
         m = self.model[-1]  # Detect()
@@ -209,13 +206,13 @@ class YOLOModel(nn.Module):
         m = self.model[-1]  # Detect() module
         for mi in m.m:  # from
             b = mi.bias.detach().view(m.na, -1).T  # conv.bias(255) to (3,85)
-            logger.info(
+            LOGGER.info(
                 ('%6g Conv2d.bias:' + '%10.3g' * 6)
                 % (mi.weight.shape[1], *b[:5].mean(1).tolist(), b[5:].mean())
             )
 
     def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
-        logger.info('Fusing layers... ')
+        LOGGER.info('Fusing layers... ')
         for m in self.model.modules():
             if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
                 m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
@@ -251,7 +248,7 @@ def parse_model(
     max_channels=None,
     yolo_channel_divisor=8,
 ):
-    logger.info(
+    LOGGER.info(
         f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}"
     )
 
@@ -333,7 +330,7 @@ def parse_model(
             t,
             np,
         )  # attach index, 'from' index, type, number params
-        logger.info(
+        LOGGER.info(
             f'{i:>3}{str(f):>18}{n_:>3}{np:10.0f}  {t:<40}{str(args):<30}'
         )  # print
         save.extend(
