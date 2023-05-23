@@ -2,7 +2,7 @@ import urllib.parse as urlparse
 from pathlib import Path
 
 import deeplite_torch_zoo
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.model import YOLOv6
+from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6_model import YOLOv6
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 

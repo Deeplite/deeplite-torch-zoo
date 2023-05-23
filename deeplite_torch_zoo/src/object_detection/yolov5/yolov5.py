@@ -84,13 +84,14 @@ class YOLOModel(nn.Module):
         self.names = [str(i) for i in range(self.yaml['nc'])]  # default names
         self.inplace = self.yaml.get('inplace', True)
 
-        self._init_head()
+        self._init_head(ch)
 
         # Init weights, biases
         initialize_weights(self)
+        self._is_fused = False
         self.info()
 
-    def _init_head(self):
+    def _init_head(self, ch):
         m = self.model[-1]  # Detect()
         if isinstance(m, Detect):
             s = 256  # 2x min stride
@@ -222,6 +223,7 @@ class YOLOModel(nn.Module):
                 # print(f" fuse_repvgg_block")
                 m.fuse_repvgg_block()
         self.info()
+        self._is_fused = True
         return self
 
     def info(self, verbose=False, img_size=640):  # print model information
@@ -237,6 +239,9 @@ class YOLOModel(nn.Module):
             if isinstance(m.anchor_grid, list):
                 m.anchor_grid = list(map(fn, m.anchor_grid))
         return self
+
+    def is_fused(self):
+        return self._is_fused
 
 
 def parse_model(
