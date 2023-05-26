@@ -212,7 +212,7 @@ class YOLOModel(nn.Module):
                 % (mi.weight.shape[1], *b[:5].mean(1).tolist(), b[5:].mean())
             )
 
-    def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
+    def fuse(self, verbose=False):  # fuse model Conv2d() + BatchNorm2d() layers
         LOGGER.info('Fusing layers... ')
         for m in self.model.modules():
             if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):

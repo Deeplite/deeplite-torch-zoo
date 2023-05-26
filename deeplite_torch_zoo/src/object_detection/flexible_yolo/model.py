@@ -40,6 +40,7 @@ class FlexibleYOLO(YOLOModel):
         :param model_config:
         """
         nn.Module.__init__(self)
+        self.yaml = None
 
         head_cls = Detect
         if custom_head is not None:
@@ -118,7 +119,7 @@ class FlexibleYOLO(YOLOModel):
                 m.anchor_grid = list(map(fn, m.anchor_grid))
         return self
 
-    def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
+    def fuse(self, verbose=False):  # fuse model Conv2d() + BatchNorm2d() layers
         LOGGER.info('Fusing layers... ')
         for m in self.modules():
             if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):

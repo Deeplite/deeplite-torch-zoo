@@ -12,10 +12,12 @@ import torchvision
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
 
+from ultralytics.yolo.utils import colorstr
 from ultralytics.yolo.utils.torch_utils import fuse_conv_and_bn, model_info, scale_img
 from ultralytics.yolo.utils.checks import check_version
 
 import deeplite_torch_zoo
+
 
 TORCHVISION_0_10 = check_version(torchvision.__version__, '0.10.0')
 TORCH_1_9 = check_version(torch.__version__, '1.9.0')

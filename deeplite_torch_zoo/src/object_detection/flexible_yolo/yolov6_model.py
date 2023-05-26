@@ -22,7 +22,6 @@ from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
 from deeplite_torch_zoo.utils import initialize_weights, LOGGER
 
 
-
 class YOLOv6(FlexibleYOLO):
     def __init__(
         self, model_config, nc=80, custom_head=None, width_mul=None, depth_mul=None
@@ -40,6 +39,7 @@ class YOLOv6(FlexibleYOLO):
                 [116, 90, 156, 198, 373, 326],
             ),
         }
+        self.yaml = None
 
         head_cls = Detect
         if custom_head is not None:
@@ -107,7 +107,7 @@ class YOLOv6(FlexibleYOLO):
                 m.anchor_grid = list(map(fn, m.anchor_grid))
         return self
 
-    def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
+    def fuse(self, verbose=False):  # fuse model Conv2d() + BatchNorm2d() layers
         LOGGER.info('Fusing layers... ')
         for m in self.modules():
             if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
