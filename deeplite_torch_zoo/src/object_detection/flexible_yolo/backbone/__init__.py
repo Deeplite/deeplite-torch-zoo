@@ -9,6 +9,8 @@ from .swin_transformer import swin_transformer as swin
 from .vgg import vgg
 from .yolov5 import YOLOv5
 
+from .timm_wrapper import TimmWrapperBackbone
+
 __all__ = ['build_backbone']
 
 BACKBONE_MAP = {
@@ -26,9 +28,11 @@ BACKBONE_MAP = {
 
 
 def build_backbone(backbone_name, **kwargs):
-    if backbone_name not in BACKBONE_MAP:
-        raise ValueError(
-            f'Backbone {backbone_name} not supported. Supported backbones: {BACKBONE_MAP.keys()}'
-        )
-    backbone = BACKBONE_MAP[backbone_name](**kwargs)
+    backbone = TimmWrapperBackbone(backbone_name)
     return backbone
+    # if backbone_name not in BACKBONE_MAP:
+    #     raise ValueError(
+    #         f'Backbone {backbone_name} not supported. Supported backbones: {BACKBONE_MAP.keys()}'
+    #     )
+    # backbone = BACKBONE_MAP[backbone_name](**kwargs)
+    # return backbone
