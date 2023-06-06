@@ -1,0 +1,2 @@
+/home/ravish/ffcv_exp/train_500_0.50_90.ffcv
+Training on 15 epoch takes :  24467.305278778076  seconds.

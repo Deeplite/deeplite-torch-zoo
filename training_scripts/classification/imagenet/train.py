@@ -82,6 +82,8 @@ parser.add_argument('data_dir', metavar='DIR',
                     help='path to dataset')
 group.add_argument('--dataset', default='imagenet',
                     help='dataset name (e.g. "imagenet", "imagenet16", "cifar100")')
+group.add_argument('--num_classes', default=1000,
+                    help='Number of classes (e.g. 1, 100, 1000)')
 group.add_argument('--train-split', metavar='NAME', default='imagenet_training',
                     help='dataset train split (default: train)')
 group.add_argument('--val-split', metavar='NAME', default='imagenet_val',
@@ -423,7 +425,7 @@ def main():
     model = create_model(
         model_name=args.model,
         pretraining_dataset=args.pretraining_dataset,
-        num_classes=len(loader_train.dataset.classes),
+        num_classes=args.num_classes,
         pretrained=args.pretrained,
         progress=True,
     )
