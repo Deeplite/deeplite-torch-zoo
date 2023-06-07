@@ -15,13 +15,16 @@ from torchvision.models import MobileNetV2
 
 __all__ = [
     'mobilenetv2_w035',
+    'get_edgevit_s',
+    'get_edgevit_xs',
+    'get_edgevit_xxs',
 ]
 
 MOBILEONE_BASE_URL = (
     'https://docs-assets.developer.apple.com/ml-research/datasets/mobileone'
 )
 CHECKPOINT_URLS = {
-    'mobilenetv2_w035': 'http://download.deeplite.ai/zoo/models/mobilenetv2_w035_imagenet_6020_4a56477132807d76.pt',
+    'mobilenetv2_w035_zoo': 'http://download.deeplite.ai/zoo/models/mobilenetv2_w035_imagenet_6020_4a56477132807d76.pt',
     'mobileone_s0_zoo': f'{MOBILEONE_BASE_URL}/mobileone_s0_unfused.pth.tar',
     'mobileone_s1_zoo': f'{MOBILEONE_BASE_URL}/mobileone_s1_unfused.pth.tar',
     'mobileone_s2_zoo': f'{MOBILEONE_BASE_URL}/mobileone_s2_unfused.pth.tar',
