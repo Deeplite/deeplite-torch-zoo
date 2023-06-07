@@ -30,7 +30,6 @@ Note: We will get combined VOC2007 and VOC2012 dataset when we will use name 'vo
         model_name="yolo-v5s",
         dataset_name="voc",
         pretrained=True, # or False, if pretrained weights are not required
-        progress=False, # or True, if a progressbar is required
         device="cpu", # or "gpu"
     )
 ```
@@ -57,7 +56,6 @@ One could create a model with a custom number of classes, while loading the pret
         pretraining_dataset="coco",
         num_classes=8,
         pretrained=True, # or False, if pretrained weights are not required
-        progress=False, # or True, if a progressbar is required
     )
 ```
 

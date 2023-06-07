@@ -12,7 +12,7 @@ model_urls = {
 
 
 def _mobilenetv2_imagenet10(
-    arch, alpha=1.0, pretrained=False, progress=True, num_classes=10, device='cuda'
+    arch, alpha=1.0, pretrained=False, num_classes=10, device='cuda'
 ):
     model = torchvision.models.mobilenet.MobileNetV2(
         width_mult=alpha, num_classes=num_classes
@@ -20,7 +20,7 @@ def _mobilenetv2_imagenet10(
 
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
     return model.to(device)
 
 
@@ -30,23 +30,21 @@ def _mobilenetv2_imagenet10(
     task_type='classification',
 )
 def mobilenet_v2_0_35_imagenet10(
-    pretrained=False, progress=True, num_classes=10, device='cuda'
+    pretrained=False, num_classes=10, device='cuda'
 ):
     return _mobilenetv2_imagenet10(
         "mobilenetv2_0.35",
         alpha=0.35,
         pretrained=pretrained,
-        progress=progress,
         num_classes=num_classes,
         device=device,
     )
 
 
-def mobilenet_v2_1_0(pretrained=False, progress=True, device='cuda'):
+def mobilenet_v2_1_0(pretrained=False, device='cuda'):
     return _mobilenetv2_imagenet10(
         "mobilenetv2_1.0",
         alpha=1,
         pretrained=pretrained,
-        progress=progress,
         device=device,
     )

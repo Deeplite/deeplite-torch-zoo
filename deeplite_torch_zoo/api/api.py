@@ -50,7 +50,6 @@ def get_model_by_name(
     model_name,
     dataset_name,
     pretrained=True,
-    progress=False,
     fp16=False,
     device="cuda",
     **kwargs,
@@ -60,7 +59,6 @@ def get_model_by_name(
     :param model_name: Name of the model to create
     :param dataset_name: Name of dataset the model was trained / is to be trained on
     :param pretrained: Whether to load pretrained weights
-    :param progress: Whether to enable the progressbar
     :param fp16: Whether to convert the model to fp16 precision
     :param device: Loads the model either on a gpu (`cuda`, `cuda:device_id`) or cpu.
 
@@ -70,7 +68,7 @@ def get_model_by_name(
         model_name=model_name.lower(), dataset_name=dataset_name
     )
     model = model_func(
-        pretrained=pretrained, progress=progress, device=device, **kwargs
+        pretrained=pretrained, device=device, **kwargs
     )
     return model.half() if fp16 else model
 
@@ -90,7 +88,6 @@ def create_model(
     pretraining_dataset,
     num_classes=None,
     pretrained=False,
-    progress=False,
     fp16=False,
     device="cuda",
     **kwargs,
@@ -103,7 +100,6 @@ def create_model(
     :param model_name: Name of the model to create
     :param pretraining_dataset: Name of pretraining dataset to (partially) load the weights from
     :param num_classes: Number of output classes in the new model
-    :param progress: Whether to enable the progressbar
     :param fp16: Whether to convert the model to fp16 precision
     :param device: Loads the model either on a gpu (`cuda`, `cuda:device_id`) or cpu.
 
@@ -114,7 +110,6 @@ def create_model(
     )
     model_wrapper_kwargs = {
         'pretrained': pretrained,
-        'progress': progress,
         'device': device,
         **kwargs,
     }

@@ -12,9 +12,9 @@ model_urls = {
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='vgg19', dataset_name='tinyimagenet', task_type='classification'
 )
-def vgg19_tinyimagenet(pretrained=False, progress=True, num_classes=100, device="cuda"):
+def vgg19_tinyimagenet(pretrained=False, num_classes=100, device="cuda"):
     model = models.vgg19(num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls['vgg19']
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
     return model.to(device)

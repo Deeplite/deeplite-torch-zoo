@@ -14,7 +14,7 @@ model_urls = {
 
 
 def _mobilenetv3_vww(
-    arch="small", pretrained=False, progress=True, num_classes=2, device='cuda'
+    arch="small", pretrained=False, num_classes=2, device='cuda'
 ):
     if arch == "small":
         model = mobilenetv3_small(num_classes=num_classes)
@@ -23,7 +23,7 @@ def _mobilenetv3_vww(
 
     if pretrained:
         checkpoint_url = model_urls[f"mobilenetv3_{arch}"]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
 
     return model.to(device)
 
@@ -32,12 +32,11 @@ def _mobilenetv3_vww(
     model_name='mobilenetv3_small', dataset_name='vww', task_type='classification'
 )
 def mobilenetv3_small_vww(
-    pretrained=False, progress=True, num_classes=2, device='cuda'
+    pretrained=False, num_classes=2, device='cuda'
 ):
     return _mobilenetv3_vww(
         arch="small",
         pretrained=pretrained,
-        progress=progress,
         num_classes=num_classes,
         device=device,
     )
@@ -47,12 +46,11 @@ def mobilenetv3_small_vww(
     model_name='mobilenetv3_large', dataset_name='vww', task_type='classification'
 )
 def mobilenetv3_large_vww(
-    pretrained=False, progress=True, num_classes=2, device='cuda'
+    pretrained=False, num_classes=2, device='cuda'
 ):
     return _mobilenetv3_vww(
         arch="large",
         pretrained=pretrained,
-        progress=progress,
         num_classes=num_classes,
         device=device,
     )

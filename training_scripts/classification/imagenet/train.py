@@ -425,7 +425,6 @@ def main():
         pretraining_dataset=args.pretraining_dataset,
         num_classes=len(loader_train.dataset.classes),
         pretrained=args.pretrained,
-        progress=True,
     )
 
     if args.num_classes is None:

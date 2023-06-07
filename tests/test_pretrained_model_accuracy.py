@@ -10,7 +10,6 @@ def test_vgg19_tinyimagenet():
         model_name="vgg19",
         dataset_name="tinyimagenet",
         pretrained=True,
-        progress=False,
     )
     test_loader = get_data_splits_by_name(
         data_root="/neutrino/datasets/TinyImageNet/",
@@ -29,7 +28,6 @@ def test_mobilenet_v2_tinyimagenet():
         model_name="mobilenet_v2",
         dataset_name="tinyimagenet",
         pretrained=True,
-        progress=False,
     )
     test_loader = get_data_splits_by_name(
         data_root="/neutrino/datasets/TinyImageNet/",
@@ -49,7 +47,6 @@ def test_resnet18_tinyimagenet():
         model_name="resnet18",
         dataset_name="tinyimagenet",
         pretrained=True,
-        progress=False,
     )
     test_loader = get_data_splits_by_name(
         data_root="/neutrino/datasets/TinyImageNet/",
@@ -69,7 +66,6 @@ def test_resnet34_tinyimagenet():
         model_name="resnet34",
         dataset_name="tinyimagenet",
         pretrained=True,
-        progress=False,
     )
     test_loader = get_data_splits_by_name(
         data_root="/neutrino/datasets/TinyImageNet/",
@@ -89,7 +85,6 @@ def test_resnet50_tinyimagenet():
         model_name="resnet50",
         dataset_name="tinyimagenet",
         pretrained=True,
-        progress=False,
     )
     test_loader = get_data_splits_by_name(
         data_root="/neutrino/datasets/TinyImageNet/",
@@ -109,7 +104,6 @@ def test_mb3_large_vww():
         model_name="mobilenetv3_large",
         dataset_name="vww",
         pretrained=True,
-        progress=False,
     )
     test_loader = get_data_splits_by_name(
         data_root="/neutrino/datasets/vww",
@@ -127,7 +121,6 @@ def test_mb3_small_vww():
         model_name="mobilenetv3_small",
         dataset_name="vww",
         pretrained=True,
-        progress=False,
     )
     test_loader = get_data_splits_by_name(
         data_root="/neutrino/datasets/vww",
@@ -145,7 +138,6 @@ def test_yolov3_voc():
         model_name="yolo3",
         dataset_name="voc",
         pretrained=True,
-        progress=False,
     )
     eval_fn = get_eval_function("yolo3", "voc")
     APs = eval_fn(
@@ -161,7 +153,6 @@ def test_yolov4s_voc():
         model_name="yolo4s",
         dataset_name="voc",
         pretrained=True,
-        progress=False,
     )
     eval_fn = get_eval_function("yolo4s", "voc")
     APs = eval_fn(
@@ -176,7 +167,6 @@ def test_yolov4m_voc():
         model_name="yolo4m",
         dataset_name="voc",
         pretrained=True,
-        progress=False,
     )
     eval_fn = get_eval_function("yolo4m", "voc")
     APs = eval_fn(
@@ -192,7 +182,6 @@ def test_yolov4l_voc():
         model_name="yolo4l",
         dataset_name="voc",
         pretrained=True,
-        progress=False,
     )
     eval_fn = get_eval_function("yolo4l", "voc")
     APs = eval_fn(
@@ -208,7 +197,6 @@ def test_yolov4l_leaky_voc():
         model_name="yolo4l_leaky",
         dataset_name="voc",
         pretrained=True,
-        progress=False,
     )
     eval_fn = get_eval_function("yolo4l_leaky", "voc")
     APs = eval_fn(
@@ -227,7 +215,6 @@ def test_yolov4x_voc():
         model_name="yolo4x",
         dataset_name="voc",
         pretrained=True,
-        progress=False,
     )
     eval_fn = get_eval_function("yolo4x", "voc")
     APs = eval_fn(
@@ -243,7 +230,6 @@ def test_yolov5s_voc():
         model_name="yolo5_6s",
         dataset_name="voc",
         pretrained=True,
-        progress=False,
     )
     eval_fn = get_eval_function("yolo5_6s", "voc")
     APs = eval_fn(model, "/neutrino/datasets/VOCdevkit/VOC2007/", _set="voc")

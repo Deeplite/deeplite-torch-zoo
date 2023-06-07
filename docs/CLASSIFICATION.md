@@ -31,7 +31,6 @@
         model_name="resnet18",
         dataset_name="cifar100",
         pretrained=True, # or False, if pretrained weights are not required
-        progress=False, # or True, if a progressbar is required
         device="cpu", # or "gpu"
     )
 ```
