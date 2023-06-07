@@ -42,6 +42,7 @@ def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
     data_split_wrapper_fn = DATA_WRAPPER_REGISTRY.get(
         dataset_name=dataset_name, model_name=model_name
     )
+    
     data_split = data_split_wrapper_fn(data_root=data_root, **kwargs)
     return data_split
 

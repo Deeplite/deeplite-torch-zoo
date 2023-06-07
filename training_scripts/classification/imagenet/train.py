@@ -88,6 +88,8 @@ group.add_argument('--train-split', metavar='NAME', default='imagenet_training',
                     help='dataset train split (default: train)')
 group.add_argument('--val-split', metavar='NAME', default='imagenet_val',
                     help='dataset validation split (default: validation)')
+group.add_argument('--dataloading', metavar='loader_type', default='pytorch',
+                    help='dataset loaders (default: pytorch, other: ffcv)')
 group.add_argument('--dataset-download', action='store_true', default=False,
                     help='Allow download of dataset for torch/ and tfds/ datasets that support it.')
 group.add_argument('--class-map', default='', type=str, metavar='FILENAME',
@@ -407,10 +409,11 @@ def main():
     datasplit_kwargs = {}
     if args.img_size is not None:
         datasplit_kwargs = {'img_size': args.img_size}
-
-    datasplit_kwargs = {}
-    if args.img_size is not None:
-        datasplit_kwargs = {'img_size': args.img_size}
+    
+    if args.dataloading != 'pytorch':
+        datasplit_kwargs['dataloading'] = args.dataloading
+        datasplit_kwargs['train_split'] = args.train_split
+        datasplit_kwargs['val_split'] = args.val_split
 
     data_splits = get_data_splits_by_name(
         dataset_name=args.dataset,
