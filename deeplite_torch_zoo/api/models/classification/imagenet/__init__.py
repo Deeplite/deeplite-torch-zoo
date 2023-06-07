@@ -8,10 +8,16 @@ from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 REGISTER_PRIORITY = ('zoo', 'timm', 'torchvision', 'pytorchcv')
 
-model_names = [model_key.model_name for model_key in MODEL_WRAPPER_REGISTRY.registry_dict 
-               if model_key.dataset_name == 'imagenet']
-pretrained_model_names = [model_key.model_name for model_key in MODEL_WRAPPER_REGISTRY.pretrained_models 
-                          if model_key.dataset_name == 'imagenet']
+model_names = [
+    model_key.model_name
+    for model_key in MODEL_WRAPPER_REGISTRY.registry_dict
+    if model_key.dataset_name == 'imagenet'
+]
+pretrained_model_names = [
+    model_key.model_name
+    for model_key in MODEL_WRAPPER_REGISTRY.pretrained_models
+    if model_key.dataset_name == 'imagenet'
+]
 registered_model_names = []
 
 # register models with clean names w/o source framework tag
