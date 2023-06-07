@@ -2,6 +2,7 @@ import torch
 
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.distributed import DistributedSampler as DS
+from deeplite_torch_zoo.src.classification.augmentations.augs import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, DEFAULT_CROP_PCT
 
 import torch
 from pathlib import Path
@@ -43,11 +44,8 @@ def get_dataloader(
     )
     return dataloader
 
-IMAGENET_MEAN = np.array([0.485, 0.456, 0.406]) * 255
-IMAGENET_STD = np.array([0.229, 0.224, 0.225]) * 255
-DEFAULT_CROP_RATIO = 224/256
 
-def create_train_loader(train_dataset, num_workers, batch_size,
+def create_ffcv_train_loader(train_dataset, num_workers, batch_size,
                             distributed, in_memory, img_size):
         this_device = f'cuda:{0}'
         train_path = Path(train_dataset)
@@ -61,7 +59,7 @@ def create_train_loader(train_dataset, num_workers, batch_size,
             ToTensor(),
             ToTorchImage(),
             ToDevice(torch.device(this_device), non_blocking=True),
-            NormalizeImage(IMAGENET_MEAN, IMAGENET_STD, np.float16)
+            NormalizeImage(np.array(IMAGENET_DEFAULT_MEAN)*255, np.array(IMAGENET_DEFAULT_STD)*255, np.float16)
         ]
 
         label_pipeline: List[Operation] = [
@@ -86,19 +84,19 @@ def create_train_loader(train_dataset, num_workers, batch_size,
 
         return loader
 
-def create_val_loader(val_dataset, num_workers, batch_size,
+def create_ffcv_val_loader(val_dataset, num_workers, batch_size,
                           img_size, distributed):
         this_device = f'cuda:{0}'
         val_path = Path(val_dataset)
         assert val_path.is_file()
         res_tuple = (img_size, img_size)
-        cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_RATIO)
+        cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_PCT)
         image_pipeline = [
             cropper,
             ToTensor(),
             ToDevice(torch.device(this_device), non_blocking=True),
             ToTorchImage(),
-            NormalizeImage(IMAGENET_MEAN, IMAGENET_STD, np.float16)
+            NormalizeImage(np.array(IMAGENET_DEFAULT_MEAN)*255, np.array(IMAGENET_DEFAULT_STD)*255, np.float16)
         ]
 
         label_pipeline = [

@@ -6,10 +6,9 @@ from torchvision import datasets
 from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_imagenet_transforms,
 )
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader, create_train_loader, create_val_loader
+from deeplite_torch_zoo.api.datasets.utils import get_dataloader, create_ffcv_train_loader, create_ffcv_val_loader
 from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
 from deeplite_torch_zoo.utils import LOGGER
-
 
 __all__ = ["get_imagenet"]
 
@@ -45,7 +44,7 @@ def get_imagenet(
         val_transforms if val_transforms is not None else default_val_transforms
     )
 
-    train_loader = create_train_loader(train_dataset=os.path.join(data_root,train_split),
+    train_loader = create_ffcv_train_loader(train_dataset=os.path.join(data_root,train_split),
                                        num_workers=num_workers,
                                        batch_size=batch_size,
                                        distributed=distributed,
@@ -55,7 +54,7 @@ def get_imagenet(
 
     test_batch_size = batch_size if test_batch_size is None else test_batch_size
 
-    test_loader = create_val_loader(val_dataset=os.path.join(data_root,val_split), 
+    test_loader = create_ffcv_val_loader(val_dataset=os.path.join(data_root,val_split), 
                                        num_workers=num_workers,
                                        batch_size=test_batch_size,
                                        img_size=img_size,
