@@ -1,4 +1,5 @@
-IMPL_MODEL_NAMES = {
+
+MODEL_IMPLEMENTATIONS = {
     'torchvision': [
         'alexnet',
         'resnet18',
@@ -500,7 +501,7 @@ IMPL_MODEL_NAMES = {
 }
 
 
-# Models that require the inplace-ABN module
+# models that contain the inplace-ABN module
 INPLACE_ABN_MODELS = [
     'densenet264d_iabn',
     'ese_vovnet99b_iabn',
@@ -515,7 +516,7 @@ INPLACE_ABN_MODELS = [
 ]
 
 
-# Models that can't handle 224x224 input size
+# models that can't accept flexible / 224x224 input image size
 FIXED_SIZE_INPUT_MODELS = [
     'bat_resnext26ts',
     'beit_base_patch16_384',

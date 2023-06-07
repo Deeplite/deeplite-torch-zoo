@@ -29,37 +29,35 @@ model_urls = {
 
 
 def _resnet(
-    arch, block, layers, num_classes=100, pretrained=False, progress=True, device='cuda'
+    arch, block, layers, num_classes=100, pretrained=False, device='cuda'
 ):
     model = ResNet(block, layers, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='resnet18', dataset_name='cifar100', task_type='classification'
 )
-def resnet18_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
+def resnet18_cifar100(pretrained=False, num_classes=100, device='cuda'):
     return _resnet(
         "resnet18",
         BasicBlock,
         [2, 2, 2, 2],
         num_classes=num_classes,
         pretrained=pretrained,
-        progress=progress,
         device=device,
     )
 
 
-def resnet34(pretrained=False, progress=True, device='cuda'):
+def resnet34(pretrained=False, device='cuda'):
     return _resnet(
         "resnet34",
         BasicBlock,
         [3, 4, 6, 3],
         pretrained=pretrained,
-        progress=progress,
         device=device,
     )
 
@@ -67,35 +65,32 @@ def resnet34(pretrained=False, progress=True, device='cuda'):
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='resnet50', dataset_name='cifar100', task_type='classification'
 )
-def resnet50_cifar100(pretrained=False, progress=True, num_classes=100, device='cuda'):
+def resnet50_cifar100(pretrained=False, num_classes=100, device='cuda'):
     return _resnet(
         "resnet50",
         Bottleneck,
         [3, 4, 6, 3],
         num_classes=num_classes,
         pretrained=pretrained,
-        progress=progress,
         device=device,
     )
 
 
-def resnet101(pretrained=False, progress=True, device='cuda'):
+def resnet101(pretrained=False, device='cuda'):
     return _resnet(
         "resnet34",
         Bottleneck,
         [3, 4, 23, 3],
         pretrained=pretrained,
-        progress=progress,
         device=device,
     )
 
 
-def resnet152(pretrained=False, progress=True, device='cuda'):
+def resnet152(pretrained=False, device='cuda'):
     return _resnet(
         "resnet34",
         Bottleneck,
         [3, 8, 36, 3],
         pretrained=pretrained,
-        progress=progress,
         device=device,
     )

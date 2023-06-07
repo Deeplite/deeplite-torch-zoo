@@ -62,7 +62,6 @@ def flexible_yolo(
     dataset_name='voc',
     num_classes=20,
     pretrained=False,
-    progress=True,
     device='cuda',
     **kwargs,
 ):
@@ -90,7 +89,7 @@ def flexible_yolo(
         checkpoint_url = urlparse.urljoin(
             CHECKPOINT_STORAGE_URL, model_urls[f'{model_name}_{dataset_name}']
         )
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
     return model.to(device)
 
 
@@ -109,7 +108,6 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
     def wrapper_func(
         pretrained=False,
         num_classes=num_classes,
-        progress=True,
         device='cuda',
         **kwargs,
     ):
@@ -118,7 +116,6 @@ def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
-            progress=progress,
             device=device,
             **kwargs,
         )

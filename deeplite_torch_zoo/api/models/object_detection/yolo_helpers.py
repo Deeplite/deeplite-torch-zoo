@@ -15,7 +15,6 @@ def create_yolo_model(
     num_classes=20,
     config_path=None,
     pretrained=False,
-    progress=True,
     device="cuda",
     **kwargs,
 ):  # pylint: disable=W0621
@@ -33,7 +32,7 @@ def create_yolo_model(
         checkpoint_url = urlparse.urljoin(
             CHECKPOINT_STORAGE_URL, model_urls[f"{model_name}_{dataset_name}"]
         )
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
     return model.to(device)
 
 
@@ -53,7 +52,6 @@ def make_wrapper_func(
     def wrapper_func(
         pretrained=False,
         num_classes=num_classes,
-        progress=True,
         device="cuda",
         **kwargs,
     ):
@@ -64,7 +62,6 @@ def make_wrapper_func(
             num_classes=num_classes,
             pretrained=pretrained,
             config_path=config_path,
-            progress=progress,
             device=device,
             **default_kwargs,
         )

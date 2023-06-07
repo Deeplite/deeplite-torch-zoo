@@ -20,18 +20,18 @@ model_urls = {
 }
 
 
-def _googlenet(arch, pretrained=False, progress=True, num_classes=100, device='cuda'):
+def _googlenet(arch, pretrained=False, num_classes=100, device='cuda'):
     model = GoogLeNet(num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='googlenet', dataset_name='cifar100', task_type='classification'
 )
-def googlenet_cifar100(pretrained=False, num_classes=100, progress=True, device='cuda'):
+def googlenet_cifar100(pretrained=False, num_classes=100, device='cuda'):
     return _googlenet(
-        "googlenet", pretrained, progress, device=device, num_classes=num_classes
+        "googlenet", pretrained, device=device, num_classes=num_classes
     )

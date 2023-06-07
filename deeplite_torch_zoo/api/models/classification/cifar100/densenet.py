@@ -31,13 +31,12 @@ def _densenet(
     growth_rate=32,
     pretrained=False,
     num_classes=100,
-    progress=True,
     device='cuda',
 ):
     model = DenseNet(block, layers, growth_rate, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
 
     return model.to(device)
 
@@ -46,7 +45,7 @@ def _densenet(
     model_name='densenet121', dataset_name='cifar100', task_type='classification'
 )
 def densenet121_cifar100(
-    pretrained=False, num_classes=100, progress=True, device='cuda'
+    pretrained=False, num_classes=100, device='cuda'
 ):
     return _densenet(
         "densenet121",
@@ -55,39 +54,35 @@ def densenet121_cifar100(
         growth_rate=32,
         num_classes=num_classes,
         pretrained=pretrained,
-        progress=progress,
         device=device,
     )
 
 
-def densenet161(pretrained=False, progress=True):
+def densenet161(pretrained=False):
     return _densenet(
         "densenet161",
         Bottleneck,
         [6, 12, 36, 24],
         growth_rate=48,
         pretrained=pretrained,
-        progress=progress,
     )
 
 
-def densenet169(pretrained=False, progress=True):
+def densenet169(pretrained=False):
     return _densenet(
         "densenet169",
         Bottleneck,
         [6, 12, 32, 32],
         growth_rate=32,
         pretrained=pretrained,
-        progress=progress,
     )
 
 
-def densenet201(pretrained=False, progress=True):
+def densenet201(pretrained=False):
     return _densenet(
         "densenet201",
         Bottleneck,
         [6, 12, 48, 32],
         growth_rate=32,
         pretrained=pretrained,
-        progress=progress,
     )

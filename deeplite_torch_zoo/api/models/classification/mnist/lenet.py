@@ -18,23 +18,22 @@ model_urls = {
 }
 
 
-def _lenet_mnist(arch, pretrained=False, progress=True, num_classes=10, device="cuda"):
+def _lenet_mnist(arch, pretrained=False, num_classes=10, device="cuda"):
     model = LeNet5(output=num_classes)
 
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
+        model = load_pretrained_weights(model, checkpoint_url, device)
     return model.to(device)
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='lenet5', dataset_name='mnist', task_type='classification'
 )
-def lenet5_mnist(pretrained=False, progress=True, num_classes=10, device="cuda"):
+def lenet5_mnist(pretrained=False, num_classes=10, device="cuda"):
     return _lenet_mnist(
         "lenet5",
         pretrained=pretrained,
-        progress=progress,
         num_classes=num_classes,
         device=device,
     )
