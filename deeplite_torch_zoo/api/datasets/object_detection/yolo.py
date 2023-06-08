@@ -34,7 +34,6 @@ def make_dataset_wrapper(wrapper_name, num_classes, img_size, dataset_create_fn)
         img_size=img_size,
         fp16=False,
         distributed=False,
-        device="cuda",
         **kwargs,
     ):
         if len(kwargs):
@@ -54,7 +53,6 @@ def make_dataset_wrapper(wrapper_name, num_classes, img_size, dataset_create_fn)
             distributed=distributed,
             shuffle=not distributed,
             collate_fn=train_dataset.collate_img_label_fn,
-            device=device,
         )
 
         test_loader = get_dataloader(
@@ -65,7 +63,6 @@ def make_dataset_wrapper(wrapper_name, num_classes, img_size, dataset_create_fn)
             distributed=distributed,
             shuffle=False,
             collate_fn=test_dataset.collate_img_label_fn,
-            device=device,
         )
 
         return {"train": train_loader, "val": test_loader, "test": test_loader}

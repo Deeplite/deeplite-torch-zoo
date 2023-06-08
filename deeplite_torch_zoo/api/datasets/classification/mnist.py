@@ -20,7 +20,6 @@ def get_mnist(
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     **kwargs,
 ):
@@ -57,7 +56,6 @@ def get_mnist(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     test_loader = get_dataloader(
@@ -67,7 +65,6 @@ def get_mnist(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": test_loader}

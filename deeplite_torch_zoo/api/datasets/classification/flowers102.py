@@ -30,7 +30,6 @@ def get_flowers102(
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     augmentation_mode='imagenet',
     train_transforms=None,
@@ -79,7 +78,6 @@ def get_flowers102(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     test_batch_size = batch_size if test_batch_size is None else test_batch_size
@@ -90,7 +88,6 @@ def get_flowers102(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": test_loader}

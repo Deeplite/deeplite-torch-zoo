@@ -19,7 +19,6 @@ def get_tinyimagenet(
     num_workers=4,
     fp16=False,
     img_size=64,
-    device="cuda",
     distributed=False,
     train_transforms=None,
     val_transforms=None,
@@ -59,7 +58,6 @@ def get_tinyimagenet(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     test_batch_size = batch_size if test_batch_size is None else test_batch_size
@@ -70,7 +68,6 @@ def get_tinyimagenet(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "val": test_loader, "test": test_loader}

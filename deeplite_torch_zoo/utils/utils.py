@@ -116,7 +116,7 @@ def get_file_hash(filename, max_has_symbols=16, min_large_file_size_mb=1000):
     return readable_hash[:max_has_symbols]
 
 
-def load_pretrained_weights(model, checkpoint_url, device):
+def load_pretrained_weights(model, checkpoint_url, device='cpu'):
     pretrained_dict = load_state_dict_from_url(
         checkpoint_url,
         progress=True,

@@ -31,7 +31,6 @@
         model_name="resnet18",
         dataset_name="cifar100",
         pretrained=True, # or False, if pretrained weights are not required
-        device="cpu", # or "gpu"
     )
 ```
 * To get the evaluation function, we have a wrapper function get_eval_by_name, which requires exact model and dataset name.

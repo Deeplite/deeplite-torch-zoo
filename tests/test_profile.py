@@ -18,7 +18,6 @@ def test_profile(
         model_name=ref_model_name,
         dataset_name='imagenet',
         pretrained=False,
-        device='cpu',
     )
     model.eval()
     metrics_dict = profile(model)
