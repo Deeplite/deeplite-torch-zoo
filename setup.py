@@ -35,6 +35,7 @@ INSTALL_REQUIRES = [
     "pytz",
     "pandas",
     "ultralytics==8.0.107",
+    "tensorboard>=2.13.0",
 ]
 
 
