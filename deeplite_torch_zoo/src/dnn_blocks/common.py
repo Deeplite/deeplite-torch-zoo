@@ -18,6 +18,8 @@ except:
 
 
 from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
+from deeplite_torch_zoo.utils import LOGGER
+
 
 ACT_TYPE_MAP = {
     'relu': nn.ReLU(inplace=True),
@@ -31,11 +33,15 @@ ACT_TYPE_MAP = {
     'mish': Mish(),
     'leakyrelu': nn.LeakyReLU(negative_slope=0.1, inplace=True),
     'leakyrelu_0.1': nn.LeakyReLU(negative_slope=0.1, inplace=True),
+    'gelu': nn.GELU,
 }
 
 
 def get_activation(activation_name):
-    return ACT_TYPE_MAP[activation_name] if activation_name else nn.Identity()
+    if activation_name:
+        return ACT_TYPE_MAP[activation_name]
+    LOGGER.warning('No activation specified for get_activation. Returning nn.Identity()')
+    return nn.Identity()
 
 
 def autopad(k, p=None, d=1):  # kernel, padding, dilation

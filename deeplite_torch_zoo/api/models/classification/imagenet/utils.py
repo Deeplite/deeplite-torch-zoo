@@ -31,9 +31,9 @@ def make_wrapper_func(
 
 
 def load_checkpoint(model, model_name, dataset_name, model_urls, device):
-    if model_name not in model_urls:
+    if f'{model_name}_{dataset_name}' not in model_urls:
         raise ValueError(
             f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
             'Use pretrained=False if you want to create a untrained model.'
         )
-    return load_pretrained_weights(model, model_urls[model_name], device)
+    return load_pretrained_weights(model, model_urls[f'{model_name}_{dataset_name}'], device)
