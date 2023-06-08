@@ -56,7 +56,6 @@ def yolov6(
     dataset_name='voc',
     pretrained=False,
     num_classes=20,
-    device='cuda',
     **kwargs,
 ):
     model = YOLOv6(model_config=config_path, nc=num_classes, **kwargs)
@@ -69,8 +68,8 @@ def yolov6(
         checkpoint_url = urlparse.urljoin(
             CHECKPOINT_STORAGE_URL, model_urls[f'{model_name}_{dataset_name}']
         )
-        model = load_pretrained_weights(model, checkpoint_url, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 def make_wrapper_func(
@@ -90,7 +89,6 @@ def make_wrapper_func(
     def wrapper_func(
         pretrained=False,
         num_classes=num_classes,
-        device='cuda',
         **kwargs,
     ):
         default_kwargs.update(**kwargs)
@@ -100,7 +98,6 @@ def make_wrapper_func(
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
-            device=device,
             **default_kwargs,
         )
 

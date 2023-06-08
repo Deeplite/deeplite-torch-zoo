@@ -20,28 +20,28 @@ model_urls = {
 }
 
 
-def _vgg(cfg, pretrained=False, num_classes=100, device='cuda'):
+def _vgg(cfg, pretrained=False, num_classes=100):
     model = VGG(cfg, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[cfg]
-        model = load_pretrained_weights(model, checkpoint_url, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
-def vgg11(pretrained=False, device='cuda'):
-    return _vgg("vgg11", pretrained, device=device)
+def vgg11(pretrained=False):
+    return _vgg("vgg11", pretrained)
 
 
-def vgg13(pretrained=False, device='cuda'):
-    return _vgg("vgg13", pretrained, device=device)
+def vgg13(pretrained=False):
+    return _vgg("vgg13", pretrained)
 
 
-def vgg16(pretrained=False, device='cuda'):
-    return _vgg("vgg16", pretrained, device=device)
+def vgg16(pretrained=False):
+    return _vgg("vgg16", pretrained)
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='vgg19', dataset_name='cifar100', task_type='classification'
 )
-def vgg19_cifar100(pretrained=False, num_classes=100, device='cuda'):
-    return _vgg("vgg19", pretrained, num_classes=num_classes, device=device)
+def vgg19_cifar100(pretrained=False, num_classes=100):
+    return _vgg("vgg19", pretrained, num_classes=num_classes)

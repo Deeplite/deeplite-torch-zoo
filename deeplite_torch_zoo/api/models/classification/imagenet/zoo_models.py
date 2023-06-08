@@ -58,13 +58,13 @@ MODEL_FNS = {
 
 def register_model_wrapper(model_fn, model_name, **model_kwargs):
 
-    def get_model(num_classes=NUM_IMAGENET_CLASSES, pretrained=False, device='cuda'):
+    def get_model(num_classes=NUM_IMAGENET_CLASSES, pretrained=False):
         model = model_fn(num_classes=num_classes, **model_kwargs)
         if pretrained:
             model = load_checkpoint(
-                model, model_name, 'imagenet', CHECKPOINT_URLS, device
+                model, model_name, 'imagenet', CHECKPOINT_URLS
             )
-        return model.to(device)
+        return model
 
     get_model = MODEL_WRAPPER_REGISTRY.register(
         model_name=model_name,

@@ -30,7 +30,6 @@ Note: We will get combined VOC2007 and VOC2012 dataset when we will use name 'vo
         model_name="yolo-v5s",
         dataset_name="voc",
         pretrained=True, # or False, if pretrained weights are not required
-        device="cpu", # or "gpu"
     )
 ```
 * To get the evaluation function, we have a wrapper function get_eval_by_name, which requires exact model and dataset name.
