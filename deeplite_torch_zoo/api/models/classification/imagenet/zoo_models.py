@@ -26,6 +26,7 @@ __all__ = []
 MOBILEONE_BASE_URL = (
     'https://docs-assets.developer.apple.com/ml-research/datasets/mobileone'
 )
+
 CHECKPOINT_URLS = {
     'mobilenetv2_w035_zoo_imagenet': 'http://download.deeplite.ai/zoo/models/mobilenetv2_w035_imagenet_6020_4a56477132807d76.pt',
     'mobileone_s0_zoo_imagenet': f'{MOBILEONE_BASE_URL}/mobileone_s0_unfused.pth.tar',
@@ -76,7 +77,7 @@ def register_model_wrapper(model_fn, model_name, **model_kwargs):
     return get_model
 
 
-for model_name, (model_fn, model_kwargs) in MODEL_FNS.items():
-    wrapper_fn = register_model_wrapper(model_fn, f'{model_name}_zoo', **model_kwargs)
+for _model_name, (_model_fn, _model_kwargs) in MODEL_FNS.items():
+    wrapper_fn = register_model_wrapper(_model_fn, f'{_model_name}_zoo', **_model_kwargs)
     globals()[wrapper_fn.__name__] = wrapper_fn
     __all__.append(wrapper_fn.__name__)
