@@ -26,7 +26,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.utils
 import yaml
-from deeplite_torch_zoo import create_model, get_data_splits_by_name
+from deeplite_torch_zoo import create_model, get_dataloaders
 from timm import utils
 from timm.data import FastCollateMixup, Mixup, resolve_data_config
 from timm.models import (convert_splitbn_model, convert_sync_batchnorm,
@@ -410,7 +410,7 @@ def main():
     if args.img_size is not None:
         datasplit_kwargs = {'img_size': args.img_size}
 
-    data_splits = get_data_splits_by_name(
+    data_splits = get_dataloaders(
         dataset_name=args.dataset,
         model_name=args.model,
         data_root=args.data_dir,

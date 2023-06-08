@@ -37,7 +37,7 @@ from utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel,
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
-from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
+from deeplite_torch_zoo import (create_model, get_dataloaders,
                                 get_eval_function)
 from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolov5_loss import \
     YoloV5Loss
@@ -111,7 +111,7 @@ def train(opt, device):
     dataset_kwargs = {}
     if opt.img_size:
         dataset_kwargs = {'img_size': opt.img_size}
-    dataset_splits = get_data_splits_by_name(
+    dataset_splits = get_dataloaders(
         data_root=opt.img_dir,
         dataset_name=opt.dataset_name,
         model_name=opt.model_name,

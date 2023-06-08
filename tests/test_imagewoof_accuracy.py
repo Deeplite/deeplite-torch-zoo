@@ -1,7 +1,7 @@
 import pytest
 
-from deeplite_torch_zoo import (get_data_splits_by_name, get_eval_function,
-                                get_model_by_name)
+from deeplite_torch_zoo import (get_dataloaders, get_eval_function,
+                                get_model)
 
 
 @pytest.mark.parametrize(
@@ -22,7 +22,7 @@ def test_classification_model_imagenet_pretrained_accuracy_fast(
         abs_tolerance=0.05,
         batch_size=32,
     ):
-    model = get_model_by_name(
+    model = get_model(
         model_name=model_name,
         dataset_name='imagenet',
         pretrained=True,
@@ -32,7 +32,7 @@ def test_classification_model_imagenet_pretrained_accuracy_fast(
         dataset_name='imagenet',
     )
     with set_torch_seed_value():
-        dataloaders = get_data_splits_by_name(
+        dataloaders = get_dataloaders(
             data_root='./',
             model_name=model_name,
             dataset_name='imagewoof_160',

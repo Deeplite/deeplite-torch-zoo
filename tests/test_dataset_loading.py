@@ -2,14 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from deeplite_torch_zoo import get_data_splits_by_name
+from deeplite_torch_zoo import get_dataloaders
 
 DATASETS_ROOT = Path('/neutrino/datasets')
 
 
 def test_cifar100_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root='./',
         model_name='resnet50',
         dataset_name="cifar100",
@@ -23,7 +23,7 @@ def test_cifar100_dataset():
 
 def test_cifar10_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root='./',
         model_name='resnet50',
         dataset_name="cifar10",
@@ -37,7 +37,7 @@ def test_cifar10_dataset():
 
 def test_imagenette_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root='./',
         model_name='resnet50',
         dataset_name="imagenette",
@@ -51,7 +51,7 @@ def test_imagenette_dataset():
 
 def test_imagewoof_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root='./',
         model_name='resnet50',
         dataset_name="imagewoof",
@@ -65,7 +65,7 @@ def test_imagewoof_dataset():
 
 def test_mnist_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root="./",
         dataset_name="mnist",
         model_name="lenet5_mnist",
@@ -81,7 +81,7 @@ def test_mnist_dataset():
 @pytest.mark.local
 def test_vww_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         dataset_name="vww",
         data_root=str(DATASETS_ROOT / "vww"),
         batch_size=BATCH_SIZE,
@@ -95,7 +95,7 @@ def test_vww_dataset():
 @pytest.mark.local
 def test_imagenet16_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         dataset_name="imagenet",
         data_root=str(DATASETS_ROOT / "imagenet16"),
         batch_size=BATCH_SIZE,
@@ -109,7 +109,7 @@ def test_imagenet16_dataset():
 @pytest.mark.local
 def test_imagenet10_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root=str(DATASETS_ROOT / "imagenet10"),
         dataset_name="imagenet",
         batch_size=BATCH_SIZE,
@@ -123,7 +123,7 @@ def test_imagenet10_dataset():
 @pytest.mark.local
 def test_imagenet1000_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root=str(DATASETS_ROOT / "imagenet"),
         dataset_name="imagenet",
         batch_size=BATCH_SIZE,
@@ -137,7 +137,7 @@ def test_imagenet1000_dataset():
 @pytest.mark.local
 def test_voc_yolo_dataset():
     BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root=str(DATASETS_ROOT / "VOCdevkit"),
         dataset_name="voc",
         model_name="yolo",
@@ -152,7 +152,7 @@ def test_voc_yolo_dataset():
 @pytest.mark.local
 def test_coco_yolo_dataset():
     BATCH_SIZE = 10
-    datasplit = get_data_splits_by_name(
+    datasplit = get_dataloaders(
         data_root=str(DATASETS_ROOT / "coco"),
         dataset_name="coco",
         model_name="yolo",

@@ -1,6 +1,6 @@
 import pytest
 
-from deeplite_torch_zoo import get_model_by_name, profile
+from deeplite_torch_zoo import get_model, profile
 
 
 @pytest.mark.parametrize(
@@ -14,7 +14,7 @@ def test_profile(
         ref_gmacs,
         ref_model_size_mb,
     ):
-    model = get_model_by_name(
+    model = get_model(
         model_name=ref_model_name,
         dataset_name='imagenet',
         pretrained=False,

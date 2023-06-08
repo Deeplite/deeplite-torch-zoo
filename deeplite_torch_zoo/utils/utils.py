@@ -1,4 +1,6 @@
 import hashlib
+import warnings
+import functools
 import os
 import random
 import math
@@ -178,3 +180,20 @@ def init_seeds(seed=0, deterministic=False):
             os.environ['PYTHONHASHSEED'] = str(seed)
         else:
             LOGGER.warning('WARNING ⚠️ Upgrade to torch>=2.0.0 for deterministic training.')
+
+
+def deprecated(func):
+    """
+    This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.warn(f'Method {func.__name__} is deprecated.',
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning)  # reset filter
+        return func(*args, **kwargs)
+    return new_func

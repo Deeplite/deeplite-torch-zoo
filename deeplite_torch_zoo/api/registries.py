@@ -4,5 +4,5 @@ from deeplite_torch_zoo.utils.registry import EvaluatorWrapperRegistry
 
 
 MODEL_WRAPPER_REGISTRY = ModelWrapperRegistry()
-DATA_WRAPPER_REGISTRY = DatasetWrapperRegistry()
+DATASET_WRAPPER_REGISTRY = DatasetWrapperRegistry()
 EVAL_WRAPPER_REGISTRY = EvaluatorWrapperRegistry()
