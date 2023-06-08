@@ -5,16 +5,28 @@ import torch.nn as nn
 import torchvision.transforms as T
 
 from deeplite_torch_zoo import create_model
+from deeplite_torch_zoo.utils import LOGGER
+
+try:
+    import inplace_abn
+    from timm.models.layers import InplaceAbn
+    INPLACE_ABN_INSTALLED = True
+except ImportError:
+    INPLACE_ABN_INSTALLED = False
 
 
 class KDTeacher(nn.Module):
-    def __init__(self, args=None, handle_inplace_abn=False):
+    def __init__(self, args=None, handle_inplace_abn=True):
         super(KDTeacher, self).__init__()
+
+        pretrained = True
+        if args.kd_model_checkpoint is not None:
+            pretrained = False
 
         model_kd = create_model(
             model_name=args.kd_model_name,
             pretraining_dataset='imagenet',
-            pretrained=True,
+            pretrained=pretrained,
             num_classes=args.num_classes,
         )
 
@@ -23,10 +35,10 @@ class KDTeacher(nn.Module):
 
         model_kd.cpu().eval()
 
-        if handle_inplace_abn:
-            model_kd = InplacABN_to_ABN(model_kd)
-            model_kd = fuse_bn2d_bn1d_abn(model_kd)
+        if INPLACE_ABN_INSTALLED and handle_inplace_abn:
+            model_kd = inplaceABN_to_ABN(model_kd)
 
+        model_kd = fuse_bn2d_bn1d_abn(model_kd)
         self.model = model_kd.cuda().eval()
 
         self.mean_model_kd = None
@@ -144,7 +156,7 @@ def fuse_bn_to_conv(bn_layer, conv_layer):
 
 
 def fuse_bn_to_linear(bn_layer, linear_layer):
-    # print('bn fuse')
+    LOGGER.info('Fusing BatchNorm layers of the teacher model')
     bn_st_dict = bn_layer.state_dict()
     conv_st_dict = linear_layer.state_dict()
 
@@ -230,7 +242,6 @@ def fuse_bn2d_bn1d_abn(model):
                 next_bn_ = extract_layer(model, next_bn)
                 fuse_bn_to_conv(next_bn_, m)
                 set_layer(model, next_bn, nn.Identity())
-
             next_abn = compute_next_abn(n, model)
             if next_abn is not None:
                 next_bn_ = extract_layer(model, next_abn)
@@ -243,14 +254,12 @@ def fuse_bn2d_bn1d_abn(model):
                 next_bn1d_ = extract_layer(model, next_bn1d)
                 fuse_bn_to_linear(next_bn1d_, m)
                 set_layer(model, next_bn1d, nn.Identity())
-
     return model
 
 
 def calc_abn_activation(ABN_layer):
-    from inplace_abn import ABN
     activation = nn.Identity()
-    if isinstance(ABN_layer, ABN):
+    if isinstance(ABN_layer, inplace_abn.ABN):
         if ABN_layer.activation == "relu":
             activation = nn.ReLU(inplace=True)
         elif ABN_layer.activation == "leaky_relu":
@@ -260,21 +269,21 @@ def calc_abn_activation(ABN_layer):
     return activation
 
 
-def InplacABN_to_ABN(module: nn.Module) -> nn.Module:
-    from inplace_abn import ABN
-    from timm.models.layers import InplaceAbn
-
+def inplaceABN_to_ABN(module: nn.Module) -> nn.Module:
     # convert all InplaceABN layer to bit-accurate ABN layers.
     if isinstance(module, InplaceAbn):
-        module_new = ABN(module.num_features, activation=module.act_name,
-                         activation_param=module.act_param)
+        module_new = inplace_abn.ABN(
+            module.num_features,
+            activation=module.act_name,
+            activation_param=module.act_param
+        )
         for key in module.state_dict():
             module_new.state_dict()[key].copy_(module.state_dict()[key])
         module_new.training = module.training
         module_new.weight.data = module_new.weight.abs() + module_new.eps
         return module_new
     for name, child in reversed(module._modules.items()):
-        new_child = InplacABN_to_ABN(child)
+        new_child = inplaceABN_to_ABN(child)
         if new_child != child:
             module._modules[name] = new_child
     return module

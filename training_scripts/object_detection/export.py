@@ -63,7 +63,11 @@ import torch.nn as nn
 from torch.utils.mobile_optimizer import optimize_for_mobile
 
 from deeplite_torch_zoo import get_model_by_name
-from deeplite_torch_zoo.utils import LOGGER
+from deeplite_torch_zoo.utils import (LOGGER, select_device, smart_inference_mode, colorstr, print_args,
+                                      Profile, check_version, check_img_size, file_size, get_default_args)
+from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
+    Detect, YOLOModel)
+
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -71,13 +75,6 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 if platform.system() != 'Windows':
     ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
-
-from utils.general import (Profile, check_img_size, check_version, colorstr,
-                           file_size, get_default_args, print_args)
-from utils.torch_utils import select_device, smart_inference_mode
-
-from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
-    Detect, YOLOModel)
 
 MACOS = platform.system() == 'Darwin'  # macOS environment
 check_requirements = lambda x: x
