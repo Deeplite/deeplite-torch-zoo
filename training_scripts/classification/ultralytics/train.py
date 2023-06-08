@@ -11,7 +11,7 @@ import torch
 import torch.distributed as dist
 import torch.nn.functional as F
 import torch.optim.lr_scheduler as lr_scheduler
-from kd import KDTeacher
+
 from torch.cuda import amp
 from tqdm import tqdm
 from utils.general import (LOGGER, WorkingDirectory, colorstr, increment_path,
@@ -23,6 +23,8 @@ from utils.torch_utils import (GenericLogger, ModelEMA, select_device,
 
 from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
                                 get_eval_function)
+from deeplite_torch_zoo.utils.kd import KDTeacher
+
 
 ROOT = Path.cwd()
 
