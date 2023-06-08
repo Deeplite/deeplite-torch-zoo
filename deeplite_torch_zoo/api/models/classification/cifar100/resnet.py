@@ -29,68 +29,63 @@ model_urls = {
 
 
 def _resnet(
-    arch, block, layers, num_classes=100, pretrained=False, device='cuda'
+    arch, block, layers, num_classes=100, pretrained=False
 ):
     model = ResNet(block, layers, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='resnet18', dataset_name='cifar100', task_type='classification'
 )
-def resnet18_cifar100(pretrained=False, num_classes=100, device='cuda'):
+def resnet18_cifar100(pretrained=False, num_classes=100):
     return _resnet(
         "resnet18",
         BasicBlock,
         [2, 2, 2, 2],
         num_classes=num_classes,
         pretrained=pretrained,
-        device=device,
     )
 
 
-def resnet34(pretrained=False, device='cuda'):
+def resnet34(pretrained=False):
     return _resnet(
         "resnet34",
         BasicBlock,
         [3, 4, 6, 3],
         pretrained=pretrained,
-        device=device,
     )
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='resnet50', dataset_name='cifar100', task_type='classification'
 )
-def resnet50_cifar100(pretrained=False, num_classes=100, device='cuda'):
+def resnet50_cifar100(pretrained=False, num_classes=100):
     return _resnet(
         "resnet50",
         Bottleneck,
         [3, 4, 6, 3],
         num_classes=num_classes,
         pretrained=pretrained,
-        device=device,
     )
 
 
-def resnet101(pretrained=False, device='cuda'):
+def resnet101(pretrained=False):
     return _resnet(
         "resnet34",
         Bottleneck,
         [3, 4, 23, 3],
         pretrained=pretrained,
-        device=device,
     )
 
 
-def resnet152(pretrained=False, device='cuda'):
+def resnet152(pretrained=False):
     return _resnet(
         "resnet34",
         Bottleneck,
         [3, 8, 36, 3],
         pretrained=pretrained,
-        device=device,
     )

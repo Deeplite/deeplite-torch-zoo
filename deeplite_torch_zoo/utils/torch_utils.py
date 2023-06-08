@@ -61,7 +61,7 @@ def generate_checkpoint_name(
     return checkpoint_name
 
 
-def load_pretrained_weights(model, checkpoint_url, device):
+def load_pretrained_weights(model, checkpoint_url, device='cpu'):
     pretrained_dict = load_state_dict_from_url(
         checkpoint_url,
         progress=True,

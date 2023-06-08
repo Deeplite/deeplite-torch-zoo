@@ -12,7 +12,7 @@ model_urls = {
 
 
 def _resnet_imagenet16(
-    arch, pretrained=False, num_classes=16, device='cuda'
+    arch, pretrained=False, num_classes=16
 ):
     if arch == "resnet18":
         model = torchvision.models.resnet18(num_classes=num_classes)
@@ -23,18 +23,17 @@ def _resnet_imagenet16(
 
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='resnet18', dataset_name='imagenet16', task_type='classification'
 )
-def resnet18_imagenet16(pretrained=False, num_classes=16, device='cuda'):
+def resnet18_imagenet16(pretrained=False, num_classes=16):
     return _resnet_imagenet16(
         "resnet18",
         pretrained=pretrained,
-        device=device,
         num_classes=num_classes,
     )
 
@@ -42,10 +41,9 @@ def resnet18_imagenet16(pretrained=False, num_classes=16, device='cuda'):
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='resnet50', dataset_name='imagenet16', task_type='classification'
 )
-def resnet50_imagenet16(pretrained=False, num_classes=16, device='cuda'):
+def resnet50_imagenet16(pretrained=False, num_classes=16):
     return _resnet_imagenet16(
         "resnet50",
         pretrained=pretrained,
-        device=device,
         num_classes=num_classes,
     )

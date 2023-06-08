@@ -117,7 +117,6 @@ To get a pretrained classification model one could use
         model_name="resnet18",
         dataset_name="cifar100",
         pretrained=True, # or False, if pretrained weights are not required
-        device="cpu", # or "cuda"
     )
 ```
 
@@ -129,7 +128,6 @@ To create a new model with ImageNet weights and a custom number of classes one c
         pretraining_dataset="imagenet",
         num_classes=42,
         pretrained=True, # or False, if pretrained weights are not required
-        device="cpu", # or "cuda"
     )
 ```
 

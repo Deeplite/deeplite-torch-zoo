@@ -48,7 +48,6 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
         model_name=model_name,
         dataset_name=dataset_name,
         pretrained=download_checkpoint,
-        device='cpu',
     )
     train_loader = get_data_splits_by_name(
         data_root=mock_dataset_path,
@@ -56,7 +55,6 @@ def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs
         model_name=model_name,
         batch_size=TEST_BATCH_SIZE,
         num_workers=0,
-        device='cpu',
         **datasplit_kwargs,
     )['train']
 
@@ -89,7 +87,6 @@ def test_detection_model_output_shape_arbitrary_num_clases(model_name, dataset_n
         num_classes=TEST_NUM_CLASSES,
         pretraining_dataset=dataset_name,
         pretrained=download_checkpoint,
-        device='cpu',
     )
     train_loader = get_data_splits_by_name(
         data_root=mock_dataset_path,
@@ -97,7 +94,6 @@ def test_detection_model_output_shape_arbitrary_num_clases(model_name, dataset_n
         model_name=model_name,
         batch_size=TEST_BATCH_SIZE,
         num_workers=0,
-        device='cpu',
         **datasplit_kwargs,
     )['train']
 

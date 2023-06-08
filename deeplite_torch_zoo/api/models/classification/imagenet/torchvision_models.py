@@ -15,7 +15,7 @@ def make_wrapper_func(wrapper_fn_name, register_model_name_key, model_name_key):
         task_type='classification',
     )
     def wrapper_func(
-        pretrained=False, device="cuda", num_classes=NUM_IMAGENET_CLASSES
+        pretrained=False, num_classes=NUM_IMAGENET_CLASSES
     ):
         model = torchvision.models.__dict__[model_name_key](
             pretrained=pretrained, num_classes=NUM_IMAGENET_CLASSES
@@ -28,7 +28,7 @@ def make_wrapper_func(wrapper_fn_name, register_model_name_key, model_name_key):
             )
             load_state_dict_partial(model, pretrained_dict)
 
-        return model.to(device)
+        return model
 
     wrapper_func.__name__ = wrapper_fn_name
     return wrapper_func

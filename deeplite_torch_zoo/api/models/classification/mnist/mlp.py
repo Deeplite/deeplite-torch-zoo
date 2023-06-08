@@ -14,50 +14,47 @@ model_urls = {
 
 
 def _mlp10_mnist(
-    arch, n_hiddens, pretrained=False, num_classes=10, device="cuda"
+    arch, n_hiddens, pretrained=False, num_classes=10
 ):
     model = MLP(input_dims=784, n_hiddens=n_hiddens, n_class=num_classes)
 
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='mlp2', dataset_name='mnist', task_type='classification'
 )
-def mlp2_mnist(pretrained=False, num_classes=10, device="cuda"):
+def mlp2_mnist(pretrained=False, num_classes=10):
     return _mlp10_mnist(
         "mlp2",
         n_hiddens=[128, 128],
         pretrained=pretrained,
         num_classes=num_classes,
-        device=device,
     )
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='mlp4', dataset_name='mnist', task_type='classification'
 )
-def mlp4_mnist(pretrained=False, num_classes=10, device="cuda"):
+def mlp4_mnist(pretrained=False, num_classes=10):
     return _mlp10_mnist(
         "mlp4",
         n_hiddens=[128, 128, 128, 128],
         pretrained=pretrained,
         num_classes=num_classes,
-        device=device,
     )
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='mlp8', dataset_name='mnist', task_type='classification'
 )
-def mlp8_mnist(pretrained=False, num_classes=10, device="cuda"):
+def mlp8_mnist(pretrained=False, num_classes=10):
     return _mlp10_mnist(
         "mlp8",
         n_hiddens=[128, 128, 128, 128, 128, 128, 128, 128],
         pretrained=pretrained,
         num_classes=num_classes,
-        device=device,
     )

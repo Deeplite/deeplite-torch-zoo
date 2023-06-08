@@ -31,21 +31,22 @@ def _densenet(
     growth_rate=32,
     pretrained=False,
     num_classes=100,
-    device='cuda',
 ):
     model = DenseNet(block, layers, growth_rate, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, device)
+        model = load_pretrained_weights(model, checkpoint_url)
 
-    return model.to(device)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
-    model_name='densenet121', dataset_name='cifar100', task_type='classification'
+    model_name='densenet121',
+    dataset_name='cifar100',
+    task_type='classification'
 )
 def densenet121_cifar100(
-    pretrained=False, num_classes=100, device='cuda'
+    pretrained=False, num_classes=100
 ):
     return _densenet(
         "densenet121",
@@ -54,7 +55,6 @@ def densenet121_cifar100(
         growth_rate=32,
         num_classes=num_classes,
         pretrained=pretrained,
-        device=device,
     )
 
 

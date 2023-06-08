@@ -27,7 +27,6 @@ def get_imagenette(
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     augmentation_mode='imagenet',
     **kwargs,
@@ -70,7 +69,6 @@ def get_imagenette(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     val_batch_size = batch_size if val_batch_size is None else val_batch_size
@@ -81,7 +79,6 @@ def get_imagenette(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": val_loader}
@@ -96,7 +93,6 @@ def get_imagenette_320(
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     augmentation_mode='imagenet',
     **kwargs,
@@ -141,7 +137,6 @@ def get_imagenette_320(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     val_batch_size = batch_size if val_batch_size is None else val_batch_size
@@ -152,7 +147,6 @@ def get_imagenette_320(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": val_loader}
@@ -167,7 +161,6 @@ def get_imagenette_160(
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     augmentation_mode='imagenet',
     **kwargs,
@@ -212,7 +205,6 @@ def get_imagenette_160(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     val_batch_size = batch_size if val_batch_size is None else val_batch_size
@@ -223,7 +215,6 @@ def get_imagenette_160(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": val_loader}

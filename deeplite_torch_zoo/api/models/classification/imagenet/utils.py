@@ -18,22 +18,21 @@ def make_wrapper_func(
         task_type='classification',
         has_checkpoint=has_checkpoint,
     )
-    def wrapper_func(pretrained=False, num_classes=num_classes, device='cuda'):
+    def wrapper_func(pretrained=False, num_classes=num_classes):
         return wrapper_fn(
             model_name=model_name,
             num_classes=num_classes,
             pretrained=pretrained,
-            device=device,
         )
 
     wrapper_func.__name__ = wrapper_name
     return wrapper_func
 
 
-def load_checkpoint(model, model_name, dataset_name, model_urls, device):
-    if model_name not in model_urls:
+def load_checkpoint(model, model_name, dataset_name, model_urls, device='cpu'):
+    if f'{model_name}_{dataset_name}' not in model_urls:
         raise ValueError(
             f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
             'Use pretrained=False if you want to create a untrained model.'
         )
-    return load_pretrained_weights(model, model_urls[model_name], device)
+    return load_pretrained_weights(model, model_urls[f'{model_name}_{dataset_name}'], device)

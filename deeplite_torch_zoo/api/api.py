@@ -50,8 +50,6 @@ def get_model_by_name(
     model_name,
     dataset_name,
     pretrained=True,
-    fp16=False,
-    device="cuda",
     **kwargs,
 ):
     """
@@ -59,8 +57,6 @@ def get_model_by_name(
     :param model_name: Name of the model to create
     :param dataset_name: Name of dataset the model was trained / is to be trained on
     :param pretrained: Whether to load pretrained weights
-    :param fp16: Whether to convert the model to fp16 precision
-    :param device: Loads the model either on a gpu (`cuda`, `cuda:device_id`) or cpu.
 
     returns a corresponding model object (optionally with pretrained weights)
     """
@@ -68,9 +64,9 @@ def get_model_by_name(
         model_name=model_name.lower(), dataset_name=dataset_name
     )
     model = model_func(
-        pretrained=pretrained, device=device, **kwargs
+        pretrained=pretrained, **kwargs
     )
-    return model.half() if fp16 else model
+    return model
 
 
 def get_eval_function(model_name, dataset_name):
@@ -88,8 +84,6 @@ def create_model(
     pretraining_dataset,
     num_classes=None,
     pretrained=False,
-    fp16=False,
-    device="cuda",
     **kwargs,
 ):
     """
@@ -110,13 +104,12 @@ def create_model(
     )
     model_wrapper_kwargs = {
         'pretrained': pretrained,
-        'device': device,
         **kwargs,
     }
     if num_classes is not None:
         model_wrapper_kwargs.update({'num_classes': num_classes})
     model = model_func(**model_wrapper_kwargs)
-    return model.half() if fp16 else model
+    return model
 
 
 def profile(model, img_size=224, in_ch=3, verbose=False, fuse=True):

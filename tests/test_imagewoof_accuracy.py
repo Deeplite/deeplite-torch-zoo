@@ -26,7 +26,6 @@ def test_classification_model_imagenet_pretrained_accuracy_fast(
         model_name=model_name,
         dataset_name='imagenet',
         pretrained=True,
-        device='cpu',
     )
     eval_fn = get_eval_function(
         model_name=model_name,

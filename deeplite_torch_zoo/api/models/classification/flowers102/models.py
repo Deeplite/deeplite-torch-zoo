@@ -22,7 +22,7 @@ def make_wrapper_func(wrapper_fn_name, model_name_key, has_checkpoint):
         has_checkpoint=has_checkpoint,
     )
     def wrapper_func(
-        pretrained=False, device='cuda', num_classes=FLOWERS102_NUM_CLASSES
+        pretrained=False, num_classes=FLOWERS102_NUM_CLASSES
     ):
         wrapper_fn = MODEL_WRAPPER_REGISTRY.get(
             model_name=model_name_key, dataset_name='imagenet'
@@ -30,15 +30,14 @@ def make_wrapper_func(wrapper_fn_name, model_name_key, has_checkpoint):
         model = wrapper_fn(
             pretrained=False,
             num_classes=num_classes,
-            device=device,
         )
         if pretrained:
             checkpoint_url = (
                 f'{CHECKPOINT_STORAGE_URL}/{FLOWERS101_CHECKPOINT_URLS[model_name_key]}'
             )
-            model = load_pretrained_weights(model, checkpoint_url, device)
+            model = load_pretrained_weights(model, checkpoint_url)
 
-        return model.to(device)
+        return model
 
     wrapper_func.__name__ = wrapper_fn_name
     return wrapper_func

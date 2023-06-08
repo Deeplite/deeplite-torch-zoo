@@ -5,7 +5,6 @@
 
 """
 
-
 from deeplite_torch_zoo.utils import load_pretrained_weights
 from deeplite_torch_zoo.src.classification.mnist_models.lenet import LeNet5
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
@@ -18,22 +17,21 @@ model_urls = {
 }
 
 
-def _lenet_mnist(arch, pretrained=False, num_classes=10, device="cuda"):
+def _lenet_mnist(arch, pretrained=False, num_classes=10):
     model = LeNet5(output=num_classes)
 
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='lenet5', dataset_name='mnist', task_type='classification'
 )
-def lenet5_mnist(pretrained=False, num_classes=10, device="cuda"):
+def lenet5_mnist(pretrained=False, num_classes=10):
     return _lenet_mnist(
         "lenet5",
         pretrained=pretrained,
         num_classes=num_classes,
-        device=device,
     )
