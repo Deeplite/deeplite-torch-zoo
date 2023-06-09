@@ -4,10 +4,8 @@ from deeplite_torch_zoo.api.eval import *
 classification_eval_list = (classification_eval, )
 
 objectdetection_eval_list = (
-    yolo_eval_lisa,
     yolo_eval_voc,
     yolo_eval_coco,
-    yolo_eval_wider_face,
 )
 
 

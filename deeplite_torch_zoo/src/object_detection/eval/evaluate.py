@@ -9,23 +9,14 @@ from tqdm import tqdm
 from deeplite_torch_zoo.src.object_detection.eval.mean_average_precision import (
     MetricBuilder,
 )
-from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.utils import (
+from deeplite_torch_zoo.src.object_detection.eval.utils import (
     box_iou,
-    check_version,
     non_max_suppression,
 )
-from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.v8_nms import (
+from deeplite_torch_zoo.src.object_detection.eval.v8_nms import (
     non_max_suppression as non_max_suppression_v8,
 )
-from deeplite_torch_zoo.utils import LOGGER
-
-
-def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
-    # Applies torch.inference_mode() decorator if torch>=1.9.0 else torch.no_grad() decorator
-    def decorate(fn):
-        return (torch.inference_mode if torch_1_9 else torch.no_grad)()(fn)
-
-    return decorate
+from deeplite_torch_zoo.utils import LOGGER, smart_inference_mode
 
 
 def process_batch(detections, labels, iouv):

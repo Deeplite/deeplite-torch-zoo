@@ -39,7 +39,15 @@ TORCH_1_12 = check_version(torch.__version__, '1.12.0')
 TORCH_2_0 = check_version(torch.__version__, minimum='2.0')
 
 
-def generate_checkpoint_name(
+def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
+    # Applies torch.inference_mode() decorator if torch>=1.9.0 else torch.no_grad() decorator
+    def decorate(fn):
+        return (torch.inference_mode if torch_1_9 else torch.no_grad)()(fn)
+
+    return decorate
+
+
+def generate_zoo_checkpoint_name(
     model,
     test_dataloader,
     pth_filename,
@@ -298,3 +306,13 @@ def smartCrossEntropyLoss(label_smoothing=0.0):
     if label_smoothing > 0:
         LOGGER.warning(f'WARNING ⚠️ label smoothing {label_smoothing} requires torch>=1.10.0')
     return nn.CrossEntropyLoss()
+
+
+class no_jit_trace:
+    def __enter__(self):
+        self.state = torch._C._get_tracing_state()
+        torch._C._set_tracing_state(None)
+
+    def __exit__(self, *args):
+        torch._C._set_tracing_state(self.state)
+        self.state = None

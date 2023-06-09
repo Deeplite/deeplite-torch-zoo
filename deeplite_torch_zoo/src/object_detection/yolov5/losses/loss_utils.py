@@ -5,20 +5,9 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
-from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.utils import xyxy2cxcywh
 
-
-def is_parallel(model):
-    # Returns True if model is of type DP or DDP
-    return type(model) in (
-        nn.parallel.DataParallel,
-        nn.parallel.DistributedDataParallel,
-    )
-
-
-def de_parallel(model):
-    # De-parallelize a model: returns single-GPU model if model is of type DP or DDP
-    return model.module if is_parallel(model) else model
+from deeplite_torch_zoo.src.object_detection.eval.utils import xyxy2cxcywh
+from deeplite_torch_zoo.utils import is_parallel, de_parallel
 
 
 def get_yolov5_targets(raw_targets, labels_length, img_size, device):

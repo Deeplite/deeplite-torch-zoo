@@ -348,23 +348,6 @@ def compute_ap(recall, precision):
     return ap, mpre, mrec
 
 
-def check_version(
-    current='0.0.0',
-    minimum='0.0.0',
-    name='version ',
-    pinned=False,
-    hard=False,
-    verbose=False,
-):
-    # Check version vs. required version
-    current, minimum = (pkg.parse_version(x) for x in (current, minimum))
-    result = (current == minimum) if pinned else (current >= minimum)  # bool
-    s = f'WARNING ⚠️ {name}{minimum} is required by YOLOv5, but {name}{current} is currently installed'  # string
-    if verbose and not result:
-        logging.warning(s)
-    return result
-
-
 def cxcywh2xyxy(x):
     # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
     y = torch.zeros_like(x) if isinstance(x, torch.Tensor) else np.zeros_like(x)
