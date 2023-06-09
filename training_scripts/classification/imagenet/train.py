@@ -26,7 +26,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.utils
 import yaml
-from deeplite_torch_zoo import create_model, get_dataloaders
+
 from timm import utils
 from timm.data import FastCollateMixup, Mixup, resolve_data_config
 from timm.models import (convert_splitbn_model, convert_sync_batchnorm,
@@ -37,7 +37,8 @@ from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
-from kd import KDTeacher
+from deeplite_torch_zoo import create_model, get_dataloaders
+from deeplite_torch_zoo.utils.kd import KDTeacher
 
 try:
     from apex import amp
