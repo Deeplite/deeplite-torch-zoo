@@ -35,7 +35,6 @@ INSTALL_REQUIRES = [
     "pytz",
     "pandas",
     "ultralytics==8.0.107",
-    "ffcv",
 ]
 
 

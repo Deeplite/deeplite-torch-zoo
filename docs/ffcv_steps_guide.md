@@ -7,13 +7,7 @@ git clone https://github.com/opencv/opencv_contrib.git
 cd opencv
 mkdir build
 cd build
-cmake -DOPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules 
-      -DWITH_CUDA=ON
-      -DCUDA_ARCH_BIN=7.5,8.0,8.6
-      -DCMAKE_BUILD_TYPE=RELEASE
-      -DOPENCV_GENERATE_PKGCONFIG=YES
-      -DCMAKE_INSTALL_PREFIX=/usr/local
-      ..
+cmake -D CMAKE_BUILD_TYPE=Release -D OPENCV_EXTRA_MODULES_PATH=opencv_contrib/modules -D CMAKE_INSTALL_PREFIX=/usr/local ..
 make -j7
 sudo make install
 sudo ldconfig
@@ -45,4 +39,30 @@ cd examples;
 # - quality=90 JPEGs
 ./write_imagenet.sh 500 0.50 90
 
+```
+
+# Script to convert CIFAR100 dataset into ffcv formate
+
+```
+from argparse import ArgumentParser
+from typing import List
+import torchvision
+from ffcv.writer import DatasetWriter
+from ffcv.fields import IntField, RGBImageField
+
+def main(train_dataset, val_dataset):
+    datasets = {
+        'train': torchvision.datasets.CIFAR100('/tmp', train=True, download=True),
+        'test': torchvision.datasets.CIFAR100('/tmp', train=False, download=True)
+        }
+
+    for (name, ds) in datasets.items():
+        path = train_dataset if name == 'train' else val_dataset
+        writer = DatasetWriter(path, {
+            'image': RGBImageField(),
+            'label': IntField()
+        })
+        writer.from_indexed_dataset(ds)
+
+main(train.ffcv, test.ffcv)
 ```

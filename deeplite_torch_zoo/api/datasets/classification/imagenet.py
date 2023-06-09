@@ -79,7 +79,10 @@ def get_imagenet(
         )
 
     elif dataloading=='ffcv':
-        print("********",train_split)
+        try:
+            from ffcv.pipeline.operation import Operation
+        except:
+            raise RuntimeError('FFCV installation is required, please refer to docs/ffcv_steps_guide.md')
         train_loader = create_ffcv_train_loader(train_dataset=os.path.join(data_root,train_split),
                                        num_workers=num_workers,
                                        batch_size=batch_size,
