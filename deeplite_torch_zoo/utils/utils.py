@@ -3,6 +3,8 @@
 import yaml
 import inspect
 import hashlib
+import warnings
+import functools
 import os
 import math
 import logging.config
@@ -85,6 +87,23 @@ def get_file_hash(filename, max_has_symbols=16, min_large_file_size_mb=1000):
             readable_hash = hashlib.sha256(bytes).hexdigest()
 
     return readable_hash[:max_has_symbols]
+
+
+def deprecated(func):
+    """
+    This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.warn(f'Method {func.__name__} is deprecated.',
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning)  # reset filter
+        return func(*args, **kwargs)
+    return new_func
 
 
 def print_args(args: Optional[dict] = None, show_file=True, show_func=False):

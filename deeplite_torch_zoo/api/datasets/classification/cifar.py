@@ -6,7 +6,7 @@ import torchvision
 from torchvision import transforms
 
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
-from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 from deeplite_torch_zoo.utils import LOGGER
 
 __all__ = ["get_cifar100", "get_cifar10"]
@@ -86,7 +86,7 @@ def _get_cifar(
     return {"train": train_loader, "test": test_loader}
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="cifar100")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="cifar100")
 def get_cifar100(
     data_root=None,
     batch_size=128,
@@ -119,7 +119,7 @@ def get_cifar100(
     )
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="cifar10")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="cifar10")
 def get_cifar10(
     data_root=None,
     batch_size=128,

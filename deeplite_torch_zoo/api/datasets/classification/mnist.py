@@ -6,14 +6,14 @@ import torchvision
 from torchvision import transforms
 
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
-from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 from deeplite_torch_zoo.utils import LOGGER
 
 
 __all__ = ["get_mnist"]
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="mnist")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="mnist")
 def get_mnist(
     data_root="",
     batch_size=128,

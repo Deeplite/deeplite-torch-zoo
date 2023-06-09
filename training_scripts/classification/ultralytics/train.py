@@ -20,7 +20,7 @@ from deeplite_torch_zoo.utils import (LOGGER, GenericLogger, ModelEMA, colorstr,
                                       select_device, smart_DDP, smart_optimizer,
                                       smartCrossEntropyLoss, torch_distributed_zero_first)
 
-from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
+from deeplite_torch_zoo import (create_model, get_dataloaders,
                                 get_eval_function)
 from deeplite_torch_zoo.utils.kd import KDTeacher
 
@@ -50,7 +50,7 @@ def train(opt, device):
     logger = GenericLogger(opt=opt, console_logger=LOGGER) if RANK in {-1, 0} else None
 
     # Dataloaders
-    dataloaders = get_data_splits_by_name(
+    dataloaders = get_dataloaders(
         data_root=opt.data_root,
         dataset_name=opt.dataset,
         model_name=opt.model,

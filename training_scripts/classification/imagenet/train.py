@@ -37,8 +37,8 @@ from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
+from deeplite_torch_zoo import create_model, get_dataloaders
 from deeplite_torch_zoo.utils.kd import KDTeacher
-from deeplite_torch_zoo import create_model, get_data_splits_by_name
 
 try:
     from apex import amp
@@ -411,7 +411,7 @@ def main():
     if args.img_size is not None:
         datasplit_kwargs = {'img_size': args.img_size}
 
-    data_splits = get_data_splits_by_name(
+    data_splits = get_dataloaders(
         dataset_name=args.dataset,
         model_name=args.model,
         data_root=args.data_dir,

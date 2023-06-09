@@ -7,16 +7,16 @@ from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_imagenet_transforms,
 )
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
-from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 from deeplite_torch_zoo.utils import LOGGER
 
 
 __all__ = ["get_imagenet"]
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet16")
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet10")
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagenet")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagenet16")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagenet10")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagenet")
 def get_imagenet(
     data_root,
     batch_size=128,

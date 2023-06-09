@@ -62,12 +62,11 @@ import torch
 import torch.nn as nn
 from torch.utils.mobile_optimizer import optimize_for_mobile
 
-from deeplite_torch_zoo import get_model_by_name
+from deeplite_torch_zoo import get_model
 from deeplite_torch_zoo.utils import (LOGGER, select_device, smart_inference_mode, colorstr, print_args,
                                       Profile, check_version, check_img_size, file_size, get_default_args)
 from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
     Detect, YOLOModel)
-
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -551,11 +550,10 @@ def run(
         assert device.type != 'cpu' or coreml, '--half only compatible with GPU export, i.e. use --device 0'
         assert not dynamic, '--half not compatible with --dynamic, i.e. use either --half or --dynamic but not both'
 
-    model = get_model_by_name(
+    model = get_model(
         model_name=model_name,
         dataset_name=dataset_name,
-        pretrained=False,
-        device='cpu'
+        pretrained=False
     )
 
     # Model compatibility updates

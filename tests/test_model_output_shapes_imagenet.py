@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from deeplite_torch_zoo import (create_model, get_model_by_name,
-                                get_models_by_dataset)
+from deeplite_torch_zoo import (create_model, get_model,
+                                list_models_by_dataset)
 from deeplite_torch_zoo.api.models.classification.model_implementation_dict import (
     FIXED_SIZE_INPUT_MODELS, INPLACE_ABN_MODELS)
 
@@ -10,7 +10,7 @@ TEST_BATCH_SIZE = 2
 TEST_NUM_CLASSES = 42
 
 IMAGENET_MODEL_TESTS = []
-for model_name in get_models_by_dataset('imagenet'):
+for model_name in list_models_by_dataset('imagenet'):
     if model_name not in FIXED_SIZE_INPUT_MODELS and model_name not in INPLACE_ABN_MODELS:
         IMAGENET_MODEL_TESTS.append((model_name, 'imagenet', 224, 3, 1000))
 
@@ -22,7 +22,7 @@ for model_name in get_models_by_dataset('imagenet'):
 )
 def test_classification_model_output_shape(model_name, dataset_name, input_resolution,
     num_inp_channels, target_output_shape, download_checkpoint=False):
-    model = get_model_by_name(
+    model = get_model(
         model_name=model_name,
         dataset_name=dataset_name,
         pretrained=download_checkpoint,

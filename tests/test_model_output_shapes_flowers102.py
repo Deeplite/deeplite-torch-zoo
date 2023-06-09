@@ -1,14 +1,14 @@
 import pytest
 import torch
 
-from deeplite_torch_zoo import (create_model, get_model_by_name,
-                                get_models_by_dataset)
+from deeplite_torch_zoo import (create_model, get_model,
+                                list_models_by_dataset)
 
 TEST_BATCH_SIZE = 2
 TEST_NUM_CLASSES = 42
 
 FLOWERS_MODEL_TESTS = []
-for model_name in get_models_by_dataset('flowers102'):
+for model_name in list_models_by_dataset('flowers102'):
     FLOWERS_MODEL_TESTS.append((model_name, 'flowers102', 224, 3, 102))
 
 
@@ -19,7 +19,7 @@ for model_name in get_models_by_dataset('flowers102'):
 )
 def test_classification_model_output_shape(model_name, dataset_name, input_resolution,
     num_inp_channels, target_output_shape, download_checkpoint=False):
-    model = get_model_by_name(
+    model = get_model(
         model_name=model_name,
         dataset_name=dataset_name,
         pretrained=download_checkpoint,
