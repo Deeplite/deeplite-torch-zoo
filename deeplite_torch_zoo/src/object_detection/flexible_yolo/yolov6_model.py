@@ -9,9 +9,7 @@ from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common 
     RepVGGBlock,
 )
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect_v8 import (
-    DetectV8,
-)
+
 from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
     HEAD_NAME_MAP,
     Conv,
@@ -39,8 +37,7 @@ class YOLOv6(FlexibleYOLO):
                 [116, 90, 156, 198, 373, 326],
             ),
         }
-        self.yaml = None
-
+        
         head_cls = Detect
         if custom_head is not None:
             head_cls = HEAD_NAME_MAP[custom_head]
@@ -68,26 +65,6 @@ class YOLOv6(FlexibleYOLO):
 
         initialize_weights(self)
         self._is_fused = False
-
-    def _init_head(self):
-        if isinstance(self.detection, Detect):
-            s = 256  # 2x min stride
-            self.detection.stride = torch.tensor(
-                [s / x.shape[-2] for x in self.forward(torch.zeros(1, 3, s, s))]
-            )
-            self.detection.anchors /= self.detection.stride.view(-1, 1, 1)
-
-            self.stride = self.detection.stride
-            self._initialize_biases()  # only run once
-        if isinstance(self.detection, DetectV8):
-            s = 256  # 2x min stride
-            # self.detection.inplace = self.inplace
-            forward = lambda x: self.forward(x)
-            self.detection.stride = torch.tensor(
-                [s / x.shape[-2] for x in forward(torch.zeros(1, 3, s, s))]
-            )  # forward
-            self.stride = self.detection.stride
-            self.detection.bias_init()  # only run once
 
     def forward(self, x):
         out = self.backbone(x)

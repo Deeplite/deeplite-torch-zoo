@@ -1,26 +1,11 @@
-from pathlib import Path
-
-import deeplite_torch_zoo
-from deeplite_torch_zoo.api.models.object_detection.yolo_helpers import (
-    make_wrapper_func,
+from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import YOLOModel
+from deeplite_torch_zoo.api.models.object_detection.helpers import (
+    make_wrapper_func, load_pretrained_model, get_project_root, DATASET_LIST
 )
 
 __all__ = []
 
-
-def get_project_root() -> Path:
-    return Path(deeplite_torch_zoo.__file__).parents[1]
-
-
 CFG_PATH = "deeplite_torch_zoo/src/object_detection/yolov5/configs"
-
-DATASET_LIST = [
-    ('person_detection', 1),
-    ('voc', 20),
-    ('coco', 80),
-    ('voc07', 20),
-    ('custom_person_detection', 1),
-]
 
 YOLO_CONFIGS = {
     'yolo3': 'yolo3/yolov3.yaml',
@@ -114,6 +99,24 @@ V8_MODEL_SCALES = {
 CUSTOM_MODEL_SCALES = {'yolo8': V8_MODEL_SCALES}
 
 
+def create_yolo_model(
+    model_name="yolo5s",
+    dataset_name="voc",
+    num_classes=20,
+    config_path=None,
+    pretrained=False,
+    **kwargs,
+):  # pylint: disable=W0621
+    model = YOLOModel(
+        config_path,
+        nc=num_classes,
+        **kwargs,
+    )
+    if pretrained:
+        model = load_pretrained_model(model, model_name, dataset_name)
+    return model
+
+
 def get_model_scales(_model_key):
     scale_dict = CUSTOM_MODEL_SCALES.get(_model_key, DEFAULT_MODEL_SCALES)
     param_names = ('depth_mul', 'width_mul', 'max_channels')
@@ -137,11 +140,12 @@ for dataset_tag, n_classes in DATASET_LIST:
     for model_tag, model_dict in full_model_dict.items():
         name = '_'.join([model_tag, dataset_tag])
         globals()[name] = make_wrapper_func(
+            create_yolo_model,
             name,
             model_tag,
             dataset_tag,
             n_classes,
-            model_dict['config'],
+            config_path=model_dict['config'],
             **model_dict['params'],
         )
         __all__.append(name)

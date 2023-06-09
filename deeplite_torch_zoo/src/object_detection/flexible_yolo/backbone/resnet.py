@@ -5,11 +5,9 @@ import math
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules import (
-    CBAM,
-    DropBlock2D,
-    LinearScheduler,
-)
+from deeplite_torch_zoo.src.dnn_blocks.common import DropBlock2D, LinearScheduler
+from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import CBAM
+
 from deeplite_torch_zoo.utils import LOGGER
 
 
