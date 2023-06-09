@@ -5,7 +5,7 @@
 
 [![Build Status](https://travis-ci.com/Deeplite/deeplite-torch-zoo.svg?token=kodd5rKMpjxQDqRCxwiV&branch=master)](https://travis-ci.com/Deeplite/deeplite-torch-zoo) [![codecov](https://codecov.io/gh/Deeplite/deeplite-torch-zoo/branch/master/graph/badge.svg?token=AVTp3PW5UP)](https://codecov.io/gh/Deeplite/deeplite-torch-zoo)
 
-# Deeplite Torch Zoo
+# 🚀 Deeplite Torch Zoo 🚀
 
 The ``deeplite-torch-zoo`` package is a collection of popular (pretrained) CNN model architectures and benchmark datasets for PyTorch. The models are grouped under different datasets and different task types such as classification, object detection, and semantic segmentation. The primary aim of ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models for a given task. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
 
