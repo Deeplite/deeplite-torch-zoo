@@ -22,6 +22,22 @@ from torch.optim import SGD, Adam, lr_scheduler
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
+from deeplite_torch_zoo.utils import (LOGGER, colorstr, init_seeds, print_args,
+                                      ModelEMA, de_parallel, select_device,
+                                      one_cycle, strip_optimizer, AverageMeter, EarlyStopping)
+
+import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
+import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
+import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
+
+from deeplite_torch_zoo import create_model, get_dataloaders, get_eval_function
+
+from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolov5_loss import \
+    YoloV5Loss
+from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolox.yolox_loss import \
+    ComputeXLoss
+
+
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
 if str(ROOT) not in sys.path:
@@ -29,22 +45,6 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 
-from utils.general import (AverageMeter, colorstr, init_seeds, one_cycle,
-                           print_args, set_logging, strip_optimizer)
-from utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel,
-                               select_device)
-
-import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
-import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
-import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
-from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
-                                get_eval_function)
-from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolov5_loss import \
-    YoloV5Loss
-from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolox.yolox_loss import \
-    ComputeXLoss
-
-LOGGER = logging.getLogger(__name__)
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
 WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
@@ -111,7 +111,7 @@ def train(opt, device):
     dataset_kwargs = {}
     if opt.img_size:
         dataset_kwargs = {'img_size': opt.img_size}
-    dataset_splits = get_data_splits_by_name(
+    dataset_splits = get_dataloaders(
         data_root=opt.img_dir,
         dataset_name=opt.dataset_name,
         model_name=opt.model_name,
@@ -138,7 +138,6 @@ def train(opt, device):
         pretraining_dataset=opt.pretraining_dataset,
         pretrained=opt.pretrained,
         num_classes=nc,
-        device=device,
     )
 
     # Freeze
@@ -483,7 +482,6 @@ def parse_opt(known=False):
 
 def main(opt):
     # Checks
-    set_logging(RANK)
     if RANK in [-1, 0]:
         print_args(vars(opt))
 

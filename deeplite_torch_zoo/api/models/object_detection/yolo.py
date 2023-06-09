@@ -105,8 +105,6 @@ def create_yolo_model(
     num_classes=20,
     config_path=None,
     pretrained=False,
-    progress=True,
-    device="cuda",
     **kwargs,
 ):  # pylint: disable=W0621
     model = YOLOModel(
@@ -115,8 +113,8 @@ def create_yolo_model(
         **kwargs,
     )
     if pretrained:
-        model = load_pretrained_model(model, model_name, dataset_name, progress, device)
-    return model.to(device)
+        model = load_pretrained_model(model, model_name, dataset_name)
+    return model
 
 
 def get_model_scales(_model_key):

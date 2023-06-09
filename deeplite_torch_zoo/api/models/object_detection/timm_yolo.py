@@ -4,13 +4,12 @@ from deeplite_torch_zoo.api.models.object_detection.timm_yolo_backbones import S
 
 __all__ = []
 
+
 def yolo_timm(
     model_name='yolo_timm_resnet18',
     dataset_name='voc',
     num_classes=20,
     pretrained=False,
-    progress=True,
-    device='cuda',
     **kwargs,
 ):
     model = TimmYOLO(
@@ -19,8 +18,8 @@ def yolo_timm(
         **kwargs,
     )
     if pretrained:
-        model = load_pretrained_model(model, model_name, dataset_name, progress, device)
-    return model.to(device)
+        model = load_pretrained_model(model, model_name, dataset_name)
+    return model
 
 
 for dataset_tag, n_classes in DATASET_LIST:

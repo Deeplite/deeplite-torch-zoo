@@ -23,7 +23,7 @@ def get_project_root() -> Path:
     return Path(deeplite_torch_zoo.__file__).parents[1]
 
 
-def load_pretrained_model(model, model_name, dataset_name, progress, device):
+def load_pretrained_model(model, model_name, dataset_name, device='cpu'):
     if f"{model_name}_{dataset_name}" not in model_urls:
         raise ValueError(
             f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
@@ -32,7 +32,7 @@ def load_pretrained_model(model, model_name, dataset_name, progress, device):
     checkpoint_url = urlparse.urljoin(
         CHECKPOINT_STORAGE_URL, model_urls[f'{model_name}_{dataset_name}']
     )
-    model = load_pretrained_weights(model, checkpoint_url, progress, device)
+    model = load_pretrained_weights(model, checkpoint_url, device)
     return model
 
 
@@ -57,8 +57,6 @@ def make_wrapper_func(
     def wrapper_func(
         pretrained=False,
         num_classes=num_classes,
-        progress=True,
-        device="cuda",
         **kwargs,
     ):
         default_kwargs.update(kwargs)
@@ -67,8 +65,6 @@ def make_wrapper_func(
             dataset_name=dataset_name,
             num_classes=num_classes,
             pretrained=pretrained,
-            progress=progress,
-            device=device,
             **default_kwargs,
         )
 

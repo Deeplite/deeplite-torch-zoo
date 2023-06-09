@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 import torch
 
-from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
-                                get_model_by_name, get_models_by_dataset)
+from deeplite_torch_zoo import (create_model, get_dataloaders,
+                                get_model, list_models_by_dataset)
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 MOCK_DATASETS_PATH = Path('tests/fixture/datasets')
@@ -19,7 +19,7 @@ BLACKLIST = ('yolo5_6sa', 'yolo3_tiny', 'yolo_fdresnet18x0.25', 'yolo_fdresnet18
 DETECTION_MODEL_TESTS = []
 
 
-for model_name in get_models_by_dataset('voc'):
+for model_name in list_models_by_dataset('voc'):
     if 'yolo' in model_name and model_name not in BLACKLIST:
         download_checkpoint = False
         if model_name in MODEL_WRAPPER_REGISTRY.pretrained_models:
@@ -28,7 +28,7 @@ for model_name in get_models_by_dataset('voc'):
             [(3, 56, 56), (3, 28, 28), (3, 14, 14)], MOCK_VOC_PATH, download_checkpoint))
 
 
-for model_name in get_models_by_dataset('person_detection'):
+for model_name in list_models_by_dataset('person_detection'):
     if 'yolo' in model_name and model_name not in BLACKLIST:
         download_checkpoint = False
         if model_name in MODEL_WRAPPER_REGISTRY.pretrained_models:
@@ -44,19 +44,17 @@ for model_name in get_models_by_dataset('person_detection'):
 )
 def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs,
     output_shapes, mock_dataset_path, download_checkpoint):
-    model = get_model_by_name(
+    model = get_model(
         model_name=model_name,
         dataset_name=dataset_name,
         pretrained=download_checkpoint,
-        device='cpu',
     )
-    train_loader = get_data_splits_by_name(
+    train_loader = get_dataloaders(
         data_root=mock_dataset_path,
         dataset_name=dataset_name,
         model_name=model_name,
         batch_size=TEST_BATCH_SIZE,
         num_workers=0,
-        device='cpu',
         **datasplit_kwargs,
     )['train']
 
@@ -89,15 +87,13 @@ def test_detection_model_output_shape_arbitrary_num_clases(model_name, dataset_n
         num_classes=TEST_NUM_CLASSES,
         pretraining_dataset=dataset_name,
         pretrained=download_checkpoint,
-        device='cpu',
     )
-    train_loader = get_data_splits_by_name(
+    train_loader = get_dataloaders(
         data_root=mock_dataset_path,
         dataset_name=dataset_name,
         model_name=model_name,
         batch_size=TEST_BATCH_SIZE,
         num_workers=0,
-        device='cpu',
         **datasplit_kwargs,
     )['train']
 

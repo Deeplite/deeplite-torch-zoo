@@ -16,9 +16,7 @@ def mobilenetv1_vww(
     num_classes=2,
     last_pooling_size=7,
     width_mult=1.0,
-    device='cuda',
     pretrained=False,
-    progress=True,
 ):
     model = MobileNetV1(
         num_classes=num_classes,
@@ -27,20 +25,18 @@ def mobilenetv1_vww(
     )
     if pretrained:
         checkpoint_url = model_urls[model_name]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='mobilenet_v1', dataset_name='vww', task_type='classification'
 )
-def mobilenet_v1_vww(pretrained=False, progress=True, num_classes=2, device='cuda'):
+def mobilenet_v1_vww(pretrained=False, num_classes=2):
     return mobilenetv1_vww(
         model_name='mobilenet_v1',
         pretrained=pretrained,
-        progress=progress,
         num_classes=num_classes,
-        device=device,
     )
 
 
@@ -48,14 +44,12 @@ def mobilenet_v1_vww(pretrained=False, progress=True, num_classes=2, device='cud
     model_name='mobilenet_v1_0.25', dataset_name='vww', task_type='classification'
 )
 def mobilenet_v1_025_vww(
-    pretrained=False, progress=True, num_classes=2, device='cuda', width_mult=0.25
+    pretrained=False, num_classes=2, width_mult=0.25
 ):
     return mobilenetv1_vww(
         model_name='mobilenet_v1_0.25',
         pretrained=pretrained,
-        progress=progress,
         num_classes=num_classes,
-        device=device,
         width_mult=width_mult,
     )
 
@@ -65,18 +59,14 @@ def mobilenet_v1_025_vww(
 )
 def mobilenet_v1_025_96px_vww(
     pretrained=False,
-    progress=True,
     num_classes=2,
-    device='cuda',
     width_mult=0.25,
     last_pooling_size=3,
 ):
     return mobilenetv1_vww(
         model_name='mobilenet_v1_0.25_96px',
         pretrained=pretrained,
-        progress=progress,
         num_classes=num_classes,
-        device=device,
         width_mult=width_mult,
         last_pooling_size=last_pooling_size,
     )

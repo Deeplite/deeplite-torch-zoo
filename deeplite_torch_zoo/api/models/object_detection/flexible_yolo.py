@@ -51,8 +51,6 @@ def flexible_yolo(
     dataset_name='voc',
     num_classes=20,
     pretrained=False,
-    progress=True,
-    device='cuda',
     **kwargs,
 ):
     config_key = model_name
@@ -71,8 +69,8 @@ def flexible_yolo(
         **kwargs,
     )
     if pretrained:
-        model = load_pretrained_model(model, model_name, dataset_name, progress, device)
-    return model.to(device)
+        model = load_pretrained_model(model, model_name, dataset_name)
+    return model
 
 
 model_list = list(model_configs.keys())

@@ -36,14 +36,12 @@ def yolov6(
     dataset_name='voc',
     pretrained=False,
     num_classes=20,
-    progress=True,
-    device='cuda',
     **kwargs,
 ):
     model = YOLOv6(model_config=config_path, nc=num_classes, **kwargs)
     if pretrained:
-        model = load_pretrained_model(model, model_name, dataset_name, progress, device)
-    return model.to(device)
+        model = load_pretrained_model(model, model_name, dataset_name)
+    return model
 
 
 def get_model_scales():

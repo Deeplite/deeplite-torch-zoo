@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from deeplite_torch_zoo import get_data_splits_by_name, get_model_by_name
+from deeplite_torch_zoo import get_dataloaders, get_model
 from deeplite_torch_zoo.utils import LOGGER
 
 
@@ -89,7 +89,7 @@ def train(args: CIFARConfig, model=None, data_splits=None):
 
     writer = SummaryWriter(comment=f'{args.model}')
 
-    data_splits = get_data_splits_by_name(
+    data_splits = get_dataloaders(
         data_root=args.data_root,
         dataset_name=args.dataset_name,
         model_name=args.model,
@@ -98,7 +98,7 @@ def train(args: CIFARConfig, model=None, data_splits=None):
     )
     train_loader, test_loader = data_splits['train'], data_splits['test']
 
-    model = get_model_by_name(
+    model = get_model(
         model_name=args.model,
         dataset_name=args.dataset_name,
         pretrained=False

@@ -6,12 +6,12 @@ from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_vanilla_transforms,
 )
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
-from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 
 __all__ = ["get_tinyimagenet"]
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name='tinyimagenet')
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='tinyimagenet')
 def get_tinyimagenet(
     data_root,
     batch_size=128,
@@ -19,7 +19,6 @@ def get_tinyimagenet(
     num_workers=4,
     fp16=False,
     img_size=64,
-    device="cuda",
     distributed=False,
     train_transforms=None,
     val_transforms=None,
@@ -59,7 +58,6 @@ def get_tinyimagenet(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     test_batch_size = batch_size if test_batch_size is None else test_batch_size
@@ -70,7 +68,6 @@ def get_tinyimagenet(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "val": test_loader, "test": test_loader}

@@ -6,7 +6,7 @@ import torchvision
 from torchvision import transforms
 
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
-from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 from deeplite_torch_zoo.utils import LOGGER
 
 __all__ = ["get_cifar100", "get_cifar10"]
@@ -17,11 +17,9 @@ def _get_cifar(
     data_root=None,
     batch_size=128,
     test_batch_size=None,
-    img_size=32,
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     train_transforms=None,
     val_transforms=None,
@@ -73,7 +71,6 @@ def _get_cifar(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     test_batch_size = batch_size if test_batch_size is None else test_batch_size
@@ -84,22 +81,19 @@ def _get_cifar(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": test_loader}
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="cifar100")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="cifar100")
 def get_cifar100(
     data_root=None,
     batch_size=128,
     test_batch_size=None,
-    img_size=32,
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     train_transforms=None,
     val_transforms=None,
@@ -116,27 +110,23 @@ def get_cifar100(
         data_root=data_root,
         batch_size=batch_size,
         test_batch_size=test_batch_size,
-        img_size=img_size,
         num_workers=num_workers,
         fp16=fp16,
         download=download,
-        device=device,
         distributed=distributed,
         train_transforms=train_transforms,
         val_transforms=val_transforms,
     )
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="cifar10")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="cifar10")
 def get_cifar10(
     data_root=None,
     batch_size=128,
     test_batch_size=None,
-    img_size=32,
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     train_transforms=None,
     val_transforms=None,
@@ -153,11 +143,9 @@ def get_cifar10(
         data_root=data_root,
         batch_size=batch_size,
         test_batch_size=test_batch_size,
-        img_size=img_size,
         num_workers=num_workers,
         fp16=fp16,
         download=download,
-        device=device,
         distributed=distributed,
         train_transforms=train_transforms,
         val_transforms=val_transforms,

@@ -13,25 +13,23 @@ Note: We will get combined VOC2007 and VOC2012 dataset when we will use name 'vo
 
 ## Wrapper Functions
 
-* One can get different data splits (train, and test splits) using the wrapper function get_data_splits_by_name,
+* One can get different data splits (train, and test splits) using the wrapper function get_dataloaders,
 
 ```{.python}
-    data_splits = get_data_splits_by_name(
+    data_splits = get_dataloaders(
         dataset_name="voc", model_name="yolo-v5s", batch_size=64
     )
     train_split = data_splits['train']
     test_split = data_splits['test']
 ```
 
-* To get the desired model architecture, we have a wrapper function get_model_by_name, which requires exact model and dataset name.
+* To get the desired model architecture, we have a wrapper function get_model, which requires exact model and dataset name.
 
 ```{.python}
-    model = get_model_by_name(
+    model = get_model(
         model_name="yolo-v5s",
         dataset_name="voc",
         pretrained=True, # or False, if pretrained weights are not required
-        progress=False, # or True, if a progressbar is required
-        device="cpu", # or "gpu"
     )
 ```
 * To get the evaluation function, we have a wrapper function get_eval_by_name, which requires exact model and dataset name.
@@ -57,7 +55,6 @@ One could create a model with a custom number of classes, while loading the pret
         pretraining_dataset="coco",
         num_classes=8,
         pretrained=True, # or False, if pretrained weights are not required
-        progress=False, # or True, if a progressbar is required
     )
 ```
 

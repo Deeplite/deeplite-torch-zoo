@@ -26,20 +26,20 @@ model_urls = {
 
 
 def _pre_act_resnet(
-    arch, block, layers, num_classes=100, pretrained=False, progress=True, device='cuda'
+    arch, block, layers, num_classes=100, pretrained=False
 ):
     model = PreActResNet(block, layers, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='pre_act_resnet18', dataset_name='cifar100', task_type='classification'
 )
 def pre_act_resnet18_cifar100(
-    pretrained=False, progress=True, num_classes=100, device='cuda'
+    pretrained=False, num_classes=100
 ):
     return _pre_act_resnet(
         "pre_act_resnet18",
@@ -47,46 +47,40 @@ def pre_act_resnet18_cifar100(
         [2, 2, 2, 2],
         num_classes=num_classes,
         pretrained=pretrained,
-        progress=progress,
-        device=device,
     )
 
 
-def pre_act_resnet34(pretrained=False, progress=True):
+def pre_act_resnet34(pretrained=False):
     return _pre_act_resnet(
         "pre_act_resnet34",
         PreActBlock,
         [3, 4, 6, 3],
         pretrained=pretrained,
-        progress=progress,
     )
 
 
-def pre_act_resnet50(pretrained=False, progress=True):
+def pre_act_resnet50(pretrained=False):
     return _pre_act_resnet(
         "pre_act_resnet50",
         PreActBottleneck,
         [3, 4, 6, 3],
         pretrained=pretrained,
-        progress=progress,
     )
 
 
-def pre_act_resnet101(pretrained=False, progress=True):
+def pre_act_resnet101(pretrained=False):
     return _pre_act_resnet(
         "pre_act_resnet101",
         PreActBottleneck,
         [3, 4, 23, 3],
         pretrained=pretrained,
-        progress=progress,
     )
 
 
-def pre_act_resnet152(pretrained=False, progress=True):
+def pre_act_resnet152(pretrained=False):
     return _pre_act_resnet(
         "pre_act_resnet152",
         PreActBottleneck,
         [3, 8, 36, 3],
         pretrained=pretrained,
-        progress=progress,
     )
