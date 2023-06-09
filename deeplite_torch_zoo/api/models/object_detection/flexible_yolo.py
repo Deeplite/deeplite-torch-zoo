@@ -5,12 +5,9 @@ from deeplite_torch_zoo.api.models.object_detection.helpers import (
 
 __all__ = []
 
-CFG_PATH = 'deeplite_torch_zoo/src/objectdetection/flexible_yolo/configs'
+CFG_PATH = 'deeplite_torch_zoo/src/object_detection/flexible_yolo/configs'
 
 model_configs = {
-    'yolo_vgg16bn': 'model_vgg.yaml',
-    'yolo_shufflenetv2': 'model_shufflenet.yaml',
-    'yolo_mobilenetv3': 'model_mobilenet.yaml',
     'yolo_resnet18': 'model_resnet.yaml',
     'yolo_resnet18x0.5': 'model_resnet.yaml',
     'yolo_fdresnet18x0.5': 'model_resnet.yaml',
@@ -42,7 +39,6 @@ model_kwargs = {
     'yolo_resnet50': {'backbone': {'version': 50}, 'neck': None},
     'yolo_resnet101': {'backbone': {'version': 101}, 'neck': None},
     'yolo_resnet152': {'backbone': {'version': 152}, 'neck': None},
-    'yolo_vgg16bn': {'backbone': {'version': '16_bn'}, 'neck': None},
 }
 
 

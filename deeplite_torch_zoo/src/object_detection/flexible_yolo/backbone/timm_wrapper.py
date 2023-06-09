@@ -34,9 +34,9 @@ class TimmWrapperBackbone(nn.Module):
         self.backbone.fc = None
         self.backbone.classifier = None
 
-        feature_info = getattr(self.backbone, "feature_info", None)
+        feature_info = getattr(self.backbone, 'feature_info', None)
         if feature_info:
-            LOGGER.info(f"timm backbone feature channels: {feature_info.channels()}")
+            LOGGER.info(f'timm backbone feature channels: {feature_info.channels()}')
         self.out_shape = feature_info.channels()[-3:]
 
     def forward(self, x):

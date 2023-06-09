@@ -4,17 +4,10 @@ import math
 
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.modules.common import (
-    C3,
-    Concat,
-    Conv,
-)
-from deeplite_torch_zoo.utils import LOGGER
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv, Concat
+from deeplite_torch_zoo.src.dnn_blocks.yolo_ultralytics_blocks import YOLOC3 as C3
 
-
-def make_divisible(x, divisor):
-    # Returns x evenly divisble by divisor
-    return math.ceil(x / divisor) * divisor
+from deeplite_torch_zoo.utils import LOGGER, make_divisible
 
 
 class PyramidFeatures(nn.Module):
