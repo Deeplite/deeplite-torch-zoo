@@ -22,6 +22,7 @@ import deeplite_torch_zoo
 
 KB_IN_MB_COUNT = 1024
 LOGGING_NAME = 'deeplite-torch-zoo'
+NUM_THREADS = min(8, max(1, os.cpu_count() - 1))
 
 
 def set_logging(name=LOGGING_NAME, verbose=True):
@@ -152,3 +153,16 @@ def get_default_args(func):
     # Get func() default arguments
     signature = inspect.signature(func)
     return {k: v.default for k, v in signature.parameters.items() if v.default is not inspect.Parameter.empty}
+
+
+def is_dir_writeable(dir_path):
+    """
+    Check if a directory is writeable.
+
+    Args:
+        dir_path (str) or (Path): The path to the directory.
+
+    Returns:
+        bool: True if the directory is writeable, False otherwise.
+    """
+    return os.access(str(dir_path), os.W_OK)

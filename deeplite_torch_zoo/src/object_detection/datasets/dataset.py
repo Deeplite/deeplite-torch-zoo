@@ -1,125 +1,199 @@
-# Code modified from https://github.com/Peterisfar/YOLOV3/
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 
-import random
+from itertools import repeat
+from multiprocessing.pool import ThreadPool
+from pathlib import Path
 
+import cv2
 import numpy as np
-from torch.utils.data import Dataset
+import torch
+from tqdm import tqdm
 
-from deeplite_torch_zoo.src.object_detection.datasets.data_augment import (
-    AugmentHSV,
-    Mixup,
-    RandomHorizontalFlip,
-    RandomVerticalFlip,
-    Resize,
-    random_perspective,
-)
+from ultralytics.yolo.data.augment import Compose, Format, LetterBox, Instances, v8_transforms as image_transforms
+
+from deeplite_torch_zoo.utils import LOGGER, LOCAL_RANK, NUM_THREADS, is_dir_writeable
+from deeplite_torch_zoo.src.object_detection.datasets.base import BaseDataset, TQDM_BAR_FORMAT
+from deeplite_torch_zoo.src.object_detection.datasets.utils import get_hash, img2label_paths, verify_image_label
 
 
-class DLZooDataset(Dataset):
-    def __init__(self, hyp_cfg, img_size, augment=False, *args, **kwargs):
+class YOLODataset(BaseDataset):
+    """
+    Dataset class for loading object detection and/or segmentation labels in YOLO format.
+
+    Args:
+        data (dict, optional): A dataset YAML dictionary. Defaults to None.
+        use_segments (bool, optional): If True, segmentation masks are used as labels. Defaults to False.
+        use_keypoints (bool, optional): If True, keypoints are used as labels. Defaults to False.
+
+    Returns:
+        (torch.utils.data.Dataset): A PyTorch dataset object that can be used for training an object detection model.
+    """
+    cache_version = '1.0.2'  # dataset labels *.cache version, >= 1.0.0 for YOLOv8
+    rand_interp_methods = [cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC, cv2.INTER_AREA, cv2.INTER_LANCZOS4]
+
+    def __init__(self, *args, data=None, use_segments=False, use_keypoints=False, **kwargs):
+        self.use_segments = use_segments
+        self.use_keypoints = use_keypoints
+        self.data = data
+        assert not (self.use_segments and self.use_keypoints), 'Can not use both segments and keypoints.'
         super().__init__(*args, **kwargs)
-        self._hyp_cfg = hyp_cfg
-        self._img_size = img_size
-        self._do_augment = augment
 
-    def _augment(self, img, bboxes):
-        img, bboxes = random_perspective(
-            img,
-            bboxes,
-            degrees=self._hyp_cfg['degrees'],
-            translate=self._hyp_cfg['translate'],
-            scale=self._hyp_cfg['scale'],
-            shear=self._hyp_cfg['shear'],
-            perspective=self._hyp_cfg['perspective'],
-        )
-        transforms = [
-            RandomHorizontalFlip(p=self._hyp_cfg['fliplr']),
-            RandomVerticalFlip(p=self._hyp_cfg['flipud']),
-            AugmentHSV(
-                hgain=self._hyp_cfg['hsv_h'],
-                sgain=self._hyp_cfg['hsv_s'],
-                vgain=self._hyp_cfg['hsv_v'],
-            ),
-        ]
-        for transform in transforms:
-            img, bboxes = transform(np.copy(img), np.copy(bboxes))
-        return img, bboxes
+    def cache_labels(self, path=Path('./labels.cache')):
+        """Cache dataset labels, check images and read shapes.
+        Args:
+            path (Path): path where to save the cache file (default: Path('./labels.cache')).
+        Returns:
+            (dict): labels.
+        """
+        x = {'labels': []}
+        nm, nf, ne, nc, msgs = 0, 0, 0, 0, []  # number missing, found, empty, corrupt, messages
+        desc = f'{self.prefix}Scanning {path.parent / path.stem}...'
+        total = len(self.im_files)
+        nkpt, ndim = self.data.get('kpt_shape', (0, 0))
+        if self.use_keypoints and (nkpt <= 0 or ndim not in (2, 3)):
+            raise ValueError("'kpt_shape' in data.yaml missing or incorrect. Should be a list with [number of "
+                             "keypoints, number of dims (2 for x,y or 3 for x,y,visible)], i.e. 'kpt_shape: [17, 3]'")
+        with ThreadPool(NUM_THREADS) as pool:
+            results = pool.imap(func=verify_image_label,
+                                iterable=zip(self.im_files, self.label_files, repeat(self.prefix),
+                                             repeat(self.use_keypoints), repeat(len(self.data['names'])), repeat(nkpt),
+                                             repeat(ndim)))
+            pbar = tqdm(results, desc=desc, total=total, bar_format=TQDM_BAR_FORMAT)
+            for im_file, lb, shape, segments, keypoint, nm_f, nf_f, ne_f, nc_f, msg in pbar:
+                nm += nm_f
+                nf += nf_f
+                ne += ne_f
+                nc += nc_f
+                if im_file:
+                    x['labels'].append(
+                        dict(
+                            im_file=im_file,
+                            shape=shape,
+                            cls=lb[:, 0:1],  # n, 1
+                            bboxes=lb[:, 1:],  # n, 4
+                            segments=segments,
+                            keypoints=keypoint,
+                            normalized=True,
+                            bbox_format='xywh'))
+                if msg:
+                    msgs.append(msg)
+                pbar.desc = f'{desc} {nf} images, {nm + ne} backgrounds, {nc} corrupt'
+            pbar.close()
 
-    def _load_mixup(self, item, get_img_fn, num_images, p=0.5):
-        img_org, bboxes_org, img_id, shape = get_img_fn(item)
-        img_org = img_org.transpose(2, 0, 1)  # HWC->CHW
+        if msgs:
+            LOGGER.info('\n'.join(msgs))
+        if nf == 0:
+            LOGGER.warning(f'{self.prefix}WARNING ⚠️ No labels found in {path}.')
+        x['hash'] = get_hash(self.label_files + self.im_files)
+        x['results'] = nf, nm, ne, nc, len(self.im_files)
+        x['msgs'] = msgs  # warnings
+        x['version'] = self.cache_version  # cache version
+        if is_dir_writeable(path.parent):
+            if path.exists():
+                path.unlink()  # remove *.cache file if exists
+            np.save(str(path), x)  # save cache for next time
+            path.with_suffix('.cache.npy').rename(path)  # remove .npy suffix
+            LOGGER.info(f'{self.prefix}New cache created: {path}')
+        else:
+            LOGGER.warning(f'{self.prefix}WARNING ⚠️ Cache directory {path.parent} is not writeable, cache not saved.')
+        return x
 
-        item_mix = random.randint(0, num_images - 1)
-        img_mix, bboxes_mix, _, _ = get_img_fn(item_mix)
-        img_mix = img_mix.transpose(2, 0, 1)
+    def get_labels(self):
+        """Returns dictionary of labels for YOLO training."""
+        self.label_files = img2label_paths(self.im_files)
+        cache_path = Path(self.label_files[0]).parent.with_suffix('.cache')
+        try:
+            import gc
+            gc.disable()  # reduce pickle load time https://github.com/ultralytics/ultralytics/pull/1585
+            cache, exists = np.load(str(cache_path), allow_pickle=True).item(), True  # load dict
+            gc.enable()
+            assert cache['version'] == self.cache_version  # matches current version
+            assert cache['hash'] == get_hash(self.label_files + self.im_files)  # identical hash
+        except (FileNotFoundError, AssertionError, AttributeError):
+            cache, exists = self.cache_labels(cache_path), False  # run cache ops
 
-        img, bboxes = Mixup(p=p)(img_org, bboxes_org, img_mix, bboxes_mix)
-        return img, bboxes, img_id, shape
+        # Display cache
+        nf, nm, ne, nc, n = cache.pop('results')  # found, missing, empty, corrupt, total
+        if exists and LOCAL_RANK in (-1, 0):
+            d = f'Scanning {cache_path}... {nf} images, {nm + ne} backgrounds, {nc} corrupt'
+            tqdm(None, desc=self.prefix + d, total=n, initial=n, bar_format=TQDM_BAR_FORMAT)  # display cache results
+            if cache['msgs']:
+                LOGGER.info('\n'.join(cache['msgs']))  # display warnings
+        if nf == 0:  # number of labels found
+            raise FileNotFoundError(f'{self.prefix}No labels found in {cache_path}, can not start training. {HELP_URL}')
 
-    def _load_mosaic(self, item, get_img_fn, num_images, resize_to_original_size=True):
-        # YOLOv5 4-mosaic loader. Loads 1 image + 3 random images into a 4-image mosaic
-        bboxes4 = []
-        s = self._img_size
-        mosaic_border = [-s // 2, -s // 2]
-        yc, xc = (
-            int(random.uniform(-x, 2 * s + x)) for x in mosaic_border
-        )  # mosaic center x, y
-        indices = [item] + random.choices(
-            range(0, num_images), k=3
-        )  # 3 additional image indices
-        random.shuffle(indices)
+        # Read cache
+        [cache.pop(k) for k in ('hash', 'version', 'msgs')]  # remove items
+        labels = cache['labels']
+        self.im_files = [lb['im_file'] for lb in labels]  # update im_files
 
-        for i, index in enumerate(indices):
-            # Load image
-            img, bboxes, img_id = get_img_fn(index)
-            h, w = img.shape[:2]
+        # Check if the dataset is all boxes or all segments
+        lengths = ((len(lb['cls']), len(lb['bboxes']), len(lb['segments'])) for lb in labels)
+        len_cls, len_boxes, len_segments = (sum(x) for x in zip(*lengths))
+        if len_segments and len_boxes != len_segments:
+            LOGGER.warning(
+                f'WARNING ⚠️ Box and segment counts should be equal, but got len(segments) = {len_segments}, '
+                f'len(boxes) = {len_boxes}. To resolve this only boxes will be used and all segments will be removed. '
+                'To avoid this please supply either a detect or segment dataset, not a detect-segment mixed dataset.')
+            for lb in labels:
+                lb['segments'] = []
+        if len_cls == 0:
+            raise ValueError(f'All labels empty in {cache_path}, can not start training without labels.')
+        return labels
 
-            # place img in img4
-            if i == 0:  # top left
-                img4 = np.full(
-                    (s * 2, s * 2, img.shape[2]), 114.0, dtype=np.float32
-                )  # 114, dtype=np.uint8)  # base image with 4 tiles
-                x1a, y1a, x2a, y2a = (
-                    max(xc - w, 0),
-                    max(yc - h, 0),
-                    xc,
-                    yc,
-                )  # xmin, ymin, xmax, ymax (large image)
-                x1b, y1b, x2b, y2b = (
-                    w - (x2a - x1a),
-                    h - (y2a - y1a),
-                    w,
-                    h,
-                )  # xmin, ymin, xmax, ymax (small image)
-            elif i == 1:  # top right
-                x1a, y1a, x2a, y2a = xc, max(yc - h, 0), min(xc + w, s * 2), yc
-                x1b, y1b, x2b, y2b = 0, h - (y2a - y1a), min(w, x2a - x1a), h
-            elif i == 2:  # bottom left
-                x1a, y1a, x2a, y2a = max(xc - w, 0), yc, xc, min(s * 2, yc + h)
-                x1b, y1b, x2b, y2b = w - (x2a - x1a), 0, w, min(y2a - y1a, h)
-            elif i == 3:  # bottom right
-                x1a, y1a, x2a, y2a = xc, yc, min(xc + w, s * 2), min(s * 2, yc + h)
-                x1b, y1b, x2b, y2b = 0, 0, min(w, x2a - x1a), min(y2a - y1a, h)
+    # TODO: use hyp config to set all these augmentations
+    def build_transforms(self, hyp=None):
+        """Builds and appends transforms to the list."""
+        if self.augment:
+            hyp.mosaic = hyp.mosaic if self.augment and not self.rect else 0.0
+            hyp.mixup = hyp.mixup if self.augment and not self.rect else 0.0
+            transforms = image_transforms(self, self.imgsz, hyp)
+        else:
+            transforms = Compose([LetterBox(new_shape=(self.imgsz, self.imgsz), scaleup=False)])
+        transforms.append(
+            Format(bbox_format='xywh',
+                   normalize=True,
+                   return_mask=self.use_segments,
+                   return_keypoint=self.use_keypoints,
+                   batch_idx=True,
+                   mask_ratio=hyp.mask_ratio,
+                   mask_overlap=hyp.overlap_mask))
+        return transforms
 
-            img4[y1a:y2a, x1a:x2a] = img[y1b:y2b, x1b:x2b]  # img4[ymin:ymax, xmin:xmax]
-            padw = x1a - x1b
-            padh = y1a - y1b
+    def close_mosaic(self, hyp):
+        """Sets mosaic, copy_paste and mixup options to 0.0 and builds transformations."""
+        hyp.mosaic = 0.0  # set mosaic ratio=0.0
+        hyp.copy_paste = 0.0  # keep the same behavior as previous v8 close-mosaic
+        hyp.mixup = 0.0  # keep the same behavior as previous v8 close-mosaic
+        self.transforms = self.build_transforms(hyp)
 
-            # Labels
-            if bboxes.size:
-                bboxes[:, 0] += padw
-                bboxes[:, 2] += padw
-                bboxes[:, 1] += padh
-                bboxes[:, 3] += padh
+    def update_labels_info(self, label):
+        """custom your label format here."""
+        # NOTE: cls is not with bboxes now, classification and semantic segmentation need an independent cls label
+        # we can make it also support classification and semantic segmentation by add or remove some dict keys there.
+        bboxes = label.pop('bboxes')
+        segments = label.pop('segments')
+        keypoints = label.pop('keypoints', None)
+        bbox_format = label.pop('bbox_format')
+        normalized = label.pop('normalized')
+        label['instances'] = Instances(bboxes, segments, keypoints, bbox_format=bbox_format, normalized=normalized)
+        return label
 
-            bboxes4.append(bboxes)
-
-        # Concat/clip labels
-        bboxes4 = np.concatenate(bboxes4, 0)
-        bboxes4 = np.clip(bboxes4, 0, img4.shape[0])
-
-        if resize_to_original_size:
-            img4, bboxes4 = Resize((s, s), True, False)(np.copy(img4), np.copy(bboxes4))
-
-        img4 = img4.transpose(2, 0, 1)  # HWC->CHW
-        return img4, bboxes4, img_id
+    @staticmethod
+    def collate_fn(batch):
+        """Collates data samples into batches."""
+        new_batch = {}
+        keys = batch[0].keys()
+        values = list(zip(*[list(b.values()) for b in batch]))
+        for i, k in enumerate(keys):
+            value = values[i]
+            if k == 'img':
+                value = torch.stack(value, 0)
+            if k in ['masks', 'keypoints', 'bboxes', 'cls']:
+                value = torch.cat(value, 0)
+            new_batch[k] = value
+        new_batch['batch_idx'] = list(new_batch['batch_idx'])
+        for i in range(len(new_batch['batch_idx'])):
+            new_batch['batch_idx'][i] += i  # add target image index for build_targets()
+        new_batch['batch_idx'] = torch.cat(new_batch['batch_idx'], 0)
+        return new_batch
