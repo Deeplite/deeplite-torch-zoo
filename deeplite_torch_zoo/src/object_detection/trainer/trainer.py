@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from deeplite_torch_zoo import create_model
-from deeplite_torch_zoo.utils import LOGGER, colorstr
-
 from ultralytics.yolo.v8.detect.train import DetectionTrainer, Loss
 from ultralytics.yolo.utils.tal import TaskAlignedAssigner
 from ultralytics.yolo.utils.loss import BboxLoss
 import ultralytics.yolo.engine.trainer
+
+from deeplite_torch_zoo.src.object_detection.trainer.yolo import YOLO
+from deeplite_torch_zoo.utils import LOGGER, colorstr
 
 
 def patched_get_model(obj, weights=None, cfg=None):
@@ -51,12 +51,7 @@ def patched_check_amp(model):
     im = np.ones((640, 640, 3))
     prefix = colorstr('AMP: ')
     LOGGER.info(f'{prefix}running Automatic Mixed Precision (AMP) checks with YOLOv8n...')
-    model = create_model(
-        model_name='yolo8n',
-        pretraining_dataset='coco',
-        pretrained=False,
-        custom_head='v8',
-    )
+    model = YOLO(model_name='yolo8n')
     try:
         assert amp_allclose(model, im)
         LOGGER.info(f'{prefix}checks passed ✅')
