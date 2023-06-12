@@ -1,7 +1,6 @@
 import pytest
 
-from deeplite_torch_zoo import (get_dataloaders, get_eval_function,
-                                get_model)
+from deeplite_torch_zoo import (get_eval_function, get_model)
 
 
 @pytest.mark.parametrize(
@@ -19,8 +18,8 @@ def test_classification_model_imagenet_pretrained_accuracy_fast(
         model_name,
         reference_accuracy,
         set_torch_seed_value,
+        imagewoof160_dataloaders,
         abs_tolerance=0.05,
-        batch_size=32,
     ):
     model = get_model(
         model_name=model_name,
@@ -32,13 +31,6 @@ def test_classification_model_imagenet_pretrained_accuracy_fast(
         dataset_name='imagenet',
     )
     with set_torch_seed_value():
-        dataloaders = get_dataloaders(
-            data_root='./',
-            model_name=model_name,
-            dataset_name='imagewoof_160',
-            batch_size=batch_size,
-            map_to_imagenet_labels=True
-        )
-        top1_accuracy = eval_fn(model, dataloaders['test'], break_iter=2)['acc']
+        top1_accuracy = eval_fn(model, imagewoof160_dataloaders['test'], break_iter=2)['acc']
 
     assert pytest.approx(top1_accuracy, abs_tolerance) == reference_accuracy
