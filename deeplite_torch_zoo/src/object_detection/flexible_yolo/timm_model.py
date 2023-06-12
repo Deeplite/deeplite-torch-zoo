@@ -1,26 +1,24 @@
 import torch.nn as nn
 
+from deeplite_torch_zoo.utils import initialize_weights
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.model import FlexibleYOLO
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
 from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import HEAD_NAME_MAP
-from deeplite_torch_zoo.utils import initialize_weights
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.neck import build_neck
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.backbone.timm_wrapper import TimmWrapperBackbone
+from deeplite_torch_zoo.src.object_detection.yolov5.anchors import ANCHOR_REGISTRY
 
 
 class TimmYOLO(FlexibleYOLO):
     def __init__(
-        self, backbone_name, neck_cfg=None, nc=80, custom_head=None,
+        self, backbone_name, nc=80, anchors=None, neck_cfg=None, custom_head=None,
     ):
         nn.Module.__init__(self)
 
         head_config = {
             'nc': nc,
-            'anchors': (
-                [10, 13, 16, 30, 33, 23],
-                [30, 61, 62, 45, 59, 119],
-                [116, 90, 156, 198, 373, 326],
-            ),
+            'anchors': anchors if anchors is not None \
+                else ANCHOR_REGISTRY.get('default')(),
         }
 
         default_neck_cfg = {
