@@ -1,14 +1,14 @@
-import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.model import FlexibleYOLO
-
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6 import build_network
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.config import Config
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (
     RepVGGBlock,
 )
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
+from deeplite_torch_zoo.src.object_detection.yolov5.anchors import ANCHOR_REGISTRY
+
 
 from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
     HEAD_NAME_MAP,
@@ -22,7 +22,7 @@ from deeplite_torch_zoo.utils import initialize_weights, LOGGER
 
 class YOLOv6(FlexibleYOLO):
     def __init__(
-        self, model_config, nc=80, custom_head=None, width_mul=None, depth_mul=None
+        self, model_config, nc=80, anchors=None, custom_head=None, width_mul=None, depth_mul=None
     ):
         """
         :param model_config:
@@ -31,11 +31,8 @@ class YOLOv6(FlexibleYOLO):
 
         head_config = {
             'nc': nc,
-            'anchors': (
-                [10, 13, 16, 30, 33, 23],
-                [30, 61, 62, 45, 59, 119],
-                [116, 90, 156, 198, 373, 326],
-            ),
+            'anchors': anchors if anchors is not None \
+                else ANCHOR_REGISTRY.get('default')(),
         }
         
         head_cls = Detect
