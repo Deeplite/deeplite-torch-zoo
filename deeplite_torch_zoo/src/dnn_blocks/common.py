@@ -36,7 +36,7 @@ ACT_TYPE_MAP = {
     'mish': Mish(),
     'leakyrelu': nn.LeakyReLU(negative_slope=0.1, inplace=True),
     'leakyrelu_0.1': nn.LeakyReLU(negative_slope=0.1, inplace=True),
-    'gelu': nn.GELU,
+    'gelu': nn.GELU(),
 }
 
 

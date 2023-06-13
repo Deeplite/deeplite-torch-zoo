@@ -54,6 +54,15 @@ IMAGENET_MODEL_NAMES = [
     'mobilenetv2_w035',
     'mobileone_s0',
     'mobileone_s4',
+    'fasternet_t2',
+    'fasternet_s',
+    'edgevit_xxs',
+]
+
+NO_PRETRAINED_WEIGHTS = [
+    'fasternet_t2',
+    'fasternet_s',
+    'edgevit_xxs',
 ]
 
 for model_name in IMAGENET_MODEL_NAMES:
@@ -69,7 +78,7 @@ def test_classification_model_output_shape(model_name, dataset_name, input_resol
     model = get_model(
         model_name=model_name,
         dataset_name=dataset_name,
-        pretrained=download_checkpoint,
+        pretrained=download_checkpoint and model_name not in NO_PRETRAINED_WEIGHTS,
     )
     model.eval()
     y = model(torch.randn(TEST_BATCH_SIZE, num_inp_channels, input_resolution, input_resolution))
@@ -87,7 +96,7 @@ def test_classification_model_output_shape_arbitrary_num_clases(model_name, data
         model_name=model_name,
         num_classes=TEST_NUM_CLASSES,
         pretraining_dataset=dataset_name,
-        pretrained=download_checkpoint,
+        pretrained=download_checkpoint and model_name not in NO_PRETRAINED_WEIGHTS,
     )
     model.eval()
     y = model(torch.randn(TEST_BATCH_SIZE, num_inp_channels, input_resolution, input_resolution))
