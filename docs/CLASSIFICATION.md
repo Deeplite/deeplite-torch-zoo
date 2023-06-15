@@ -14,25 +14,23 @@
 
 ## Wrapper Functions
 
-* One can get different data splits (train, and test splits) using the wrapper function get_data_splits_by_name,
+* One can get different data splits (train, and test splits) using the wrapper function get_dataloaders,
 
 ```{.python}
-    data_splits = get_data_splits_by_name(
+    data_splits = get_dataloaders(
         dataset_name="cifar100", model_name="resnet18", batch_size=128
     )
     train_split = data_splits['train']
     test_split = data_splits['test']
 ```
 
-* To get the desired model architecture, we have a wrapper function get_model_by_name, which requires exact model and dataset name.
+* To get the desired model architecture, we have a wrapper function get_model, which requires exact model and dataset name.
 
 ```{.python}
-    model = get_model_by_name(
+    model = get_model(
         model_name="resnet18",
         dataset_name="cifar100",
         pretrained=True, # or False, if pretrained weights are not required
-        progress=False, # or True, if a progressbar is required
-        device="cpu", # or "gpu"
     )
 ```
 * To get the evaluation function, we have a wrapper function get_eval_by_name, which requires exact model and dataset name.

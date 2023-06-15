@@ -27,8 +27,6 @@ def _resnext(
     bottleneck_width,
     num_classes=100,
     pretrained=False,
-    progress=True,
-    device='cuda',
 ):
     model = ResNeXt(
         num_blocks=num_blocks,
@@ -38,15 +36,15 @@ def _resnext(
     )
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='resnext29_2x64d', dataset_name='cifar100', task_type='classification'
 )
 def resnext29_2x64d_cifar100(
-    pretrained=False, progress=True, num_classes=100, device='cuda'
+    pretrained=False, num_classes=100
 ):
     return _resnext(
         "resnext29_2x64d",
@@ -55,42 +53,34 @@ def resnext29_2x64d_cifar100(
         cardinality=2,
         bottleneck_width=64,
         pretrained=pretrained,
-        progress=progress,
-        device=device,
     )
 
 
-def resnext29_4x64d(pretrained=False, progress=True, device='cuda'):
+def resnext29_4x64d(pretrained=False):
     return _resnext(
         "resnext29_4x64d",
         num_blocks=[3, 3, 3],
         cardinality=4,
         bottleneck_width=64,
         pretrained=pretrained,
-        progress=progress,
-        device=device,
     )
 
 
-def resnext29_8x64d(pretrained=False, progress=True, device='cuda'):
+def resnext29_8x64d(pretrained=False):
     return _resnext(
         "resnext29_8x64d",
         num_blocks=[3, 3, 3],
         cardinality=8,
         bottleneck_width=64,
         pretrained=pretrained,
-        progress=progress,
-        device=device,
     )
 
 
-def resnext29_32x4d(pretrained=False, progress=True, device='cuda'):
+def resnext29_32x4d(pretrained=False):
     return _resnext(
         "resnext29_32x4d",
         num_blocks=[3, 3, 3],
         cardinality=32,
         bottleneck_width=4,
         pretrained=pretrained,
-        progress=progress,
-        device=device,
     )

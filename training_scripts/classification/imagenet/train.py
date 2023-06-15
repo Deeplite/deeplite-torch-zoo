@@ -26,7 +26,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.utils
 import yaml
-from deeplite_torch_zoo import create_model, get_data_splits_by_name
+
 from timm import utils
 from timm.data import FastCollateMixup, Mixup, resolve_data_config
 from timm.models import (convert_splitbn_model, convert_sync_batchnorm,
@@ -37,7 +37,8 @@ from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
-from kd import KDTeacher
+from deeplite_torch_zoo import create_model, get_dataloaders
+from deeplite_torch_zoo.utils.kd import KDTeacher
 
 try:
     from apex import amp
@@ -415,7 +416,7 @@ def main():
         datasplit_kwargs['train_split'] = args.train_split
         datasplit_kwargs['val_split'] = args.val_split
 
-    data_splits = get_data_splits_by_name(
+    data_splits = get_dataloaders(
         dataset_name=args.dataset,
         model_name=args.model,
         data_root=args.data_dir,
@@ -430,7 +431,6 @@ def main():
         pretraining_dataset=args.pretraining_dataset,
         num_classes=args.num_classes,
         pretrained=args.pretrained,
-        progress=True,
     )
 
     if args.num_classes is None:

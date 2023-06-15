@@ -1,164 +1,68 @@
+import shutil
 from pathlib import Path
 
 import pytest
 
-from deeplite_torch_zoo import get_data_splits_by_name
-
-DATASETS_ROOT = Path('/neutrino/datasets')
+from deeplite_torch_zoo import get_dataloaders
 
 
-def test_cifar100_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root='./',
-        model_name='resnet50',
-        dataset_name="cifar100",
+DATASETS_ROOT = Path('/neutrino/datasets/')
+BATCH_SIZE = 128
+DATASET_MODEL_MAP = {
+    'cifar100': 'resnet18',
+    'cifar10': 'resnet18',
+    'imagenette': 'resnet18',
+    'imagewoof': 'resnet18',
+    'mnist': 'lenet5_mnist',
+}
+
+@pytest.mark.parametrize(
+    ('dataset_name', 'tmp_dataset_files', 'tmp_dataset_folders', 
+     'train_dataloader_len', 'test_dataloader_len'),
+    [
+        ('cifar100', ('cifar-100-python.tar.gz', ), ('cifar-100-python', ), 391, 79),
+        ('cifar10', ('cifar-10-python.tar.gz', ), ('cifar-10-batches-py', ), 391, 79),
+        ('imagenette', ('imagenette.zip', ), ('imagenette', ), 74, 31),
+        ('imagewoof', ('imagewoof.zip', ), ('imagewoof', ), 71, 31),
+        ('mnist', (), ('MNIST', ), 469, 79),
+    ],
+)
+def test_get_dataloaders(dataset_name, tmp_dataset_files, tmp_dataset_folders, 
+                         train_dataloader_len, test_dataloader_len, 
+                         data_root='./'):
+    p = Path(data_root)
+    dataloaders = get_dataloaders(
+        data_root=data_root,
+        dataset_name=dataset_name,
+        model_name=DATASET_MODEL_MAP[dataset_name],
         batch_size=BATCH_SIZE
     )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len == 391
-    assert test_len ==  79
+    assert len(dataloaders['train']) == train_dataloader_len
+    assert len(dataloaders['test']) == test_dataloader_len
+    for file in tmp_dataset_files:
+        (p / file).unlink()
+    for folder in tmp_dataset_folders:
+        shutil.rmtree(p / folder)
 
 
-def test_cifar10_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root='./',
-        model_name='resnet50',
-        dataset_name="cifar10",
+@pytest.mark.parametrize(
+    ('dataset_name', 'data_root', 'train_dataloader_len', 'test_dataloader_len'),
+    [
+        ('vww', str(DATASETS_ROOT / 'vww'), 901, 63),
+        ('imagenet', str(DATASETS_ROOT / 'imagenet16'), 1408, 332),
+        ('imagenet', str(DATASETS_ROOT / 'imagenet10'), 3010, 118),
+        ('imagenet', str(DATASETS_ROOT / 'imagenet'), 10010, 391),
+        ('voc', str(DATASETS_ROOT / 'VOCdevkit'), 130, 39),
+        ('coco', str(DATASETS_ROOT / 'coco'), 11829, 500),
+    ],
+)
+@pytest.mark.local
+def test_get_dataloaders_local(dataset_name, data_root, train_dataloader_len, test_dataloader_len):
+    dataloaders = get_dataloaders(
+        data_root=data_root,
+        dataset_name=dataset_name,
+        model_name=DATASET_MODEL_MAP[dataset_name],
         batch_size=BATCH_SIZE
     )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  391
-    assert test_len ==  79
-
-
-def test_imagenette_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root='./',
-        model_name='resnet50',
-        dataset_name="imagenette",
-        batch_size=BATCH_SIZE
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  74
-    assert test_len ==  31
-
-
-def test_imagewoof_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root='./',
-        model_name='resnet50',
-        dataset_name="imagewoof",
-        batch_size=BATCH_SIZE
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  71
-    assert test_len ==  31
-
-
-def test_mnist_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root="./",
-        dataset_name="mnist",
-        model_name="lenet5_mnist",
-        batch_size=BATCH_SIZE,
-
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  469
-    assert test_len ==  79
-
-
-@pytest.mark.local
-def test_vww_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        dataset_name="vww",
-        data_root=str(DATASETS_ROOT / "vww"),
-        batch_size=BATCH_SIZE,
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  901
-    assert test_len ==  63
-
-
-@pytest.mark.local
-def test_imagenet16_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        dataset_name="imagenet",
-        data_root=str(DATASETS_ROOT / "imagenet16"),
-        batch_size=BATCH_SIZE,
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  1408
-    assert test_len ==  332
-
-
-@pytest.mark.local
-def test_imagenet10_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root=str(DATASETS_ROOT / "imagenet10"),
-        dataset_name="imagenet",
-        batch_size=BATCH_SIZE,
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  3010
-    assert test_len ==  118
-
-
-@pytest.mark.local
-def test_imagenet1000_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root=str(DATASETS_ROOT / "imagenet"),
-        dataset_name="imagenet",
-        batch_size=BATCH_SIZE,
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  10010
-    assert test_len ==  391
-
-
-@pytest.mark.local
-def test_voc_yolo_dataset():
-    BATCH_SIZE = 128
-    datasplit = get_data_splits_by_name(
-        data_root=str(DATASETS_ROOT / "VOCdevkit"),
-        dataset_name="voc",
-        model_name="yolo",
-        batch_size=BATCH_SIZE,
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  130
-    assert test_len ==  39
-
-
-@pytest.mark.local
-def test_coco_yolo_dataset():
-    BATCH_SIZE = 10
-    datasplit = get_data_splits_by_name(
-        data_root=str(DATASETS_ROOT / "coco"),
-        dataset_name="coco",
-        model_name="yolo",
-        batch_size=BATCH_SIZE,
-    )
-    train_len = len(datasplit["train"])
-    test_len = len(datasplit["test"])
-    assert train_len ==  11829
-    assert test_len ==  500
+    assert len(dataloaders['train']) == train_dataloader_len
+    assert len(dataloaders['test']) == test_dataloader_len

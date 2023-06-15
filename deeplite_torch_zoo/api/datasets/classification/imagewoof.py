@@ -11,7 +11,7 @@ from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_vanilla_transforms,
 )
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
-from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 
 __all__ = ["get_imagewoof", "get_imagewoof_320", "get_imagewoof_160"]
 
@@ -19,7 +19,7 @@ __all__ = ["get_imagewoof", "get_imagewoof_320", "get_imagewoof_160"]
 IMAGEWOOF_IMAGENET_CLS_LABEL_MAP = (155, 159, 162, 167, 182, 193, 207, 229, 258, 273)
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagewoof")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagewoof")
 def get_imagewoof(
     data_root="",
     batch_size=64,
@@ -28,7 +28,6 @@ def get_imagewoof(
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     augmentation_mode='imagenet',
     **kwargs,
@@ -71,7 +70,6 @@ def get_imagewoof(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     val_batch_size = batch_size if val_batch_size is None else val_batch_size
@@ -82,13 +80,12 @@ def get_imagewoof(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": val_loader}
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagewoof_320")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagewoof_320")
 def get_imagewoof_320(
     data_root="",
     batch_size=64,
@@ -97,7 +94,6 @@ def get_imagewoof_320(
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     augmentation_mode='imagenet',
     **kwargs,
@@ -142,7 +138,6 @@ def get_imagewoof_320(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     val_batch_size = batch_size if val_batch_size is None else val_batch_size
@@ -153,13 +148,12 @@ def get_imagewoof_320(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": val_loader}
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name="imagewoof_160")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagewoof_160")
 def get_imagewoof_160(
     data_root="",
     batch_size=64,
@@ -168,7 +162,6 @@ def get_imagewoof_160(
     num_workers=4,
     fp16=False,
     download=True,
-    device="cuda",
     distributed=False,
     augmentation_mode='imagenet',
     map_to_imagenet_labels=False,
@@ -216,7 +209,6 @@ def get_imagewoof_160(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     val_batch_size = batch_size if val_batch_size is None else val_batch_size
@@ -227,7 +219,6 @@ def get_imagewoof_160(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": val_loader}

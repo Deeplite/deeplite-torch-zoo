@@ -11,24 +11,22 @@ model_urls = {
 
 
 def _resnet_imagenet10(
-    arch, pretrained=False, progress=True, num_classes=10, device='cuda'
+    arch, pretrained=False, num_classes=10
 ):
     model = torchvision.models.resnet18(num_classes=num_classes)
 
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='resnet18', dataset_name='imagenet10', task_type='classification'
 )
-def resnet18_imagenet10(pretrained=False, progress=True, num_classes=10, device='cuda'):
+def resnet18_imagenet10(pretrained=False, num_classes=10):
     return _resnet_imagenet10(
         "resnet18",
         pretrained=pretrained,
-        progress=progress,
         num_classes=num_classes,
-        device=device,
     )

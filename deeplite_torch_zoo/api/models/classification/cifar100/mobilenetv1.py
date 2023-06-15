@@ -20,20 +20,20 @@ model_urls = {
 }
 
 
-def _mobilenetv1(arch, pretrained=False, progress=True, num_classes=100, device='cuda'):
+def _mobilenetv1(arch, pretrained=False, num_classes=100):
     model = MobileNet(num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, progress, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='mobilenet_v1', dataset_name='cifar100', task_type='classification'
 )
 def mobilenet_v1_cifar100(
-    pretrained=False, num_classes=100, progress=True, device='cuda'
+    pretrained=False, num_classes=100
 ):
     return _mobilenetv1(
-        "mobilenet_v1", pretrained, progress, num_classes=num_classes, device=device
+        "mobilenet_v1", pretrained, num_classes=num_classes
     )

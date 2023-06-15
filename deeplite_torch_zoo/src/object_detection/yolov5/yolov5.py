@@ -49,6 +49,7 @@ class YOLOModel(nn.Module):
         channel_divisor=8,
         max_channels=None,
         custom_head=None,
+        verbose=False,
     ):
         super().__init__()
         if isinstance(cfg, dict):
@@ -89,7 +90,8 @@ class YOLOModel(nn.Module):
         # Init weights, biases
         initialize_weights(self)
         self._is_fused = False
-        self.info()
+        if verbose:
+            self.info()
 
     def _init_head(self, ch):
         m = self.model[-1]  # Detect()

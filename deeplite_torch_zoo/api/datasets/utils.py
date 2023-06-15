@@ -24,7 +24,6 @@ def get_dataloader(
     distributed=False,
     shuffle=False,
     collate_fn=None,
-    device="cuda",
 ):
     if collate_fn is None:
         collate_fn = default_collate

@@ -3,17 +3,7 @@
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.utils import check_version
-
-
-class no_jit_trace:
-    def __enter__(self):
-        self.state = torch._C._get_tracing_state()
-        torch._C._set_tracing_state(None)
-
-    def __exit__(self, *args):
-        torch._C._set_tracing_state(self.state)
-        self.state = None
+from deeplite_torch_zoo.utils import no_jit_trace, check_version
 
 
 class Detect(nn.Module):

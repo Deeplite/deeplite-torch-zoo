@@ -1,4 +1,4 @@
-model_urls = {
+FLOWERS101_CHECKPOINT_URLS = {
     'adv_inception_v3': 'adv_inception_v3_flowers102_9007_5287b17777f9cb6c.pt',
     'alexnetb': 'alexnetb_flowers102_4664_d7186c4c51bae57f.pt',
     'bam_resnet50': 'bam_resnet50_flowers102_9362_953d3c9274ee9507.pt',

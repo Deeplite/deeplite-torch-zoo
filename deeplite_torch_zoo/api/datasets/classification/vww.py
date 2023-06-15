@@ -6,12 +6,12 @@ from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_vanilla_transforms,
 )
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
-from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 
 __all__ = ["get_vww"]
 
 
-@DATA_WRAPPER_REGISTRY.register(dataset_name='vww')
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='vww')
 def get_vww(
     data_root,
     batch_size=128,
@@ -20,7 +20,6 @@ def get_vww(
     num_workers=4,
     fp16=False,
     distributed=False,
-    device="cuda",
     train_transforms=None,
     val_transforms=None,
     **kwargs,
@@ -62,7 +61,6 @@ def get_vww(
         fp16=fp16,
         distributed=distributed,
         shuffle=not distributed,
-        device=device,
     )
 
     test_batch_size = batch_size if test_batch_size is None else test_batch_size
@@ -73,7 +71,6 @@ def get_vww(
         fp16=fp16,
         distributed=distributed,
         shuffle=False,
-        device=device,
     )
 
     return {"train": train_loader, "test": test_loader}

@@ -49,10 +49,11 @@ class YoloV5Loss(nn.Module):
         if g > 0:
             BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
 
-        if hasattr(model, 'model'):
-            det = de_parallel(model).model[-1]  # Detect() module
-        if hasattr(model, 'detection'):
-            det = de_parallel(model).detection
+        dpmodel = de_parallel(model)
+        if hasattr(dpmodel, 'model'):
+            det = dpmodel.model[-1]  # Detect() module
+        if hasattr(dpmodel, 'detection'):
+            det = dpmodel.detection
 
         self.na = copy(det.na)
         self.nl = copy(det.nl)
