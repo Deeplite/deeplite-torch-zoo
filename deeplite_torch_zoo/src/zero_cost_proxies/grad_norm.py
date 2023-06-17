@@ -4,9 +4,9 @@ from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
 @ZERO_COST_SCORES.register('grad_norm')
-def grad_norm(model, batch, loss_fn):
+def grad_norm(model, dataloader, loss_fn):
     model.requires_grad_(True)
-    inputs, targets = batch
+    inputs, targets = next(iter(dataloader))
     outputs = model(inputs)
     loss = loss_fn(outputs, targets)
     loss.backward()

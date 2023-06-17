@@ -22,10 +22,10 @@ def eval_score(jacob, k=1e-5):
 
 
 @ZERO_COST_SCORES.register('jacob_cov')
-def jacob_cov(model, batch, loss_fn=None):
+def jacob_cov(model, dataloader, loss_fn=None):
     model.zero_grad()
     # NOTE: diff between old/new papers
-    inputs, _ = batch
+    inputs, targets = next(iter(dataloader))
     jacobs, _ = get_jacob(model, inputs)
     try:
         jc = eval_score(jacobs.reshape(jacobs.size(0), -1).cpu().numpy())

@@ -6,7 +6,7 @@ from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
 @ZERO_COST_SCORES.register('grasp')
-def grasp(model, batch, loss_fn, mode='param', T=1, niter=1):
+def grasp(model, dataloader, loss_fn, mode='param', T=1, niter=1):
     weights = []
     for module in model.modules():
         if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
@@ -14,7 +14,7 @@ def grasp(model, batch, loss_fn, mode='param', T=1, niter=1):
             module.weight.requires_grad_(True)
 
     # Forward n1
-    inputs, targets = batch  # To fix for niter>1 ?
+    inputs, targets = next(iter(dataloader))  # To fix for niter>1 ?
     grad_w = None
     for _ in range(niter):
         outputs = model(inputs)

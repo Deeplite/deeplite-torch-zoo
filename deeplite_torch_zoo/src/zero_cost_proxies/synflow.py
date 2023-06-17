@@ -5,7 +5,7 @@ from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
 @ZERO_COST_SCORES.register('synflow')
-def synflow(model, batch, loss_fn=None, mode=None):
+def synflow(model, dataloader, loss_fn=None, mode=None):
     # Convert params to their abs. Keep sign for converting it back.
     @torch.no_grad()
     def linearize(model):
@@ -27,7 +27,8 @@ def synflow(model, batch, loss_fn=None, mode=None):
     signs = linearize(model)  # Keep signs of all params
     model.zero_grad()
     model.double()
-    inputs, _ = batch
+
+    inputs, _ = next(iter(dataloader))
 
     # Compute gradients with input of all-ones
     shape = list(inputs.shape[1:])

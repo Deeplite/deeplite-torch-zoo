@@ -24,7 +24,9 @@ def snip_forward_linear(self, x):
 
 
 @ZERO_COST_SCORES.register('snip')
-def snip(model, batch, loss_fn, mode=None):
+def snip(model, dataloader, loss_fn, mode=None):
+    inputs, targets = next(iter(dataloader))
+
     for module in model.modules():
         if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
             module.weight_mask = nn.Parameter(torch.ones_like(module.weight))
@@ -36,7 +38,6 @@ def snip(model, batch, loss_fn, mode=None):
 
     # Compute gradients, without apply
     model.zero_grad()
-    inputs, targets = batch
     outputs = model(inputs)
     loss = loss_fn(outputs, targets)
     loss.backward()

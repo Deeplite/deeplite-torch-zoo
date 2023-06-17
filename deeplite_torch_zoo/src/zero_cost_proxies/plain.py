@@ -5,9 +5,9 @@ from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
 @ZERO_COST_SCORES.register('plain')
-def plain(model, batch, loss_fn, mode=None):
+def plain(model, dataloader, loss_fn, mode=None):
     model.zero_grad()
-    inputs, targets = batch
+    inputs, targets = next(iter(dataloader))
     outputs = model(inputs)
     loss = loss_fn(outputs, targets)
     loss.backward()
