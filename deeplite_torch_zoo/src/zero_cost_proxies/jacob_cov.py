@@ -5,12 +5,11 @@ from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
 def get_jacob(model, model_output_generator):
-    x, y, _ = next(model_output_generator(model))
-    y = torch.cat([yi.view(y[0].shape[0], 3, -1) for yi in y], 2)  # Double check
-    y.backward(torch.ones_like(y))
-    jacob = x.grad.detach()
-    x.requires_grad_(False)
-    return jacob, y.detach()
+    inputs, outputs, _ = next(model_output_generator(model, input_gradient=True))
+    outputs.backward(torch.ones_like(outputs))
+    jacob = inputs.grad.detach()
+    inputs.requires_grad_(False)
+    return jacob, outputs.detach()
     # return jacob, target.detach(), y.detach() # NOTE: diff with orig paper
 
 

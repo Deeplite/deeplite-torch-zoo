@@ -47,9 +47,10 @@ def compute_zico(grad_dict):
 @ZERO_COST_SCORES.register('zico')
 def zico(model, model_output_generator, loss_fn, n_steps=2):
     grad_dict = {}
+    data_generator = model_output_generator(model)
     for step in range(n_steps):
         model.zero_grad()
-        _, outputs, targets = next(model_output_generator(model))
+        inp, outputs, targets = next(data_generator)
         loss = loss_fn(outputs, targets)
         loss.backward()
         grad_dict = get_grad(model, grad_dict, step)

@@ -16,7 +16,7 @@ def grasp(model, model_output_generator, loss_fn, mode='param', T=1, niter=1):
     # Forward n1
     grad_w = None
     for _ in range(niter):
-        _, outputs, targets = next(model_output_generator(model, shuffle_data=False))
+        _, outputs, targets = next(model_output_generator(model))
         for i in range(len(outputs)):
             outputs[i] /= T
         loss = loss_fn(outputs, targets)
@@ -28,7 +28,7 @@ def grasp(model, model_output_generator, loss_fn, mode='param', T=1, niter=1):
                 grad_w[idx] += grad_w_p[idx]
 
     # Forward n2
-    _, outputs, targets = next(model_output_generator(model, shuffle_data=False))
+    _, outputs, targets = next(model_output_generator(model))
     for i in range(len(outputs)):
         outputs[i] /= T
     loss = loss_fn(outputs, targets)
