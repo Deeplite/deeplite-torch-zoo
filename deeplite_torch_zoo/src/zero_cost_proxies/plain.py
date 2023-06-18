@@ -5,10 +5,10 @@ from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
 @ZERO_COST_SCORES.register('plain')
-def plain(model, dataloader, loss_fn, mode=None):
+def plain(model, model_output_generator, loss_fn, mode=None):
     model.zero_grad()
-    inputs, targets = next(iter(dataloader))
-    outputs = model(inputs)
+    
+    _, outputs, targets = next(model_output_generator(model))
     loss = loss_fn(outputs, targets)
     loss.backward()
 

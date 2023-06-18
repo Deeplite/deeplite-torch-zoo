@@ -4,9 +4,8 @@ import numpy as np
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
-def get_jacob(model, x):
-    x.requires_grad_(True)
-    y = model(x)
+def get_jacob(model, model_output_generator):
+    x, y, _ = next(model_output_generator(model))
     y = torch.cat([yi.view(y[0].shape[0], 3, -1) for yi in y], 2)  # Double check
     y.backward(torch.ones_like(y))
     jacob = x.grad.detach()
@@ -22,11 +21,10 @@ def eval_score(jacob, k=1e-5):
 
 
 @ZERO_COST_SCORES.register('jacob_cov')
-def jacob_cov(model, dataloader, loss_fn=None):
+def jacob_cov(model, model_output_generator, loss_fn=None):
     model.zero_grad()
     # NOTE: diff between old/new papers
-    inputs, targets = next(iter(dataloader))
-    jacobs, _ = get_jacob(model, inputs)
+    jacobs, _ = get_jacob(model, model_output_generator)
     try:
         jc = eval_score(jacobs.reshape(jacobs.size(0), -1).cpu().numpy())
     except:

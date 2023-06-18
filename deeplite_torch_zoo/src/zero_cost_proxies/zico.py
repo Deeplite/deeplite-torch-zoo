@@ -45,16 +45,13 @@ def compute_zico(grad_dict):
 
 
 @ZERO_COST_SCORES.register('zico')
-def zico(model, dataloader, loss_fn, num_batches=2):
+def zico(model, model_output_generator, loss_fn, n_steps=2):
     grad_dict = {}
-    for batch_idx, batch in enumerate(dataloader):
-        if batch_idx >= num_batches:
-            break
-        inputs, targets = batch
+    for step in range(n_steps):
         model.zero_grad()
-        outputs = model(inputs)
+        _, outputs, targets = next(model_output_generator(model))
         loss = loss_fn(outputs, targets)
         loss.backward()
-        grad_dict = get_grad(model, grad_dict, batch_idx)
+        grad_dict = get_grad(model, grad_dict, step)
 
     return compute_zico(grad_dict)

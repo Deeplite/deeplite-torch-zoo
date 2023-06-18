@@ -23,7 +23,7 @@ def fisher_forward_linear(self, x):
 
 
 @ZERO_COST_SCORES.register('fisher')
-def fisher(model, dataloader, loss_fn, mode='channel'):
+def fisher(model, model_output_generator, loss_fn, mode='channel'):
     for layer in model.modules():
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
             # Variables/op needed for fisher computation
@@ -57,8 +57,7 @@ def fisher(model, dataloader, loss_fn, mode='channel'):
 
             layer.dummy.register_backward_hook(hook_factory(layer))
 
-    inputs, targets = next(iter(dataloader))
-    outputs = model(inputs)
+    inputs, outputs, targets = next(model_output_generator(model))
     loss = loss_fn(outputs, targets)
     loss.backward()
 

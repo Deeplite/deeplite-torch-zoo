@@ -1,11 +1,12 @@
 import torch
+import torch.nn as nn
 
 from deeplite_torch_zoo.utils import get_layer_metric_array
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
 @ZERO_COST_SCORES.register('synflow')
-def synflow(model, dataloader, loss_fn=None, mode=None):
+def synflow(model, model_output_generator, loss_fn=None, mode=None):
     # Convert params to their abs. Keep sign for converting it back.
     @torch.no_grad()
     def linearize(model):
@@ -28,7 +29,7 @@ def synflow(model, dataloader, loss_fn=None, mode=None):
     model.zero_grad()
     model.double()
 
-    inputs, _ = next(iter(dataloader))
+    inputs, _, _ = next(model_output_generator(nn.Identity()))
 
     # Compute gradients with input of all-ones
     shape = list(inputs.shape[1:])
