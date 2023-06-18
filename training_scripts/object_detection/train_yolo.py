@@ -128,7 +128,7 @@ def train(opt, device):
 
     dataset = train_loader.dataset
     nc = dataset.num_classes
-    print("Number of classes = ", nc)
+    LOGGER.info("Number of classes = ", nc)
 
     nb = len(train_loader)  # number of batches
 
@@ -138,14 +138,14 @@ def train(opt, device):
         pretraining_dataset=opt.pretraining_dataset,
         pretrained=opt.pretrained,
         num_classes=nc,
-    )
+    ).to(device)
 
     # Freeze
     freeze = [f'model.{x}.' for x in range(freeze)]  # layers to freeze
     for k, v in model.named_parameters():
         v.requires_grad = True  # train all layers
         if any(x in k for x in freeze):
-            print(f'freezing {k}')
+            LOGGER.info(f'freezing {k}')
             v.requires_grad = False
 
     # Optimizer
@@ -486,7 +486,7 @@ def main(opt):
         print_args(vars(opt))
 
     # DDP mode
-    device = select_device(opt.device, batch_size=opt.batch_size)
+    device = select_device(opt.device)
     if LOCAL_RANK != -1:
         assert torch.cuda.device_count() > LOCAL_RANK, 'insufficient CUDA devices for DDP command'
         assert opt.batch_size % WORLD_SIZE == 0, '--batch-size must be multiple of CUDA device count'
