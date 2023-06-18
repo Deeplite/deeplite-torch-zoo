@@ -6,8 +6,8 @@ from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 @ZERO_COST_SCORES.register('grad_norm')
 def grad_norm(model, model_output_generator, loss_fn):
     model.requires_grad_(True)
-    _, outputs, targets = next(model_output_generator(model))
-    loss = loss_fn(outputs, targets)
+    _, outputs, targets, loss_kwargs = next(model_output_generator(model))
+    loss = loss_fn(outputs, targets, **loss_kwargs)
     loss.backward()
 
     norm2_sum = 0

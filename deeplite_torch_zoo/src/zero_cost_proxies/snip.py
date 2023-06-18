@@ -36,8 +36,8 @@ def snip(model, model_output_generator, loss_fn, mode=None):
 
     # Compute gradients, without apply
     model.zero_grad()
-    _, outputs, targets = next(model_output_generator(model))
-    loss = loss_fn(outputs, targets)
+    _, outputs, targets, loss_kwargs = next(model_output_generator(model))
+    loss = loss_fn(outputs, targets, **loss_kwargs)
     loss.backward()
 
     # Gradient selection

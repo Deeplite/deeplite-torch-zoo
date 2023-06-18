@@ -14,12 +14,13 @@ def grasp(model, model_output_generator, loss_fn, mode='param', T=1, niter=1):
             module.weight.requires_grad_(True)
 
     # Forward n1
+    data_generator = model_output_generator(model, shuffle_data=False)
     grad_w = None
     for _ in range(niter):
-        _, outputs, targets = next(model_output_generator(model))
+        _, outputs, targets, loss_kwargs = next(data_generator)
         for i in range(len(outputs)):
             outputs[i] /= T
-        loss = loss_fn(outputs, targets)
+        loss = loss_fn(outputs, targets, **loss_kwargs)
         grad_w_p = torch.autograd.grad(loss, weights, allow_unused=True)
         if grad_w is None:
             grad_w = list(grad_w_p)
@@ -28,10 +29,10 @@ def grasp(model, model_output_generator, loss_fn, mode='param', T=1, niter=1):
                 grad_w[idx] += grad_w_p[idx]
 
     # Forward n2
-    _, outputs, targets = next(model_output_generator(model))
+    _, outputs, targets, loss_kwargs = next(data_generator)
     for i in range(len(outputs)):
         outputs[i] /= T
-    loss = loss_fn(outputs, targets)
+    loss = loss_fn(outputs, targets, **loss_kwargs)
     grad_f = torch.autograd.grad(loss, weights, create_graph=True, allow_unused=True)
 
     # Accumulate gradients and call backwards

@@ -57,8 +57,8 @@ def fisher(model, model_output_generator, loss_fn, mode='channel'):
 
             layer.dummy.register_backward_hook(hook_factory(layer))
 
-    inputs, outputs, targets = next(model_output_generator(model))
-    loss = loss_fn(outputs, targets)
+    inputs, outputs, targets, loss_kwargs = next(model_output_generator(model))
+    loss = loss_fn(outputs, targets, **loss_kwargs)
     loss.backward()
 
     # Retrieve fisher info

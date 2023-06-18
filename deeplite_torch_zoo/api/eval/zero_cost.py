@@ -1,4 +1,5 @@
 from copy import deepcopy
+from itertools import repeat
 
 from deeplite_torch_zoo.src.zero_cost_proxies.fisher import *  # pylint: disable=unused-import
 from deeplite_torch_zoo.src.zero_cost_proxies.grad_norm import *  # pylint: disable=unused-import
@@ -35,11 +36,13 @@ def get_zero_cost_estimator(metric_name: str):
         model_ = deepcopy(model)
 
         if model_output_generator is None:
-            def model_output_generator(model, input_gradient=False):
-                for inputs, targets in dataloader:
+            def model_output_generator(model, shuffle_data=True, input_gradient=False):
+                loss_kwargs = {}
+                loader = dataloader if shuffle_data else repeat(next(iter(dataloader)))
+                for inputs, targets in loader:
                     inputs.requires_grad_(input_gradient)
                     outputs = model(inputs)
-                    yield inputs, outputs, targets
+                    yield inputs, outputs, targets, loss_kwargs
 
         model_.train()
         model_.zero_grad()

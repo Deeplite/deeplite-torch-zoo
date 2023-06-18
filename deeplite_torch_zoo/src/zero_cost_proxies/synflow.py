@@ -29,7 +29,7 @@ def synflow(model, model_output_generator, loss_fn=None, mode=None):
     model.zero_grad()
     model.double()
 
-    inputs, _, _ = next(model_output_generator(nn.Identity()))
+    inputs, _, _, _ = next(model_output_generator(nn.Identity()))
 
     # Compute gradients with input of all-ones
     shape = list(inputs.shape[1:])

@@ -4,8 +4,9 @@ import numpy as np
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 
 
-def get_jacob(model, model_output_generator):
-    inputs, outputs, _ = next(model_output_generator(model, input_gradient=True))
+def get_jacob(model, model_output_generator, output_post_processing):
+    inputs, outputs, _, _ = next(model_output_generator(model, input_gradient=True))
+    outputs = output_post_processing(outputs)
     outputs.backward(torch.ones_like(outputs))
     jacob = inputs.grad.detach()
     inputs.requires_grad_(False)
@@ -20,10 +21,12 @@ def eval_score(jacob, k=1e-5):
 
 
 @ZERO_COST_SCORES.register('jacob_cov')
-def jacob_cov(model, model_output_generator, loss_fn=None):
+def jacob_cov(model, model_output_generator, loss_fn=None, output_post_processing=None):
     model.zero_grad()
+    if output_post_processing is None:
+        output_post_processing = lambda tensor: tensor
     # NOTE: diff between old/new papers
-    jacobs, _ = get_jacob(model, model_output_generator)
+    jacobs, _ = get_jacob(model, model_output_generator, output_post_processing)
     try:
         jc = eval_score(jacobs.reshape(jacobs.size(0), -1).cpu().numpy())
     except:
