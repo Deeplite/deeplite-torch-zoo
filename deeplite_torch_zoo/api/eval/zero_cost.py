@@ -29,7 +29,7 @@ def get_zero_cost_estimator(metric_name: str):
         if dataloader is not None and model_output_generator is not None:
             raise ValueError(
                 'Zero-cost estimator computation requires either a `dataloader` or a `model_output_generator` '
-                'argument not equal to None, not both at the same time. In case when `dataloader` is passed, ' 
+                'argument not equal to None, not both at the same time. In case when `dataloader` is passed, '
                 'a standard interface to compute model output is assumed.'
             )
 
@@ -38,7 +38,10 @@ def get_zero_cost_estimator(metric_name: str):
         if model_output_generator is None:
             def model_output_generator(model, shuffle_data=True, input_gradient=False):
                 loss_kwargs = {}
-                loader = dataloader if shuffle_data else repeat(next(iter(dataloader)))
+                try:
+                    loader = dataloader if shuffle_data else repeat(next(iter(dataloader)))
+                except StopIteration:
+                    return
                 for inputs, targets in loader:
                     inputs.requires_grad_(input_gradient)
                     outputs = model(inputs)
