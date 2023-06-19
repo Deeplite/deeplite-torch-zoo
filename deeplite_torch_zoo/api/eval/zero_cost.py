@@ -34,6 +34,7 @@ def get_zero_cost_estimator(metric_name: str):
             )
 
         model_ = deepcopy(model)
+        device = next(model.parameters()).device
 
         if model_output_generator is None:
             def model_output_generator(model, shuffle_data=True, input_gradient=False):
@@ -43,6 +44,8 @@ def get_zero_cost_estimator(metric_name: str):
                 except StopIteration:
                     return
                 for inputs, targets in loader:
+                    inputs = inputs.to(device)
+                    targets = targets.to(device)
                     inputs.requires_grad_(input_gradient)
                     outputs = model(inputs)
                     yield inputs, outputs, targets, loss_kwargs
