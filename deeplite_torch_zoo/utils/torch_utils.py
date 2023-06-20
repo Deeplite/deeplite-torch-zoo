@@ -1,9 +1,13 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 
 import os
+import math
+import time
 import random
 import warnings
+import contextlib
 
+from copy import deepcopy
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -13,19 +17,15 @@ import numpy as np
 import torch
 import torchvision
 import torch.nn as nn
+import torch.nn.functional as F
+import torch.distributed as dist
 
 from torch.hub import load_state_dict_from_url
 from torch.utils.tensorboard import SummaryWriter
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from ultralytics.yolo.utils import colorstr
-from ultralytics.yolo.utils.checks import check_version
-from ultralytics.yolo.utils.torch_utils import (fuse_conv_and_bn, model_info, scale_img, ModelEMA,
-                                                select_device, torch_distributed_zero_first, one_cycle)
-from ultralytics.yolo.utils.ops import Profile
-
 import deeplite_torch_zoo
-from deeplite_torch_zoo.utils import LOGGER, get_file_hash
+from deeplite_torch_zoo.utils import LOGGER, get_file_hash, colorstr, check_version
 
 
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
@@ -332,3 +332,221 @@ def strip_optimizer(f='best.pt', s=''):
     torch.save(x, s or f)
     mb = os.path.getsize(s or f) / 1E6  # filesize
     LOGGER.info(f"Optimizer stripped from {f},{(' saved as %s,' % s) if s else ''} {mb:.1f}MB")
+
+
+def fuse_conv_and_bn(conv, bn):
+    """Fuse Conv2d() and BatchNorm2d() layers https://tehnokv.com/posts/fusing-batchnorm-and-conv/."""
+    fusedconv = nn.Conv2d(conv.in_channels,
+                          conv.out_channels,
+                          kernel_size=conv.kernel_size,
+                          stride=conv.stride,
+                          padding=conv.padding,
+                          dilation=conv.dilation,
+                          groups=conv.groups,
+                          bias=True).requires_grad_(False).to(conv.weight.device)
+
+    # Prepare filters
+    w_conv = conv.weight.clone().view(conv.out_channels, -1)
+    w_bn = torch.diag(bn.weight.div(torch.sqrt(bn.eps + bn.running_var)))
+    fusedconv.weight.copy_(torch.mm(w_bn, w_conv).view(fusedconv.weight.shape))
+
+    # Prepare spatial bias
+    b_conv = torch.zeros(conv.weight.size(0), device=conv.weight.device) if conv.bias is None else conv.bias
+    b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(torch.sqrt(bn.running_var + bn.eps))
+    fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
+
+    return fusedconv
+
+
+def scale_img(img, ratio=1.0, same_shape=False, gs=32):  # img(16,3,256,416)
+    # Scales img(bs,3,y,x) by ratio constrained to gs-multiple
+    if ratio == 1.0:
+        return img
+    h, w = img.shape[2:]
+    s = (int(h * ratio), int(w * ratio))  # new size
+    img = F.interpolate(img, size=s, mode='bilinear', align_corners=False)  # resize
+    if not same_shape:  # pad/crop img
+        h, w = (math.ceil(x * ratio / gs) * gs for x in (h, w))
+    return F.pad(img, [0, w - s[1], 0, h - s[0]], value=0.447)  # value = imagenet mean
+
+
+def copy_attr(a, b, include=(), exclude=()):
+    """Copies attributes from object 'b' to object 'a', with options to include/exclude certain attributes."""
+    for k, v in b.__dict__.items():
+        if (len(include) and k not in include) or k.startswith('_') or k in exclude:
+            continue
+        else:
+            setattr(a, k, v)
+
+            
+class ModelEMA:
+    """Updated Exponential Moving Average (EMA) from https://github.com/rwightman/pytorch-image-models
+    Keeps a moving average of everything in the model state_dict (parameters and buffers)
+    For EMA details see https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
+    To disable EMA set the `enabled` attribute to `False`.
+    """
+
+    def __init__(self, model, decay=0.9999, tau=2000, updates=0):
+        """Create EMA."""
+        self.ema = deepcopy(de_parallel(model)).eval()  # FP32 EMA
+        self.updates = updates  # number of EMA updates
+        self.decay = lambda x: decay * (1 - math.exp(-x / tau))  # decay exponential ramp (to help early epochs)
+        for p in self.ema.parameters():
+            p.requires_grad_(False)
+        self.enabled = True
+
+    def update(self, model):
+        """Update EMA parameters."""
+        if self.enabled:
+            self.updates += 1
+            d = self.decay(self.updates)
+
+            msd = de_parallel(model).state_dict()  # model state_dict
+            for k, v in self.ema.state_dict().items():
+                if v.dtype.is_floating_point:  # true for FP16 and FP32
+                    v *= d
+                    v += (1 - d) * msd[k].detach()
+                    # assert v.dtype == msd[k].dtype == torch.float32, f'{k}: EMA {v.dtype},  model {msd[k].dtype}'
+
+    def update_attr(self, model, include=(), exclude=('process_group', 'reducer')):
+        """Updates attributes and saves stripped model with optimizer removed."""
+        if self.enabled:
+            copy_attr(self.ema, model, include, exclude)
+
+
+def select_device(device='', batch=0, newline=False, verbose=True):
+    """Selects PyTorch Device. Options are device = None or 'cpu' or 0 or '0' or '0,1,2,3'."""
+    s = ''
+    device = str(device).lower()
+    for remove in 'cuda:', 'none', '(', ')', '[', ']', "'", ' ':
+        device = device.replace(remove, '')  # to string, 'cuda:0' -> '0' and '(0, 1)' -> '0,1'
+    cpu = device == 'cpu'
+    mps = device == 'mps'  # Apple Metal Performance Shaders (MPS)
+    if cpu or mps:
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # force torch.cuda.is_available() = False
+    elif device:  # non-cpu device requested
+        if device == 'cuda':
+            device = '0'
+        visible = os.environ.get('CUDA_VISIBLE_DEVICES', None)
+        os.environ['CUDA_VISIBLE_DEVICES'] = device  # set environment variable - must be before assert is_available()
+        if not (torch.cuda.is_available() and torch.cuda.device_count() >= len(device.replace(',', ''))):
+            LOGGER.info(s)
+            install = 'See https://pytorch.org/get-started/locally/ for up-to-date torch install instructions if no ' \
+                      'CUDA devices are seen by torch.\n' if torch.cuda.device_count() == 0 else ''
+            raise ValueError(f"Invalid CUDA 'device={device}' requested."
+                             f" Use 'device=cpu' or pass valid CUDA device(s) if available,"
+                             f" i.e. 'device=0' or 'device=0,1,2,3' for Multi-GPU.\n"
+                             f'\ntorch.cuda.is_available(): {torch.cuda.is_available()}'
+                             f'\ntorch.cuda.device_count(): {torch.cuda.device_count()}'
+                             f"\nos.environ['CUDA_VISIBLE_DEVICES']: {visible}\n"
+                             f'{install}')
+
+    if not cpu and not mps and torch.cuda.is_available():  # prefer GPU if available
+        devices = device.split(',') if device else '0'  # range(torch.cuda.device_count())  # i.e. 0,1,6,7
+        n = len(devices)  # device count
+        if n > 1 and batch > 0 and batch % n != 0:  # check batch_size is divisible by device_count
+            raise ValueError(f"'batch={batch}' must be a multiple of GPU count {n}. Try 'batch={batch // n * n}' or "
+                             f"'batch={batch // n * n + n}', the nearest batch sizes evenly divisible by {n}.")
+        space = ' ' * (len(s) + 1)
+        for i, d in enumerate(devices):
+            p = torch.cuda.get_device_properties(i)
+            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, {p.total_memory / (1 << 20):.0f}MiB)\n"  # bytes to MB
+        arg = 'cuda:0'
+    elif mps and getattr(torch, 'has_mps', False) and torch.backends.mps.is_available() and TORCH_2_0:
+        # Prefer MPS if available
+        s += 'MPS\n'
+        arg = 'mps'
+    else:  # revert to CPU
+        s += 'CPU\n'
+        arg = 'cpu'
+
+    if verbose and RANK == -1:
+        LOGGER.info(s if newline else s.rstrip())
+    return torch.device(arg)
+
+
+@contextmanager
+def torch_distributed_zero_first(local_rank: int):
+    """Decorator to make all processes in distributed training wait for each local_master to do something."""
+    initialized = torch.distributed.is_available() and torch.distributed.is_initialized()
+    if initialized and local_rank not in (-1, 0):
+        dist.barrier(device_ids=[local_rank])
+    yield
+    if initialized and local_rank == 0:
+        dist.barrier(device_ids=[0])
+
+
+def one_cycle(y1=0.0, y2=1.0, steps=100):
+    """Returns a lambda function for sinusoidal ramp from y1 to y2 https://arxiv.org/pdf/1812.01187.pdf."""
+    return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
+
+
+class Profile(contextlib.ContextDecorator):
+    """
+    YOLOv8 Profile class.
+    Usage: as a decorator with @Profile() or as a context manager with 'with Profile():'
+    """
+
+    def __init__(self, t=0.0):
+        """
+        Initialize the Profile class.
+
+        Args:
+            t (float): Initial time. Defaults to 0.0.
+        """
+        self.t = t
+        self.cuda = torch.cuda.is_available()
+
+    def __enter__(self):
+        """
+        Start timing.
+        """
+        self.start = self.time()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        """
+        Stop timing.
+        """
+        self.dt = self.time() - self.start  # delta-time
+        self.t += self.dt  # accumulate dt
+
+    def time(self):
+        """
+        Get current time.
+        """
+        if self.cuda:
+            torch.cuda.synchronize()
+        return time.time()
+    
+
+def model_info(model, detailed=False, verbose=True, imgsz=640):
+    """Model information. imgsz may be int or list, i.e. imgsz=640 or imgsz=[640, 320]."""
+    if not verbose:
+        return
+    n_p = get_num_params(model)  # number of parameters
+    n_g = get_num_gradients(model)  # number of gradients
+    n_l = len(list(model.modules()))  # number of layers
+    if detailed:
+        LOGGER.info(
+            f"{'layer':>5} {'name':>40} {'gradient':>9} {'parameters':>12} {'shape':>20} {'mu':>10} {'sigma':>10}")
+        for i, (name, p) in enumerate(model.named_parameters()):
+            name = name.replace('module_list.', '')
+            LOGGER.info('%5g %40s %9s %12g %20s %10.3g %10.3g %10s' %
+                        (i, name, p.requires_grad, p.numel(), list(p.shape), p.mean(), p.std(), p.dtype))
+
+    fused = ' (fused)' if getattr(model, 'is_fused', lambda: False)() else ''
+    yaml_file = getattr(model, 'yaml_file', '') or getattr(model, 'yaml', {}).get('yaml_file', '')
+    model_name = Path(yaml_file).stem.replace('yolo', 'YOLO') or 'Model'
+    LOGGER.info(f'{model_name} summary{fused}: {n_l} layers, {n_p} parameters, {n_g} gradients')
+    return n_l, n_p, n_g
+
+
+def get_num_params(model):
+    """Return the total number of parameters in a YOLO model."""
+    return sum(x.numel() for x in model.parameters())
+
+
+def get_num_gradients(model):
+    """Return the total number of parameters with gradients in a YOLO model."""
+    return sum(x.numel() for x in model.parameters() if x.requires_grad)
