@@ -12,5 +12,5 @@ from deeplite_torch_zoo.api import (  # pylint: disable=unused-import
 )
 from deeplite_torch_zoo.api.eval.zero_cost import get_zero_cost_estimator
 
-# model wrappers
-from deeplite_torch_zoo.src.object_detection.trainer import YOLO as Detector # pylint: disable=unused-import
+# utils
+from deeplite_torch_zoo.utils import LOGGER  # pylint: disable=unused-import

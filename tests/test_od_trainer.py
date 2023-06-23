@@ -1,6 +1,6 @@
 import pytest 
 
-from deeplite_torch_zoo import Detector
+from deeplite_torch_zoo.trainer import Detector
 
 
 @pytest.mark.parametrize(
