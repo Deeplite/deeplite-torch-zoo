@@ -5,6 +5,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.utils import get_layer_metric_array
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
+from deeplite_torch_zoo.src.zero_cost_proxies.utils import compute_zc_statistic
 
 
 def snip_forward_conv2d(self, x):
@@ -24,7 +25,7 @@ def snip_forward_linear(self, x):
 
 
 @ZERO_COST_SCORES.register('snip')
-def snip(model, model_output_generator, loss_fn, mode=None):
+def snip(model, model_output_generator, loss_fn, reduction='sum'):
     for module in model.modules():
         if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
             module.weight_mask = nn.Parameter(torch.ones_like(module.weight))
@@ -47,6 +48,5 @@ def snip(model, model_output_generator, loss_fn, mode=None):
         else:
             return torch.zeros_like(module.weight)
 
-    grads_abs = get_layer_metric_array(model, snip, mode)
-
-    return sum([torch.sum(x).item() for x in grads_abs])
+    grads_abs = get_layer_metric_array(model, snip)
+    return compute_zc_statistic(grads_abs, reduction=reduction)

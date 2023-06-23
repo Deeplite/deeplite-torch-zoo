@@ -24,7 +24,7 @@ def eval_score(jacob, k=1e-5):
 def jacob_cov(model, model_output_generator, loss_fn=None, output_post_processing=None):
     model.zero_grad()
     if output_post_processing is None:
-        output_post_processing = lambda tensor: tensor
+        output_post_processing = lambda tensors: torch.cat([x.flatten() for x in tensors])
     # NOTE: diff between old/new papers
     jacobs, _ = get_jacob(model, model_output_generator, output_post_processing)
     try:

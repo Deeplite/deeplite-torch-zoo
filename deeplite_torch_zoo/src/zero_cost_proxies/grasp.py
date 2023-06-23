@@ -3,10 +3,11 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.utils import get_layer_metric_array
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
+from deeplite_torch_zoo.src.zero_cost_proxies.utils import compute_zc_statistic
 
 
 @ZERO_COST_SCORES.register('grasp')
-def grasp(model, model_output_generator, loss_fn, mode='param', T=1, niter=1):
+def grasp(model, model_output_generator, loss_fn, T=1, niter=1, reduction='sum'):
     weights = []
     for module in model.modules():
         if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
@@ -52,6 +53,6 @@ def grasp(model, model_output_generator, loss_fn, mode='param', T=1, niter=1):
         else:
             return torch.zeros_like(module.weight)
 
-    grads = get_layer_metric_array(model, grasp, mode)
+    grads = get_layer_metric_array(model, grasp)
 
-    return sum([torch.sum(x).item() for x in grads])
+    return compute_zc_statistic(grads, reduction=reduction)

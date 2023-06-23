@@ -1,57 +1,59 @@
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.utils import get_layer_metric_array
+from deeplite_torch_zoo.utils import get_layer_metric_array, NORMALIZATION_LAYERS
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
+from deeplite_torch_zoo.src.zero_cost_proxies.utils import compute_zc_statistic
 
 
 @ZERO_COST_SCORES.register('synflow')
-def synflow(model, model_output_generator, loss_fn=None, mode=None):
-    # Convert params to their abs. Keep sign for converting it back.
+def synflow(
+    model,
+    model_output_generator,
+    loss_fn=None,
+    dummify_bns=True,
+    bn_training_mode=False,
+    reduction='sum',
+    output_post_processing=None,
+):
+    if output_post_processing is None:
+        output_post_processing = lambda tensors: torch.cat([x.flatten() for x in tensors])
+
+    # replace *norm layer forwards with dummy forwards
+    if dummify_bns:
+
+        def dummify_bns_fn(module):
+            if isinstance(module, NORMALIZATION_LAYERS):
+                module.forward = lambda x: x
+
+        model.apply(dummify_bns_fn)
+
+    # convert params to their abs
     @torch.no_grad()
     def linearize(model):
-        signs = {}
-        for name, param in model.state_dict().items():
-            signs[name] = torch.sign(param)
+        for param in model.state_dict().values():
             param.abs_()
-        return signs
 
-    # Convert to orig values
-    @torch.no_grad()
-    def nonlinearize(model, signs):
-        for name, param in model.state_dict().items():
-            if 'weight_mask' not in name:
-                param.mul_(signs[name])
-        return
-
-    model.zero_grad()
-    signs = linearize(model)  # Keep signs of all params
-    model.zero_grad()
     model.double()
+    model.zero_grad()
 
-    inputs, _, _, _ = next(model_output_generator(nn.Identity()))
+    if not bn_training_mode:
+        if not dummify_bns:
+            model.eval()
+        linearize(model)
 
-    # Compute gradients with input of all-ones
-    shape = list(inputs.shape[1:])
-    device = inputs.device
-    inputs = torch.ones([1] + shape, device=device, dtype=torch.float64)
-    outputs = model.forward(inputs)
-    torch.sum(torch.cat([x.flatten() for x in outputs])).backward()
+    inp, _, _, _ = next(model_output_generator(nn.Identity()))
+    # compute gradients with input of all-ones
+    inputs = torch.ones((1, *inp.shape[1:]), device=inp.device, dtype=torch.float64)
+    outputs = model(inputs)
+    torch.sum(output_post_processing(outputs)).backward()
 
-    # Select the gradients
+    # select the gradients
     def get_synflow(layer):
         if layer.weight.grad is not None:
             return torch.abs(layer.weight * layer.weight.grad)
         else:
             return torch.zeros_like(layer.weight)
 
-    grads_abs_list = get_layer_metric_array(model, get_synflow, mode)
-    nonlinearize(model, signs)  # Apply signs of all params
-    score = 0
-    for grad_abs in grads_abs_list:
-        if len(grad_abs.shape) == 4:
-            score += float(torch.mean(torch.sum(grad_abs, dim=[1, 2, 3])))
-        elif len(grad_abs.shape) == 2:
-            score += float(torch.mean(torch.sum(grad_abs, dim=[1])))
-
-    return score
+    grads_abs = get_layer_metric_array(model, get_synflow)
+    return compute_zc_statistic(grads_abs, reduction=reduction)

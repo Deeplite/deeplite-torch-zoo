@@ -5,6 +5,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.utils import get_layer_metric_array, reshape_elements
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
+from deeplite_torch_zoo.src.zero_cost_proxies.utils import compute_zc_statistic
 
 
 def fisher_forward_conv2d(self, x):
@@ -23,7 +24,7 @@ def fisher_forward_linear(self, x):
 
 
 @ZERO_COST_SCORES.register('fisher')
-def fisher(model, model_output_generator, loss_fn, mode='channel'):
+def fisher(model, model_output_generator, loss_fn, reduction='sum'):
     for layer in model.modules():
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
             # Variables/op needed for fisher computation
@@ -68,8 +69,7 @@ def fisher(model, model_output_generator, loss_fn, mode='channel'):
         else:
             return torch.zeros(module.weight.shape[0])  # size=ch
 
-    grads_abs_ch = get_layer_metric_array(model, fisher, mode)
-    shapes = get_layer_metric_array(model, lambda l: l.weight.shape[1:], mode)
+    grads_abs_ch = get_layer_metric_array(model, fisher)
+    shapes = get_layer_metric_array(model, lambda l: l.weight.shape[1:])
     grads_abs = reshape_elements(grads_abs_ch, shapes, inputs.device)
-
-    return sum([torch.sum(x).item() for x in grads_abs])
+    return compute_zc_statistic(grads_abs, reduction=reduction)

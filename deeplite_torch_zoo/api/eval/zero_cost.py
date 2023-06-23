@@ -10,6 +10,8 @@ from deeplite_torch_zoo.src.zero_cost_proxies.plain import *  # pylint: disable=
 from deeplite_torch_zoo.src.zero_cost_proxies.snip import *  # pylint: disable=unused-import
 from deeplite_torch_zoo.src.zero_cost_proxies.synflow import *  # pylint: disable=unused-import
 from deeplite_torch_zoo.src.zero_cost_proxies.zico import *  # pylint: disable=unused-import
+from deeplite_torch_zoo.src.zero_cost_proxies.nparams import *  # pylint: disable=unused-import
+from deeplite_torch_zoo.src.zero_cost_proxies.macs import *  # pylint: disable=unused-import
 
 from deeplite_torch_zoo.utils import weight_gaussian_init
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
@@ -23,7 +25,10 @@ def get_zero_cost_estimator(metric_name: str):
         loss_fn=None,
         dataloader=None,
         model_output_generator=None,
+        inplace=False,
         do_gaussian_init=False,
+        eval_mode=False,
+        fuse=False,
         **kwargs
     ):
         if dataloader is not None and model_output_generator is not None:
@@ -33,7 +38,9 @@ def get_zero_cost_estimator(metric_name: str):
                 'a standard interface to compute model output is assumed.'
             )
 
-        model_ = deepcopy(model)
+        model_ = model
+        if not inplace:
+            model_ = deepcopy(model)
         device = next(model.parameters()).device
 
         if model_output_generator is None:
@@ -52,6 +59,10 @@ def get_zero_cost_estimator(metric_name: str):
 
         model_.train()
         model_.zero_grad()
+        if eval_mode:
+            model_.eval()
+        if fuse and hasattr(model, 'fuse'):
+            model_ = model_.fuse()
         if do_gaussian_init:
             weight_gaussian_init(model_)
 

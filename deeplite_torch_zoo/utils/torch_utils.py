@@ -47,6 +47,19 @@ TORCH_1_11 = check_version(torch.__version__, '1.11.0')
 TORCH_1_12 = check_version(torch.__version__, '1.12.0')
 TORCH_2_0 = check_version(torch.__version__, minimum='2.0')
 
+NORMALIZATION_LAYERS = (
+    nn.BatchNorm1d,
+    nn.BatchNorm2d,
+    nn.BatchNorm3d,
+    nn.GroupNorm,
+    nn.SyncBatchNorm,
+    nn.InstanceNorm1d,
+    nn.InstanceNorm2d,
+    nn.InstanceNorm3d,
+    nn.LayerNorm,
+    nn.LocalResponseNorm,
+)
+
 
 def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
     # Applies torch.inference_mode() decorator if torch>=1.9.0 else torch.no_grad() decorator
@@ -409,11 +422,9 @@ def reshape_elements(elements, shapes, device):
 def get_layer_metric_array(model, metric, mode=None):
     metric_array = []
     for layer in model.modules():
-        if mode == 'channel' and hasattr(layer, 'dont_ch_prune'):
-            continue
+        # should add other layers????
         if isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.Linear):
             metric_array.append(metric(layer))
-
     return metric_array
 
 
