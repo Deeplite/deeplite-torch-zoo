@@ -22,9 +22,9 @@ def get_zero_cost_estimator(metric_name: str):
 
     def compute_zc_score_wrapper(
         model,
-        loss_fn=None,
         dataloader=None,
         model_output_generator=None,
+        loss_fn=None,
         inplace=False,
         do_gaussian_init=False,
         eval_mode=False,
