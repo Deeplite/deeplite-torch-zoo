@@ -65,9 +65,7 @@ def get_model(
     model_func = MODEL_WRAPPER_REGISTRY.get(
         model_name=model_name.lower(), dataset_name=dataset_name
     )
-    model = model_func(
-        pretrained=pretrained, **kwargs
-    )
+    model = model_func(pretrained=pretrained, **kwargs)
     return model
 
 
@@ -114,7 +112,9 @@ def create_model(
     return model
 
 
-def profile(model, img_size=224, fuse=True, eval_mode=True, include_frozen_params=False):
+def profile(
+    model, img_size=224, fuse=True, eval_mode=True, include_frozen_params=False
+):
     """
     Do model profiling to calculate the MAC count, the number of parameters and weight size of the model.
     The torchprofile package is used to calculate MACs, which is jit-based and
@@ -129,8 +129,10 @@ def profile(model, img_size=224, fuse=True, eval_mode=True, include_frozen_param
     device = next(model.parameters()).device
 
     if not isinstance(img_size, (int, tuple)):
-        raise ValueError('img_size has be either an integer (e.g. 224) '
-                         'or a tuple of integers (e.g. (3, 224, 224))')
+        raise ValueError(
+            'img_size has be either an integer (e.g. 224) '
+            'or a tuple of integers (e.g. (3, 224, 224))'
+        )
     if not isinstance(img_size, tuple):
         img_size = (3, img_size, img_size)
 
@@ -138,9 +140,13 @@ def profile(model, img_size=224, fuse=True, eval_mode=True, include_frozen_param
         model = model.fuse()
 
     with switch_train_mode(model, is_training=not eval_mode):
-        num_params = sum(p.numel() for p in model.parameters() if include_frozen_params or p.requires_grad)
+        num_params = sum(
+            p.numel()
+            for p in model.parameters()
+            if include_frozen_params or p.requires_grad
+        )
         macs = profile_macs(model, torch.randn(1, *img_size).to(device))
-        
+
     return {'GMACs': macs / 1e9, 'Mparams': num_params / 1e6}
 
 
@@ -179,7 +185,9 @@ def list_models(
         for model_key in all_model_keys
     }
     models = []
-    include_filters = filter_string if isinstance(filter_string, (tuple, list)) else [filter_string]
+    include_filters = (
+        filter_string if isinstance(filter_string, (tuple, list)) else [filter_string]
+    )
     for f in include_filters:
         include_models = fnmatch.filter(all_models.keys(), f'*{f}*')
         if include_models:
@@ -195,7 +203,9 @@ def list_models(
         rows[model_key.model_name].extend([model_key.dataset_name])
     for model in rows:
         rows[model] = ', '.join(rows[model])
-    table.add_rows([['Model name', 'Pretrained checkpoints on datasets'], *rows.items()])
+    table.add_rows(
+        [['Model name', 'Pretrained checkpoints on datasets'], *rows.items()]
+    )
     LOGGER.info(table.draw())
     return table
 
@@ -209,30 +219,15 @@ def list_models_by_dataset(dataset_name):
 
 
 @deprecated
-def get_model_by_name(
-        model_name,
-        dataset_name,
-        pretrained=True,
-        **kwargs
-    ):
+def get_model_by_name(model_name, dataset_name, pretrained=True, **kwargs):
     return get_model(
         model_name=model_name,
         dataset_name=dataset_name,
         pretrained=pretrained,
-        **kwargs
+        **kwargs,
     )
 
 
 @deprecated
-def get_data_splits_by_name(
-        data_root,
-        dataset_name,
-        model_name,
-        **kwargs
-    ):
-    return get_dataloaders(
-        data_root,
-        dataset_name,
-        model_name,
-        **kwargs
-    )
+def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
+    return get_dataloaders(data_root, dataset_name, model_name, **kwargs)
