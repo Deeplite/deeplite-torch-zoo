@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import torch
 
 
@@ -6,11 +8,12 @@ def aggregate_statistic(value_array, reduction='sum'):
         return value_array
     score = 0
     for item in value_array:
+        if not isinstance(item, Iterable):
+            score += float(item)
+            continue
+        item = torch.Tensor(item)
         if reduction == 'sum':
-            if isinstance(item, torch.Tensor):
-                score += float(torch.sum(item))
-            else:
-                score += float(sum(item))
+            score += float(torch.sum(item))
         elif reduction == 'channel_mean':
             score += float(
                 torch.mean(torch.sum(item, dim=tuple(range(1, len(item.shape)))))
