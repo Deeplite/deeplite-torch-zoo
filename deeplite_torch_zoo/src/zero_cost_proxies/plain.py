@@ -2,7 +2,7 @@ import torch
 
 from deeplite_torch_zoo.utils import get_layer_metric_array
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
-from deeplite_torch_zoo.src.zero_cost_proxies.utils import compute_zc_statistic
+from deeplite_torch_zoo.src.zero_cost_proxies.utils import aggregate_statistic
 
 
 @ZERO_COST_SCORES.register('plain')
@@ -21,4 +21,4 @@ def plain(model, model_output_generator, loss_fn, reduction='sum'):
             return torch.zeros_like(module.weight)
 
     grads_abs = get_layer_metric_array(model, plain)
-    return compute_zc_statistic(grads_abs, reduction=reduction)
+    return aggregate_statistic(grads_abs, reduction=reduction)

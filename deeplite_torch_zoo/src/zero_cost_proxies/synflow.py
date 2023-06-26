@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.utils import get_layer_metric_array, NORMALIZATION_LAYERS
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
-from deeplite_torch_zoo.src.zero_cost_proxies.utils import compute_zc_statistic
+from deeplite_torch_zoo.src.zero_cost_proxies.utils import aggregate_statistic
 
 
 @ZERO_COST_SCORES.register('synflow')
@@ -11,13 +11,15 @@ def synflow(
     model,
     model_output_generator,
     loss_fn=None,
-    dummify_bns=True,
-    bn_training_mode=False,
+    dummify_bns=False,
+    bn_training_mode=True,
     reduction='sum',
     output_post_processing=None,
 ):
     if output_post_processing is None:
-        output_post_processing = lambda tensors: torch.cat([x.flatten() for x in tensors])
+        output_post_processing = lambda tensors: torch.cat(
+            [x.flatten() for x in tensors]
+        )
 
     # replace *norm layer forwards with dummy forwards
     if dummify_bns:
@@ -56,4 +58,4 @@ def synflow(
             return torch.zeros_like(layer.weight)
 
     grads_abs = get_layer_metric_array(model, get_synflow)
-    return compute_zc_statistic(grads_abs, reduction=reduction)
+    return aggregate_statistic(grads_abs, reduction=reduction)

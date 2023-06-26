@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.utils import get_layer_metric_array, reshape_elements
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
-from deeplite_torch_zoo.src.zero_cost_proxies.utils import compute_zc_statistic
+from deeplite_torch_zoo.src.zero_cost_proxies.utils import aggregate_statistic
 
 
 def fisher_forward_conv2d(self, x):
@@ -72,4 +72,4 @@ def fisher(model, model_output_generator, loss_fn, reduction='sum'):
     grads_abs_ch = get_layer_metric_array(model, fisher)
     shapes = get_layer_metric_array(model, lambda l: l.weight.shape[1:])
     grads_abs = reshape_elements(grads_abs_ch, shapes, inputs.device)
-    return compute_zc_statistic(grads_abs, reduction=reduction)
+    return aggregate_statistic(grads_abs, reduction=reduction)
