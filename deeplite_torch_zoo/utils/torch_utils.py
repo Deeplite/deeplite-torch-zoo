@@ -53,6 +53,18 @@ NORMALIZATION_LAYERS = (
     nn.LocalResponseNorm,
 )
 
+TRAINABLE_LAYERS = (
+    nn.Conv1d,
+    nn.Conv2d,
+    nn.Conv3d,
+    nn.ConvTranspose1d,
+    nn.ConvTranspose2d,
+    nn.ConvTranspose3d,
+    nn.Linear,
+    nn.Embedding,
+    nn.EmbeddingBag,
+)
+
 
 def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
     # Applies torch.inference_mode() decorator if torch>=1.9.0 else torch.no_grad() decorator
@@ -412,12 +424,11 @@ def reshape_elements(elements, shapes, device):
         return broadcast_val(elements, shapes)
 
 
-def get_layer_metric_array(model, metric, mode=None):
+def get_layerwise_metric_values(model, metric_fn):
     metric_array = []
     for layer in model.modules():
-        # should add other layers????
-        if isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.Linear):
-            metric_array.append(metric(layer))
+        if isinstance(layer, TRAINABLE_LAYERS):
+            metric_array.append(metric_fn(layer))
     return metric_array
 
 
@@ -433,20 +444,28 @@ def strip_optimizer(f='best.pt', s=''):
     for p in x['model'].parameters():
         p.requires_grad = False
     torch.save(x, s or f)
-    mb = os.path.getsize(s or f) / 1E6  # filesize
-    LOGGER.info(f"Optimizer stripped from {f},{(' saved as %s,' % s) if s else ''} {mb:.1f}MB")
+    mb = os.path.getsize(s or f) / 1e6  # filesize
+    LOGGER.info(
+        f"Optimizer stripped from {f},{(' saved as %s,' % s) if s else ''} {mb:.1f}MB"
+    )
 
 
 def fuse_conv_and_bn(conv, bn):
     """Fuse Conv2d() and BatchNorm2d() layers https://tehnokv.com/posts/fusing-batchnorm-and-conv/."""
-    fusedconv = nn.Conv2d(conv.in_channels,
-                          conv.out_channels,
-                          kernel_size=conv.kernel_size,
-                          stride=conv.stride,
-                          padding=conv.padding,
-                          dilation=conv.dilation,
-                          groups=conv.groups,
-                          bias=True).requires_grad_(False).to(conv.weight.device)
+    fusedconv = (
+        nn.Conv2d(
+            conv.in_channels,
+            conv.out_channels,
+            kernel_size=conv.kernel_size,
+            stride=conv.stride,
+            padding=conv.padding,
+            dilation=conv.dilation,
+            groups=conv.groups,
+            bias=True,
+        )
+        .requires_grad_(False)
+        .to(conv.weight.device)
+    )
 
     # Prepare filters
     w_conv = conv.weight.clone().view(conv.out_channels, -1)
@@ -454,8 +473,14 @@ def fuse_conv_and_bn(conv, bn):
     fusedconv.weight.copy_(torch.mm(w_bn, w_conv).view(fusedconv.weight.shape))
 
     # Prepare spatial bias
-    b_conv = torch.zeros(conv.weight.size(0), device=conv.weight.device) if conv.bias is None else conv.bias
-    b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(torch.sqrt(bn.running_var + bn.eps))
+    b_conv = (
+        torch.zeros(conv.weight.size(0), device=conv.weight.device)
+        if conv.bias is None
+        else conv.bias
+    )
+    b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(
+        torch.sqrt(bn.running_var + bn.eps)
+    )
     fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
 
     return fusedconv
@@ -493,7 +518,9 @@ class ModelEMA:
         """Create EMA."""
         self.ema = deepcopy(de_parallel(model)).eval()  # FP32 EMA
         self.updates = updates  # number of EMA updates
-        self.decay = lambda x: decay * (1 - math.exp(-x / tau))  # decay exponential ramp (to help early epochs)
+        self.decay = lambda x: decay * (
+            1 - math.exp(-x / tau)
+        )  # decay exponential ramp (to help early epochs)
         for p in self.ema.parameters():
             p.requires_grad_(False)
         self.enabled = True
@@ -522,40 +549,66 @@ def select_device(device='', batch=0, newline=False, verbose=True):
     s = ''
     device = str(device).lower()
     for remove in 'cuda:', 'none', '(', ')', '[', ']', "'", ' ':
-        device = device.replace(remove, '')  # to string, 'cuda:0' -> '0' and '(0, 1)' -> '0,1'
+        device = device.replace(
+            remove, ''
+        )  # to string, 'cuda:0' -> '0' and '(0, 1)' -> '0,1'
     cpu = device == 'cpu'
     mps = device == 'mps'  # Apple Metal Performance Shaders (MPS)
     if cpu or mps:
-        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # force torch.cuda.is_available() = False
+        os.environ[
+            'CUDA_VISIBLE_DEVICES'
+        ] = '-1'  # force torch.cuda.is_available() = False
     elif device:  # non-cpu device requested
         if device == 'cuda':
             device = '0'
         visible = os.environ.get('CUDA_VISIBLE_DEVICES', None)
-        os.environ['CUDA_VISIBLE_DEVICES'] = device  # set environment variable - must be before assert is_available()
-        if not (torch.cuda.is_available() and torch.cuda.device_count() >= len(device.replace(',', ''))):
+        os.environ[
+            'CUDA_VISIBLE_DEVICES'
+        ] = device  # set environment variable - must be before assert is_available()
+        if not (
+            torch.cuda.is_available()
+            and torch.cuda.device_count() >= len(device.replace(',', ''))
+        ):
             LOGGER.info(s)
-            install = 'See https://pytorch.org/get-started/locally/ for up-to-date torch install instructions if no ' \
-                      'CUDA devices are seen by torch.\n' if torch.cuda.device_count() == 0 else ''
-            raise ValueError(f"Invalid CUDA 'device={device}' requested."
-                             f" Use 'device=cpu' or pass valid CUDA device(s) if available,"
-                             f" i.e. 'device=0' or 'device=0,1,2,3' for Multi-GPU.\n"
-                             f'\ntorch.cuda.is_available(): {torch.cuda.is_available()}'
-                             f'\ntorch.cuda.device_count(): {torch.cuda.device_count()}'
-                             f"\nos.environ['CUDA_VISIBLE_DEVICES']: {visible}\n"
-                             f'{install}')
+            install = (
+                'See https://pytorch.org/get-started/locally/ for up-to-date torch install instructions if no '
+                'CUDA devices are seen by torch.\n'
+                if torch.cuda.device_count() == 0
+                else ''
+            )
+            raise ValueError(
+                f"Invalid CUDA 'device={device}' requested."
+                f" Use 'device=cpu' or pass valid CUDA device(s) if available,"
+                f" i.e. 'device=0' or 'device=0,1,2,3' for Multi-GPU.\n"
+                f'\ntorch.cuda.is_available(): {torch.cuda.is_available()}'
+                f'\ntorch.cuda.device_count(): {torch.cuda.device_count()}'
+                f"\nos.environ['CUDA_VISIBLE_DEVICES']: {visible}\n"
+                f'{install}'
+            )
 
     if not cpu and not mps and torch.cuda.is_available():  # prefer GPU if available
-        devices = device.split(',') if device else '0'  # range(torch.cuda.device_count())  # i.e. 0,1,6,7
+        devices = (
+            device.split(',') if device else '0'
+        )  # range(torch.cuda.device_count())  # i.e. 0,1,6,7
         n = len(devices)  # device count
-        if n > 1 and batch > 0 and batch % n != 0:  # check batch_size is divisible by device_count
-            raise ValueError(f"'batch={batch}' must be a multiple of GPU count {n}. Try 'batch={batch // n * n}' or "
-                             f"'batch={batch // n * n + n}', the nearest batch sizes evenly divisible by {n}.")
+        if (
+            n > 1 and batch > 0 and batch % n != 0
+        ):  # check batch_size is divisible by device_count
+            raise ValueError(
+                f"'batch={batch}' must be a multiple of GPU count {n}. Try 'batch={batch // n * n}' or "
+                f"'batch={batch // n * n + n}', the nearest batch sizes evenly divisible by {n}."
+            )
         space = ' ' * (len(s) + 1)
         for i, d in enumerate(devices):
             p = torch.cuda.get_device_properties(i)
             s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, {p.total_memory / (1 << 20):.0f}MiB)\n"  # bytes to MB
         arg = 'cuda:0'
-    elif mps and getattr(torch, 'has_mps', False) and torch.backends.mps.is_available() and TORCH_2_0:
+    elif (
+        mps
+        and getattr(torch, 'has_mps', False)
+        and torch.backends.mps.is_available()
+        and TORCH_2_0
+    ):
         # Prefer MPS if available
         s += 'MPS\n'
         arg = 'mps'
@@ -571,7 +624,9 @@ def select_device(device='', batch=0, newline=False, verbose=True):
 @contextmanager
 def torch_distributed_zero_first(local_rank: int):
     """Decorator to make all processes in distributed training wait for each local_master to do something."""
-    initialized = torch.distributed.is_available() and torch.distributed.is_initialized()
+    initialized = (
+        torch.distributed.is_available() and torch.distributed.is_initialized()
+    )
     if initialized and local_rank not in (-1, 0):
         dist.barrier(device_ids=[local_rank])
     yield
@@ -632,16 +687,32 @@ def model_info(model, detailed=False, verbose=True, imgsz=640):
     n_l = len(list(model.modules()))  # number of layers
     if detailed:
         LOGGER.info(
-            f"{'layer':>5} {'name':>40} {'gradient':>9} {'parameters':>12} {'shape':>20} {'mu':>10} {'sigma':>10}")
+            f"{'layer':>5} {'name':>40} {'gradient':>9} {'parameters':>12} {'shape':>20} {'mu':>10} {'sigma':>10}"
+        )
         for i, (name, p) in enumerate(model.named_parameters()):
             name = name.replace('module_list.', '')
-            LOGGER.info('%5g %40s %9s %12g %20s %10.3g %10.3g %10s' %
-                        (i, name, p.requires_grad, p.numel(), list(p.shape), p.mean(), p.std(), p.dtype))
+            LOGGER.info(
+                '%5g %40s %9s %12g %20s %10.3g %10.3g %10s'
+                % (
+                    i,
+                    name,
+                    p.requires_grad,
+                    p.numel(),
+                    list(p.shape),
+                    p.mean(),
+                    p.std(),
+                    p.dtype,
+                )
+            )
 
     fused = ' (fused)' if getattr(model, 'is_fused', lambda: False)() else ''
-    yaml_file = getattr(model, 'yaml_file', '') or getattr(model, 'yaml', {}).get('yaml_file', '')
+    yaml_file = getattr(model, 'yaml_file', '') or getattr(model, 'yaml', {}).get(
+        'yaml_file', ''
+    )
     model_name = Path(yaml_file).stem.replace('yolo', 'YOLO') or 'Model'
-    LOGGER.info(f'{model_name} summary{fused}: {n_l} layers, {n_p} parameters, {n_g} gradients')
+    LOGGER.info(
+        f'{model_name} summary{fused}: {n_l} layers, {n_p} parameters, {n_g} gradients'
+    )
     return n_l, n_p, n_g
 
 

@@ -36,7 +36,7 @@ def get_imagenet(
             f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!"
         )
 
-    default_train_transforms, default_val_transforms = get_imagenet_transforms(img_size, **kwargs)
+    default_train_transforms, default_val_transforms = get_imagenet_transforms(img_size)
 
     train_transforms = (
         train_transforms if train_transforms is not None else default_train_transforms

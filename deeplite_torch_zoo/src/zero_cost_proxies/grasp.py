@@ -16,7 +16,7 @@
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.utils import get_layer_metric_array
+from deeplite_torch_zoo.utils import get_layerwise_metric_values
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 from deeplite_torch_zoo.src.zero_cost_proxies.utils import aggregate_statistic
 
@@ -68,6 +68,6 @@ def grasp(model, model_output_generator, loss_fn, T=1, niter=1, reduction='sum')
         else:
             return torch.zeros_like(module.weight)
 
-    grads = get_layer_metric_array(model, grasp)
+    grads = get_layerwise_metric_values(model, grasp)
 
     return aggregate_statistic(grads, reduction=reduction)

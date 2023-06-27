@@ -67,6 +67,4 @@ def zico(
         loss.backward()
         grad_dict = get_grad(model, grad_dict, step)
 
-    return aggregate_statistic(
-        compute_zico(grad_dict, mode=mode), reduction=reduction
-    )
+    return aggregate_statistic(compute_zico(grad_dict, mode=mode), reduction=reduction)

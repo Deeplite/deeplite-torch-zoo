@@ -16,9 +16,21 @@
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.utils import get_layer_metric_array, NORMALIZATION_LAYERS
+from deeplite_torch_zoo.utils import get_layerwise_metric_values, NORMALIZATION_LAYERS
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 from deeplite_torch_zoo.src.zero_cost_proxies.utils import aggregate_statistic
+
+
+def dummify_bns_fn(module):
+    if isinstance(module, NORMALIZATION_LAYERS):
+        module.forward = lambda x: x
+
+
+def get_synflow(layer):
+    if layer.weight.grad is not None:
+        return torch.abs(layer.weight * layer.weight.grad)
+    else:
+        return torch.zeros_like(layer.weight)
 
 
 @ZERO_COST_SCORES.register('synflow')
@@ -38,11 +50,6 @@ def synflow(
 
     # replace *norm layer forwards with dummy forwards
     if dummify_bns:
-
-        def dummify_bns_fn(module):
-            if isinstance(module, NORMALIZATION_LAYERS):
-                module.forward = lambda x: x
-
         model.apply(dummify_bns_fn)
 
     # convert params to their abs
@@ -66,11 +73,5 @@ def synflow(
     torch.sum(output_post_processing(outputs)).backward()
 
     # select the gradients
-    def get_synflow(layer):
-        if layer.weight.grad is not None:
-            return torch.abs(layer.weight * layer.weight.grad)
-        else:
-            return torch.zeros_like(layer.weight)
-
-    grads_abs = get_layer_metric_array(model, get_synflow)
+    grads_abs = get_layerwise_metric_values(model, get_synflow)
     return aggregate_statistic(grads_abs, reduction=reduction)

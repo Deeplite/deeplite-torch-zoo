@@ -29,7 +29,6 @@ def get_imagenet_transforms(
     re_prob=0.0,  # Random erase prob (default: 0.)
     re_mode='pixel',  # Random erase mode (default: "pixel")
     re_count=1,  # Random erase count (default: 1)
-    **kwargs,
 ):
     train_transforms = transforms_imagenet_train(
         img_size=img_size,

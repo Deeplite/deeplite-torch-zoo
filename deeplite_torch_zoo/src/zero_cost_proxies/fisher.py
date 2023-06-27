@@ -18,7 +18,7 @@ import types
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.utils import get_layer_metric_array, reshape_elements
+from deeplite_torch_zoo.utils import get_layerwise_metric_values, reshape_elements
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 from deeplite_torch_zoo.src.zero_cost_proxies.utils import aggregate_statistic
 
@@ -84,7 +84,7 @@ def fisher(model, model_output_generator, loss_fn, reduction='sum'):
         else:
             return torch.zeros(module.weight.shape[0])  # size=ch
 
-    grads_abs_ch = get_layer_metric_array(model, fisher)
-    shapes = get_layer_metric_array(model, lambda l: l.weight.shape[1:])
+    grads_abs_ch = get_layerwise_metric_values(model, fisher)
+    shapes = get_layerwise_metric_values(model, lambda l: l.weight.shape[1:])
     grads_abs = reshape_elements(grads_abs_ch, shapes, inputs.device)
     return aggregate_statistic(grads_abs, reduction=reduction)

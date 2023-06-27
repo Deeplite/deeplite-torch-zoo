@@ -18,7 +18,7 @@ import types
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.utils import get_layer_metric_array
+from deeplite_torch_zoo.utils import get_layerwise_metric_values
 from deeplite_torch_zoo.src.registries import ZERO_COST_SCORES
 from deeplite_torch_zoo.src.zero_cost_proxies.utils import aggregate_statistic
 
@@ -63,5 +63,5 @@ def snip(model, model_output_generator, loss_fn, reduction='sum'):
         else:
             return torch.zeros_like(module.weight)
 
-    grads_abs = get_layer_metric_array(model, snip)
+    grads_abs = get_layerwise_metric_values(model, snip)
     return aggregate_statistic(grads_abs, reduction=reduction)
