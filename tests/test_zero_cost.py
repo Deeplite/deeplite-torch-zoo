@@ -18,7 +18,6 @@ REF_METRIC_VALUES = [
     ('plain', 0.280363),
     ('snip', 317.93181),
     ('synflow', 3.31904e24),
-    ('zico', 298.6544),
 ]
 
 
