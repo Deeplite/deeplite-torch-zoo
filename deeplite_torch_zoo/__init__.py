@@ -11,8 +11,5 @@ from deeplite_torch_zoo.api import (  # pylint: disable=unused-import
     get_data_splits_by_name,  # deprecated
 )
 
-# model wrappers
-from deeplite_torch_zoo.src.object_detection.trainer import YOLO as Detector # pylint: disable=unused-import
-
 # utils
 from deeplite_torch_zoo.utils import LOGGER  # pylint: disable=unused-import
