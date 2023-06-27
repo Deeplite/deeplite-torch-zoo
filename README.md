@@ -237,8 +237,11 @@ We always welcome community contributions to expand the scope of `deeplite-torch
 
 NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
-
 ## Credit
+
+<details>
+
+  <summary>Repositories used</summary>
 
 ### Object Detection
 - The implementation of yolov3-voc: [Peterisfar/YOLOV3](https://github.com/Peterisfar/YOLOV3/)
@@ -279,3 +282,5 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - Cutout implementation: [uoguelph-mlrg/Cutout](https://github.com/uoguelph-mlrg/Cutout)
 - Robustness measurement image distortions: [hendrycks/robustness](https://github.com/hendrycks/robustness)
 - Registry implementation: [openvinotoolkit/openvino/tools/pot](https://github.com/openvinotoolkit/openvino/blob/master/tools/pot)
+
+</details>
