@@ -4,15 +4,15 @@ from deeplite_torch_zoo import get_model, profile
 
 
 @pytest.mark.parametrize(
-    ('ref_model_name', 'ref_gmacs', 'ref_model_size_mb'),
+    ('ref_model_name', 'ref_gmacs', 'ref_mparams'),
     [
-        ('resnet50', 4.100300288, 102.228128)
+        ('resnet50', 4.100300288, 25.557032)
     ]
 )
 def test_profile(
         ref_model_name,
         ref_gmacs,
-        ref_model_size_mb,
+        ref_mparams,
     ):
     model = get_model(
         model_name=ref_model_name,
@@ -23,4 +23,4 @@ def test_profile(
     metrics_dict = profile(model)
 
     assert metrics_dict['GMACs'] == ref_gmacs
-    assert metrics_dict['size_Mb'] == ref_model_size_mb
+    assert metrics_dict['Mparams'] == ref_mparams
