@@ -429,7 +429,7 @@ def main():
     model = create_model(
         model_name=args.model,
         pretraining_dataset=args.pretraining_dataset,
-        num_classes=args.num_classes,
+        num_classes=int(args.num_classes),
         pretrained=args.pretrained,
     )
 
