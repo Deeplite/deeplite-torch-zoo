@@ -59,7 +59,6 @@ def synflow(
             param.abs_()
 
     model.double()
-    model.zero_grad()
 
     if not bn_training_mode:
         if not dummify_bns:

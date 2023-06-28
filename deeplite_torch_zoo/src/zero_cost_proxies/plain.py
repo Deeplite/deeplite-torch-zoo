@@ -22,8 +22,6 @@ from deeplite_torch_zoo.src.zero_cost_proxies.utils import aggregate_statistic
 
 @ZERO_COST_SCORES.register('plain')
 def plain(model, model_output_generator, loss_fn, reduction='sum'):
-    model.zero_grad()
-
     _, outputs, targets, loss_kwargs = next(model_output_generator(model))
     loss = loss_fn(outputs, targets, **loss_kwargs)
     loss.backward()

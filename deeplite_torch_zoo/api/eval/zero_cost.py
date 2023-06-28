@@ -67,10 +67,9 @@ def get_zero_cost_estimator(metric_name: str):
                 device=device,
             )
 
-        model_.train()
+        model_.train(not eval_mode)
         model_.zero_grad()
-        if eval_mode:
-            model_.eval()
+
         if fuse and hasattr(model, 'fuse'):
             model_ = model_.fuse()
         if do_gaussian_init:

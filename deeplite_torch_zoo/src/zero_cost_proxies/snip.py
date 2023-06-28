@@ -51,7 +51,6 @@ def snip(model, model_output_generator, loss_fn, reduction='sum'):
                 module.forward = types.MethodType(snip_forward_linear, module)
 
     # Compute gradients, without apply
-    model.zero_grad()
     _, outputs, targets, loss_kwargs = next(model_output_generator(model))
     loss = loss_fn(outputs, targets, **loss_kwargs)
     loss.backward()

@@ -44,7 +44,6 @@ def jacob_cov(
     output_post_processing=None,
     reduction='sum',
 ):
-    model.zero_grad()
     if output_post_processing is None:
         output_post_processing = lambda tensors: torch.cat(
             [x.flatten() for x in tensors]
