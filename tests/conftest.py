@@ -106,3 +106,17 @@ def imagewoof160_dataloaders(data_root='./', batch_size=32):
     yield dataloaders
     (p / 'imagewoof160.zip').unlink()
     shutil.rmtree(p / 'imagewoof160')
+
+
+@pytest.fixture
+def cifar100_dataloaders(data_root='./', batch_size=32):
+    p = Path(data_root)
+    dataloaders = get_dataloaders(
+        dataset_name='cifar100',
+        model_name='resnet18',
+        data_root=data_root,
+        batch_size=batch_size,
+    )
+    yield dataloaders
+    (p / 'cifar-100-python.tar.gz').unlink()
+    shutil.rmtree(p / 'cifar-100-python')

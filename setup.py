@@ -38,14 +38,6 @@ INSTALL_REQUIRES = [
     "tensorboard>=2.11.2",
 ]
 
-
-python_version = sys.version_info
-if python_version < (3, 7, 0):
-    INSTALL_REQUIRES.append("torchinfo==1.5.4")
-else:
-    INSTALL_REQUIRES.append("torchinfo==1.7.2")
-
-
 setup(
     name="deeplite-torch-zoo",
     version="2.0.0",
