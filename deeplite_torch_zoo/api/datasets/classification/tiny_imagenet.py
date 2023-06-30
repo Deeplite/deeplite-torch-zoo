@@ -21,10 +21,9 @@ def get_tinyimagenet(
     data_root=None,
     img_size=64,
     batch_size=64,
-    test_batch_size=256,
-    use_prefetcher=True,
+    test_batch_size=None,
+    use_prefetcher=False,
     num_workers=1,
-    eval_workers=1,
     distributed=False,
     pin_memory=False,
     device=torch.device('cuda'),
@@ -85,6 +84,8 @@ def get_tinyimagenet(
             re_prob=re_prob,
             re_mode=re_mode,
             re_count=re_count,
+            re_num_splits=re_num_splits,
+            use_prefetcher=use_prefetcher,
         )
     else:
         default_train_transforms, default_val_transforms = get_vanilla_transforms(
@@ -94,16 +95,13 @@ def get_tinyimagenet(
             mean=mean,
             std=std,
             crop_pct=crop_pct,
+            use_prefetcher=use_prefetcher,
         )
 
-    train_transforms = (
-        train_transforms if train_transforms is not None else default_train_transforms
-    )
-    val_transforms = (
-        val_transforms if val_transforms is not None else default_val_transforms
-    )
-
-    data_transforms = {'train': train_transforms, 'val': val_transforms}
+    data_transforms = {
+        'train': train_transforms or default_train_transforms,
+        'val': val_transforms or default_val_transforms,
+    }
     image_datasets = {
         x: datasets.ImageFolder(os.path.join(data_root, x), data_transforms[x])
         for x in ['train', 'val']
@@ -135,12 +133,12 @@ def get_tinyimagenet(
     test_loader = create_loader(
         image_datasets['val'],
         input_size=img_size,
-        batch_size=test_batch_size if test_batch_size is not None else batch_size,
+        batch_size=test_batch_size or batch_size,
         is_training=False,
         use_prefetcher=use_prefetcher,
         mean=mean,
         std=std,
-        num_workers=eval_workers,
+        num_workers=num_workers,
         distributed=distributed,
         pin_memory=pin_memory,
         device=device,

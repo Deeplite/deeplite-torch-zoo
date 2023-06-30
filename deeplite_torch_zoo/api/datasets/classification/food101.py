@@ -21,11 +21,10 @@ def get_food101(
     data_root=None,
     img_size=224,
     batch_size=64,
-    test_batch_size=256,
+    test_batch_size=None,
     download=True,
-    use_prefetcher=True,
+    use_prefetcher=False,
     num_workers=1,
-    eval_workers=1,
     distributed=False,
     pin_memory=False,
     device=torch.device('cuda'),
@@ -86,6 +85,8 @@ def get_food101(
             re_prob=re_prob,
             re_mode=re_mode,
             re_count=re_count,
+            re_num_splits=re_num_splits,
+            use_prefetcher=use_prefetcher,
         )
     else:
         default_train_transforms, default_val_transforms = get_vanilla_transforms(
@@ -95,32 +96,22 @@ def get_food101(
             mean=mean,
             std=std,
             crop_pct=crop_pct,
+            use_prefetcher=use_prefetcher,
         )
-
-    train_transforms = (
-        train_transforms if train_transforms is not None else default_train_transforms
-    )
-    val_transforms = (
-        val_transforms if val_transforms is not None else default_val_transforms
-    )
 
     dataset_train = Food101(
         root=data_root,
         split='train',
         download=download,
-        transform=train_transforms
+        transform=train_transforms or default_train_transforms
     )
-    dataset_train.transform = train_transforms if train_transforms is not None \
-        else default_train_transforms
 
     dataset_eval = Food101(
         root=data_root,
         split='test',
         download=download,
-        transform=val_transforms,
+        transform=val_transforms or default_val_transforms,
     )
-    dataset_eval.transform = val_transforms if val_transforms is not None \
-        else default_val_transforms
 
     train_loader = create_loader(
         dataset_train,
@@ -148,12 +139,12 @@ def get_food101(
     test_loader = create_loader(
         dataset_eval,
         input_size=img_size,
-        batch_size=test_batch_size if test_batch_size is not None else batch_size,
+        batch_size=test_batch_size or batch_size,
         is_training=False,
         use_prefetcher=use_prefetcher,
         mean=mean,
         std=std,
-        num_workers=eval_workers,
+        num_workers=num_workers,
         distributed=distributed,
         pin_memory=pin_memory,
         device=device,

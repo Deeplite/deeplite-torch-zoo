@@ -22,12 +22,11 @@ def _get_imagenette(
     data_root=None,
     img_size=224,
     batch_size=64,
-    test_batch_size=256,
+    test_batch_size=None,
     download=True,
     dataset_url=None,
-    use_prefetcher=True,
+    use_prefetcher=False,
     num_workers=1,
-    eval_workers=1,
     distributed=False,
     pin_memory=False,
     device=torch.device('cuda'),
@@ -88,6 +87,8 @@ def _get_imagenette(
             re_prob=re_prob,
             re_mode=re_mode,
             re_count=re_count,
+            re_num_splits=re_num_splits,
+            use_prefetcher=use_prefetcher,
         )
     else:
         default_train_transforms, default_val_transforms = get_vanilla_transforms(
@@ -97,36 +98,24 @@ def _get_imagenette(
             mean=mean,
             std=std,
             crop_pct=crop_pct,
+            use_prefetcher=use_prefetcher,
         )
-
-    train_transforms = (
-        train_transforms if train_transforms is not None else default_train_transforms
-    )
-    val_transforms = (
-        val_transforms if val_transforms is not None else default_val_transforms
-    )
 
     dataset_train = Imagenette(
         root=data_root,
         split='train',
         download=download,
-        transform=train_transforms,
+        transform=train_transforms or default_train_transforms,
         url=dataset_url,
     )
-
-    dataset_train.transform = train_transforms if train_transforms is not None \
-        else default_train_transforms
 
     dataset_eval = Imagenette(
         root=data_root,
         split='val',
         download=download,
-        transform=val_transforms,
+        transform=val_transforms or default_val_transforms,
         url=dataset_url,
     )
-
-    dataset_eval.transform = val_transforms if val_transforms is not None \
-        else default_val_transforms
 
     train_loader = create_loader(
         dataset_train,
@@ -154,12 +143,12 @@ def _get_imagenette(
     test_loader = create_loader(
         dataset_eval,
         input_size=img_size,
-        batch_size=test_batch_size if test_batch_size is not None else batch_size,
+        batch_size=test_batch_size or batch_size,
         is_training=False,
         use_prefetcher=use_prefetcher,
         mean=mean,
         std=std,
-        num_workers=eval_workers,
+        num_workers=num_workers,
         distributed=distributed,
         pin_memory=pin_memory,
         device=device,
@@ -173,12 +162,11 @@ def get_imagenette(
     data_root=None,
     img_size=224,
     batch_size=64,
-    test_batch_size=256,
+    test_batch_size=None,
     download=True,
     dataset_url='https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette.zip',
-    use_prefetcher=True,
+    use_prefetcher=False,
     num_workers=1,
-    eval_workers=1,
     distributed=False,
     pin_memory=False,
     device=torch.device('cuda'),
@@ -216,7 +204,6 @@ def get_imagenette(
         dataset_url=dataset_url,
         use_prefetcher=use_prefetcher,
         num_workers=num_workers,
-        eval_workers=eval_workers,
         distributed=distributed,
         pin_memory=pin_memory,
         device=device,
@@ -252,12 +239,11 @@ def get_imagenette_320(
     data_root=None,
     img_size=320,
     batch_size=64,
-    test_batch_size=256,
+    test_batch_size=None,
     download=True,
     dataset_url='https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette320.zip',
-    use_prefetcher=True,
+    use_prefetcher=False,
     num_workers=1,
-    eval_workers=1,
     distributed=False,
     pin_memory=False,
     device=torch.device('cuda'),
@@ -295,7 +281,6 @@ def get_imagenette_320(
         dataset_url=dataset_url,
         use_prefetcher=use_prefetcher,
         num_workers=num_workers,
-        eval_workers=eval_workers,
         distributed=distributed,
         pin_memory=pin_memory,
         device=device,
@@ -331,12 +316,11 @@ def get_imagenette_160(
     data_root=None,
     img_size=160,
     batch_size=64,
-    test_batch_size=256,
+    test_batch_size=None,
     download=True,
     dataset_url='https://github.com/ultralytics/yolov5/releases/download/v1.0/imagenette160.zip',
-    use_prefetcher=True,
+    use_prefetcher=False,
     num_workers=1,
-    eval_workers=1,
     distributed=False,
     pin_memory=False,
     device=torch.device('cuda'),
@@ -374,7 +358,6 @@ def get_imagenette_160(
         dataset_url=dataset_url,
         use_prefetcher=use_prefetcher,
         num_workers=num_workers,
-        eval_workers=eval_workers,
         distributed=distributed,
         pin_memory=pin_memory,
         device=device,
