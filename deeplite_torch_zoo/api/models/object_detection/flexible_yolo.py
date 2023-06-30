@@ -1,27 +1,13 @@
-import urllib.parse as urlparse
-from pathlib import Path
-
-import deeplite_torch_zoo
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.model import FlexibleYOLO
-from deeplite_torch_zoo.utils import load_pretrained_weights
-from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.models.object_detection.helpers import (
+    make_wrapper_func, get_project_root, load_pretrained_model, DATASET_LIST
+)
 
 __all__ = []
 
-
-def get_project_root() -> Path:
-    return Path(deeplite_torch_zoo.__file__).parents[1]
-
-
-CFG_PATH = 'deeplite_torch_zoo/src/objectdetection/flexible_yolo/configs'
-CHECKPOINT_STORAGE_URL = 'http://download.deeplite.ai/zoo/models/'
-
-model_urls = {}
+CFG_PATH = 'deeplite_torch_zoo/src/object_detection/flexible_yolo/configs'
 
 model_configs = {
-    'yolo_vgg16bn': 'model_vgg.yaml',
-    'yolo_shufflenetv2': 'model_shufflenet.yaml',
-    'yolo_mobilenetv3': 'model_mobilenet.yaml',
     'yolo_resnet18': 'model_resnet.yaml',
     'yolo_resnet18x0.5': 'model_resnet.yaml',
     'yolo_fdresnet18x0.5': 'model_resnet.yaml',
@@ -53,7 +39,6 @@ model_kwargs = {
     'yolo_resnet50': {'backbone': {'version': 50}, 'neck': None},
     'yolo_resnet101': {'backbone': {'version': 101}, 'neck': None},
     'yolo_resnet152': {'backbone': {'version': 152}, 'neck': None},
-    'yolo_vgg16bn': {'backbone': {'version': '16_bn'}, 'neck': None},
 }
 
 
@@ -62,7 +47,6 @@ def flexible_yolo(
     dataset_name='voc',
     num_classes=20,
     pretrained=False,
-    device='cuda',
     **kwargs,
 ):
     config_key = model_name
@@ -81,60 +65,13 @@ def flexible_yolo(
         **kwargs,
     )
     if pretrained:
-        if f"{model_name}_{dataset_name}" not in model_urls:
-            raise ValueError(
-                f'Could not find a pretrained checkpoint for model {model_name} on dataset {dataset_name}. \n'
-                'Use pretrained=False if you want to create a untrained model.'
-            )
-        checkpoint_url = urlparse.urljoin(
-            CHECKPOINT_STORAGE_URL, model_urls[f'{model_name}_{dataset_name}']
-        )
-        model = load_pretrained_weights(model, checkpoint_url, device)
-    return model.to(device)
-
-
-def make_wrapper_func(wrapper_name, model_name, dataset_name, num_classes):
-    model_wrapper_fn = flexible_yolo
-    has_checkpoint = True
-    if f"{model_name}_{dataset_name}" not in model_urls:
-        has_checkpoint = False
-
-    @MODEL_WRAPPER_REGISTRY.register(
-        model_name=model_name,
-        dataset_name=dataset_name,
-        task_type='object_detection',
-        has_checkpoint=has_checkpoint,
-    )
-    def wrapper_func(
-        pretrained=False,
-        num_classes=num_classes,
-        device='cuda',
-        **kwargs,
-    ):
-        return model_wrapper_fn(
-            model_name=model_name,
-            dataset_name=dataset_name,
-            num_classes=num_classes,
-            pretrained=pretrained,
-            device=device,
-            **kwargs,
-        )
-
-    wrapper_func.__name__ = wrapper_name
-    return wrapper_func
+        model = load_pretrained_model(model, model_name, dataset_name)
+    return model
 
 
 model_list = list(model_configs.keys())
-datasets = [
-    ('person_detection', 1),
-    ('voc', 20),
-    ('coco', 80),
-    ('voc07', 20),
-    ('custom_person_detection', 1),
-]
-
-for dataset_tag, n_classes in datasets:
+for dataset_tag, n_classes in DATASET_LIST:
     for model_tag in model_list:
         name = '_'.join([model_tag, dataset_tag])
-        globals()[name] = make_wrapper_func(name, model_tag, dataset_tag, n_classes)
+        globals()[name] = make_wrapper_func(flexible_yolo, name, model_tag, dataset_tag, n_classes)
         __all__.append(name)

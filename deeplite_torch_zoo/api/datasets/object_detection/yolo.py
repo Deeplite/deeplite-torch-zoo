@@ -20,7 +20,7 @@ from deeplite_torch_zoo.src.object_detection.datasets.voc_utils import (
 )
 from deeplite_torch_zoo.src.object_detection.datasets.wider_face import WiderFace
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
-from deeplite_torch_zoo.api.registries import DATA_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 
 __all__ = []
 
@@ -34,7 +34,6 @@ def make_dataset_wrapper(wrapper_name, num_classes, img_size, dataset_create_fn)
         img_size=img_size,
         fp16=False,
         distributed=False,
-        device="cuda",
         **kwargs,
     ):
         if len(kwargs):
@@ -54,7 +53,6 @@ def make_dataset_wrapper(wrapper_name, num_classes, img_size, dataset_create_fn)
             distributed=distributed,
             shuffle=not distributed,
             collate_fn=train_dataset.collate_img_label_fn,
-            device=device,
         )
 
         test_loader = get_dataloader(
@@ -65,7 +63,6 @@ def make_dataset_wrapper(wrapper_name, num_classes, img_size, dataset_create_fn)
             distributed=distributed,
             shuffle=False,
             collate_fn=test_dataset.collate_img_label_fn,
-            device=device,
         )
 
         return {"train": train_loader, "val": test_loader, "test": test_loader}
@@ -230,7 +227,7 @@ for dataset_name_key, dataset_parameters in DATASET_WRAPPER_FNS.items():
         dataset_create_fn=dataset_parameters.dataset_create_fn,
     )
     globals()[wrapper_fn_name] = wrapper_fn
-    DATA_WRAPPER_REGISTRY.register(dataset_name=dataset_name_key, model_type='yolo')(
+    DATASET_WRAPPER_REGISTRY.register(dataset_name=dataset_name_key, model_type='yolo')(
         wrapper_fn
     )
     __all__.append(wrapper_fn_name)

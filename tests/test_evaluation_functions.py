@@ -4,16 +4,14 @@ from deeplite_torch_zoo.api.eval import *
 classification_eval_list = (classification_eval, )
 
 objectdetection_eval_list = (
-    yolo_eval_lisa,
     yolo_eval_voc,
     yolo_eval_coco,
-    yolo_eval_wider_face,
 )
 
 
 def test_eval_classification():
     all_classification_models = list_models(
-        task_type_filter="classification", print_table=True, return_list=True
+        task_type_filter="classification", print_table=False
     )
 
     for (model_name, dataset_name) in all_classification_models:
@@ -23,7 +21,7 @@ def test_eval_classification():
 
 def test_eval_objectdetection():
     all_od_models = list_models(
-        task_type_filter="object_detection", print_table=True, return_list=True
+        task_type_filter="object_detection", print_table=False
     )
     for (model_name, dataset_name) in all_od_models:
         eval_fn = get_eval_function(model_name=model_name, dataset_name=dataset_name)

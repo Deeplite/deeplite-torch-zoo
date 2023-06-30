@@ -26,20 +26,20 @@ model_urls = {
 
 
 def _pre_act_resnet(
-    arch, block, layers, num_classes=100, pretrained=False, device='cuda'
+    arch, block, layers, num_classes=100, pretrained=False
 ):
     model = PreActResNet(block, layers, num_classes=num_classes)
     if pretrained:
         checkpoint_url = model_urls[arch]
-        model = load_pretrained_weights(model, checkpoint_url, device)
-    return model.to(device)
+        model = load_pretrained_weights(model, checkpoint_url)
+    return model
 
 
 @MODEL_WRAPPER_REGISTRY.register(
     model_name='pre_act_resnet18', dataset_name='cifar100', task_type='classification'
 )
 def pre_act_resnet18_cifar100(
-    pretrained=False, num_classes=100, device='cuda'
+    pretrained=False, num_classes=100
 ):
     return _pre_act_resnet(
         "pre_act_resnet18",
@@ -47,7 +47,6 @@ def pre_act_resnet18_cifar100(
         [2, 2, 2, 2],
         num_classes=num_classes,
         pretrained=pretrained,
-        device=device,
     )
 
 

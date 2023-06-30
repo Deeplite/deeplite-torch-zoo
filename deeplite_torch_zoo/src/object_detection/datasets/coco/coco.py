@@ -36,10 +36,13 @@ from PIL import ImageFile
 from pycocotools.coco import COCO
 from torchvision.datasets import CocoDetection
 
-from deeplite_torch_zoo.src.object_detection.eval.zoo_eval.coco.utils import (
-    xywh_to_xyxy,
-)
 from deeplite_torch_zoo.utils import LOGGER
+
+
+def xywh_to_xyxy(bbox):
+    bbox[..., 2] += bbox[..., 0]
+    bbox[..., 3] += bbox[..., 1]
+    return bbox
 
 
 class CocoDetectionBoundingBox(CocoDetection):

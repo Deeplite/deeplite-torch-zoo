@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
-from deeplite_torch_zoo.src.object_detection.eval.yolov5_eval.utils import check_version
+from deeplite_torch_zoo.utils import check_version
 
 
 class DFL(nn.Module):

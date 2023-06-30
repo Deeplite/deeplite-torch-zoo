@@ -22,8 +22,6 @@ imagenet_model_names = [model_key.model_name for model_key in MODEL_WRAPPER_REGI
 # register models for some extra datasets
 for model_name in imagenet_model_names:
     has_checkpoint = False
-    if model_name in FLOWERS101_CHECKPOINT_URLS:
-        has_checkpoint = True
     for dataset_name, num_classes in EXTRA_CLS_DATASETS.items():
         wrapper_name = '_'.join((model_name, dataset_name))
         wrapper_fn = MODEL_WRAPPER_REGISTRY.get(

@@ -1,29 +1,22 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+
+import yaml
+import inspect
 import hashlib
+import warnings
+import functools
 import os
-import random
 import math
+import contextlib
 import logging.config
 
-from contextlib import contextmanager
+import pkg_resources as pkg
 
-import numpy as np
+from pathlib import Path
+from typing import Optional
+
 import torch
-import torchvision
-import torch.nn as nn
-from torch.hub import load_state_dict_from_url
 
-from ultralytics.yolo.utils import colorstr
-from ultralytics.yolo.utils.torch_utils import fuse_conv_and_bn, model_info, scale_img
-from ultralytics.yolo.utils.checks import check_version
-
-import deeplite_torch_zoo
-
-
-TORCHVISION_0_10 = check_version(torchvision.__version__, '0.10.0')
-TORCH_1_9 = check_version(torch.__version__, '1.9.0')
-TORCH_1_11 = check_version(torch.__version__, '1.11.0')
-TORCH_1_12 = check_version(torch.__version__, '1.12.0')
-TORCH_2_0 = check_version(torch.__version__, minimum='2.0')
 
 KB_IN_MB_COUNT = 1024
 LOGGING_NAME = 'deeplite-torch-zoo'
@@ -76,28 +69,6 @@ def make_divisible(x, divisor):
     return math.ceil(x / divisor) * divisor
 
 
-def generate_checkpoint_name(
-    model,
-    test_dataloader,
-    pth_filename,
-    model_name,
-    dataset_name,
-    metric_key='acc',
-    ndigits=4,
-):
-    ckpt_hash = get_file_hash(pth_filename)
-    model.load_state_dict(torch.load(pth_filename), strict=True)
-    eval_fn = deeplite_torch_zoo.get_eval_function(
-        model_name=model_name, dataset_name=dataset_name
-    )
-    metric_val = eval_fn(model, test_dataloader, progressbar=True)[metric_key]
-    if isinstance(metric_val, torch.Tensor):
-        metric_val = metric_val.item()
-    metric_str = str(metric_val).lstrip('0').replace('.', '')[:ndigits]
-    checkpoint_name = f'{model_name}_{dataset_name}_{metric_str}_{ckpt_hash}.pt'
-    return checkpoint_name
-
-
 def get_file_hash(filename, max_has_symbols=16, min_large_file_size_mb=1000):
     filesize_mb = os.path.getsize(filename) / (KB_IN_MB_COUNT * KB_IN_MB_COUNT)
     is_large_file = filesize_mb > min_large_file_size_mb
@@ -116,65 +87,174 @@ def get_file_hash(filename, max_has_symbols=16, min_large_file_size_mb=1000):
     return readable_hash[:max_has_symbols]
 
 
-def load_pretrained_weights(model, checkpoint_url, device):
-    pretrained_dict = load_state_dict_from_url(
-        checkpoint_url,
-        progress=True,
-        check_hash=True,
-        map_location=device,
-    )
-    load_state_dict_partial(model, pretrained_dict)
-    return model
+def deprecated(func):
+    """
+    This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.warn(f'Method {func.__name__} is deprecated.',
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning)  # reset filter
+        return func(*args, **kwargs)
+    return new_func
 
 
-def load_state_dict_partial(model, pretrained_dict):
-    model_dict = model.state_dict()
-    pretrained_dict = {
-        k: v
-        for k, v in pretrained_dict.items()
-        if k in model_dict and v.size() == model_dict[k].size()
-    }  # pylint: disable=E1135, E1136
-    model_dict.update(pretrained_dict)
-    model.load_state_dict(model_dict)
-    LOGGER.info(f'Loaded {len(pretrained_dict)}/{len(model_dict)} modules')
+def print_args(args: Optional[dict] = None, show_file=True, show_func=False):
+    # Print function arguments (optional args dict)
+    x = inspect.currentframe().f_back  # previous frame
+    file, _, func, _, _ = inspect.getframeinfo(x)
+    if args is None:  # get args automatically
+        args, _, _, frm = inspect.getargvalues(x)
+        args = {k: v for k, v in frm.items() if k in args}
+    file = Path(file).stem
+    s = (f'{file}: ' if show_file else '') + (f'{func}: ' if show_func else '')
+    LOGGER.info(colorstr(s) + ', '.join(f'{k}={v}' for k, v in args.items()))
 
 
-@contextmanager
-def switch_train_mode(model, is_training=False):
-    is_original_mode_training = model.training
-    model.train(is_training)
-    try:
-        yield
-    finally:
-        model.train(is_original_mode_training)
+def yaml_save(file='data.yaml', data={}):
+    # Single-line safe yaml saving
+    with open(file, 'w') as f:
+        yaml.safe_dump({k: str(v) if isinstance(v, Path) else v for k, v in data.items()}, f, sort_keys=False)
 
 
-def initialize_weights(model):
-    """Initialize model weights to random values."""
-    for m in model.modules():
-        t = type(m)
-        if t is nn.Conv2d:
-            pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-        elif t is nn.BatchNorm2d:
-            m.eps = 1e-3
-            m.momentum = 0.03
-        elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU]:
-            m.inplace = True
+def check_img_size(imgsz, s=32, floor=0):
+    # Verify image size is a multiple of stride s in each dimension
+    if isinstance(imgsz, int):  # integer i.e. img_size=640
+        new_size = max(make_divisible(imgsz, int(s)), floor)
+    else:  # list i.e. img_size=[640, 480]
+        imgsz = list(imgsz)  # convert to list if tuple
+        new_size = [max(make_divisible(x, int(s)), floor) for x in imgsz]
+    if new_size != imgsz:
+        LOGGER.warning(f'WARNING ⚠️ --img-size {imgsz} must be multiple of max stride {s}, updating to {new_size}')
+    return new_size
 
 
-def init_seeds(seed=0, deterministic=False):
-    """Initialize random number generator (RNG) seeds https://pytorch.org/docs/stable/notes/randomness.html."""
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)  # for Multi-GPU, exception safe
-    # torch.backends.cudnn.benchmark = True  # AutoBatch problem https://github.com/ultralytics/yolov5/issues/9287
-    if deterministic:  # https://github.com/ultralytics/yolov5/pull/8213
-        if TORCH_2_0:
-            torch.use_deterministic_algorithms(True)
-            torch.backends.cudnn.deterministic = True
-            os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-            os.environ['PYTHONHASHSEED'] = str(seed)
-        else:
-            LOGGER.warning('WARNING ⚠️ Upgrade to torch>=2.0.0 for deterministic training.')
+def file_size(path):
+    # Return file/dir size (MB)
+    mb = 1 << 20  # bytes to MiB (1024 ** 2)
+    path = Path(path)
+    if path.is_file():
+        return path.stat().st_size / mb
+    elif path.is_dir():
+        return sum(f.stat().st_size for f in path.glob('**/*') if f.is_file()) / mb
+    else:
+        return 0.0
+
+
+def get_default_args(func):
+    # Get func() default arguments
+    signature = inspect.signature(func)
+    return {k: v.default for k, v in signature.parameters.items() if v.default is not inspect.Parameter.empty}
+
+
+def colorstr(*input):
+    """Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code, i.e.  colorstr('blue', 'hello world')."""
+    *args, string = input if len(input) > 1 else ('blue', 'bold', input[0])  # color arguments, string
+    colors = {
+        'black': '\033[30m',  # basic colors
+        'red': '\033[31m',
+        'green': '\033[32m',
+        'yellow': '\033[33m',
+        'blue': '\033[34m',
+        'magenta': '\033[35m',
+        'cyan': '\033[36m',
+        'white': '\033[37m',
+        'bright_black': '\033[90m',  # bright colors
+        'bright_red': '\033[91m',
+        'bright_green': '\033[92m',
+        'bright_yellow': '\033[93m',
+        'bright_blue': '\033[94m',
+        'bright_magenta': '\033[95m',
+        'bright_cyan': '\033[96m',
+        'bright_white': '\033[97m',
+        'end': '\033[0m',  # misc
+        'bold': '\033[1m',
+        'underline': '\033[4m'}
+    return ''.join(colors[x] for x in args) + f'{string}' + colors['end']
+
+
+def increment_path(path, exist_ok=False, sep='', mkdir=False):
+    """
+    Increments a file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
+
+    If the path exists and exist_ok is not set to True, the path will be incremented by appending a number and sep to
+    the end of the path. If the path is a file, the file extension will be preserved. If the path is a directory, the
+    number will be appended directly to the end of the path. If mkdir is set to True, the path will be created as a
+    directory if it does not already exist.
+
+    Args:
+        path (str, pathlib.Path): Path to increment.
+        exist_ok (bool, optional): If True, the path will not be incremented and returned as-is. Defaults to False.
+        sep (str, optional): Separator to use between the path and the incrementation number. Defaults to ''.
+        mkdir (bool, optional): Create a directory if it does not exist. Defaults to False.
+
+    Returns:
+        (pathlib.Path): Incremented path.
+    """
+    path = Path(path)  # os-agnostic
+    if path.exists() and not exist_ok:
+        path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
+
+        # Method 1
+        for n in range(2, 9999):
+            p = f'{path}{sep}{n}{suffix}'  # increment path
+            if not os.path.exists(p):  #
+                break
+        path = Path(p)
+
+    if mkdir:
+        path.mkdir(parents=True, exist_ok=True)  # make directory
+
+    return path
+
+
+class WorkingDirectory(contextlib.ContextDecorator):
+    """Usage: @WorkingDirectory(dir) decorator or 'with WorkingDirectory(dir):' context manager."""
+
+    def __init__(self, new_dir):
+        """Sets the working directory to 'new_dir' upon instantiation."""
+        self.dir = new_dir  # new dir
+        self.cwd = Path.cwd().resolve()  # current dir
+
+    def __enter__(self):
+        """Changes the current directory to the specified directory."""
+        os.chdir(self.dir)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Restore the current working directory on context exit."""
+        os.chdir(self.cwd)
+
+
+def check_version(current: str = '0.0.0',
+                  minimum: str = '0.0.0',
+                  name: str = 'version ',
+                  pinned: bool = False,
+                  hard: bool = False,
+                  verbose: bool = False) -> bool:
+    """
+    Check current version against the required minimum version.
+
+    Args:
+        current (str): Current version.
+        minimum (str): Required minimum version.
+        name (str): Name to be used in warning message.
+        pinned (bool): If True, versions must match exactly. If False, minimum version must be satisfied.
+        hard (bool): If True, raise an AssertionError if the minimum version is not met.
+        verbose (bool): If True, print warning message if minimum version is not met.
+
+    Returns:
+        (bool): True if minimum version is met, False otherwise.
+    """
+    current, minimum = (pkg.parse_version(x) for x in (current, minimum))
+    result = (current == minimum) if pinned else (current >= minimum)  # bool
+    warning_message = f'WARNING ⚠️ {name}{minimum} is required by YOLOv8, but {name}{current} is currently installed'
+    if hard:
+        assert result, warning_message  # assert min requirements met
+    if verbose and not result:
+        LOGGER.warning(warning_message)
+    return result
