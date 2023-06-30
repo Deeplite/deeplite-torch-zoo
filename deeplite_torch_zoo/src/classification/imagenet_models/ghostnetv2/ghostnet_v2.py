@@ -1,8 +1,26 @@
+# 2020.11.06-Changed for building GhostNetV2
+#            Huawei Technologies Co., Ltd. <foss@huawei.com>
+
+# Creates a GhostNet Model as defined in:
+# GhostNet: More Features from Cheap Operations By Kai Han, Yunhe Wang, Qi Tian, Jianyuan Guo, Chunjing Xu, Chang Xu.
+# https://arxiv.org/abs/1911.11907
+# Modified from https://github.com/d-li14/mobilenetv3.pytorch and https://github.com/rwightman/pytorch-image-models
+
+# Taken from https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
+# The file is modified by Deeplite Inc. from the original implementation on Jan 18, 2023
+# Code implementation refactoring
+
 import torch.nn as nn
 import torch.nn.functional as F
 
-from deeplite_torch_zoo.src.dnn_blocks.common import round_channels, get_activation, ConvBnAct
-from deeplite_torch_zoo.src.dnn_blocks.ghostnetv2.ghostnet_blocks import GhostBottleneckV2
+from deeplite_torch_zoo.src.dnn_blocks.common import (
+    round_channels,
+    get_activation,
+    ConvBnAct,
+)
+from deeplite_torch_zoo.src.dnn_blocks.ghostnetv2.ghostnet_blocks import (
+    GhostBottleneckV2,
+)
 
 
 class GhostNetV2(nn.Module):
@@ -27,8 +45,17 @@ class GhostNetV2(nn.Module):
                 output_channel = round_channels(c * width, 4)
                 hidden_channel = round_channels(exp_size * width, 4)
                 layers.append(
-                    GhostBottleneckV2(input_channel, output_channel, hidden_channel, k, s,
-                                se_ratio=se_ratio, layer_id=layer_id, act=act))
+                    GhostBottleneckV2(
+                        input_channel,
+                        output_channel,
+                        hidden_channel,
+                        k,
+                        s,
+                        se_ratio=se_ratio,
+                        layer_id=layer_id,
+                        act=act,
+                    )
+                )
                 input_channel = output_channel
                 layer_id += 1
             stages.append(nn.Sequential(*layers))
@@ -55,7 +82,7 @@ class GhostNetV2(nn.Module):
         x = self.conv_head(x)
         x = self.act2(x)
         x = x.view(x.size(0), -1)
-        if self.dropout > 0.:
+        if self.dropout > 0.0:
             x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.classifier(x)
         return x

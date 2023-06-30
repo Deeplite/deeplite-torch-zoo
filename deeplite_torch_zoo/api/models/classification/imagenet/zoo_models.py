@@ -5,7 +5,7 @@ from deeplite_torch_zoo.api.models.classification.imagenet.utils import (
 )
 
 from deeplite_torch_zoo.src.classification.imagenet_models.mobileone import mobileone
-from deeplite_torch_zoo.src.classification.imagenet_models.ghostnet_v2 import (
+from deeplite_torch_zoo.src.classification.imagenet_models.ghostnetv2 import (
     ghostnet_v2,
 )
 from deeplite_torch_zoo.src.classification.imagenet_models.edgevit import (

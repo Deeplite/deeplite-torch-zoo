@@ -1,3 +1,11 @@
+# 2020.11.06-Changed for building GhostNetV2
+#            Huawei Technologies Co., Ltd. <foss@huawei.com>
+
+# Creates a GhostNet Model as defined in:
+# GhostNet: More Features from Cheap Operations By Kai Han, Yunhe Wang, Qi Tian, Jianyuan Guo, Chunjing Xu, Chang Xu.
+# https://arxiv.org/abs/1911.11907
+# Modified from https://github.com/d-li14/mobilenetv3.pytorch and https://github.com/rwightman/pytorch-image-models
+
 # Taken from https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
 # The file is modified by Deeplite Inc. from the original implementation on Jan 18, 2023
 # Code implementation refactoring
@@ -67,7 +75,15 @@ class GhostModuleV2(nn.Module):
             self.act,
         )
         self.cheap_operation = nn.Sequential(
-            nn.Conv2d(init_channels, new_channels, dw_k, 1, dw_k // 2, groups=init_channels, bias=False),
+            nn.Conv2d(
+                init_channels,
+                new_channels,
+                dw_k,
+                1,
+                dw_k // 2,
+                groups=init_channels,
+                bias=False,
+            ),
             nn.BatchNorm2d(new_channels),
             self.act,
         )
@@ -79,42 +95,69 @@ class GhostModuleV2(nn.Module):
         x1 = self.primary_conv(x)
         x2 = self.cheap_operation(x1)
         out = torch.cat([x1, x2], dim=1)
-        res = out[:, :self.oup, :, :]
+        res = out[:, : self.oup, :, :]
         if self.dfc:
             res = res * self.dfc(x)
         return res
 
 
 class GhostBottleneckV2(nn.Module):
-
-    def __init__(self, c1, c2, mid_chs, dw_kernel_size=3, s=1, se_ratio=0, layer_id=None, act='relu'):
+    def __init__(
+        self,
+        c1,
+        c2,
+        mid_chs,
+        dw_kernel_size=3,
+        s=1,
+        se_ratio=0,
+        layer_id=None,
+        act='relu',
+    ):
         super(GhostBottleneckV2, self).__init__()
-        has_se = se_ratio is not None and se_ratio > 0.
+        has_se = se_ratio is not None and se_ratio > 0.0
         self.stride = s
         self.act = get_activation(act)
 
         # point-wise expansion
-        do_dfc = layer_id > 1
+        do_dfc = True if layer_id is None else layer_id > 1
         self.ghost1 = GhostModuleV2(c1, mid_chs, dfc=do_dfc, act=act)
 
         # depth-wise convolution
         if self.stride > 1:
-            self.conv_dw = nn.Conv2d(mid_chs, mid_chs, dw_kernel_size, stride=s,
-                             padding=(dw_kernel_size - 1) // 2, groups=mid_chs, bias=False)
+            self.conv_dw = nn.Conv2d(
+                mid_chs,
+                mid_chs,
+                dw_kernel_size,
+                stride=s,
+                padding=(dw_kernel_size - 1) // 2,
+                groups=mid_chs,
+                bias=False,
+            )
             self.bn_dw = nn.BatchNorm2d(mid_chs)
 
         # squeeze-and-excitation
-        self.se = SELayer(mid_chs, reduction=int(1 / se_ratio), round_mid=4) if has_se else None
+        self.se = (
+            SELayer(mid_chs, reduction=int(1 / se_ratio), round_mid=4)
+            if has_se
+            else None
+        )
 
         self.ghost2 = GhostModuleV2(mid_chs, c2, dfc=False, act=None)
 
         # shortcut
-        if (c1 == c2 and self.stride == 1):
+        if c1 == c2 and self.stride == 1:
             self.shortcut = nn.Sequential()
         else:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(c1, c1, dw_kernel_size, stride=s,
-                       padding=(dw_kernel_size - 1) // 2, groups=c1, bias=False),
+                nn.Conv2d(
+                    c1,
+                    c1,
+                    dw_kernel_size,
+                    stride=s,
+                    padding=(dw_kernel_size - 1) // 2,
+                    groups=c1,
+                    bias=False,
+                ),
                 nn.BatchNorm2d(c1),
                 nn.Conv2d(c1, c2, 1, stride=1, padding=0, bias=False),
                 nn.BatchNorm2d(c2),
