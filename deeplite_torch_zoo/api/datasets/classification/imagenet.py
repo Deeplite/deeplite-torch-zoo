@@ -56,6 +56,9 @@ def get_imagenet(
     use_multi_epochs_loader=False,
     worker_seeding='all',
 ):
+    if isinstance(device, str):
+        device = torch.device(device)
+
     re_num_splits = 0
     if re_split:
         # apply RE to second half of batch if no aug split otherwise line up with aug split
@@ -131,7 +134,7 @@ def get_imagenet(
     test_loader = create_loader(
         dataset_eval,
         input_size=img_size,
-        batch_size=test_batch_size,
+        batch_size=test_batch_size if test_batch_size is not None else batch_size,
         is_training=False,
         use_prefetcher=use_prefetcher,
         mean=mean,

@@ -102,6 +102,7 @@ def imagewoof160_dataloaders(data_root='./', batch_size=32):
         data_root=data_root,
         batch_size=batch_size,
         map_to_imagenet_labels=True,
+        device='cpu',
     )
     yield dataloaders
     (p / 'imagewoof160.zip').unlink()
@@ -116,6 +117,7 @@ def cifar100_dataloaders(data_root='./', batch_size=32):
         model_name='resnet18',
         data_root=data_root,
         batch_size=batch_size,
+        device='cpu',
     )
     yield dataloaders
     (p / 'cifar-100-python.tar.gz').unlink()
