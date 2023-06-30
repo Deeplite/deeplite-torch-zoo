@@ -1,77 +1,145 @@
-import os
-import sys
-
-from torchvision import datasets
+import torch
+from timm.data import create_dataset
 
 from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_imagenet_transforms,
 )
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import create_loader
 from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
-from deeplite_torch_zoo.utils import LOGGER
+from deeplite_torch_zoo.src.classification.augmentations.augs import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, DEFAULT_CROP_PCT
 
 
-__all__ = ["get_imagenet"]
+__all__ = ['get_imagenet']
 
 
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagenet16")
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagenet10")
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagenet")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='imagenet16')
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='imagenet10')
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='imagenet')
 def get_imagenet(
     data_root,
-    batch_size=128,
-    test_batch_size=None,
     img_size=224,
-    num_workers=4,
-    fp16=False,
+    batch_size=64,
+    test_batch_size=256,
+    train_split='training',
+    val_split='validation',
+    class_map=None,
+    download=False,
+    seed=42,
+    repeats=0,
+    use_prefetcher=True,
+    num_workers=1,
+    eval_workers=1,
     distributed=False,
-    train_split='imagenet_training',
-    val_split='imagenet_val',
+    pin_memory=False,
+    device=torch.device('cuda'),
     train_transforms=None,
     val_transforms=None,
-    **kwargs,
+    mean=IMAGENET_DEFAULT_MEAN,
+    std=IMAGENET_DEFAULT_STD,
+    crop_pct=DEFAULT_CROP_PCT,
+    scale=(0.08, 1.0),
+    ratio=(3.0 / 4.0, 4.0 / 3.0),
+    hflip=0.5,
+    vflip=0.0,
+    color_jitter=0.4,
+    auto_augment=None,
+    train_interpolation='random',
+    test_interpolation='bilinear',
+    re_prob=0.0,
+    re_mode='pixel',
+    re_count=1,
+    re_split=False,
+    num_aug_splits=0,
+    num_aug_repeats=0,
+    no_aug=False,
+    collate_fn=None,
+    use_multi_epochs_loader=False,
+    worker_seeding='all',
 ):
-    if kwargs:
-        LOGGER.warning(
-            f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!"
-        )
-
-    default_train_transforms, default_val_transforms = get_imagenet_transforms(img_size)
-
-    train_transforms = (
-        train_transforms if train_transforms is not None else default_train_transforms
-    )
-    val_transforms = (
-        val_transforms if val_transforms is not None else default_val_transforms
-    )
-
-    train_dataset = datasets.ImageFolder(
-        os.path.join(data_root, train_split),
-        train_transforms,
-    )
-
-    test_dataset = datasets.ImageFolder(
-        os.path.join(data_root, val_split),
-        val_transforms,
+    re_num_splits = 0
+    if re_split:
+        # apply RE to second half of batch if no aug split otherwise line up with aug split
+        re_num_splits = num_aug_splits or 2
+    default_train_transforms, default_val_transforms = get_imagenet_transforms(
+        img_size,
+        mean=mean,
+        std=std,
+        crop_pct=crop_pct,
+        scale=scale,
+        ratio=ratio,
+        hflip=hflip,
+        vflip=vflip,
+        color_jitter=color_jitter,
+        auto_augment=auto_augment,
+        train_interpolation=train_interpolation,
+        test_interpolation=test_interpolation,
+        re_prob=re_prob,
+        re_mode=re_mode,
+        re_count=re_count,
     )
 
-    train_loader = get_dataloader(
-        train_dataset,
+    dataset_train = create_dataset(
+        'imagenet',
+        root=data_root,
+        split=train_split,
+        is_training=True,
+        class_map=class_map,
+        download=download,
         batch_size=batch_size,
+        seed=seed,
+        repeats=repeats,
+    )
+    dataset_train.transform = train_transforms if train_transforms is not None \
+        else default_train_transforms
+    dataset_train.classes = range(1000)
+
+    dataset_eval = create_dataset(
+        'imagenet',
+        root=data_root,
+        split=val_split,
+        is_training=False,
+        class_map=class_map,
+        download=download,
+        batch_size=batch_size,
+    )
+    dataset_eval.transform = val_transforms if val_transforms is not None \
+        else default_val_transforms
+
+    train_loader = create_loader(
+        dataset_train,
+        input_size=img_size,
+        batch_size=batch_size,
+        is_training=True,
+        use_prefetcher=use_prefetcher,
+        no_aug=no_aug,
+        re_prob=re_prob,
+        re_mode=re_mode,
+        re_count=re_count,
+        num_aug_repeats=num_aug_repeats,
+        re_num_splits=re_num_splits,
+        mean=mean,
+        std=std,
         num_workers=num_workers,
-        fp16=fp16,
         distributed=distributed,
-        shuffle=not distributed,
+        collate_fn=collate_fn,
+        pin_memory=pin_memory,
+        device=device,
+        use_multi_epochs_loader=use_multi_epochs_loader,
+        worker_seeding=worker_seeding,
     )
 
-    test_batch_size = batch_size if test_batch_size is None else test_batch_size
-    test_loader = get_dataloader(
-        test_dataset,
+    test_loader = create_loader(
+        dataset_eval,
+        input_size=img_size,
         batch_size=test_batch_size,
-        num_workers=num_workers,
-        fp16=fp16,
+        is_training=False,
+        use_prefetcher=use_prefetcher,
+        mean=mean,
+        std=std,
+        num_workers=eval_workers,
         distributed=distributed,
-        shuffle=False,
+        pin_memory=pin_memory,
+        device=device,
     )
 
-    return {"train": train_loader, "test": test_loader}
+    return {'train': train_loader, 'test': test_loader}

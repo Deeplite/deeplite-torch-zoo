@@ -19,7 +19,7 @@ from deeplite_torch_zoo.src.object_detection.datasets.voc_utils import (
     prepare_yolo_voc_data,
 )
 from deeplite_torch_zoo.src.object_detection.datasets.wider_face import WiderFace
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import create_loader
 from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 
 __all__ = []

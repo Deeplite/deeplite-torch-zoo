@@ -1,6 +1,6 @@
 import torchvision
 
-from deeplite_torch_zoo.utils import load_state_dict_partial
+from deeplite_torch_zoo.utils import load_state_dict_partial, LOGGER
 from deeplite_torch_zoo.api.models.classification.model_implementation_dict import (
     MODEL_IMPLEMENTATIONS,
 )
@@ -15,8 +15,9 @@ def make_wrapper_func(wrapper_fn_name, register_model_name_key, model_name_key):
         task_type='classification',
     )
     def wrapper_func(
-        pretrained=False, num_classes=NUM_IMAGENET_CLASSES
+        pretrained=False, num_classes=NUM_IMAGENET_CLASSES, **model_kwargs
     ):
+        LOGGER.warning(f'Extra options {model_kwargs} are not applicable for a torchvision model')
         model = torchvision.models.__dict__[model_name_key](
             pretrained=pretrained, num_classes=NUM_IMAGENET_CLASSES
         )

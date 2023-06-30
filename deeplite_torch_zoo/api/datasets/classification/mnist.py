@@ -5,7 +5,7 @@ from os.path import expanduser
 import torchvision
 from torchvision import transforms
 
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import create_loader
 from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 from deeplite_torch_zoo.utils import LOGGER
 

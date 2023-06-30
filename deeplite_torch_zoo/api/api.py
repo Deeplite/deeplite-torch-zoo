@@ -52,7 +52,7 @@ def get_model(
     model_name,
     dataset_name,
     pretrained=True,
-    **kwargs,
+    **model_kwargs,
 ):
     """
     Tries to find a matching model creation wrapper function in the registry and uses it to create a new model object
@@ -65,7 +65,7 @@ def get_model(
     model_func = MODEL_WRAPPER_REGISTRY.get(
         model_name=model_name.lower(), dataset_name=dataset_name
     )
-    model = model_func(pretrained=pretrained, **kwargs)
+    model = model_func(pretrained=pretrained, **model_kwargs)
     return model
 
 

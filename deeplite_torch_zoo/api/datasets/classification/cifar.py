@@ -5,11 +5,14 @@ from os.path import expanduser
 import torchvision
 from torchvision import transforms
 
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import create_loader
 from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 from deeplite_torch_zoo.utils import LOGGER
 
-__all__ = ["get_cifar100", "get_cifar10"]
+__all__ = ['get_cifar100', 'get_cifar10']
+
+
+CIFAR_IMAGE_SIZE = 32
 
 
 def _get_cifar(
@@ -25,11 +28,11 @@ def _get_cifar(
     val_transforms=None,
 ):
     if data_root is None:
-        data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
+        data_root = os.path.join(expanduser('~'), '.deeplite-torch-zoo')
 
     default_train_transforms = transforms.Compose(
         [
-            transforms.RandomCrop(32, padding=4),
+            transforms.RandomCrop(CIFAR_IMAGE_SIZE, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -64,29 +67,28 @@ def _get_cifar(
         transform=val_transforms,
     )
 
-    train_loader = get_dataloader(
+    train_loader = create_loader(
         train_dataset,
+        CIFAR_IMAGE_SIZE,
         batch_size=batch_size,
         num_workers=num_workers,
-        fp16=fp16,
         distributed=distributed,
-        shuffle=not distributed,
+        is_training=True,
     )
 
-    test_batch_size = batch_size if test_batch_size is None else test_batch_size
-    test_loader = get_dataloader(
+    test_loader = create_loader(
         test_dataset,
-        batch_size=test_batch_size,
+        CIFAR_IMAGE_SIZE,
+        batch_size=batch_size if test_batch_size is None else test_batch_size,
         num_workers=num_workers,
-        fp16=fp16,
         distributed=distributed,
-        shuffle=False,
+        is_training=True,
     )
 
-    return {"train": train_loader, "test": test_loader}
+    return {'train': train_loader, 'test': test_loader}
 
 
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="cifar100")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='cifar100')
 def get_cifar100(
     data_root=None,
     batch_size=128,
@@ -101,7 +103,7 @@ def get_cifar100(
 ):
     if kwargs:
         LOGGER.warning(
-            f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!"
+            f'Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!'
         )
 
     cifar_cls = torchvision.datasets.CIFAR100
@@ -119,7 +121,7 @@ def get_cifar100(
     )
 
 
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="cifar10")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='cifar10')
 def get_cifar10(
     data_root=None,
     batch_size=128,
@@ -134,7 +136,7 @@ def get_cifar10(
 ):
     if kwargs:
         LOGGER.warning(
-            f"Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!"
+            f'Warning, {sys._getframe().f_code.co_name}: extra arguments {list(kwargs.keys())}!'
         )
 
     cifar_cls = torchvision.datasets.CIFAR10

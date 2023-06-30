@@ -7,7 +7,7 @@ import pytest
 import torch
 from torch.utils.data import Dataset
 
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import create_loader
 from deeplite_torch_zoo import get_dataloaders
 
 

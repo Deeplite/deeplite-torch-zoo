@@ -30,8 +30,12 @@ def get_imagenet_transforms(
     re_mode='pixel',  # Random erase mode (default: "pixel")
     re_count=1,  # Random erase count (default: 1)
 ):
+    if isinstance(img_size, (tuple, list)):
+        img_size = img_size[-2:]
+    else:
+        img_size = img_size
     train_transforms = transforms_imagenet_train(
-        img_size=img_size,
+        img_size,
         mean=mean,
         std=std,
         scale=scale,

@@ -5,7 +5,7 @@ from torchvision import datasets
 from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_vanilla_transforms,
 )
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import create_loader
 from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 
 __all__ = ["get_tinyimagenet"]
