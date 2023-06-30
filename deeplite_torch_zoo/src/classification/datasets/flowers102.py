@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import PIL.Image
 from torchvision.datasets.utils import (
     check_integrity,
     download_and_extract_archive,

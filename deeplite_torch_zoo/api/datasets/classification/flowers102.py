@@ -23,7 +23,7 @@ def get_flowers102(
     batch_size=64,
     test_batch_size=256,
     download=True,
-    use_prefetcher=True,
+    use_prefetcher=False,
     num_workers=1,
     eval_workers=1,
     distributed=False,
