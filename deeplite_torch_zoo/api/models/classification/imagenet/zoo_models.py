@@ -5,6 +5,9 @@ from deeplite_torch_zoo.api.models.classification.imagenet.utils import (
 )
 
 from deeplite_torch_zoo.src.classification.imagenet_models.mobileone import mobileone
+from deeplite_torch_zoo.src.classification.imagenet_models.ghostnetv2 import (
+    ghostnet_v2,
+)
 from deeplite_torch_zoo.src.classification.imagenet_models.edgevit import (
     edgevit_xxs,
     edgevit_xs,
@@ -26,6 +29,7 @@ __all__ = []
 MOBILEONE_BASE_URL = (
     'https://docs-assets.developer.apple.com/ml-research/datasets/mobileone'
 )
+
 
 CHECKPOINT_URLS = {
     'mobilenetv2_w035_zoo_imagenet': 'http://download.deeplite.ai/zoo/models/mobilenetv2_w035_imagenet_6020_4a56477132807d76.pt',
@@ -53,6 +57,9 @@ MODEL_FNS = {
     'mobileone_s2': (mobileone, {'inference_mode': False, 'variant': 's2'}),
     'mobileone_s3': (mobileone, {'inference_mode': False, 'variant': 's3'}),
     'mobileone_s4': (mobileone, {'inference_mode': False, 'variant': 's4'}),
+    'ghostnetv2_1.0': (ghostnet_v2, {'width': 1.0}),
+    'ghostnetv2_1.3': (ghostnet_v2, {'width': 1.3}),
+    'ghostnetv2_1.6': (ghostnet_v2, {'width': 1.6}),
 }
 
 
