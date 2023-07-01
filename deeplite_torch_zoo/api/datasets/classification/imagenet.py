@@ -138,7 +138,7 @@ def get_imagenet(
         use_prefetcher=use_prefetcher,
         mean=mean,
         std=std,
-        num_workers=num_workers,
+        num_workers=eval_workers or num_workers,
         distributed=distributed,
         pin_memory=pin_memory,
         device=device,

@@ -52,6 +52,7 @@ def get_flowers102(
     collate_fn=None,
     use_multi_epochs_loader=False,
     worker_seeding='all',
+    **kwargs,
 ):
     if isinstance(device, str):
         device = torch.device(device)
@@ -64,11 +65,11 @@ def get_flowers102(
             f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"'
         )
 
+    re_num_splits = 0
+    if re_split:
+        # apply RE to second half of batch if no aug split otherwise line up with aug split
+        re_num_splits = num_aug_splits or 2
     if augmentation_mode == 'imagenet':
-        re_num_splits = 0
-        if re_split:
-            # apply RE to second half of batch if no aug split otherwise line up with aug split
-            re_num_splits = num_aug_splits or 2
         default_train_transforms, default_val_transforms = get_imagenet_transforms(
             img_size,
             mean=mean,

@@ -361,6 +361,8 @@ group.add_argument('--log-wandb', action='store_true', default=False,
                    help='log training and validation metrics to wandb')
 group.add_argument('--log-tb', action='store_true', default=False,
                    help='log training and validation metrics to tensorboard')
+group.add_argument('--pretraining-dataset', type=str, default='imagenet')
+
 # KD parameters:
 group.add_argument('--kd_model_name', default=None, type=str)
 group.add_argument('--kd_model_checkpoint', default=None, type=str)
@@ -451,7 +453,7 @@ def main():
 
     model = create_model(
         model_name=args.model,
-        pretraining_dataset='imagenet',
+        pretraining_dataset=args.pretraining_dataset,
         pretrained=args.pretrained,
         num_classes=args.num_classes,
         **model_kwargs
@@ -632,13 +634,8 @@ def main():
     if args.no_aug or not train_interpolation:
         train_interpolation = data_config['interpolation']
 
-    eval_workers = args.workers
-    if args.distributed and ('tfds' in args.dataset or 'wds' in args.dataset):
-        # FIXME reduces validation padding issues when using TFDS, WDS w/ workers and distributed training
-        eval_workers = min(2, args.workers)
-
     dataloaders = get_dataloaders(
-        dataset_name='imagenet',
+        dataset_name=args.dataset,
         model_name=args.model,
         data_root=args.data_dir,
         img_size=data_config['input_size'],
@@ -670,7 +667,6 @@ def main():
         mean=data_config['mean'],
         std=data_config['std'],
         num_workers=args.workers,
-        eval_workers=eval_workers,
         collate_fn=collate_fn,
         pin_memory=args.pin_mem,
         device=device,
