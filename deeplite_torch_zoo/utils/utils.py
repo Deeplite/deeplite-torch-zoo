@@ -7,17 +7,15 @@ import warnings
 import functools
 import os
 import math
+import contextlib
 import logging.config
+
+import pkg_resources as pkg
 
 from pathlib import Path
 from typing import Optional
 
 import torch
-
-from ultralytics.yolo.utils import colorstr
-from ultralytics.yolo.utils.files import WorkingDirectory, increment_path
-
-import deeplite_torch_zoo
 
 
 KB_IN_MB_COUNT = 1024
@@ -153,6 +151,114 @@ def get_default_args(func):
     # Get func() default arguments
     signature = inspect.signature(func)
     return {k: v.default for k, v in signature.parameters.items() if v.default is not inspect.Parameter.empty}
+
+
+def colorstr(*input):
+    """Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code, i.e.  colorstr('blue', 'hello world')."""
+    *args, string = input if len(input) > 1 else ('blue', 'bold', input[0])  # color arguments, string
+    colors = {
+        'black': '\033[30m',  # basic colors
+        'red': '\033[31m',
+        'green': '\033[32m',
+        'yellow': '\033[33m',
+        'blue': '\033[34m',
+        'magenta': '\033[35m',
+        'cyan': '\033[36m',
+        'white': '\033[37m',
+        'bright_black': '\033[90m',  # bright colors
+        'bright_red': '\033[91m',
+        'bright_green': '\033[92m',
+        'bright_yellow': '\033[93m',
+        'bright_blue': '\033[94m',
+        'bright_magenta': '\033[95m',
+        'bright_cyan': '\033[96m',
+        'bright_white': '\033[97m',
+        'end': '\033[0m',  # misc
+        'bold': '\033[1m',
+        'underline': '\033[4m'}
+    return ''.join(colors[x] for x in args) + f'{string}' + colors['end']
+
+
+def increment_path(path, exist_ok=False, sep='', mkdir=False):
+    """
+    Increments a file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
+
+    If the path exists and exist_ok is not set to True, the path will be incremented by appending a number and sep to
+    the end of the path. If the path is a file, the file extension will be preserved. If the path is a directory, the
+    number will be appended directly to the end of the path. If mkdir is set to True, the path will be created as a
+    directory if it does not already exist.
+
+    Args:
+        path (str, pathlib.Path): Path to increment.
+        exist_ok (bool, optional): If True, the path will not be incremented and returned as-is. Defaults to False.
+        sep (str, optional): Separator to use between the path and the incrementation number. Defaults to ''.
+        mkdir (bool, optional): Create a directory if it does not exist. Defaults to False.
+
+    Returns:
+        (pathlib.Path): Incremented path.
+    """
+    path = Path(path)  # os-agnostic
+    if path.exists() and not exist_ok:
+        path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
+
+        # Method 1
+        for n in range(2, 9999):
+            p = f'{path}{sep}{n}{suffix}'  # increment path
+            if not os.path.exists(p):  #
+                break
+        path = Path(p)
+
+    if mkdir:
+        path.mkdir(parents=True, exist_ok=True)  # make directory
+
+    return path
+
+
+class WorkingDirectory(contextlib.ContextDecorator):
+    """Usage: @WorkingDirectory(dir) decorator or 'with WorkingDirectory(dir):' context manager."""
+
+    def __init__(self, new_dir):
+        """Sets the working directory to 'new_dir' upon instantiation."""
+        self.dir = new_dir  # new dir
+        self.cwd = Path.cwd().resolve()  # current dir
+
+    def __enter__(self):
+        """Changes the current directory to the specified directory."""
+        os.chdir(self.dir)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Restore the current working directory on context exit."""
+        os.chdir(self.cwd)
+
+
+def check_version(current: str = '0.0.0',
+                  minimum: str = '0.0.0',
+                  name: str = 'version ',
+                  pinned: bool = False,
+                  hard: bool = False,
+                  verbose: bool = False) -> bool:
+    """
+    Check current version against the required minimum version.
+
+    Args:
+        current (str): Current version.
+        minimum (str): Required minimum version.
+        name (str): Name to be used in warning message.
+        pinned (bool): If True, versions must match exactly. If False, minimum version must be satisfied.
+        hard (bool): If True, raise an AssertionError if the minimum version is not met.
+        verbose (bool): If True, print warning message if minimum version is not met.
+
+    Returns:
+        (bool): True if minimum version is met, False otherwise.
+    """
+    current, minimum = (pkg.parse_version(x) for x in (current, minimum))
+    result = (current == minimum) if pinned else (current >= minimum)  # bool
+    warning_message = f'WARNING ⚠️ {name}{minimum} is required by YOLOv8, but {name}{current} is currently installed'
+    if hard:
+        assert result, warning_message  # assert min requirements met
+    if verbose and not result:
+        LOGGER.warning(warning_message)
+    return result
 
 
 def is_dir_writeable(dir_path):

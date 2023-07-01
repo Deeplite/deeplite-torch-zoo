@@ -41,21 +41,21 @@ The ``deeplite-torch-zoo`` package is a collection of popular (pretrained) CNN m
 
 Use following command to install the package from our internal PyPI repository.
 
-```
+``` console
     $ pip install --upgrade pip
     $ pip install deeplite-torch-zoo
 ```
 
 ## Install from source (development version)
 
-```
+``` console
     $ git clone https://github.com/Deeplite/deeplite-torch-zoo.git
     $ pip install .
 ```
 
 ## Install in dev mode
 
-```
+``` console
     $ git clone https://github.com/Deeplite/deeplite-torch-zoo.git
     $ pip install -e .
     $ pip install -r requirements-test.txt
@@ -67,11 +67,8 @@ To test the installation, one can run the basic tests using `pytest` command in 
 
 The ``deeplite-torch-zoo`` is collection of benchmark computer vision datasets and pretrained models. There are four primary wrapper functions to load datasets, models and evaluation functions: ``get_dataloaders``, ``get_model``, ``get_eval_function`` and ``create_model`` which can be imported as
 
-```{.python}
-from deeplite_torch_zoo import get_dataloaders
-from deeplite_torch_zoo import get_model
-from deeplite_torch_zoo import get_eval_function
-from deeplite_torch_zoo import create_model
+``` python
+from deeplite_torch_zoo import get_dataloaders, get_model, get_eval_function, create_model
 ```
 
 ## Loading Datasets
@@ -81,10 +78,13 @@ The loaded datasets are available as a dictionary of the following format: ``{'t
 ### Classification Datasets
 
 
-```{.python}
-    data_splits = get_dataloaders(
-        data_root="./", dataset_name="cifar100", model_name="resnet18", batch_size=128
-    )
+``` python
+data_splits = get_dataloaders(
+  data_root='./',
+  dataset_name='cifar100',
+  model_name='resnet18',
+  batch_size=128
+)
 ```
 The list of all available classification datasets can be found [here](docs/CLASSIFICATION.md/#datasets). Please note that it is always necessary to pass the model name upon the creation of dataloader because the dataset class logic might depend on the model type.
 
@@ -92,13 +92,13 @@ The list of all available classification datasets can be found [here](docs/CLASS
 
 The following sample code loads the [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) dataset. ``train`` contains the data loader for the trainval data splits of the `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for the test split of `VOC2007`. You also need to provide the model name to instantiate the dataloaders.
 
-```{.python}
-data_splits = get_dataloaders(
-        data_root=PATH_TO_VOCdevkit,
-        dataset_name="voc",
-        model_name="yolo3",
-        batch_size=BATCH_SIZE,
-    )
+``` python
+dataloaders = get_dataloaders(
+    data_root=PATH_TO_VOCdevkit,
+    dataset_name='voc',
+    model_name='yolo3',
+    batch_size=BATCH_SIZE,
+)
 ```
 The list of all available object detection datasets can be found [here](docs/OBJECT_DETECTION.md/#datasets).
 
@@ -112,7 +112,7 @@ Models are generally provided with weights pretrained on specific datasets. One 
 
 To get a pretrained classification model one could use
 
-```{.python}
+``` python
     model = get_model(
         model_name="resnet18",
         dataset_name="cifar100",
@@ -122,7 +122,7 @@ To get a pretrained classification model one could use
 
 To create a new model with ImageNet weights and a custom number of classes one could use
 
-```{.python}
+``` python
     model = create_model(
         model_name="resnet18",
         pretraining_dataset="imagenet",
@@ -137,7 +137,7 @@ The list of all available classification models can be found [here](docs/CLASSIF
 
 ### Object Detection Models
 
-```{.python}
+``` python
     model = get_model(
         model_name="yolo4s",
         dataset_name="voc",
@@ -147,7 +147,7 @@ The list of all available classification models can be found [here](docs/CLASSIF
 
 Likewise, to create a object detection model with an arbitrary number of classes
 
-```{.python}
+``` python
     model = get_model(
         model_name="yolo4s",
         num_classes=5,
@@ -162,7 +162,7 @@ The list of all available Object Detection models can be found [here](docs/OBJEC
 
 To create an evaluation fuction for the given model and dataset one could call ``get_eval_function`` passing the ``model_name`` and ``dataset_name`` arguments:
 
-```{.python}
+``` python
     eval_fn = get_eval_function(
         model_name="resnet50",
         dataset_name="imagenet",
@@ -175,7 +175,7 @@ The returned evaluation function is a Python callable that takes two arguments: 
 # Available Models
 
 There is an useful utility function ``list_models`` which can be imported as
-```{.python}
+``` python
 from deeplite_torch_zoo import list_models
 ```
 This utility will help in listing available pretrained models or datasets.
@@ -237,8 +237,11 @@ We always welcome community contributions to expand the scope of `deeplite-torch
 
 NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
-
 ## Credit
+
+<details>
+
+  <summary>Repositories used</summary>
 
 ### Object Detection
 - The implementation of yolov3-voc: [Peterisfar/YOLOV3](https://github.com/Peterisfar/YOLOV3/)
@@ -279,3 +282,5 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - Cutout implementation: [uoguelph-mlrg/Cutout](https://github.com/uoguelph-mlrg/Cutout)
 - Robustness measurement image distortions: [hendrycks/robustness](https://github.com/hendrycks/robustness)
 - Registry implementation: [openvinotoolkit/openvino/tools/pot](https://github.com/openvinotoolkit/openvino/blob/master/tools/pot)
+
+</details>

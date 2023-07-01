@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 # Source: https://github.com/JierunChen/FasterNet
 
 from typing import List
@@ -70,7 +73,7 @@ class MLPBlock(nn.Module):
         mlp_layer: List[nn.Module] = [
             nn.Conv2d(dim, mlp_hidden_dim, 1, bias=False),
             norm_layer(mlp_hidden_dim),
-            act_layer(),
+            act_layer,
             nn.Conv2d(mlp_hidden_dim, dim, 1, bias=False),
         ]
 
@@ -190,7 +193,7 @@ class FasterNet(nn.Module):
         act='relu',
         features_only=False,
         init_cfg=None,
-        pconv_fw_type='split_cat'
+        pconv_fw_type='split_cat',
     ):
         super().__init__()
 
@@ -268,7 +271,7 @@ class FasterNet(nn.Module):
             self.avgpool_pre_head = nn.Sequential(
                 nn.AdaptiveAvgPool2d(1),
                 nn.Conv2d(self.num_features, feature_dim, 1, bias=False),
-                act_layer(),
+                act_layer,
             )
             self.head = (
                 nn.Linear(feature_dim, num_classes)

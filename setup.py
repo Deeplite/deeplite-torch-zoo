@@ -19,7 +19,7 @@ INSTALL_REQUIRES = [
     "torch>=1.4, <=2.0.0",
     "opencv-python<=4.6.0.66",
     "scipy>=1.4.1",
-    "numpy==1.19.5",
+    "numpy==1.20.0",
     "pycocotools==2.0.4",
     "Cython==0.29.30",
     "tqdm>=4.46.0",
@@ -37,14 +37,6 @@ INSTALL_REQUIRES = [
     "ultralytics==8.0.107",
     "tensorboard>=2.11.2",
 ]
-
-
-python_version = sys.version_info
-if python_version < (3, 7, 0):
-    INSTALL_REQUIRES.append("torchinfo==1.5.4")
-else:
-    INSTALL_REQUIRES.append("torchinfo==1.7.2")
-
 
 setup(
     name="deeplite-torch-zoo",

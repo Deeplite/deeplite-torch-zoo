@@ -104,14 +104,22 @@ def build_yolo_dataset(cfg, img_path, batch, data, mode='train', rect=False, str
         fraction=cfg.fraction if mode == 'train' else 1.0)
 
 
-def get_dataloader(self, dataset_path, batch_size=16, rank=0, mode='train'):
+def get_dataloader(dataset_path, data, cfg, batch_size=16, rank=0, mode='train'):
     with torch_distributed_zero_first(rank):  # init dataset *.cache only once if DDP
-        gs = max(int(de_parallel(self.model).stride.max() if self.model else 0), 32)
-        dataset = build_yolo_dataset(self.args, dataset_path, batch_size,   
-                                     self.data, mode=mode, rect=mode == 'val', stride=gs)
+        gs = 32
+        # gs = max(int(de_parallel(self.model).stride.max() if self.model else 0), 32)
+        dataset = build_yolo_dataset(
+            cfg,
+            dataset_path,
+            batch_size,
+            data,
+            mode=mode,
+            rect=mode == 'val',
+            stride=gs
+        )
     shuffle = mode == 'train'
     if getattr(dataset, 'rect', False) and shuffle:
         LOGGER.warning("WARNING ⚠️ 'rect=True' is incompatible with DataLoader shuffle, setting shuffle=False")
         shuffle = False
-    workers = self.args.workers if mode == 'train' else self.args.workers * 2
+    workers = cfg.workers if mode == 'train' else cfg.workers * 2
     return build_dataloader(dataset, batch_size, workers, shuffle, rank)  # return dataloader
