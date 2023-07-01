@@ -63,11 +63,11 @@ def get_vww(
             f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"'
         )
 
+    re_num_splits = 0
+    if re_split:
+        # apply RE to second half of batch if no aug split otherwise line up with aug split
+        re_num_splits = num_aug_splits or 2
     if augmentation_mode == 'imagenet':
-        re_num_splits = 0
-        if re_split:
-            # apply RE to second half of batch if no aug split otherwise line up with aug split
-            re_num_splits = num_aug_splits or 2
         default_train_transforms, default_val_transforms = get_imagenet_transforms(
             img_size,
             mean=mean,

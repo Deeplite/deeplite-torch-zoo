@@ -33,9 +33,8 @@ def get_imagenet_transforms(
     use_prefetcher=False,
 ):
     if isinstance(img_size, (tuple, list)):
-        img_size = img_size[-2:]
-    else:
-        img_size = img_size
+        img_size = img_size[-1]
+
     train_transforms = transforms_imagenet_train(
         img_size,
         mean=mean,
@@ -76,6 +75,9 @@ def get_vanilla_transforms(
     cutout_args=None,
     use_prefetcher=False,
 ):
+    if isinstance(img_size, (tuple, list)):
+        img_size = img_size[-1]
+
     train_transforms = [
         transforms.RandomResizedCrop(img_size),
         transforms.RandomHorizontalFlip(hflip),

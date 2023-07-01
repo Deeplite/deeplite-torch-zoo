@@ -91,7 +91,7 @@ parser.add_argument('data', nargs='?', metavar='DIR', const=None,
                     help='path to dataset (positional is *deprecated*, use --data-dir)')
 parser.add_argument('--data-dir', metavar='DIR',
                     help='path to dataset (root dir)')
-parser.add_argument('--dataset', metavar='NAME', default='',
+parser.add_argument('--dataset', metavar='NAME', default='imagenet',
                     help='dataset type + name ("<type>/<name>") (default: ImageFolder or ImageTar if empty)')
 group.add_argument('--train-split', metavar='NAME', default='train',
                    help='dataset train split (default: train)')
@@ -108,6 +108,7 @@ group.add_argument('--model', default='resnet50', type=str, metavar='MODEL',
                    help='Name of model to train (default: "resnet50")')
 group.add_argument('--pretrained', action='store_true', default=False,
                    help='Start with pretrained version of specified network (if avail)')
+group.add_argument('--pretraining-dataset', type=str, default='imagenet')
 group.add_argument('--initial-checkpoint', default='', type=str, metavar='PATH',
                    help='Initialize model from this checkpoint (default: none)')
 group.add_argument('--resume', default='', type=str, metavar='PATH',
@@ -344,7 +345,7 @@ group.add_argument('--synchronize-step', action='store_true', default=False,
                    help='torch.cuda.synchronize() end of each step')
 group.add_argument('--pin-mem', action='store_true', default=False,
                    help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
-group.add_argument('--no-prefetcher', action='store_true', default=False,
+group.add_argument('--no-prefetcher', action='store_true', default=True,
                    help='disable fast prefetcher')
 group.add_argument('--output', default='', type=str, metavar='PATH',
                    help='path to output folder (default: none, current dir)')
@@ -361,6 +362,7 @@ group.add_argument('--log-wandb', action='store_true', default=False,
                    help='log training and validation metrics to wandb')
 group.add_argument('--log-tb', action='store_true', default=False,
                    help='log training and validation metrics to tensorboard')
+
 # KD parameters:
 group.add_argument('--kd_model_name', default=None, type=str)
 group.add_argument('--kd_model_checkpoint', default=None, type=str)
@@ -451,7 +453,7 @@ def main():
 
     model = create_model(
         model_name=args.model,
-        pretraining_dataset='imagenet',
+        pretraining_dataset=args.pretraining_dataset,
         pretrained=args.pretrained,
         num_classes=args.num_classes,
         **model_kwargs
@@ -632,13 +634,8 @@ def main():
     if args.no_aug or not train_interpolation:
         train_interpolation = data_config['interpolation']
 
-    eval_workers = args.workers
-    if args.distributed and ('tfds' in args.dataset or 'wds' in args.dataset):
-        # FIXME reduces validation padding issues when using TFDS, WDS w/ workers and distributed training
-        eval_workers = min(2, args.workers)
-
     dataloaders = get_dataloaders(
-        dataset_name='imagenet',
+        dataset_name=args.dataset,
         model_name=args.model,
         data_root=args.data_dir,
         img_size=data_config['input_size'],
@@ -670,7 +667,6 @@ def main():
         mean=data_config['mean'],
         std=data_config['std'],
         num_workers=args.workers,
-        eval_workers=eval_workers,
         collate_fn=collate_fn,
         pin_memory=args.pin_mem,
         device=device,
