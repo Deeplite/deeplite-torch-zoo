@@ -42,6 +42,7 @@ from timm.utils import ApexScaler, NativeScaler
 
 from deeplite_torch_zoo import create_model, get_dataloaders
 from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss
+from deeplite_torch_zoo.utils.checkpoint_saver import CheckpointSaver
 
 try:
     from apex import amp
@@ -713,7 +714,7 @@ def main():
             ])
         output_dir = utils.get_outdir(args.output if args.output else './output/train', exp_name)
         decreasing = True if eval_metric == 'loss' else False
-        saver = utils.CheckpointSaver(
+        saver = CheckpointSaver(
             model=model,
             optimizer=optimizer,
             args=args,
@@ -796,6 +797,8 @@ def main():
                 args,
                 amp_autocast=amp_autocast,
             )
+            eval_metrics_unite = eval_metrics
+            ema_eval_metrics = None
 
             if model_ema is not None and not args.model_ema_force_cpu:
                 if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
@@ -809,21 +812,22 @@ def main():
                     amp_autocast=amp_autocast,
                     log_suffix=' (EMA)',
                 )
-                eval_metrics = ema_eval_metrics
+                if ema_eval_metrics[eval_metric] > eval_metrics[eval_metric]: # choose the best model
+                    eval_metrics_unite = ema_eval_metrics
 
             if output_dir is not None:
                 lrs = [param_group['lr'] for param_group in optimizer.param_groups]
                 if args.log_tb:
                     for key, value in train_metrics.items():
                         writer.add_scalar('train/' + key, value, epoch)
-                    for key, value in eval_metrics.items():
+                    for key, value in eval_metrics_unite.items():
                         writer.add_scalar('eval/' + key, value, epoch)
                     for i, lr in enumerate(lrs):
                         writer.add_scalar(f'lr/{i}', lr, epoch)
                 utils.update_summary(
                     epoch,
                     train_metrics,
-                    eval_metrics,
+                    eval_metrics_unite,
                     filename=os.path.join(output_dir, 'summary.csv'),
                     lr=sum(lrs) / len(lrs),
                     write_header=best_metric is None,
@@ -833,11 +837,15 @@ def main():
             if saver is not None:
                 # save proper checkpoint with eval metric
                 save_metric = eval_metrics[eval_metric]
-                best_metric, best_epoch = saver.save_checkpoint(epoch, metric=save_metric)
+                if ema_eval_metrics:
+                    save_metric_ema = ema_eval_metrics[eval_metric]
+                else:
+                    save_metric_ema = -1
+                best_metric, best_epoch = saver.save_checkpoint(epoch, metric=save_metric, metric_ema=save_metric_ema)
 
             if lr_scheduler is not None:
                 # step LR for next epoch
-                lr_scheduler.step(epoch + 1, eval_metrics[eval_metric])
+                lr_scheduler.step(epoch + 1, eval_metrics_unite[eval_metric])
 
     except KeyboardInterrupt:
         pass
@@ -1086,3 +1094,4 @@ def validate(
 
 if __name__ == '__main__':
     main()
+
