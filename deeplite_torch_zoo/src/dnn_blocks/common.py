@@ -43,7 +43,7 @@ ACT_TYPE_MAP = {
 def get_activation(activation_name):
     if activation_name:
         return ACT_TYPE_MAP[activation_name]
-    LOGGER.warning('No activation specified for get_activation. Returning nn.Identity()')
+    LOGGER.debug('No activation specified for get_activation. Returning nn.Identity()')
     return nn.Identity()
 
 
