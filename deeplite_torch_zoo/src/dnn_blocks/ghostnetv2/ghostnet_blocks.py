@@ -1,3 +1,11 @@
+# 2020.11.06-Changed for building GhostNetV2
+#            Huawei Technologies Co., Ltd. <foss@huawei.com>
+
+# Creates a GhostNet Model as defined in:
+# GhostNet: More Features from Cheap Operations By Kai Han, Yunhe Wang, Qi Tian, Jianyuan Guo, Chunjing Xu, Chang Xu.
+# https://arxiv.org/abs/1911.11907
+# Modified from https://github.com/d-li14/mobilenetv3.pytorch and https://github.com/rwightman/pytorch-image-models
+
 # Taken from https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
 # The file is modified by Deeplite Inc. from the original implementation on Jan 18, 2023
 # Code implementation refactoring
@@ -8,7 +16,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from deeplite_torch_zoo.src.dnn_blocks.common import get_activation, round_channels
+from deeplite_torch_zoo.src.dnn_blocks.common import get_activation
 from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
 
 
@@ -52,32 +60,35 @@ class DFCModule(nn.Module):
 
 
 class GhostModuleV2(nn.Module):
-    def __init__(self, c1, c2, k=3, ratio=2, dw_size=3, s=1, act='relu', mode=None):
-        super().__init__()
-        self.mode = mode
-        self.activation = get_activation(act)
+    def __init__(self, c1, c2, k=1, ratio=2, dw_k=3, s=1, dfc=False, act='relu'):
+        super(GhostModuleV2, self).__init__()
+        self.dfc = dfc
+        self.gate_fn = nn.Sigmoid()
+        self.act = get_activation(act)
+
         self.oup = c2
         init_channels = math.ceil(c2 / ratio)
         new_channels = init_channels * (ratio - 1)
         self.primary_conv = nn.Sequential(
             nn.Conv2d(c1, init_channels, k, s, k // 2, bias=False),
             nn.BatchNorm2d(init_channels),
-            get_activation(act),
+            self.act,
         )
         self.cheap_operation = nn.Sequential(
             nn.Conv2d(
                 init_channels,
                 new_channels,
-                dw_size,
+                dw_k,
                 1,
-                dw_size // 2,
+                dw_k // 2,
                 groups=init_channels,
                 bias=False,
             ),
             nn.BatchNorm2d(new_channels),
-            get_activation(act),
+            self.act,
         )
-        if self.mode == 'attn':
+
+        if self.dfc:
             self.dfc = DFCModule(c1, c2, k, s)
 
     def forward(self, x):
@@ -85,7 +96,7 @@ class GhostModuleV2(nn.Module):
         x2 = self.cheap_operation(x1)
         out = torch.cat([x1, x2], dim=1)
         res = out[:, : self.oup, :, :]
-        if self.mode == 'attn':
+        if self.dfc:
             res = res * self.dfc(x)
         return res
 
@@ -95,25 +106,23 @@ class GhostBottleneckV2(nn.Module):
         self,
         c1,
         c2,
-        mid_chs=None,
-        e=2,
+        mid_chs,
         dw_kernel_size=3,
         s=1,
+        se_ratio=0,
+        layer_id=None,
         act='relu',
-        se_ratio=0.0,
-        use_attn=True,
     ):
         super(GhostBottleneckV2, self).__init__()
         has_se = se_ratio is not None and se_ratio > 0.0
         self.stride = s
-        if mid_chs is None:
-            mid_chs = round_channels(c1 * e, divisor=4)
+        self.act = get_activation(act)
 
-        # Point-wise expansion
-        mode = 'attn' if use_attn else 'original'
-        self.ghost1 = GhostModuleV2(c1, mid_chs, act=act, mode=mode)
+        # point-wise expansion
+        do_dfc = True if layer_id is None else layer_id > 1
+        self.ghost1 = GhostModuleV2(c1, mid_chs, dfc=do_dfc, act=act)
 
-        # Depth-wise convolution
+        # depth-wise convolution
         if self.stride > 1:
             self.conv_dw = nn.Conv2d(
                 mid_chs,
@@ -126,9 +135,14 @@ class GhostBottleneckV2(nn.Module):
             )
             self.bn_dw = nn.BatchNorm2d(mid_chs)
 
-        # Squeeze-and-excitation
-        self.se = SELayer(mid_chs, reduction=1 / se_ratio) if has_se else nn.Identity()
-        self.ghost2 = GhostModuleV2(mid_chs, c2, act=False, mode='original')
+        # squeeze-and-excitation
+        self.se = (
+            SELayer(mid_chs, reduction=int(1 / se_ratio), round_mid=4)
+            if has_se
+            else None
+        )
+
+        self.ghost2 = GhostModuleV2(mid_chs, c2, dfc=False, act=None)
 
         # shortcut
         if c1 == c2 and self.stride == 1:
@@ -165,19 +179,15 @@ class GhostBottleneckV2(nn.Module):
 def _test_blocks(c1, c2, b=2, res=32):
     input = torch.rand((b, c1, res, res), device=None, requires_grad=False)
 
-    block = GhostModuleV2(c1, c2, mode="original")
+    block = GhostModuleV2(c1, c2, dfc=False)
     output = block(input)
     assert output.shape == (b, c2, res, res)
 
-    block = GhostBottleneckV2(c1, c2, 1, use_attn=True)
+    block = GhostModuleV2(c1, c2, dfc=True)
     output = block(input)
     assert output.shape == (b, c2, res, res)
 
-    block = GhostBottleneckV2(c1, c2, 1, use_attn=False)
-    output = block(input)
-    assert output.shape == (b, c2, res, res)
-
-    block = GhostModuleV2(c1, c2, mode="attn")
+    block = GhostBottleneckV2(c1, c2, 1)
     output = block(input)
     assert output.shape == (b, c2, res, res)
 

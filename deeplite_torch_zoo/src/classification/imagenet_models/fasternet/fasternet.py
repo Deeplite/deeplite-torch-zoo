@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 # Source: https://github.com/JierunChen/FasterNet
 
 from typing import List
@@ -190,7 +193,7 @@ class FasterNet(nn.Module):
         act='relu',
         features_only=False,
         init_cfg=None,
-        pconv_fw_type='split_cat'
+        pconv_fw_type='split_cat',
     ):
         super().__init__()
 

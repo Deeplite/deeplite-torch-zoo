@@ -17,8 +17,6 @@ cooldown_epochs: 10
 crop_pct: null
 cutmix: 1.0
 cutmix_minmax: null
-data_dir: gs://xxx-imagenet
-dataset: tfds/imagenet2012:5.0.0
 dataset_download: false
 decay_epochs: 1.0
 decay_rate: 0.988
