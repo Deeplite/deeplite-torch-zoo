@@ -798,6 +798,7 @@ def main():
                 amp_autocast=amp_autocast,
             )
             eval_metrics_unite = eval_metrics
+            ema_eval_metrics = None
 
             if model_ema is not None and not args.model_ema_force_cpu:
                 if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
