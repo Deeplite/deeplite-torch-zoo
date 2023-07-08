@@ -84,7 +84,8 @@ def fisher(model, model_output_generator, loss_fn, reduction='sum'):
         else:
             return torch.zeros(module.weight.shape[0])  # size=ch
 
-    grads_abs_ch = get_layerwise_metric_values(model, fisher)
+    grads_abs_ch = get_layerwise_metric_values(model, fisher,
+                                               target_layer_types=(nn.Conv2d, nn.Linear))
     shapes = get_layerwise_metric_values(model, lambda l: l.weight.shape[1:])
     grads_abs = reshape_elements(grads_abs_ch, shapes, inputs.device)
     return aggregate_statistic(grads_abs, reduction=reduction)
