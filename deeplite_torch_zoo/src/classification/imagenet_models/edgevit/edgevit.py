@@ -1,3 +1,5 @@
+# Source: https://github.com/saic-fi/edgevit
+
 from collections import OrderedDict
 from functools import partial
 

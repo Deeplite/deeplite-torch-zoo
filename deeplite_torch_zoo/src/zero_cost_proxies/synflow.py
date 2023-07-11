@@ -13,6 +13,8 @@
 # limitations under the License.
 # =============================================================================
 
+from functools import partial
+
 import torch
 import torch.nn as nn
 
@@ -74,3 +76,7 @@ def synflow(
     # select the gradients
     grads_abs = get_layerwise_metric_values(model, get_synflow)
     return aggregate_statistic(grads_abs, reduction=reduction)
+
+
+synflow_train = partial(synflow, dummify_bns=False, bn_training_mode=True)
+synflow_train = ZERO_COST_SCORES.register('synflow_train')(synflow_train)

@@ -48,10 +48,8 @@ class SELayer(nn.Module):
             mid_channels = (
                 channels // reduction
                 if not round_mid
-                else round_channels(float(channels) / reduction)
+                else round_channels(float(channels) / reduction, round_mid)
             )
-
-        mid_channels += 1
 
         self.pool = nn.AdaptiveAvgPool2d(output_size=1)
         if use_conv:
