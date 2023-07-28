@@ -1,231 +1,146 @@
+<div align="center">
+  
+  ![logo](https://docs.deeplite.ai/neutrino/_static/content/deeplite-logo-color.png)
 
-<p align="center">
-  <img src="https://docs.deeplite.ai/neutrino/_static/content/deeplite-logo-color.png" />
-</p>
+  **🚀 Deeplite Torch Zoo 🚀 is a collection of state-of-the-art efficient  
+  computer vision models for embedded applications in [PyTorch](https://pytorch.org/).**  
+  
+  [![Build Status](https://travis-ci.com/Deeplite/deeplite-torch-zoo.svg?token=kodd5rKMpjxQDqRCxwiV&branch=master)](https://travis-ci.com/Deeplite/deeplite-torch-zoo) [![codecov](https://codecov.io/gh/Deeplite/deeplite-torch-zoo/branch/master/graph/badge.svg?token=AVTp3PW5UP)](https://codecov.io/gh/Deeplite/deeplite-torch-zoo)
 
-[![Build Status](https://travis-ci.com/Deeplite/deeplite-torch-zoo.svg?token=kodd5rKMpjxQDqRCxwiV&branch=master)](https://travis-ci.com/Deeplite/deeplite-torch-zoo) [![codecov](https://codecov.io/gh/Deeplite/deeplite-torch-zoo/branch/master/graph/badge.svg?token=AVTp3PW5UP)](https://codecov.io/gh/Deeplite/deeplite-torch-zoo)
+</div>
 
-# 🚀 Deeplite Torch Zoo 🚀
+The main features of this library are:
 
-The ``deeplite-torch-zoo`` package is a collection of popular (pretrained) CNN model architectures and benchmark datasets for PyTorch. The models are grouped under different datasets and different task types such as classification, object detection, and semantic segmentation. The primary aim of ``deeplite-torch-zoo`` is to booststrap applications by starting with the most suitable pretrained models for a given task. In addition, the pretrained models from ``deeplite-torch-zoo`` can be used as a good starting point for optimizing model architectures using our [neutrino_engine](https://docs.deeplite.ai/neutrino/index.html)
+ - High-level API to create models, dataloaders, and evaluation functions
+ - Single interface for SOTA classification models:
+    - [timm models](https://github.com/huggingface/pytorch-image-models/),
+    - [pytorchcv models](https://github.com/osmr/imgclsmob/tree/master/pytorch),
+    - other SOTA efficient models (EdgeViT, FasterNet, GhostNetV2, MobileOne)
+ - Single interface for SOTA YOLO detectors (compatible with [Ultralytics training](https://github.com/ultralytics/ultralytics)):
+    - YOLOv3, v4, v5, v6-3.0, v7, v8
+    - YOLO with timm backbones
+    - [other experimental configs](https://github.com/Deeplite/deeplite-torch-zoo/tree/develop/deeplite_torch_zoo/src/object_detection/yolov5/configs)
 
-- [Deeplite Torch Zoo](#deeplite-torch-zoo)
-- [Installation](#installation)
-  - [Install using pip (release version)](#install-using-pip-release-version)
-  - [Install from source (development version)](#install-from-source-development-version)
-  - [Install in dev mode](#install-in-dev-mode)
-- [How to Use](#how-to-use)
-  - [Loading Datasets](#loading-datasets)
-    - [Classification Datasets](#classification-datasets)
-    - [Object Detection Datasets](#object-detection-datasets)
-  - [Loading and Creating Models](#loading-and-creating-models)
-    - [Classification Models](#classification-models)
-    - [Object Detection Models](#object-detection-models)
-  - [Creating an evaluation function](#creating-an-evaluation-function)
-- [Available Models](#available-models)
-- [Train on Custom Dataset](#train-on-custom-dataset)
-- [Benchmark Results](#benchmark-results)
-- [Contribute a Model/Dataset to the Zoo](#contribute-a-modeldataset-to-the-zoo)
-  - [Credit](#credit)
-    - [Object Detection](#object-detection)
-    - [Segmentation](#segmentation)
-    - [Classification](#classification)
-    - [DNN building block implementations](#dnn-building-block-implementations)
-    - [Misc](#misc)
+### 📋 Table of content
+ 1. [Quick start](#start)
+ 2. [Installation](#installation)
+ 3. [Training scripts](#training-scripts)
+ 7. [Contributing](#contributing)
+ 9. [Credit](#credit)
 
 
-# Installation
+### ⏳ Quick start <a name="start"></a>
 
-## Install using pip (release version)
+#### Create a classification model
 
+```python
+from deeplite_torch_zoo import get_model, list_models
 
-Use following command to install the package from our internal PyPI repository.
+model = get_model(
+    model_name='edgevit_xs',        # model names for imagenet available via `list_models('imagenet')`
+    dataset_name='imagenet',        # dataset name, since resnet18 is different for e.g. imagenet and cifar100
+    pretrained=False,               # if True, will try to load a pre-trained checkpoint
+)
 
-``` console
-    $ pip install --upgrade pip
-    $ pip install deeplite-torch-zoo
-```
+# creating a model with 42 classes for transfer learning:
 
-## Install from source (development version)
+from deeplite_torch_zoo import create_model
 
-``` console
-    $ git clone https://github.com/Deeplite/deeplite-torch-zoo.git
-    $ pip install .
-```
-
-## Install in dev mode
-
-``` console
-    $ git clone https://github.com/Deeplite/deeplite-torch-zoo.git
-    $ pip install -e .
-    $ pip install -r requirements-test.txt
-```
-
-To test the installation, one can run the basic tests using `pytest` command in the root folder.
-
-# How to Use
-
-The ``deeplite-torch-zoo`` is collection of benchmark computer vision datasets and pretrained models. There are four primary wrapper functions to load datasets, models and evaluation functions: ``get_dataloaders``, ``get_model``, ``get_eval_function`` and ``create_model`` which can be imported as
-
-``` python
-from deeplite_torch_zoo import get_dataloaders, get_model, get_eval_function, create_model
-```
-
-## Loading Datasets
-
-The loaded datasets are available as a dictionary of the following format: ``{'train': train_dataloder, 'test': test_dataloader}``. The `train_dataloder` and `test_dataloader` are objects of type ``torch.utils.data.DataLoader``.
-
-### Classification Datasets
-
-
-``` python
-data_splits = get_dataloaders(
-  data_root='./',
-  dataset_name='cifar100',
-  model_name='resnet18',
-  batch_size=128
+model = create_model(
+    model_name='edgevit_xs',          # model names for imagenet available via `list_models('imagenet')`
+    num_classes=42,                   # number of classes for transfer learning
+    pretraining_dataset='imagenet',   # take weights from checkpoint pre-trained on this dataset
+    pretrained=False,                 # if True, will try to load all weights with matching tensor shapes
 )
 ```
-The list of all available classification datasets can be found [here](docs/CLASSIFICATION.md/#datasets). Please note that it is always necessary to pass the model name upon the creation of dataloader because the dataset class logic might depend on the model type.
 
-### Object Detection Datasets
+#### Create an object detection model
 
-The following sample code loads the [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) dataset. ``train`` contains the data loader for the trainval data splits of the `VOC2007` and/or `VOC2012`. If both datasets are provided it concatenates both `VOC2007` and `VOC2012` train sets. Otherwise, it returns the train set for the provided dataset. 'test' contains dataloader (always with ``batch_size=1``) for the test split of `VOC2007`. You also need to provide the model name to instantiate the dataloaders.
+```python
+from deeplite_torch_zoo import get_model
 
-``` python
+model = get_model(
+    model_name='yolo4n',        # creates a YOLOv4n model (`n` corresponds to width factor 0.25, depth factor 0.33)
+    dataset_name='coco',        # 
+    pretrained=False,           # if True, will try to load a pre-trained checkpoint
+)  
+
+# one could create a YOLO model with timm backbone, 
+# PAN neck and YOLOv8 decoupled anchor-free head like this:
+
+model = get_model(
+    model_name='yolo_timm_fbnetv3_d',    # creates a YOLO with FBNetV3-d backbone from timm
+    dataset_name='coco',                 # 
+    pretrained=False,                    # if True, will try to load a pre-trained checkpoint
+    custom_head='v8',                    # will replace default detection head with YOLOv8 detection head 
+)  
+```
+
+#### Create PyTorch dataloaders
+
+```python
+from deeplite_torch_zoo import get_dataloaders
+
 dataloaders = get_dataloaders(
-    data_root=PATH_TO_VOCdevkit,
-    dataset_name='voc',
-    model_name='yolo3',
-    batch_size=BATCH_SIZE,
+    data_root='./',                      # folder with data, will be used to download datasets to if applicable
+    dataset_name='imagewoof',            # see below for the list of supported datasets 
+    model_name='resnet18',               # 
+    batch_size=64,                       # dataloader batch size (train and test)
 )
-```
-The list of all available object detection datasets can be found [here](docs/OBJECT_DETECTION.md/#datasets).
 
-> **_NOTE:_**  As it can be observed the data_loaders are provided based on the corresponding model (`model_name`). Different object detection models consider inputs/outputs in different formats, and thus the our `data_splits` are formatted according to the needs of the model (e.g. for SSD or YOLO detection models).
-
-## Loading and Creating Models
-
-Models are generally provided with weights pretrained on specific datasets. One would load a model ``X`` pretrained on a dataset ``Y`` to get the appropriate weights for the task ``Y``. The ``get_model`` could used for this purpose. There is also an option to create a new model with an arbitrary number of categories for the downstream tasl and load the weights from another dataset for transfer learning (e.g. to load ``COCO`` weights to train a model on the ``VOC`` dataset). The ``create_model`` method should be generally used for that. Note that ``get_model`` always returns a fully-trained model for the specified task, this method thus does not allow specifying a custom number of classes.
-
-### Classification Models
-
-To get a pretrained classification model one could use
-
-``` python
-    model = get_model(
-        model_name="resnet18",
-        dataset_name="cifar100",
-        pretrained=True, # or False, if pretrained weights are not required
-    )
+# dataloaders['train'] -> train dataloader
+# dataloaders['test'] -> test dataloader
 ```
 
-To create a new model with ImageNet weights and a custom number of classes one could use
+The list of supported datasets is available for [classification](https://github.com/Deeplite/deeplite-torch-zoo/blob/develop/docs/CLASSIFICATION.md) and [object detection](https://github.com/Deeplite/deeplite-torch-zoo/blob/develop/docs/OBJECT_DETECTION.md).
 
-``` python
-    model = create_model(
-        model_name="resnet18",
-        pretraining_dataset="imagenet",
-        num_classes=42,
-        pretrained=True, # or False, if pretrained weights are not required
-    )
+#### Creating an evaluation function
+
+```python
+from deeplite_torch_zoo import get_eval_function
+
+eval_function = get_eval_function(
+    model_name='yolo8s',
+    dataset_name='voc',
+)
+
+metrics = eval_function(model, test_dataloader)   # required arg signature is fixed for all eval functions 
 ```
 
-This method would load the ImageNet-pretrained weights to all the modules of the model where one could match the shape of the weight tensors (i.e. all the layers except the last fully-connected one in the above case).
+#### (Experimental) Training with patched Ultralytics trainer
 
-The list of all available classification models can be found [here](docs/CLASSIFICATION.md/#complete-list-of-models-and-datasets).
+```python
+from deeplite_torch_zoo.trainer import Detector
 
-### Object Detection Models
-
-``` python
-    model = get_model(
-        model_name="yolo4s",
-        dataset_name="voc",
-        pretrained=True, # or False, if pretrained weights are not required
-    )
+model = Detector(model_name='yolo7n')        # will create a wrapper around YOLOv7n model
+                                             # (YOLOv7n model with YOLOv8 detection head)
+model.train(data='VOC.yaml', epochs=100)     # same arguments as Ultralytics trainer
 ```
 
-Likewise, to create a object detection model with an arbitrary number of classes
+### 🛠 Installation <a name="installation"></a>
+PyPI version:
+```bash
+$ pip install deeplite-torch-zoo
+````
+Latest version from source:
+```bash
+$ pip install git+https://github.com/Deeplite/deeplite-torch-zoo.git
+````
 
-``` python
-    model = get_model(
-        model_name="yolo4s",
-        num_classes=5,
-        dataset_name="coco",
-        pretrained=True, # or False, if pretrained weights are not required
-    )
-```
+### 💪 Training scripts <a name="training-scripts"></a>
 
-The list of all available Object Detection models can be found [here](docs/OBJECT_DETECTION.md/#complete-list-of-models-and-datasets).
-
-## Creating an evaluation function
-
-To create an evaluation fuction for the given model and dataset one could call ``get_eval_function`` passing the ``model_name`` and ``dataset_name`` arguments:
-
-``` python
-    eval_fn = get_eval_function(
-        model_name="resnet50",
-        dataset_name="imagenet",
-    )
-```
-
-The returned evaluation function is a Python callable that takes two arguments: a PyTorch model object and a PyTorch dataloader object (logically corresponding to the test split dataloader) and returns a dictionary with metric names as keys and their corresponding values.
+We provide several training scripts as an example of how `deeplite-torch-zoo` can be integrated into existing training pipelines:
 
 
-# Available Models
+- [modified timm ImageNet script](https://github.com/Deeplite/deeplite-torch-zoo/tree/develop/training_scripts/classification/imagenet)
 
-There is an useful utility function ``list_models`` which can be imported as
-``` python
-from deeplite_torch_zoo import list_models
-```
-This utility will help in listing available pretrained models or datasets.
-
-For instance ``list_models("yolo5")`` will provide the list of available pretrained models that contain ``yolo5`` in their model names. Similar results e.g. can be obtained using ``list_models("yo")``. Filtering models by the corresponding task type is also possible by passing the string of the task type with the ``task_type_filter`` argument (the following task types are available: ``classification``, ``object_detection``, ``semantic_segmentation``).
-
-```
-    +------------------+------------------------------------+
-    | Available models |          Source datasets           |
-    +==================+====================================+
-    | yolo5_6l         | voc                                |
-    +------------------+------------------------------------+
-    | yolo5_6m         | coco, voc                          |
-    +------------------+------------------------------------+
-    | yolo5_6m_relu    | person_detection, voc              |
-    +------------------+------------------------------------+
-    | yolo5_6ma        | coco                               |
-    +------------------+------------------------------------+
-    | yolo5_6n         | coco, person_detection, voc, voc07 |
-    +------------------+------------------------------------+
-    | yolo5_6n_hswish  | coco                               |
-    +------------------+------------------------------------+
-    | yolo5_6n_relu    | coco, person_detection, voc        |
-    +------------------+------------------------------------+
-    | yolo5_6s         | coco, person_detection, voc, voc07 |
-    +------------------+------------------------------------+
-    | yolo5_6s_relu    | person_detection, voc              |
-    +------------------+------------------------------------+
-    | yolo5_6sa        | coco, person_detection             |
-    +------------------+------------------------------------+
-    | yolo5_6x         | voc                                |
-    +------------------+------------------------------------+
-```
+  - support for Knowledge Distillation
+  - training recipes provides (A1, A2, A3, [USI](https://github.com/Alibaba-MIIL/Solving_ImageNet), etc.)
+- [modfied Ultralytics classification fine-tuning script](https://github.com/Deeplite/deeplite-torch-zoo/tree/develop/training_scripts/classification/ultralytics)
+- [modfied Ultralytics YOLOv5 object detector training script](https://github.com/Deeplite/deeplite-torch-zoo/tree/develop/training_scripts/object_detection)
 
 
-# Train on Custom Dataset
-
-One could refer to the example [training scripts](../training_scripts/) to see how the zoo could be integrated into differen training pipelines. For more details please see
-
-- [Training a Classification Model](docs/CLASSIFICATION.md/#training-on-custom-dataset)
-- [Training an Object Detection Model](docs/OBJECT_DETECTION.md/#training-on-custom-dataset)
-
-
-# Benchmark Results
-
-Please refer to our [documentation](https://docs.deeplite.ai/neutrino/zoo.html#zoo-benchmark-results) for the detailed performance metrics of the pretrained models available in the ``deeplite-torch-zoo``. After downloading a model, please evaluate the model using [deeplite-profiler](https://docs.deeplite.ai/neutrino/profiler.html) to verify the performance metric values. However, one may see different numbers for the execution time as the target hardware and/or the load on the system may impact it.
-
-# Contribute a Model/Dataset to the Zoo
-
-> **_NOTE:_**  If you looking for an SDK documentation, please head over [here](https://deeplite.github.io/deeplite-torch-zoo/).
+### 🤝 Contributing <a name="contributing"></a>
 
 We always welcome community contributions to expand the scope of `deeplite-torch-zoo` and also to have additional new models and datasets. Please refer to the [documentation](https://docs.deeplite.ai/neutrino/zoo.html#contribute-a-model-dataset-to-the-zoo) for the detailed steps on how to add a model and dataset. In general, we follow the `fork-and-pull` Git workflow.
 
@@ -237,19 +152,19 @@ We always welcome community contributions to expand the scope of `deeplite-torch
 
 NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
-## Credit
+## 🙏 Credit <a name="credit"></a>
 
 <details>
 
-  <summary>Repositories used</summary>
+  <summary>Repositories used to build Deeplite Torch Zoo</summary>
 
 ### Object Detection
-- The implementation of yolov3-voc: [Peterisfar/YOLOV3](https://github.com/Peterisfar/YOLOV3/)
-- The implementation of yolov3: [ultralytics/yolov3](https://github.com/ultralytics/yolov3)
-- The implementation of yolov5: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
-- The implementation of flexible-yolov5: [Bobo-y/flexible-yolov5](https://github.com/Bobo-y/flexible-yolov5)
-- The implementation of yolov7: [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
-- The implementation of yolox: [iscyy/yoloair](https://github.com/iscyy/yoloair)
+- YOLOv3-VOC implementation: [Peterisfar/YOLOV3](https://github.com/Peterisfar/YOLOV3/)
+- YOLOv3 implementation: [ultralytics/yolov3](https://github.com/ultralytics/yolov3)
+- YOLOv5 implementation: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
+- flexible-yolov5 implementation: [Bobo-y/flexible-yolov5](https://github.com/Bobo-y/flexible-yolov5)
+- YOLOv7 implementation: [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
+- YOLOX implementation: [iscyy/yoloair](https://github.com/iscyy/yoloair)
 - [westerndigitalcorporation/YOLOv3-in-PyTorch](https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch)
 
 ### Segmentation
