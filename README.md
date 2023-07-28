@@ -47,7 +47,7 @@ model = get_model(
 from deeplite_torch_zoo import create_model
 
 model = create_model(
-    model_name='edgevit_xs',          # model names for imagenet available via `list_models('imagenet')`
+    model_name='fasternet_t0',        # model names for imagenet available via `list_models('imagenet')`
     num_classes=42,                   # number of classes for transfer learning
     pretraining_dataset='imagenet',   # take weights from checkpoint pre-trained on this dataset
     pretrained=False,                 # if True, will try to load all weights with matching tensor shapes
@@ -60,8 +60,8 @@ model = create_model(
 from deeplite_torch_zoo import get_model
 
 model = get_model(
-    model_name='yolo4n',        # creates a YOLOv4n model (`n` corresponds to width factor 0.25, depth factor 0.33)
-    dataset_name='coco',        # 
+    model_name='yolo4n',        # creates a YOLOv4n model on COCO
+    dataset_name='coco',        # (`n` corresponds to width factor 0.25, depth factor 0.33)
     pretrained=False,           # if True, will try to load a pre-trained checkpoint
 )  
 
@@ -72,7 +72,8 @@ model = get_model(
     model_name='yolo_timm_fbnetv3_d',    # creates a YOLO with FBNetV3-d backbone from timm
     dataset_name='coco',                 # 
     pretrained=False,                    # if True, will try to load a pre-trained checkpoint
-    custom_head='v8',                    # will replace default detection head with YOLOv8 detection head 
+    custom_head='v8',                    # will replace default detection head
+                                         # with YOLOv8 detection head 
 )  
 ```
 
@@ -82,9 +83,9 @@ model = get_model(
 from deeplite_torch_zoo import get_dataloaders
 
 dataloaders = get_dataloaders(
-    data_root='./',                      # folder with data, will be used to download datasets to if applicable
-    dataset_name='imagewoof',            # see below for the list of supported datasets 
-    model_name='resnet18',               # 
+    data_root='./',                      # folder with data, will be used to download 
+    dataset_name='imagewoof',            # datasets to if applicable,
+    model_name='resnet18',               # see below for the list of supported datasets 
     batch_size=64,                       # dataloader batch size (train and test)
 )
 
@@ -104,7 +105,8 @@ eval_function = get_eval_function(
     dataset_name='voc',
 )
 
-metrics = eval_function(model, test_dataloader)   # required arg signature is fixed for all eval functions 
+# required arg signature is fixed for all eval functions 
+metrics = eval_function(model, test_dataloader)
 ```
 
 #### (Experimental) Training with patched Ultralytics trainer
