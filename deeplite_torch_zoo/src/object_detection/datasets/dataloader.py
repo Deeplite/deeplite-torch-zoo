@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch.utils.data import dataloader, distributed
 
-from deeplite_torch_zoo.utils import LOGGER, colorstr, de_parallel, torch_distributed_zero_first
+from deeplite_torch_zoo.utils import LOGGER, colorstr, torch_distributed_zero_first
 from deeplite_torch_zoo.src.object_detection.datasets.dataset import YOLODataset
 from deeplite_torch_zoo.src.object_detection.datasets.utils import RANK, PIN_MEMORY
 
@@ -62,10 +62,8 @@ def build_yolo_dataset(cfg, img_path, batch, data, mode='train', rect=False, str
         fraction=cfg.fraction if mode == 'train' else 1.0)
 
 
-def get_dataloader(dataset_path, data, cfg, batch_size=16, rank=0, mode='train'):
+def get_dataloader(dataset_path, data, cfg, batch_size=16, gs=32, rank=0, mode='train'):
     with torch_distributed_zero_first(rank):  # init dataset *.cache only once if DDP
-        gs = 32
-        # gs = max(int(de_parallel(self.model).stride.max() if self.model else 0), 32)
         dataset = build_yolo_dataset(
             cfg,
             dataset_path,

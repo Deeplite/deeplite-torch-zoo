@@ -9,12 +9,12 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from ultralytics.yolo.data.augment import Compose, Format, LetterBox, Instances, v8_transforms as image_transforms
-
 from deeplite_torch_zoo.utils import LOGGER, LOCAL_RANK, NUM_THREADS, is_dir_writeable
 from deeplite_torch_zoo.src.object_detection.datasets.base import BaseDataset, TQDM_BAR_FORMAT
-from deeplite_torch_zoo.src.object_detection.datasets.utils import get_hash, img2label_paths # verify_image_label
-from ultralytics.data.utils import verify_image_label
+from deeplite_torch_zoo.src.object_detection.datasets.utils import get_hash, img2label_paths, verify_image_label
+from deeplite_torch_zoo.src.object_detection.datasets.augment import Compose, Format, LetterBox, \
+    v8_transforms as image_transforms
+from deeplite_torch_zoo.src.object_detection.datasets.instance import Instances
 
 
 class YOLODataset(BaseDataset):
@@ -205,4 +205,3 @@ class YOLODataset(BaseDataset):
         ], axis=1)
         shapes = [(a, b) for a, b in zip(new_batch['ori_shape'], new_batch['ratio_pad'])]
         return new_batch['img'], targets, new_batch['im_file'], shapes
-

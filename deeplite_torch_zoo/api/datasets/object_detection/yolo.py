@@ -1,3 +1,5 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+
 from deeplite_torch_zoo.utils import RANK
 
 from deeplite_torch_zoo.src.object_detection.datasets.dataloader import get_dataloader
@@ -18,6 +20,7 @@ def create_detection_dataloaders(
     train_loader = get_dataloader(trainset, data, cfg, batch_size=batch_size, rank=RANK, mode='train')
     test_loader = get_dataloader(testset, data, cfg, batch_size=batch_size * 2, rank=-1, mode='val')
     return {'train': train_loader, 'test': test_loader}
+
 
 
 # DatasetParameters = namedtuple(
