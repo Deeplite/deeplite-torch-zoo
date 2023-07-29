@@ -15,11 +15,8 @@ import psutil
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from deeplite_torch_zoo.utils import LOGGER, LOCAL_RANK, NUM_THREADS
+from deeplite_torch_zoo.utils import LOGGER, LOCAL_RANK, NUM_THREADS, TQDM_BAR_FORMAT
 from deeplite_torch_zoo.src.object_detection.datasets.utils import IMG_FORMATS
-
-
-TQDM_BAR_FORMAT = '{l_bar}{bar:10}{r_bar}'
 
 
 class BaseDataset(Dataset):

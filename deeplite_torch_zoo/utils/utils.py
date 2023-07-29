@@ -1,5 +1,6 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 
+import time
 import yaml
 import inspect
 import hashlib
@@ -21,6 +22,7 @@ import torch
 KB_IN_MB_COUNT = 1024
 LOGGING_NAME = 'deeplite-torch-zoo'
 NUM_THREADS = min(8, max(1, os.cpu_count() - 1))
+TQDM_BAR_FORMAT = '{l_bar}{bar:10}{r_bar}'
 
 
 def set_logging(name=LOGGING_NAME, verbose=True):
@@ -272,3 +274,23 @@ def is_dir_writeable(dir_path):
         bool: True if the directory is writeable, False otherwise.
     """
     return os.access(str(dir_path), os.W_OK)
+
+
+class Profile(contextlib.ContextDecorator):
+    # YOLOv5 Profile class. Usage: @Profile() decorator or 'with Profile():' context manager
+    def __init__(self, t=0.0):
+        self.t = t
+        self.cuda = torch.cuda.is_available()
+
+    def __enter__(self):
+        self.start = self.time()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.dt = self.time() - self.start  # delta-time
+        self.t += self.dt  # accumulate dt
+
+    def time(self):
+        if self.cuda:
+            torch.cuda.synchronize()
+        return time.time()

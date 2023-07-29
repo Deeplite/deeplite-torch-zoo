@@ -22,8 +22,7 @@ from tqdm import tqdm
 
 import torch
 
-from deeplite_torch_zoo.utils import LOGGER, is_dir_writeable, colorstr, ROOT
-from deeplite_torch_zoo.src.object_detection.datasets.base import TQDM_BAR_FORMAT
+from deeplite_torch_zoo.utils import LOGGER, is_dir_writeable, colorstr, ROOT, TQDM_BAR_FORMAT
 
 
 MACOS, LINUX, WINDOWS = (platform.system() == x for x in ['Darwin', 'Linux', 'Windows'])  # environment booleans
