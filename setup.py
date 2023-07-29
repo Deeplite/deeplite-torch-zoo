@@ -20,7 +20,6 @@ INSTALL_REQUIRES = [
     "opencv-python<=4.6.0.66",
     "scipy>=1.4.1",
     "numpy==1.20.0",
-    "pycocotools==2.0.4",
     "Cython==0.29.30",
     "tqdm>=4.46.0",
     "albumentations==1.0.3",
