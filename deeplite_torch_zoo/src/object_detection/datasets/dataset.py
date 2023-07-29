@@ -13,7 +13,8 @@ from ultralytics.yolo.data.augment import Compose, Format, LetterBox, Instances,
 
 from deeplite_torch_zoo.utils import LOGGER, LOCAL_RANK, NUM_THREADS, is_dir_writeable
 from deeplite_torch_zoo.src.object_detection.datasets.base import BaseDataset, TQDM_BAR_FORMAT
-from deeplite_torch_zoo.src.object_detection.datasets.utils import get_hash, img2label_paths, verify_image_label
+from deeplite_torch_zoo.src.object_detection.datasets.utils import get_hash, img2label_paths # verify_image_label
+from ultralytics.data.utils import verify_image_label
 
 
 class YOLODataset(BaseDataset):
@@ -120,7 +121,7 @@ class YOLODataset(BaseDataset):
             if cache['msgs']:
                 LOGGER.info('\n'.join(cache['msgs']))  # display warnings
         if nf == 0:  # number of labels found
-            raise FileNotFoundError(f'{self.prefix}No labels found in {cache_path}, can not start training. {HELP_URL}')
+            raise FileNotFoundError(f'{self.prefix}No labels found in {cache_path}, can not start training.')
 
         # Read cache
         [cache.pop(k) for k in ('hash', 'version', 'msgs')]  # remove items
@@ -179,25 +180,6 @@ class YOLODataset(BaseDataset):
         label['instances'] = Instances(bboxes, segments, keypoints, bbox_format=bbox_format, normalized=normalized)
         return label
 
-    # @staticmethod
-    # def collate_fn(batch):
-    #     """Collates data samples into batches."""
-    #     new_batch = {}
-    #     keys = batch[0].keys()
-    #     values = list(zip(*[list(b.values()) for b in batch]))
-    #     for i, k in enumerate(keys):
-    #         value = values[i]
-    #         if k == 'img':
-    #             value = torch.stack(value, 0)
-    #         if k in ['masks', 'keypoints', 'bboxes', 'cls']:
-    #             value = torch.cat(value, 0)
-    #         new_batch[k] = value
-    #     new_batch['batch_idx'] = list(new_batch['batch_idx'])
-    #     for i in range(len(new_batch['batch_idx'])):
-    #         new_batch['batch_idx'][i] += i  # add target image index for build_targets()
-    #     new_batch['batch_idx'] = torch.cat(new_batch['batch_idx'], 0)
-    #     return new_batch
-
     @staticmethod
     def collate_fn(batch):
         """Collates data samples into batches."""
@@ -215,10 +197,12 @@ class YOLODataset(BaseDataset):
         for i in range(len(new_batch['batch_idx'])):
             new_batch['batch_idx'][i] += i  # add target image index for build_targets()
         new_batch['batch_idx'] = torch.cat(new_batch['batch_idx'], 0)
-        return new_batch
 
-    # def __getitem__(self, index):
-    #     """Returns transformed label information for given index."""
-    #     batch = self.transforms(self.get_image_and_label(index))
-    #     labels = torch.cat([batch['batch_idx'].unsqueeze(-1), batch['cls'], batch['bboxes']], 1)
-    #     return batch['img'], labels, batch['im_file'], batch['ratio_pad']
+        targets = torch.cat([
+            new_batch['batch_idx'].unsqueeze(-1),
+            new_batch['cls'],
+            new_batch['bboxes']
+        ], axis=1)
+        shapes = [(a, b) for a, b in zip(new_batch['ori_shape'], new_batch['ratio_pad'])]
+        return new_batch['img'], targets, new_batch['im_file'], shapes
+
