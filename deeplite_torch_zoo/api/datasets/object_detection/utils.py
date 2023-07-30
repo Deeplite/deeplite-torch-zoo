@@ -14,7 +14,7 @@ import glob
 import zipfile
 
 from tarfile import is_tarfile
-from urllib import parse, request
+from urllib import request
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile, is_zipfile
 
@@ -178,8 +178,8 @@ def check_disk_space(url='https://ultralytics.com/assets/coco128.zip', sf=1.5, h
     """
     with contextlib.suppress(Exception):
         gib = 1 << 30  # bytes per GiB
-        data = int(requests.head(url).headers['Content-Length']) / gib  # file size (GB)
-        total, used, free = (x / gib for x in shutil.disk_usage('/'))  # bytes
+        data = int(requests.head(url, timeout=20).headers['Content-Length']) / gib  # file size (GB)
+        _, _, free = (x / gib for x in shutil.disk_usage('/'))  # bytes
         if data * sf < free:
             return True  # sufficient space
 
@@ -188,9 +188,8 @@ def check_disk_space(url='https://ultralytics.com/assets/coco128.zip', sf=1.5, h
                 f'Please free {data * sf - free:.1f} GB additional disk space and try again.')
         if hard:
             raise MemoryError(text)
-        else:
-            LOGGER.warning(text)
-            return False
+        LOGGER.warning(text)
+        return False
 
             # Pass if error
     return True
@@ -236,7 +235,7 @@ def safe_download(url,
             try:
                 if curl or i > 0:  # curl download with retry, continue
                     s = 'sS' * (not progress)  # silent
-                    r = subprocess.run(['curl', '-#', f'-{s}L', url, '-o', f, '--retry', '3', '-C', '-']).returncode
+                    r = subprocess.run(['curl', '-#', f'-{s}L', url, '-o', f, '--retry', '3', '-C', '-'], check=False).returncode
                     assert r == 0, f'Curl return value {r}'
                 else:  # urllib download
                     method = 'torch'
@@ -262,7 +261,7 @@ def safe_download(url,
             except Exception as e:
                 if i == 0 and not is_online():
                     raise ConnectionError(emojis(f'❌  Download failure for {url}. Environment is not online.')) from e
-                elif i >= retry:
+                if i >= retry:
                     raise ConnectionError(emojis(f'❌  Download failure for {url}. Retry limit reached.')) from e
                 LOGGER.warning(f'⚠️ Download failure, retrying {i + 1}/{retry} {url}...')
 
@@ -278,6 +277,7 @@ def safe_download(url,
         if delete:
             f.unlink()  # remove zip
         return unzip_dir
+    return None
 
 
 def url2file(url):
@@ -288,7 +288,7 @@ def url2file(url):
 def clean_url(url):
     """Strip auth from URL, i.e. https://url.com/file.txt?auth -> https://url.com/file.txt."""
     url = str(Path(url)).replace(':/', '://')  # Pathlib turns :// -> :/
-    return urllib.parse.unquote(url).split('?')[0]  # '%2F' to '/', split https://url.com/file.txt?auth
+    return urllib.parse.unquote(url).split('?', maxsplit=1)[0]  # '%2F' to '/', split https://url.com/file.txt?auth
 
 
 def check_suffix(file='yolov8n.pt', suffix='.pt', msg=''):
@@ -308,7 +308,7 @@ def check_file(file, suffix='', download=True, hard=True):
     file = str(file).strip()  # convert to string and strip spaces
     if not file or ('://' not in file and Path(file).exists()):  # exists ('://' check required in Windows Python<3.10)
         return file
-    elif download and file.lower().startswith(('https://', 'http://', 'rtsp://', 'rtmp://')):  # download
+    if download and file.lower().startswith(('https://', 'http://', 'rtsp://', 'rtmp://')):  # download
         url = file  # warning: Pathlib turns :// -> :/
         file = url2file(file)  # '%2F' to '/', split https://url.com/file.txt?auth
         if Path(file).exists():
@@ -316,13 +316,13 @@ def check_file(file, suffix='', download=True, hard=True):
         else:
             safe_download(url=url, file=file, unzip=False)
         return file
-    else:  # search
-        files = glob.glob(str(ROOT / 'cfg' / '**' / file), recursive=True)  # find file
-        if not files and hard:
-            raise FileNotFoundError(f"'{file}' does not exist")
-        elif len(files) > 1 and hard:
-            raise FileNotFoundError(f"Multiple files match '{file}', specify exact path: {files}")
-        return files[0] if len(files) else []  # return file
+    # search
+    files = glob.glob(str(ROOT / 'cfg' / '**' / file), recursive=True)  # find file
+    if not files and hard:
+        raise FileNotFoundError(f"'{file}' does not exist")
+    if len(files) > 1 and hard:
+        raise FileNotFoundError(f"Multiple files match '{file}', specify exact path: {files}")
+    return files[0] if files else []  # return file
 
 
 def check_det_dataset(dataset, autodownload=True):
@@ -373,7 +373,7 @@ def check_det_dataset(dataset, autodownload=True):
                 data[k] = [str((path / x).resolve()) for x in data[k]]
 
     # Parse yaml
-    train, val, test, s = (data.get(x) for x in ('train', 'val', 'test', 'download'))
+    _, val, _, s = (data.get(x) for x in ('train', 'val', 'test', 'download'))
     if val:
         val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
         if not all(x.exists() for x in val):
@@ -392,7 +392,7 @@ def check_det_dataset(dataset, autodownload=True):
                 LOGGER.info(f'Running {s} ...')
                 r = os.system(s)
             else:  # python script
-                r = exec(s, {'yaml': data})  # return None
+                r = exec(s, {'yaml': data})  # pylint: disable=exec-used
             dt = f'({round(time.time() - t, 1)}s)'
             s = f"success ✅ {dt}, saved to {colorstr('bold', DATASETS_DIR)}" if r in (0, None) else f'failure {dt} ❌'
             LOGGER.info(f'Dataset download {s}\n')
