@@ -17,7 +17,7 @@ Note: We will get combined VOC2007 and VOC2012 dataset when we will use name 'vo
 
 ```{.python}
     data_splits = get_dataloaders(
-        dataset_name="voc", model_name="yolo-v5s", batch_size=64
+        dataset_name='voc', batch_size=64
     )
     train_split = data_splits['train']
     test_split = data_splits['test']

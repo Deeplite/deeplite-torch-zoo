@@ -1,10 +1,10 @@
 <div align="center">
-  
+
   ![logo](https://docs.deeplite.ai/neutrino/_static/content/deeplite-logo-color.png)
 
-  **🚀 Deeplite Torch Zoo 🚀 is a collection of state-of-the-art efficient  
-  computer vision models for embedded applications in [PyTorch](https://pytorch.org/).**  
-  
+  **🚀 Deeplite Torch Zoo 🚀 is a collection of state-of-the-art efficient
+  computer vision models for embedded applications in [PyTorch](https://pytorch.org/).**
+
   [![Build Status](https://travis-ci.com/Deeplite/deeplite-torch-zoo.svg?token=kodd5rKMpjxQDqRCxwiV&branch=master)](https://travis-ci.com/Deeplite/deeplite-torch-zoo) [![codecov](https://codecov.io/gh/Deeplite/deeplite-torch-zoo/branch/master/graph/badge.svg?token=AVTp3PW5UP)](https://codecov.io/gh/Deeplite/deeplite-torch-zoo)
 
 </div>
@@ -63,18 +63,18 @@ model = get_model(
     model_name='yolo4n',        # creates a YOLOv4n model on COCO
     dataset_name='coco',        # (`n` corresponds to width factor 0.25, depth factor 0.33)
     pretrained=False,           # if True, will try to load a pre-trained checkpoint
-)  
+)
 
-# one could create a YOLO model with timm backbone, 
+# one could create a YOLO model with timm backbone,
 # PAN neck and YOLOv8 decoupled anchor-free head like this:
 
 model = get_model(
     model_name='yolo_timm_fbnetv3_d',    # creates a YOLO with FBNetV3-d backbone from timm
-    dataset_name='coco',                 # 
+    dataset_name='coco',                 #
     pretrained=False,                    # if True, will try to load a pre-trained checkpoint
     custom_head='v8',                    # will replace default detection head
-                                         # with YOLOv8 detection head 
-)  
+                                         # with YOLOv8 detection head
+)
 ```
 
 #### Create PyTorch dataloaders
@@ -83,14 +83,16 @@ model = get_model(
 from deeplite_torch_zoo import get_dataloaders
 
 dataloaders = get_dataloaders(
-    data_root='./',                      # folder with data, will be used to download 
+    data_root='./',                      # folder with data, will be used for download
     dataset_name='imagewoof',            # datasets to if applicable,
-    model_name='resnet18',               # see below for the list of supported datasets 
+    num_workers=8,                       # number of dataloader workers
     batch_size=64,                       # dataloader batch size (train and test)
 )
 
 # dataloaders['train'] -> train dataloader
 # dataloaders['test'] -> test dataloader
+#
+# see below for the list of supported datasets
 ```
 
 The list of supported datasets is available for [classification](https://github.com/Deeplite/deeplite-torch-zoo/blob/develop/docs/CLASSIFICATION.md) and [object detection](https://github.com/Deeplite/deeplite-torch-zoo/blob/develop/docs/OBJECT_DETECTION.md).
@@ -105,7 +107,7 @@ eval_function = get_eval_function(
     dataset_name='voc',
 )
 
-# required arg signature is fixed for all eval functions 
+# required arg signature is fixed for all eval functions
 metrics = eval_function(model, test_dataloader)
 ```
 

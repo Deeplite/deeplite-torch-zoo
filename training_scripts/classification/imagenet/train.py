@@ -413,7 +413,6 @@ def main():
 
     data_splits = get_dataloaders(
         dataset_name=args.dataset,
-        model_name=args.model,
         data_root=args.data_dir,
         batch_size=args.batch_size,
         num_workers=args.workers,

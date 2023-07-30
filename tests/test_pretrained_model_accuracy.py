@@ -42,11 +42,10 @@ def test_pretrained_model_acc(model_name, dataset_name, reference_accuracy, abs_
     test_loader = get_dataloaders(
         data_root=DATASET_PATHS[dataset_name],
         dataset_name=dataset_name,
-        model_name=model_name,
         batch_size=BATCH_SIZE,
     )[TEST_LOADER_KEY_MAP[dataset_name]]
     eval_fn = get_eval_function(
-        model_name=model_name, 
+        model_name=model_name,
         dataset_name=dataset_name
     )
     accuracy = eval_fn(model, test_loader)[ACC_KEY_MAP[dataset_name]]

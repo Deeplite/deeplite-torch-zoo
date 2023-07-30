@@ -9,42 +9,6 @@ import re
 from collections import namedtuple
 
 
-def extract_model_type(model_name):
-    MODEL_NAME_SUBSTRINGS = [
-        'yolo',
-    ]
-    for substring in MODEL_NAME_SUBSTRINGS:
-        if re.search(substring, model_name):
-            return substring
-    return model_name
-
-
-def extract_dataset_type(dataset_name):
-    DATASET_NAME_SUBSTRINGS = [
-        'voc_format_dataset',
-        'voc07',
-        'voc',
-        'coco',
-        'wider_face',
-        'lisa',
-        'person_detection',
-        'car_detection',
-        'person_pet_vehicle_detection',
-    ]
-    DATASET_TYPE_MAP = {
-        'car_detection': 'coco',
-        'person_detection': 'voc',
-        'person_pet_vehicle_detection': 'voc',
-        'voc_format_dataset': 'voc',
-    }
-    for substring in DATASET_NAME_SUBSTRINGS:
-        if re.search(substring, dataset_name):
-            if substring in DATASET_TYPE_MAP:
-                return DATASET_TYPE_MAP[substring]
-            return substring
-    return dataset_name
-
-
 class Registry:
     def __init__(self, name=None, error_on_same_key=True):
         self._registry_dict = dict()
@@ -159,13 +123,13 @@ class DatasetWrapperRegistry(Registry):
     def __init__(self):
         super().__init__()
         self._task_type_map = dict()
-        self._registry_key = namedtuple('RegistryKey', ['dataset_name', 'model_type'])
+        self._registry_key = namedtuple('RegistryKey', ['dataset_name'])
 
-    def register(self, dataset_name, model_type=None):
+    def register(self, dataset_name):
         def _register(obj_name, obj):
             if obj_name in self._registry_dict:
                 raise KeyError(
-                    f'{obj_name} is already registered in the datasplit wrapper registry'
+                    f'{obj_name} is already registered in the dataset registry'
                 )
             self._registry_dict[obj_name] = obj
 
@@ -173,21 +137,17 @@ class DatasetWrapperRegistry(Registry):
             cls_name = dataset_name
             if cls_name is None:
                 cls_name = obj.__name__
-            cls_name = self._registry_key(dataset_name=cls_name, model_type=model_type)
+            cls_name = self._registry_key(dataset_name=cls_name)
             _register(cls_name, obj)
             return obj
 
         return wrap
 
-    def get(self, dataset_name, model_name):
-        model_type = extract_model_type(model_name)
-        key = self._registry_key(dataset_name=dataset_name, model_type=model_type)
-        if key not in self._registry_dict:
-            key = self._registry_key(dataset_name=dataset_name, model_type=None)
+    def get(self, dataset_name):
+        key = self._registry_key(dataset_name=dataset_name)
         if key not in self._registry_dict:
             raise KeyError(
-                f'Dataset {dataset_name} for model type {model_type} was not found '
-                'in the datasplit wrapper registry'
+                f'Dataset {dataset_name} was not found in the dataset registry'
             )
         return self._registry_dict[key]
 
@@ -221,17 +181,13 @@ class EvaluatorWrapperRegistry(Registry):
         return wrap
 
     def get(self, task_type, model_name, dataset_name):
-        model_type = extract_model_type(model_name)
-        dataset_type = extract_dataset_type(dataset_name)
-
         key = self._registry_key(
-            task_type=task_type, dataset_type=dataset_type, model_type=model_type
+            task_type=task_type, dataset_type=dataset_name, model_type=model_name
         )
         if key not in self._registry_dict:
             key = self._registry_key(
-                task_type=task_type, model_type=model_type, dataset_type=None
+                task_type=task_type, model_type=model_name, dataset_type=None
             )
-
         if key not in self._registry_dict:
             key = self._registry_key(
                 task_type=task_type, model_type=None, dataset_type=None

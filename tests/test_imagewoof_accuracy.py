@@ -1,6 +1,6 @@
 import pytest
 
-from deeplite_torch_zoo import (get_eval_function, get_model)
+from deeplite_torch_zoo import get_eval_function, get_model
 
 
 @pytest.mark.parametrize(
