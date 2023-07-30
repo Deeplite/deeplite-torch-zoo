@@ -152,7 +152,7 @@ def list_models(
     filter_string='',
     print_table=True,
     task_type_filter=None,
-    include_no_checkpoint=False,
+    with_checkpoint=False,
 ):
     """
     A helper function to list all existing models or dataset calls
@@ -163,10 +163,10 @@ def list_models(
     to use as a filter
     :param print_table: Whether to print a table with matched models (if False, return as a list)
     """
-    if include_no_checkpoint:
-        all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
-    else:
+    if with_checkpoint:
         all_model_keys = MODEL_WRAPPER_REGISTRY.pretrained_models.keys()
+    else:
+        all_model_keys = MODEL_WRAPPER_REGISTRY.registry_dict.keys()
     if task_type_filter is not None:
         allowed_task_types = set(MODEL_WRAPPER_REGISTRY.task_type_map.values())
         if task_type_filter not in allowed_task_types:
@@ -208,10 +208,10 @@ def list_models(
     return table
 
 
-def list_models_by_dataset(dataset_name):
+def list_models_by_dataset(dataset_name, with_checkpoint=False):
     return [
         model_key.model_name
-        for model_key in list_models(dataset_name, print_table=False)
+        for model_key in list_models(dataset_name, print_table=False, with_checkpoint=with_checkpoint)
         if model_key.dataset_name == dataset_name
     ]
 

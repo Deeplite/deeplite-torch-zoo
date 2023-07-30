@@ -203,5 +203,8 @@ class YOLODataset(BaseDataset):
             new_batch['cls'],
             new_batch['bboxes']
         ], axis=1)
-        shapes = [(a, b) for a, b in zip(new_batch['ori_shape'], new_batch['ratio_pad'])]
+        shapes = None
+        if 'ratio_pad' in new_batch:
+            shapes = [(ori_shape, ratio_pad) for ori_shape, ratio_pad
+                    in zip(new_batch['ori_shape'], new_batch['ratio_pad'])]
         return new_batch['img'], targets, new_batch['im_file'], shapes

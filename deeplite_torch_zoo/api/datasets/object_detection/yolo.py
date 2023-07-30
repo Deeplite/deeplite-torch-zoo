@@ -16,7 +16,7 @@ __all__ = []
 
 HERE = pathlib.Path(__file__).parent
 
-CONFIG_VARS = ['workers', 'rect', 'cache', 'single_cls', 'task', 'classes', 'fraction',
+CONFIG_VARS = ['rect', 'cache', 'single_cls', 'task', 'classes', 'fraction',
                'mosaic', 'mixup', 'mask_ratio', 'overlap_mask', 'copy_paste', 'degrees',
                'translate', 'scale', 'shear', 'perspective', 'fliplr', 'flipud', 'hsv_h', 'hsv_s', 'hsv_v']
 
@@ -42,7 +42,7 @@ def create_detection_dataloaders(
     dataset_config=None,
     batch_size=64,
     image_size=None,
-    workers=8,
+    num_workers=8,
     rect=False,
     cache=False,
     single_cls=False,
@@ -72,6 +72,7 @@ def create_detection_dataloaders(
     if image_size is None:
         image_size = DEFAULT_RESOLUTIONS.get(dataset_config, 640)
     cfg.imgsz = image_size
+    cfg.workers = num_workers
 
     if dataset_config.endswith('.yaml'):
         data = check_det_dataset(dataset_config)
