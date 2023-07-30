@@ -62,5 +62,6 @@ def snip(model, model_output_generator, loss_fn, reduction='sum'):
         else:
             return torch.zeros_like(module.weight)
 
-    grads_abs = get_layerwise_metric_values(model, snip)
+    grads_abs = get_layerwise_metric_values(model, snip,
+                                            target_layer_types=(nn.Conv2d, nn.Linear))
     return aggregate_statistic(grads_abs, reduction=reduction)
