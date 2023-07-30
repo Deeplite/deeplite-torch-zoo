@@ -8,16 +8,10 @@ from deeplite_torch_zoo import get_dataloaders
 
 DATASETS_ROOT = Path('/neutrino/datasets/')
 BATCH_SIZE = 128
-DATASET_MODEL_MAP = {
-    'cifar100': 'resnet18',
-    'cifar10': 'resnet18',
-    'imagenette': 'resnet18',
-    'imagewoof': 'resnet18',
-    'mnist': 'lenet5_mnist',
-}
+
 
 @pytest.mark.parametrize(
-    ('dataset_name', 'tmp_dataset_files', 'tmp_dataset_folders', 
+    ('dataset_name', 'tmp_dataset_files', 'tmp_dataset_folders',
      'train_dataloader_len', 'test_dataloader_len'),
     [
         ('cifar100', ('cifar-100-python.tar.gz', ), ('cifar-100-python', ), 391, 79),
@@ -27,14 +21,13 @@ DATASET_MODEL_MAP = {
         ('mnist', (), ('MNIST', ), 469, 79),
     ],
 )
-def test_get_dataloaders(dataset_name, tmp_dataset_files, tmp_dataset_folders, 
-                         train_dataloader_len, test_dataloader_len, 
+def test_get_dataloaders(dataset_name, tmp_dataset_files, tmp_dataset_folders,
+                         train_dataloader_len, test_dataloader_len,
                          data_root='./'):
     p = Path(data_root)
     dataloaders = get_dataloaders(
         data_root=data_root,
         dataset_name=dataset_name,
-        model_name=DATASET_MODEL_MAP[dataset_name],
         batch_size=BATCH_SIZE
     )
     assert len(dataloaders['train']) == train_dataloader_len
@@ -61,7 +54,6 @@ def test_get_dataloaders_local(dataset_name, data_root, train_dataloader_len, te
     dataloaders = get_dataloaders(
         data_root=data_root,
         dataset_name=dataset_name,
-        model_name=DATASET_MODEL_MAP[dataset_name],
         batch_size=BATCH_SIZE
     )
     assert len(dataloaders['train']) == train_dataloader_len

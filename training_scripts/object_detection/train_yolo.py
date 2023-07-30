@@ -110,14 +110,12 @@ def train(opt, device):
     # Dataloaders
     dataset_kwargs = {}
     if opt.img_size:
-        dataset_kwargs = {'img_size': opt.img_size}
+        dataset_kwargs = {'image_size': opt.img_size}
     dataset_splits = get_dataloaders(
         data_root=opt.img_dir,
         dataset_name=opt.dataset_name,
-        model_name=opt.model_name,
         batch_size=batch_size,
         num_workers=workers,
-        distributed=(cuda and RANK != -1),
         **dataset_kwargs
     )
     train_img_size = dataset_splits["train"].dataset._img_size

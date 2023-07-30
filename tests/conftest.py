@@ -25,7 +25,6 @@ def imagewoof160_dataloaders(data_root='./', batch_size=32):
     p = Path(data_root)
     dataloaders = get_dataloaders(
         dataset_name='imagewoof_160',
-        model_name='resnet18',
         data_root=data_root,
         batch_size=batch_size,
         map_to_imagenet_labels=True,
@@ -40,7 +39,6 @@ def cifar100_dataloaders(data_root='./', batch_size=32):
     p = Path(data_root)
     dataloaders = get_dataloaders(
         dataset_name='cifar100',
-        model_name='resnet18',
         data_root=data_root,
         batch_size=batch_size,
     )

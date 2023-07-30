@@ -92,7 +92,6 @@ def train(args: CIFARConfig, model=None, data_splits=None):
     data_splits = get_dataloaders(
         data_root=args.data_root,
         dataset_name=args.dataset_name,
-        model_name=args.model,
         batch_size=args.batch_size,
         num_workers=args.workers
     )

@@ -227,5 +227,5 @@ def get_model_by_name(model_name, dataset_name, pretrained=True, **kwargs):
 
 
 @deprecated
-def get_data_splits_by_name(data_root, dataset_name, model_name, **kwargs):
-    return get_dataloaders(data_root, dataset_name, model_name, **kwargs)
+def get_data_splits_by_name(data_root, dataset_name, **kwargs):
+    return get_dataloaders(data_root, dataset_name, **kwargs)

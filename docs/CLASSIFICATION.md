@@ -18,7 +18,7 @@
 
 ```{.python}
     data_splits = get_dataloaders(
-        dataset_name="cifar100", model_name="resnet18", batch_size=128
+        dataset_name="cifar100", batch_size=128
     )
     train_split = data_splits['train']
     test_split = data_splits['test']

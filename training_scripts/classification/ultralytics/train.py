@@ -53,7 +53,6 @@ def train(opt, device):
     dataloaders = get_dataloaders(
         data_root=opt.data_root,
         dataset_name=opt.dataset,
-        model_name=opt.model,
         batch_size=bs,
         test_batch_size=opt.test_batch_size,
         img_size=imgsz,
