@@ -13,7 +13,7 @@ from deeplite_torch_zoo.src.object_detection.eval.utils import (
     ap_per_class,
 )
 from deeplite_torch_zoo.src.object_detection.datasets.utils import xywh2xyxy
-from deeplite_torch_zoo.src.object_detection.eval.v8_nms import (
+from deeplite_torch_zoo.src.object_detection.eval.v8.v8_nms import (
     non_max_suppression as non_max_suppression_v8,
 )
 from deeplite_torch_zoo.utils import LOGGER, smart_inference_mode, Profile, TQDM_BAR_FORMAT
