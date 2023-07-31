@@ -13,7 +13,7 @@ from deeplite_torch_zoo.src.object_detection.flexible_yolo.backbone import (
 )
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.neck import build_neck
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect_v8 import (
+from deeplite_torch_zoo.src.object_detection.yolov5.heads.v8.detect_v8 import (
     DetectV8,
 )
 from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
