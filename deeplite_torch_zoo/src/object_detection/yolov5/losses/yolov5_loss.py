@@ -12,23 +12,23 @@ import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_de
 from deeplite_torch_zoo.src.object_detection.yolov5.losses.loss_utils import (
     FocalLoss,
     bbox_iou,
-    de_parallel,
-    get_yolov5_targets,
     smooth_BCE,
 )
+
+from deeplite_torch_zoo.utils import de_parallel
 
 
 class YoloV5Loss(nn.Module):
     def __init__(
-        self, model, num_classes=80, device="cuda", autobalance=False, hyp_cfg=None
+        self, model, num_classes=80, device='cuda', autobalance=False, hyp_cfg=None
     ):
         super(YoloV5Loss, self).__init__()
         self.device = device
         self.num_classes = num_classes
         self.model = model
         if hyp_cfg is None:
-            hyp_cfg = hyp_cfg_default
-        self.hyp = hyp_cfg.TRAIN  # hyperparameters
+            hyp_cfg = hyp_cfg_default.TRAIN
+        self.hyp = hyp_cfg  # hyperparameters
         self.sort_obj_iou = False
 
         # Define criteria
@@ -71,8 +71,8 @@ class YoloV5Loss(nn.Module):
             autobalance,
         )
 
-    def forward(self, p, raw_targets, labels_length, img_size):  # predictions, targets
-        targets = get_yolov5_targets(raw_targets, labels_length, img_size, self.device)
+    def forward(self, p, targets):  # predictions, targets
+        targets = targets.to(self.device)
 
         lcls, lbox, lobj = (
             torch.zeros(1, device=self.device),

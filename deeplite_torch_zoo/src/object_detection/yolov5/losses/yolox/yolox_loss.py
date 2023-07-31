@@ -2,10 +2,7 @@
 
 import torch
 
-from deeplite_torch_zoo.src.object_detection.yolov5.losses.loss_utils import (
-    get_yolov5_targets,
-    is_parallel,
-)
+from deeplite_torch_zoo.utils import is_parallel
 
 
 class ComputeXLoss:
@@ -20,10 +17,9 @@ class ComputeXLoss:
         self.device = device
 
     def __call__(
-        self, p, raw_targets, labels_length, img_size
+        self, p, targets,
     ):  # predictions, targets, model
-        targets = get_yolov5_targets(raw_targets, labels_length, img_size, self.device)
-
+        targets = targets.to(self.device)
         if (not self.det.training) or (len(p) == 0) or (len(targets) == 0):
             return torch.tensor(
                 0.0, device=self.device, requires_grad=True

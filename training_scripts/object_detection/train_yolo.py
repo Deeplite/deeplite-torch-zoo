@@ -27,15 +27,10 @@ from deeplite_torch_zoo.utils import (LOGGER, colorstr, init_seeds, print_args,
                                       one_cycle, strip_optimizer, AverageMeter, EarlyStopping)
 
 import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_default as hyp_cfg_scratch
-import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_finetune as hyp_cfg_finetune
-import deeplite_torch_zoo.src.object_detection.yolov5.configs.hyps.hyp_config_lisa as hyp_cfg_lisa
-
 from deeplite_torch_zoo import create_model, get_dataloaders, get_eval_function
 
 from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolov5_loss import \
     YoloV5Loss
-from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolox.yolox_loss import \
-    ComputeXLoss
 
 
 FILE = Path(__file__).resolve()
@@ -48,35 +43,6 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
 WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
-
-
-def get_hyperparameter_dict(dataset_name, hp_config=None):
-    DATASET_TO_HP_CONFIG_MAP = {
-        "lisa": hyp_cfg_lisa,
-    }
-
-    for dataset_name in (
-        "voc",
-        "coco",
-        "wider_face",
-        "person_detection",
-        "car_detection",
-        "voc07",
-    ):
-        DATASET_TO_HP_CONFIG_MAP[dataset_name] = hyp_cfg_scratch
-
-    HP_CONFIG_MAP = {
-        "scratch": hyp_cfg_scratch,
-        "finetune": hyp_cfg_finetune,
-    }
-
-    if hp_config is None:
-        for dataset_name in DATASET_TO_HP_CONFIG_MAP:
-            if dataset_name in dataset_name:
-                hyp_config = DATASET_TO_HP_CONFIG_MAP[dataset_name]
-    else:
-        hyp_config = HP_CONFIG_MAP[hp_config]
-    return hyp_config.TRAIN, hyp_config
 
 
 def train(opt, device):
@@ -93,7 +59,7 @@ def train(opt, device):
     last, best = w / 'last.pt', w / 'best.pt'
 
     # Get hyperparameter dict
-    hyp, hyp_loss = get_hyperparameter_dict(opt.dataset_name, opt.hp_config)
+    hyp = hyp_cfg_scratch.TRAIN
 
     # Save run settings
     with open(save_dir / 'hyp.yaml', 'w') as f:
@@ -101,7 +67,8 @@ def train(opt, device):
     with open(save_dir / 'opt.yaml', 'w') as f:
         yaml.safe_dump(vars(opt), f, sort_keys=False)
     tb_writer = SummaryWriter(save_dir)
-    opt.data_root = Path(opt.data_root)
+    if opt.data_root:
+        opt.data_root = Path(opt.data_root)
 
     # Config
     cuda = device.type != 'cpu'
@@ -111,24 +78,21 @@ def train(opt, device):
     dataset_kwargs = {}
     if opt.img_size:
         dataset_kwargs = {'image_size': opt.img_size}
-    dataset_splits = get_dataloaders(
+    dataloaders = get_dataloaders(
         data_root=opt.data_root,
         dataset_name=opt.dataset_name,
         batch_size=batch_size,
         num_workers=workers,
         **dataset_kwargs
     )
-    train_img_size = dataset_splits["train"].dataset._img_size
-    test_img_size = dataset_splits["test"].dataset._img_size
+    train_loader = dataloaders['train']
+    test_loader = dataloaders['test']
 
-    train_loader = dataset_splits['train']
-    test_loader = dataset_splits['test']
-
-    dataset = train_loader.dataset
-    nc = dataset.num_classes
-    LOGGER.info("Number of classes = ", nc)
-
+    train_img_size = train_loader.dataset.imgsz
+    test_img_size = test_loader.dataset.imgsz
+    nc = train_loader.dataset.data['nc']
     nb = len(train_loader)  # number of batches
+    LOGGER.info(f'Number of classes: {nc}')
 
     # Model
     model = create_model(
@@ -150,7 +114,7 @@ def train(opt, device):
     nbs = 64  # nominal batch size
     accumulate = max(round(nbs / batch_size), 1)  # accumulate loss before optimizing
     hyp['weight_decay'] *= batch_size * accumulate / nbs  # scale weight_decay
-    LOGGER.info(f"Scaled weight_decay = {hyp['weight_decay']}")
+    LOGGER.info(f'Scaled weight_decay = {hyp["weight_decay"]}')
 
     g0, g1, g2 = [], [], []  # optimizer parameter groups
     for v in model.modules():
@@ -168,8 +132,8 @@ def train(opt, device):
 
     optimizer.add_param_group({'params': g1, 'weight_decay': hyp['weight_decay']})  # add g1 with weight_decay
     optimizer.add_param_group({'params': g2})  # add g2 (biases)
-    LOGGER.info(f"{colorstr('optimizer:')} {type(optimizer).__name__} with parameter groups "
-                f"{len(g0)} weight, {len(g1)} weight (no decay), {len(g2)} bias")
+    LOGGER.info(f'{colorstr("optimizer:")} {type(optimizer).__name__} with parameter groups '
+                f'{len(g0)} weight, {len(g1)} weight (no decay), {len(g2)} bias')
     del g0, g1, g2
 
     # Scheduler
@@ -221,21 +185,17 @@ def train(opt, device):
     model.nc = nc  # attach number of classes to model
     model.hyp = hyp  # attach hyperparameters to model
 
-    eval_function = get_eval_function(dataset_name=opt.dataset_name,
-        model_name=opt.model_name)
+    eval_function = get_eval_function(
+        dataset_name=opt.dataset_name,
+        model_name=opt.model_name
+    )
 
-    if 'yolox' in opt.model_name:
-        criterion = ComputeXLoss(
-            model=model,
-            device=device,
-        )
-    else:
-        criterion = YoloV5Loss(
-            model=model,
-            num_classes=nc,
-            device=device,
-            hyp_cfg=hyp_loss,
-        )
+    criterion = YoloV5Loss(
+        model=model,
+        num_classes=nc,
+        device=device,
+        hyp_cfg=hyp,
+    )
 
     if opt.eval_before_train:
         ap_dict = eval_function(model, test_loader)
@@ -258,7 +218,7 @@ def train(opt, device):
 
     LOGGER.info(f'Image sizes {train_img_size} train, {test_img_size} val\n'
                 f'Using {train_loader.num_workers} dataloader workers\n'
-                f"Logging results to {colorstr('bold', save_dir)}\n"
+                f'Logging results to {colorstr("bold", save_dir)}\n'
                 f'Starting training for {epochs} epochs...')
     for epoch in range(start_epoch, epochs):  # epoch
         model.train()
@@ -275,7 +235,7 @@ def train(opt, device):
         if RANK in [-1, 0]:
             pbar = tqdm(pbar, total=nb)  # progress bar
         optimizer.zero_grad()
-        for i, (imgs, targets, labels_length, _) in pbar:  # batch
+        for i, (imgs, targets, _, _) in pbar:  # batch
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float()
 
@@ -302,7 +262,7 @@ def train(opt, device):
                 pred = model(imgs)  # forward
 
                 loss, loss_items = criterion(
-                    pred, targets, labels_length, imgs.shape[-1]
+                    pred, targets
                 )
 
                 if RANK in (-1, 0):
@@ -350,14 +310,11 @@ def train(opt, device):
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if (not noval or final_epoch) and epoch > opt.eval_skip_epochs - 1:  # Calculate mAP
                 ap_dict = eval_function(ema.ema, test_loader)
-                LOGGER.info(f'Eval metrics: {ap_dict}')
-                tb_writer.add_scalar('eval/mAP', ap_dict['mAP'], epoch)
                 for eval_key, eval_value in ap_dict.items():
-                    if eval_key != 'mAP':
-                        tb_writer.add_scalar(f'ap_per_class/{eval_key}', eval_value, epoch)
+                    tb_writer.add_scalar(f'eval/{eval_key}', eval_value, epoch)
 
             # Update best mAP
-            fi = ap_dict['mAP']
+            fi = ap_dict['mAP@0.5:0.95']
             if fi > best_fitness:
                 best_fitness = fi
 
@@ -397,7 +354,7 @@ def train(opt, device):
                     ap_dict = eval_function(model, test_loader)
                     LOGGER.info(f'Eval metrics: {ap_dict}')
 
-        LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}")
+        LOGGER.info(f'Results saved to {colorstr("bold", save_dir)}')
 
     torch.cuda.empty_cache()
 
@@ -410,35 +367,36 @@ def parse_opt(known=False):
     parser.add_argument('--pretrained', action='store_true', default=False,
         help='train the model from scratch if false')
     parser.add_argument(
-        "--pretraining_dataset", type=str, default="coco",
-        help="Load pretrained weights fine-tuned on the specified dataset ('voc' or 'coco')",
+        '--pretraining_dataset', type=str, default='coco',
+        help='Load pretrained weights fine-tuned on the specified dataset ("voc" or "coco")',
     )
     parser.add_argument(
-        "--dataset", dest="dataset_name", type=str, default="voc",
+        '--dataset', dest='dataset_name', type=str, default='voc',
         choices=[
-            "coco",
-            "voc",
+            'coco128',
+            'coco',
+            'voc',
         ],
-        help="Name of the dataset to train/validate on",
+        help='Name of the dataset to train/validate on',
     )
     parser.add_argument(
-        "--model", dest="model_name", type=str, default="yolo5n",
-        help="Specific YOLO model name to be used in training (ex. yolo3, yolo4m, yolo5n, ...)",
+        '--model', dest='model_name', type=str, default='yolo5n',
+        help='Specific YOLO model name to be used in training (ex. yolo3, yolo4m, yolo5n, ...)',
     )
     parser.add_argument(
-        "--hp_config", dest="hp_config", type=str, default=None,
-        help="The hyperparameter configuration name to use. Available options: 'scratch', 'finetune'",
+        '--hp_config', dest='hp_config', type=str, default=None,
+        help='The hyperparameter configuration name to use. Available options: "scratch", "finetune"',
     )
     parser.add_argument(
-        "--img_size", dest="img_size", type=int, default=False,
-        help="Image resolution to use during model training. If False, the default config value is used.",
+        '--img_size', dest='img_size', type=int, default=False,
+        help='Image resolution to use during model training. If False, the default config value is used.',
     )
     parser.add_argument(
-        "--logdir", type=str, dest="save_dir", default="runs", help="Log directory",
+        '--logdir', type=str, dest='save_dir', default='runs', help='Log directory',
     )
     parser.add_argument(
-        "--eval-skip-epochs", dest="eval_skip_epochs", type=int, default=0,
-        help="Skip evaluation for this number of epochs in the beginning",
+        '--eval-skip-epochs', dest='eval_skip_epochs', type=int, default=0,
+        help='Skip evaluation for this number of epochs in the beginning',
     )
 
     parser.add_argument('--eval_before_train', action='store_true', help='run eval before training starts')
@@ -474,7 +432,7 @@ def main(opt):
         assert opt.batch_size % WORLD_SIZE == 0, '--batch-size must be multiple of CUDA device count'
         torch.cuda.set_device(LOCAL_RANK)
         device = torch.device('cuda', LOCAL_RANK)
-        dist.init_process_group(backend="nccl" if dist.is_nccl_available() else "gloo")
+        dist.init_process_group(backend='nccl' if dist.is_nccl_available() else 'gloo')
 
     train(opt, device)
     if WORLD_SIZE > 1 and RANK == 0:
@@ -482,6 +440,6 @@ def main(opt):
         dist.destroy_process_group()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     opt = parse_opt()
     main(opt)

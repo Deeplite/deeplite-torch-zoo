@@ -2,32 +2,8 @@
 
 import math
 
-import numpy as np
 import torch
 import torch.nn as nn
-
-from deeplite_torch_zoo.src.object_detection.eval.utils import xyxy2cxcywh
-from deeplite_torch_zoo.utils import is_parallel, de_parallel
-
-
-def get_yolov5_targets(raw_targets, labels_length, img_size, device):
-    targets = torch.zeros(
-        (int(sum(labels_length)), 6), device=device, dtype=torch.float32
-    )
-    cum_index = np.cumsum(labels_length)
-    prv_index = 0
-    for i, target in enumerate(raw_targets):
-        current_index = int(cum_index[i])
-        current_length = int(labels_length[i])
-        targets[prv_index:current_index, 0] = i
-        targets[prv_index:current_index, 1] = target[:current_length, 4]
-        targets[prv_index:current_index, 2:] = xyxy2cxcywh(
-            target[:current_length, :4]
-        )  # convert from x1, y1, x2, y2 to cx, cy, w, h
-        prv_index = cum_index[i]
-
-    targets[:, 2:6] /= img_size  # Normalize to 0 - 1
-    return targets
 
 
 class FocalLoss(nn.Module):
