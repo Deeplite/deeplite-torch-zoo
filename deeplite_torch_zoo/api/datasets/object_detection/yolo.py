@@ -64,6 +64,7 @@ def create_detection_dataloaders(
     hsv_h=0.015,
     hsv_s=0.7,
     hsv_v=0.4,
+    gs=32,
 ):
     cfg = Dict()
     for var_name in CONFIG_VARS:
@@ -85,8 +86,8 @@ def create_detection_dataloaders(
         )
 
     trainset, testset = data['train'], data.get('val') or data.get('test')
-    train_loader = get_dataloader(trainset, data, cfg, batch_size=batch_size, rank=RANK, mode='train')
-    test_loader = get_dataloader(testset, data, cfg, batch_size=batch_size * 2, rank=-1, mode='val')
+    train_loader = get_dataloader(trainset, data, cfg, batch_size=batch_size, rank=RANK, mode='train', gs=gs)
+    test_loader = get_dataloader(testset, data, cfg, batch_size=batch_size * 2, rank=-1, mode='val', gs=gs)
     return {'train': train_loader, 'test': test_loader}
 
 
