@@ -75,11 +75,14 @@ def create_detection_dataloaders(
     cfg.workers = num_workers
 
     if dataset_config.endswith('.yaml'):
-        data = check_det_dataset(dataset_config)
+        data = check_det_dataset(dataset_config, data_root=data_root)
     elif dataset_config in DATASET_CONFIGS:
-        data = check_det_dataset(HERE / 'configs' / DATASET_CONFIGS[dataset_config])
+        data = check_det_dataset(HERE / 'configs' / DATASET_CONFIGS[dataset_config], data_root=data_root)
     else:
-        raise ValueError
+        raise ValueError(
+            f'Incorrect dataset name/config passed: {dataset_config}. Either pass a path '
+            f'to a YAML config or a valid zoo dataset name. Supported datasets: {DATASET_CONFIGS.keys()}'
+        )
 
     trainset, testset = data['train'], data.get('val') or data.get('test')
     train_loader = get_dataloader(trainset, data, cfg, batch_size=batch_size, rank=RANK, mode='train')

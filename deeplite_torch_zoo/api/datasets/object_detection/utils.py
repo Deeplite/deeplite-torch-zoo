@@ -325,7 +325,7 @@ def check_file(file, suffix='', download=True, hard=True):
     return files[0] if files else []  # return file
 
 
-def check_det_dataset(dataset, autodownload=True):
+def check_det_dataset(dataset, data_root=None, autodownload=True):
     """Download, check and/or unzip dataset if not found locally."""
     data = check_file(dataset)
 
@@ -339,6 +339,11 @@ def check_det_dataset(dataset, autodownload=True):
     # Read yaml (optional)
     if isinstance(data, (str, Path)):
         data = yaml_load(data, append_filename=True)  # dictionary
+
+    if data_root is not None:
+        if not isinstance(data_root, (str, Path)):
+            raise ValueError(f'Invalid data path provided: {data_root}')
+        data['path'] = data_root
 
     # Checks
     for k in 'train', 'val':
@@ -359,9 +364,12 @@ def check_det_dataset(dataset, autodownload=True):
     # Resolve paths
     path = Path(extract_dir or data.get('path') or Path(data.get('yaml_file', '')).parent)  # dataset root
 
-    if not path.is_absolute():
+    if not path.is_absolute() and data_root is None:
         path = (DATASETS_DIR / path).resolve()
-    data['path'] = path  # download scripts
+
+    download_dir = path
+    path = path  / dataset.stem
+    data['path'] = path # download scripts
     for k in 'train', 'val', 'test':
         if data.get(k):  # prepend path
             if isinstance(data[k], str):
@@ -374,6 +382,7 @@ def check_det_dataset(dataset, autodownload=True):
 
     # Parse yaml
     _, val, _, s = (data.get(x) for x in ('train', 'val', 'test', 'download'))
+
     if val:
         val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
         if not all(x.exists() for x in val):
@@ -382,11 +391,11 @@ def check_det_dataset(dataset, autodownload=True):
             if s and autodownload:
                 LOGGER.warning(m)
             else:
-                m += f"\nNote dataset download directory is '{DATASETS_DIR}'"
+                m += f"\nNote dataset download directory is '{download_dir}'"
                 raise FileNotFoundError(m)
             t = time.time()
             if s.startswith('http') and s.endswith('.zip'):  # URL
-                safe_download(url=s, dir=DATASETS_DIR, delete=True)
+                safe_download(url=s, dir=download_dir, delete=True)
                 r = None  # success
             elif s.startswith('bash '):  # bash script
                 LOGGER.info(f'Running {s} ...')
@@ -394,6 +403,6 @@ def check_det_dataset(dataset, autodownload=True):
             else:  # python script
                 r = exec(s, {'yaml': data})  # pylint: disable=exec-used
             dt = f'({round(time.time() - t, 1)}s)'
-            s = f"success ✅ {dt}, saved to {colorstr('bold', DATASETS_DIR)}" if r in (0, None) else f'failure {dt} ❌'
+            s = f"success ✅ {dt}, saved to {colorstr('bold', download_dir)}" if r in (0, None) else f'failure {dt} ❌'
             LOGGER.info(f'Dataset download {s}\n')
     return data  # dictionary

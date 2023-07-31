@@ -101,7 +101,7 @@ def train(opt, device):
     with open(save_dir / 'opt.yaml', 'w') as f:
         yaml.safe_dump(vars(opt), f, sort_keys=False)
     tb_writer = SummaryWriter(save_dir)
-    opt.img_dir = Path(opt.img_dir)
+    opt.data_root = Path(opt.data_root)
 
     # Config
     cuda = device.type != 'cpu'
@@ -112,7 +112,7 @@ def train(opt, device):
     if opt.img_size:
         dataset_kwargs = {'image_size': opt.img_size}
     dataset_splits = get_dataloaders(
-        data_root=opt.img_dir,
+        data_root=opt.data_root,
         dataset_name=opt.dataset_name,
         batch_size=batch_size,
         num_workers=workers,
@@ -405,7 +405,7 @@ def train(opt, device):
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--img-dir', dest='img_dir', type=str,
+    parser.add_argument('--data-root', dest='data_root', type=str, default=None,
         help='the path to the folder containing images to be detected or trained')
     parser.add_argument('--pretrained', action='store_true', default=False,
         help='train the model from scratch if false')
@@ -418,13 +418,6 @@ def parse_opt(known=False):
         choices=[
             "coco",
             "voc",
-            "lisa",
-            "lisa_full",
-            "lisa_subset11",
-            "wider_face",
-            "voc07",
-            "car_detection",
-            "voc_format_dataset",
         ],
         help="Name of the dataset to train/validate on",
     )
@@ -433,27 +426,18 @@ def parse_opt(known=False):
         help="Specific YOLO model name to be used in training (ex. yolo3, yolo4m, yolo5n, ...)",
     )
     parser.add_argument(
-        "--hp_config",
-        dest="hp_config", type=str, default=None,
+        "--hp_config", dest="hp_config", type=str, default=None,
         help="The hyperparameter configuration name to use. Available options: 'scratch', 'finetune'",
     )
     parser.add_argument(
-        "--img_size",
-        dest="img_size", type=int, default=False,
+        "--img_size", dest="img_size", type=int, default=False,
         help="Image resolution to use during model training. If False, the default config value is used.",
     )
     parser.add_argument(
-        "--logdir",
-        type=str,
-        dest="save_dir",
-        default="runs",
-        help="Log directory",
+        "--logdir", type=str, dest="save_dir", default="runs", help="Log directory",
     )
     parser.add_argument(
-        "--eval-skip-epochs",
-        dest="eval_skip_epochs",
-        type=int,
-        default=100,
+        "--eval-skip-epochs", dest="eval_skip_epochs", type=int, default=0,
         help="Skip evaluation for this number of epochs in the beginning",
     )
 
