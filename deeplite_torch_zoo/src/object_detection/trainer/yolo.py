@@ -1,3 +1,5 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+
 from ultralytics.yolo.engine.model import YOLO
 from ultralytics.yolo.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, callbacks
 from deeplite_torch_zoo import create_model

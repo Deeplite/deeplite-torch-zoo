@@ -1,3 +1,5 @@
+# https://github.com/meituan/YOLOv6/
+
 from torch import nn
 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (

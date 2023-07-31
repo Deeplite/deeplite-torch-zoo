@@ -1,3 +1,5 @@
+# https://github.com/meituan/YOLOv6/
+
 import torch
 from torch import nn
 

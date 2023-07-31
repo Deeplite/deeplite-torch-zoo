@@ -13,7 +13,7 @@ from deeplite_torch_zoo.src.dnn_blocks.yolov7.repvgg_blocks import RepConv
 from deeplite_torch_zoo.src.object_detection.yolov5.common import *
 from deeplite_torch_zoo.src.object_detection.yolov5.experimental import *
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect_v8 import (
+from deeplite_torch_zoo.src.object_detection.yolov5.heads.v8.detect_v8 import (
     DetectV8,
 )
 from deeplite_torch_zoo.src.object_detection.yolov5.heads.yolox.detectx import (

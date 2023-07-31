@@ -1,3 +1,5 @@
+# https://github.com/meituan/YOLOv6/
+
 import numpy as np
 import torch
 import torch.nn.functional as F

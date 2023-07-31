@@ -1,3 +1,5 @@
+# https://github.com/meituan/YOLOv6/
+
 # YOLOv6s model
 model = dict(
     type='YOLOv6s',
