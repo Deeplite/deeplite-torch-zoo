@@ -1,4 +1,4 @@
-# https://github.com/WongKinYiu/PyTorch_YOLOv4/blob/u5/models/yolov4l-mish.yaml
+# Credit: https://github.com/WongKinYiu/PyTorch_YOLOv4/blob/u5/models/yolov4l-mish.yaml
 
 # parameters
 nc: 80  # number of classes

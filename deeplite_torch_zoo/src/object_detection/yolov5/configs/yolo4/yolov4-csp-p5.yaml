@@ -1,3 +1,5 @@
+# Credit: https://github.com/WongKinYiu/PyTorch_YOLOv4/tree/u5
+
 # parameters
 nc: 80  # number of classes
 depth_multiple: 1.0  # model depth multiple

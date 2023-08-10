@@ -163,10 +163,10 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
   <summary>Repositories used to build Deeplite Torch Zoo</summary>
 
 ### Object Detection
-- YOLOv3-VOC implementation: [Peterisfar/YOLOV3](https://github.com/Peterisfar/YOLOV3/)
 - YOLOv3 implementation: [ultralytics/yolov3](https://github.com/ultralytics/yolov3)
 - YOLOv5 implementation: [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
 - flexible-yolov5 implementation: [Bobo-y/flexible-yolov5](https://github.com/Bobo-y/flexible-yolov5)
+- YOLOv8 implementation: [ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)
 - YOLOv7 implementation: [WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
 - YOLOX implementation: [iscyy/yoloair](https://github.com/iscyy/yoloair)
 - [westerndigitalcorporation/YOLOv3-in-PyTorch](https://github.com/westerndigitalcorporation/YOLOv3-in-PyTorch)
@@ -194,7 +194,6 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
 
 ### Misc
-- mAP metric calculation code: [bes-dev/mean_average_precision](https://github.com/bes-dev/mean_average_precision)
 - torchvision dataset implementations: [pytorch/vision](https://github.com/pytorch/vision)
 - MLP implementation: [aaron-xichen/pytorch-playground](https://github.com/aaron-xichen/pytorch-playground)
 - AutoAugment implementation: [DeepVoltaire/AutoAugment](https://github.com/DeepVoltaire/AutoAugment)

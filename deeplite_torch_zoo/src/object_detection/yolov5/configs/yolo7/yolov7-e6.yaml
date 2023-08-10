@@ -1,3 +1,5 @@
+# Credit: https://github.com/WongKinYiu/yolov7
+
 # parameters
 nc: 80  # number of classes
 depth_multiple: 1.0  # model depth multiple
