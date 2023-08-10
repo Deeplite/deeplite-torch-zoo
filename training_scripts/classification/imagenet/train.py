@@ -26,7 +26,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.utils
 import yaml
-from deeplite_torch_zoo import create_model, get_data_splits_by_name
+
 from timm import utils
 from timm.data import FastCollateMixup, Mixup, resolve_data_config
 from timm.models import (convert_splitbn_model, convert_sync_batchnorm,
@@ -37,7 +37,8 @@ from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
-from kd import KDTeacher
+from deeplite_torch_zoo import create_model, get_dataloaders
+from deeplite_torch_zoo.utils.kd import KDTeacher
 
 try:
     from apex import amp
@@ -410,9 +411,8 @@ def main():
     if args.img_size is not None:
         datasplit_kwargs = {'img_size': args.img_size}
 
-    data_splits = get_data_splits_by_name(
+    data_splits = get_dataloaders(
         dataset_name=args.dataset,
-        model_name=args.model,
         data_root=args.data_dir,
         batch_size=args.batch_size,
         num_workers=args.workers,
@@ -425,7 +425,6 @@ def main():
         pretraining_dataset=args.pretraining_dataset,
         num_classes=len(loader_train.dataset.classes),
         pretrained=args.pretrained,
-        progress=True,
     )
 
     if args.num_classes is None:

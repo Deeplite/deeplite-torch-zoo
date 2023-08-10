@@ -3,19 +3,24 @@
 # The file is modified by Deeplite Inc. from the original implementation on Feb 23, 2023
 # Refactoring block implementation
 
-import warnings
 
 import torch
 import torch.nn as nn
-
-from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
-                                                      GhostConv,
-                                                      get_activation,
-                                                      round_channels)
+from deeplite_torch_zoo.src.dnn_blocks.common import (
+    ConvBnAct,
+    DWConv,
+    GhostConv,
+    get_activation,
+    round_channels,
+)
 from deeplite_torch_zoo.src.dnn_blocks.resnet.resnet_blocks import (
-    GhostBottleneck, ResNeXtBottleneck)
+    GhostBottleneck,
+    ResNetBottleneck,
+)
+from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNEL_BLOCKS
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneck(nn.Module):
     # Ultralytics bottleneck (2 convs)
     def __init__(
@@ -28,28 +33,20 @@ class YOLOBottleneck(nn.Module):
         if c_ < g:
             return
 
-        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = ConvBnAct(c_, c2, k, 1, g=g, act=act)
+        if isinstance(k, tuple):
+            self.cv1 = ConvBnAct(c1, c_, k[0], 1, act=act)
+            self.cv2 = ConvBnAct(c_, c2, k[1], 1, g=g, act=act)
+        else:
+            self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
+            self.cv2 = ConvBnAct(c_, c2, k, 1, g=g, act=act)
         self.add = shortcut and c1 == c2
 
     def forward(self, x):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
-class YOLOCrossConv(nn.Module):
-    # Ultralytics Cross Convolution Downsample
-    def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, act='relu', shortcut=False):
-        # ch_in, ch_out, kernel, stride, groups, expansion, shortcut
-        super().__init__()
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, (1, k), (1, s), act=act)
-        self.cv2 = ConvBnAct(c_, c2, (k, 1), (s, 1), g=g, act=act)
-        self.add = shortcut and c1 == c2
-
-    def forward(self, x):
-        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
-
-
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -76,6 +73,8 @@ class YOLOBottleneckCSP(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), 1))))
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSP2(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -102,6 +101,7 @@ class YOLOBottleneckCSP2(nn.Module):
         return self.cv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOVoVCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -127,140 +127,7 @@ class YOLOVoVCSP(nn.Module):
         return self.cv3(torch.cat((x1, x2), dim=1))
 
 
-class YOLOSPP(nn.Module):
-    # Spatial pyramid pooling layer used in YOLOv3-SPP
-    def __init__(self, c1, c2, k=(5, 9, 13), act='hswish'):
-        super().__init__()
-        c_ = c1 // 2  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = ConvBnAct(c_ * (len(k) + 1), c2, 1, 1, act=act)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-
-    def forward(self, x):
-        x = self.cv1(x)
-        return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
-
-
-class YOLOSPPCSP(nn.Module):
-    # CSP SPP https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), act='hswish'
-    ):
-        super().__init__()
-        c_ = int(2 * c2 * e)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = ConvBnAct(c_, c_, 3, 1, act=act)
-        self.cv4 = ConvBnAct(c_, c_, 1, 1, act=act)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-        self.cv5 = ConvBnAct(4 * c_, c_, 1, 1, act=act)
-        self.cv6 = ConvBnAct(c_, c_, 3, 1, act=act)
-        self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = get_activation(act)
-        self.cv7 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
-
-    def forward(self, x):
-        x1 = self.cv4(self.cv3(self.cv1(x)))
-        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
-        y2 = self.cv2(x)
-        return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-
-
-class YOLOSPPCSPLeaky(nn.Module):
-    def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), act='leakyrelu'
-    ):
-        super().__init__()
-        c_ = int(2 * c2 * e)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = ConvBnAct(c_, c_, 3, 1, act=act)
-        self.cv4 = ConvBnAct(c_, c_, 1, 1, act=act)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-        self.cv5 = ConvBnAct(4 * c_, c_, 1, 1, act=act)
-        self.cv6 = ConvBnAct(c_, c_, 3, 1, act=act)
-        self.bn = nn.BatchNorm2d(2 * c_)
-        self.act = get_activation(act)
-        self.cv7 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
-
-    def forward(self, x):
-        x1 = self.cv4(self.cv3(self.cv1(x)))
-        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
-        y2 = self.cv2(x)
-        return self.cv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-
-
-class YOLOSPPF(nn.Module):
-    # Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher
-    def __init__(self, c1, c2, k=5, act='hswish'):  # equivalent to SPP(k=(5, 9, 13))
-        super().__init__()
-        c_ = c1 // 2  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = ConvBnAct(c_ * 4, c2, 1, 1, act=act)
-        self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
-
-    def forward(self, x):
-        x = self.cv1(x)
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')  # suppress torch 1.9.0 max_pool2d() warning
-            y1 = self.m(x)
-            y2 = self.m(y1)
-            return self.cv2(torch.cat([x, y1, y2, self.m(y2)], 1))
-
-
-class YOLOSPPCSPC(nn.Module):
-    # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
-    def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, k=(5, 9, 13), act='hswish'
-    ):
-        super().__init__()
-        c_ = int(2 * c2 * e)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv3 = ConvBnAct(c_, c_, 3, 1, act=act)
-        self.cv4 = ConvBnAct(c_, c_, 1, 1, act=act)
-        self.m = nn.ModuleList(
-            [nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k]
-        )
-        self.cv5 = ConvBnAct(4 * c_, c_, 1, 1, act=act)
-        self.cv6 = ConvBnAct(c_, c_, 3, 1, act=act)
-        self.cv7 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
-
-    def forward(self, x):
-        x1 = self.cv4(self.cv3(self.cv1(x)))
-        y1 = self.cv6(self.cv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
-        y2 = self.cv2(x)
-        return self.cv7(torch.cat((y1, y2), dim=1))
-
-
-class YOLOC3(nn.Module):
-    # CSP Bottleneck with 3 convolutions
-    def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu', depth_coef=1
-    ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__()
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv2 = ConvBnAct(c1, c_, 1, 1, act=act)
-        self.cv3 = ConvBnAct(2 * c_, c2, 1, act=act)  # optional act=FReLU(c2)
-        n = n * depth_coef
-        self.m = nn.Sequential(
-            *(
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
-                for _ in range(n)
-            )
-        )
-
-    def forward(self, x):
-        return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), 1))
-
-
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOGhostBottleneck(nn.Module):
     # Ghost Bottleneck https://github.com/huawei-noah/ghostnet
     def __init__(
@@ -283,6 +150,8 @@ class YOLOGhostBottleneck(nn.Module):
         return self.conv(x) + self.shortcut(x)
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSPF(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
@@ -309,6 +178,8 @@ class YOLOBottleneckCSPF(nn.Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSPL(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     # modified by @ivan-lazarevich to have c2 out channels
@@ -336,6 +207,8 @@ class YOLOBottleneckCSPL(nn.Module):
         return self.act(self.bn(torch.cat((y1, y2), dim=1)))
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOBottleneckCSPLG(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     # modified by @lzrvch to have c2 out channels
@@ -363,18 +236,23 @@ class YOLOBottleneckCSPLG(nn.Module):
         return self.act(self.bn(torch.cat((y1, y2), dim=1)))
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class BottleneckCSPA(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSPA, self).__init__()
         c_ = int(c2 * e)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1)
-        self.cv2 = ConvBnAct(c1, c_, 1, 1)
-        self.cv3 = ConvBnAct(2 * c_, c2, 1, 1)
+        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv2 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv3 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
         self.m = nn.Sequential(
-            *[YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0) for _ in range(n)]
+            *[
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                for _ in range(n)
+            ]
         )
 
     def forward(self, x):
@@ -383,18 +261,23 @@ class BottleneckCSPA(nn.Module):
         return self.cv3(torch.cat((y1, y2), dim=1))
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class BottleneckCSPB(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSPB, self).__init__()
         c_ = int(c2)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1)
-        self.cv2 = ConvBnAct(c_, c_, 1, 1)
-        self.cv3 = ConvBnAct(2 * c_, c2, 1, 1)
+        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv2 = ConvBnAct(c_, c_, 1, 1, act=act)
+        self.cv3 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
         self.m = nn.Sequential(
-            *[YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0) for _ in range(n)]
+            *[
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                for _ in range(n)
+            ]
         )
 
     def forward(self, x):
@@ -404,19 +287,24 @@ class BottleneckCSPB(nn.Module):
         return self.cv3(torch.cat((y1, y2), dim=1))
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class BottleneckCSPC(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSPC, self).__init__()
         c_ = int(c2 * e)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, 1, 1)
-        self.cv2 = ConvBnAct(c1, c_, 1, 1)
-        self.cv3 = ConvBnAct(c_, c_, 1, 1)
-        self.cv4 = ConvBnAct(2 * c_, c2, 1, 1)
+        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv2 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv3 = ConvBnAct(c_, c_, 1, 1, act=act)
+        self.cv4 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
         self.m = nn.Sequential(
-            *[YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0) for _ in range(n)]
+            *[
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                for _ in range(n)
+            ]
         )
 
     def forward(self, x):
@@ -425,73 +313,188 @@ class BottleneckCSPC(nn.Module):
         return self.cv4(torch.cat((y1, y2), dim=1))
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class ResCSPA(BottleneckCSPA):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__(c1, c2, n, shortcut, g, e)
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(
-            *[ResNeXtBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)]
+            *[
+                ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut)
+                for _ in range(n)
+            ]
         )
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class ResCSPB(BottleneckCSPB):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__(c1, c2, n, shortcut, g, e)
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2)  # hidden channels
         self.m = nn.Sequential(
-            *[ResNeXtBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)]
+            *[
+                ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut)
+                for _ in range(n)
+            ]
         )
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class ResCSPC(BottleneckCSPC):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__(c1, c2, n, shortcut, g, e)
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(
-            *[ResNeXtBottleneck(c_, c_, groups=g, e=0.5) for _ in range(n)]
+            *[
+                ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut)
+                for _ in range(n)
+            ]
         )
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class GhostCSPA(BottleneckCSPA):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__(c1, c2, n, shortcut, g, e)
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(
-            *[GhostBottleneck(c_, c_, shrink_factor=shrink_factor) for _ in range(n)]
+            *[
+                GhostBottleneck(c_, c_, shrink_factor=shrink_factor, act=act)
+                for _ in range(n)
+            ]
         )
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class GhostCSPB(BottleneckCSPB):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__(c1, c2, n, shortcut, g, e)
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2)  # hidden channels
         self.m = nn.Sequential(
-            *[GhostBottleneck(c_, c_, shrink_factor=shrink_factor) for _ in range(n)]
+            *[
+                GhostBottleneck(c_, c_, shrink_factor=shrink_factor, act=act)
+                for _ in range(n)
+            ]
         )
 
 
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
 class GhostCSPC(BottleneckCSPC):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__(c1, c2, n, shortcut, g, e)
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(
-            *[GhostBottleneck(c_, c_, shrink_factor=shrink_factor) for _ in range(n)]
+            *[
+                GhostBottleneck(c_, c_, shrink_factor=shrink_factor, act=act)
+                for _ in range(n)
+            ]
         )
+
+
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
+class ResXCSPA(ResCSPA):
+    # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
+    def __init__(
+        self, c1, c2, n=1, shortcut=True, g=32, e=0.5, act='relu'
+    ):  # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
+        c_ = int(c2 * e)  # hidden channels
+        self.m = nn.Sequential(
+            *[
+                ResNetBottleneck(c_, c_, groups=g, e=1.0, act=act, shortcut=shortcut)
+                for _ in range(n)
+            ]
+        )
+
+
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
+class ResXCSPB(ResCSPB):
+    # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
+    def __init__(
+        self, c1, c2, n=1, shortcut=True, g=32, e=0.5, act='relu'
+    ):  # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
+        c_ = int(c2)  # hidden channels
+        self.m = nn.Sequential(
+            *[
+                ResNetBottleneck(c_, c_, groups=g, e=1.0, act=act, shortcut=shortcut)
+                for _ in range(n)
+            ]
+        )
+
+
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
+class ResXCSPC(ResCSPC):
+    # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
+    def __init__(
+        self, c1, c2, n=1, shortcut=True, g=32, e=0.5, act='relu'
+    ):  # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__(c1, c2, n, shortcut, g, e, act=act)
+        c_ = int(c2 * e)  # hidden channels
+        self.m = nn.Sequential(
+            *[
+                ResNetBottleneck(c_, c_, groups=g, e=1.0, act=act, shortcut=shortcut)
+                for _ in range(n)
+            ]
+        )
+
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class Stem(nn.Module):
+    # Stem
+    def __init__(
+        self, c1, c2, k=1, s=1, p=None, g=1, act='relu'
+    ):  # ch_in, ch_out, kernel, stride, padding, groups
+        super(Stem, self).__init__()
+        c_ = int(c2 / 2)  # hidden channels
+        self.cv1 = ConvBnAct(c1, c_, 3, 2, act=act)
+        self.cv2 = ConvBnAct(c_, c_, 1, 1, act=act)
+        self.cv3 = ConvBnAct(c_, c_, 3, 2, act=act)
+        self.pool = torch.nn.MaxPool2d(2, stride=2)
+        self.cv4 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
+
+    def forward(self, x):
+        x = self.cv1(x)
+        return self.cv4(torch.cat((self.cv3(self.cv2(x)), self.pool(x)), dim=1))
+
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class DownC(nn.Module):
+    # Spatial pyramid pooling layer used in YOLOv3-SPP
+    def __init__(self, c1, c2, n=1, k=2, act='relu'):
+        super(DownC, self).__init__()
+        c_ = int(c1)  # hidden channels
+        self.cv1 = ConvBnAct(c1, c_, 1, 1, act=act)
+        self.cv2 = ConvBnAct(c_, c2 // 2, 3, k, act=act)
+        self.cv3 = ConvBnAct(c1, c2 // 2, 1, 1, act=act)
+        self.mp = nn.MaxPool2d(kernel_size=k, stride=k)
+
+    def forward(self, x):
+        return torch.cat((self.cv2(self.cv1(x)), self.cv3(self.mp(x))), dim=1)

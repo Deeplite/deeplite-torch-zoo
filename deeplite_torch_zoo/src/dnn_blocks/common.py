@@ -5,15 +5,23 @@
 # The file is modified by Deeplite Inc. from the original implementation on Mar 21, 2023
 # Code refactoring
 
+import numpy as np
+
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 try:
     from mish_cuda import MishCuda as Mish
 except:
+
     class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
         def forward(self, x):
             return x * torch.nn.functional.softplus(x).tanh()
+
+
+from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
+from deeplite_torch_zoo.utils import LOGGER
 
 
 ACT_TYPE_MAP = {
@@ -28,17 +36,23 @@ ACT_TYPE_MAP = {
     'mish': Mish(),
     'leakyrelu': nn.LeakyReLU(negative_slope=0.1, inplace=True),
     'leakyrelu_0.1': nn.LeakyReLU(negative_slope=0.1, inplace=True),
+    'gelu': nn.GELU(),
 }
 
 
 def get_activation(activation_name):
-    return ACT_TYPE_MAP[activation_name] if activation_name else nn.Identity()
+    if activation_name:
+        return ACT_TYPE_MAP[activation_name]
+    LOGGER.warning('No activation specified for get_activation. Returning nn.Identity()')
+    return nn.Identity()
 
 
 def autopad(k, p=None, d=1):  # kernel, padding, dilation
     # Pad to 'same' shape outputs
     if d > 1:
-        k = d * (k - 1) + 1 if isinstance(k, int) else [d * (x - 1) + 1 for x in k]  # actual kernel-size
+        k = (
+            d * (k - 1) + 1 if isinstance(k, int) else [d * (x - 1) + 1 for x in k]
+        )  # actual kernel-size
     if p is None:
         p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
     return p
@@ -51,6 +65,7 @@ def round_channels(channels, divisor=8):
     return rounded_channels
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class ConvBnAct(nn.Module):
     # Standard convolution-batchnorm-activation block
     def __init__(
@@ -116,6 +131,7 @@ class ConvBnAct(nn.Module):
         return out
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class DWConv(ConvBnAct):
     # Depth-wise convolution class
     def __init__(
@@ -136,8 +152,9 @@ class DWConv(ConvBnAct):
         )
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class GhostConv(nn.Module):
-    # Ghost Convolution block https://github.com/huawei-noah/ghostnet
+    # Ghost Convolution https://github.com/huawei-noah/ghostnet
     def __init__(
         self,
         c1,
@@ -145,36 +162,36 @@ class GhostConv(nn.Module):
         k=1,
         s=1,
         g=1,
-        act='relu',
-        dw_k=3,
+        dw_k=5,
         dw_s=1,
+        act='relu',
+        shrink_factor=0.5,
         residual=False,
-        shrink_factor=2,
     ):  # ch_in, ch_out, kernel, stride, groups
-        super().__init__()
-        c_ = int(c2 / shrink_factor)  # hidden channels
-        self.single_conv = False
-        dw_c = c_ * (shrink_factor - 1)
-        if dw_c + c_ != c2:
-            self.cv1 = ConvBnAct(c1, c2, k, s, act=act, g=g)
-            self.single_conv = True
-            return
+        super(GhostConv, self).__init__()
+        c_ = c2 // 2  # hidden channels
 
-        self.cv1 = ConvBnAct(c1, c_, k, s, act=act, g=g)
-        self.cv2 = ConvBnAct(c_, dw_c, dw_k, dw_s, act=act, g=c_)
         self.residual = residual
+        self.single_conv = False
+        if c_ < 2:
+            self.single_conv = True
+            self.cv1 = ConvBnAct(c1, c2, k, s, p=None, g=g, act=act)
+        else:
+            self.cv1 = ConvBnAct(c1, c_, k, s, p=None, g=g, act=act)
+            self.cv2 = ConvBnAct(c_, c_, dw_k, dw_s, p=None, g=c_, act=act)
 
     def forward(self, x):
+        y = self.cv1(x)
         if self.single_conv:
-            return self.cv1(x)
-        if not self.residual:
-            y = self.cv1(x)
-            return torch.cat((y, self.cv2(y)), 1)
-        else:
-            y = self.cv1(x)
-            return x + torch.cat((y, self.cv2(y)), 1)
+            return y
+        return (
+            torch.cat([y, self.cv2(y)], 1)
+            if not self.residual
+            else x + torch.cat([y, self.cv2(y)], 1)
+        )
 
 
+@VARIABLE_CHANNEL_BLOCKS.register()
 class Focus(nn.Module):
     # Focus wh information into c-space
     def __init__(
@@ -259,3 +276,104 @@ class RobustConv2(nn.Module):
         if self.gamma is not None:
             x = x.mul(self.gamma.reshape(1, -1, 1, 1))
         return x
+
+
+class DropBlock2D(nn.Module):
+    """
+    Randomly zeroes 2D spatial blocks of the input tensor.
+    As described in the paper
+    `DropBlock: A regularization method for convolutional networks`_ ,
+    dropping whole blocks of feature map allows to remove semantic
+    information as compared to regular dropout.
+    Args:
+        drop_prob (float): probability of an element to be dropped.
+        block_size (int): size of the block to drop
+    Shape:
+        - Input: `(N, C, H, W)`
+        - Output: `(N, C, H, W)`
+    .. _DropBlock: A regularization method for convolutional networks:
+       https://arxiv.org/abs/1810.12890
+    """
+
+    def __init__(self, drop_prob, block_size):
+        super(DropBlock2D, self).__init__()
+
+        self.drop_prob = drop_prob
+        self.block_size = block_size
+
+    def forward(self, x):
+        # shape: (bsize, channels, height, width)
+
+        assert (
+            x.dim() == 4
+        ), "Expected input with 4 dimensions (bsize, channels, height, width)"
+
+        if not self.training or self.drop_prob == 0.0:
+            return x
+        else:
+            # get gamma value
+            gamma = self._compute_gamma(x)
+
+            # sample mask
+            mask = (torch.rand(x.shape[0], *x.shape[2:]) < gamma).float()
+
+            # place mask on input device
+            mask = mask.to(x.device)
+
+            # compute block mask
+            block_mask = self._compute_block_mask(mask)
+
+            # apply block mask
+            out = x * block_mask[:, None, :, :]
+
+            # scale output
+            out = out * block_mask.numel() / block_mask.sum()
+
+            return out
+
+    def _compute_block_mask(self, mask):
+        block_mask = F.max_pool2d(
+            input=mask[:, None, :, :],
+            kernel_size=(self.block_size, self.block_size),
+            stride=(1, 1),
+            padding=self.block_size // 2,
+        )
+
+        if self.block_size % 2 == 0:
+            block_mask = block_mask[:, :, :-1, :-1]
+
+        block_mask = 1 - block_mask.squeeze(1)
+
+        return block_mask
+
+    def _compute_gamma(self, x):
+        return self.drop_prob / (self.block_size**2)
+
+
+class LinearScheduler(nn.Module):
+    def __init__(self, dropblock, start_value, stop_value, nr_steps):
+        super(LinearScheduler, self).__init__()
+        self.dropblock = dropblock
+        self.i = 0
+        self.drop_values = np.linspace(
+            start=start_value, stop=stop_value, num=int(nr_steps)
+        )
+
+    def forward(self, x):
+        return self.dropblock(x)
+
+    def step(self):
+        if self.i < len(self.drop_values):
+            self.dropblock.drop_prob = self.drop_values[self.i]
+
+        self.i += 1
+
+
+class Concat(nn.Module):
+    # Concatenate a list of tensors along dimension
+    def __init__(self, dimension=1):
+        super(Concat, self).__init__()
+        self.d = dimension
+
+    def forward(self, x):
+        return torch.cat(x, self.d)

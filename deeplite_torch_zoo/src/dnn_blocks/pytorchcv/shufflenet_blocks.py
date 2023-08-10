@@ -3,8 +3,7 @@
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.common import (ConvBnAct, DWConv,
-                                                      get_activation)
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct, DWConv, get_activation
 from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.common import ChannelShuffle
 
 
@@ -27,15 +26,10 @@ class ShuffleUnit(nn.Module):
     ignore_group : bool
         Whether ignore group value in the first convolution layer.
     """
-    def __init__(self,
-                 c1,
-                 c2,
-                 g=1,
-                 e=4,
-                 dw_k=3,
-                 act='relu',
-                 downsample=False,
-                 ignore_group=False):
+
+    def __init__(
+        self, c1, c2, g=1, e=4, dw_k=3, act='relu', downsample=False, ignore_group=False
+    ):
         super(ShuffleUnit, self).__init__()
         self.downsample = downsample
         mid_channels = c2 // e
@@ -44,7 +38,9 @@ class ShuffleUnit(nn.Module):
             c2 -= c1
 
         if c1 != c2:
-            raise ValueError('Input and output channel count of ShuffleUnit does not match')
+            raise ValueError(
+                'Input and output channel count of ShuffleUnit does not match'
+            )
 
         self.compress_conv_bn_act1 = ConvBnAct(
             c1=c1,
@@ -54,23 +50,17 @@ class ShuffleUnit(nn.Module):
             act=act,
         )
 
-        self.c_shuffle = ChannelShuffle(
-            channels=mid_channels,
-            groups=g)
+        self.c_shuffle = ChannelShuffle(channels=mid_channels, groups=g)
 
         self.dw_conv_bn2 = DWConv(
             c1=mid_channels,
             c2=mid_channels,
             k=dw_k,
             s=(2 if self.downsample else 1),
-            act=False)
+            act=False,
+        )
 
-        self.expand_conv_bn3 = ConvBnAct(
-            c1=mid_channels,
-            c2=c2,
-            k=1,
-            g=g,
-            act=False)
+        self.expand_conv_bn3 = ConvBnAct(c1=mid_channels, c2=c2, k=1, g=g, act=False)
 
         if downsample:
             self.avgpool = nn.AvgPool2d(kernel_size=3, stride=2, padding=1)
@@ -93,7 +83,7 @@ class ShuffleUnit(nn.Module):
 
 def _test_blocks(c1, c2, b=2, res=32):
     # perform a basic forward pass
-    input = torch.rand((b,c1,res, res), device=None, requires_grad=False)
+    input = torch.rand((b, c1, res, res), device=None, requires_grad=False)
 
     fire_block = ShuffleUnit(c1, c2)
     output = fire_block(input)
@@ -101,4 +91,4 @@ def _test_blocks(c1, c2, b=2, res=32):
 
 
 if __name__ == "__main__":
-    _test_blocks(32, 32) #  c1 == c2
+    _test_blocks(32, 32)  #  c1 == c2

@@ -1,9 +1,0 @@
-[submodule "deeplite_torch_zoo/src/segmentation/unet_scse/repo"]
-	path = deeplite_torch_zoo/src/segmentation/unet_scse/repo
-	url = https://github.com/nyoki-mtl/pytorch-segmentation.git
-[submodule "deeplite_torch_zoo/src/segmentation/deeplab/repo"]
-	path = deeplite_torch_zoo/src/segmentation/deeplab/repo
-	url = https://github.com/jfzhang95/pytorch-deeplab-xception.git
-[submodule "deeplite_torch_zoo/src/objectdetection/mb_ssd/repo"]
-	path = deeplite_torch_zoo/src/objectdetection/mb_ssd/repo
-	url = https://github.com/qfgaohao/pytorch-ssd.git

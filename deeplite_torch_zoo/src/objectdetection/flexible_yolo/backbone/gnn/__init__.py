@@ -1,1 +1,0 @@
-from .gnn import gnn

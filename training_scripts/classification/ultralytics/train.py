@@ -11,18 +11,19 @@ import torch
 import torch.distributed as dist
 import torch.nn.functional as F
 import torch.optim.lr_scheduler as lr_scheduler
-from kd import KDTeacher
+
 from torch.cuda import amp
 from tqdm import tqdm
-from utils.general import (LOGGER, WorkingDirectory, colorstr, increment_path,
-                           init_seeds, print_args, yaml_save)
-from utils.torch_utils import (GenericLogger, ModelEMA, select_device,
-                               smart_DDP, smart_optimizer,
-                               smartCrossEntropyLoss,
-                               torch_distributed_zero_first)
 
-from deeplite_torch_zoo import (create_model, get_data_splits_by_name,
+from deeplite_torch_zoo.utils import (LOGGER, GenericLogger, ModelEMA, colorstr, init_seeds, print_args,
+                                      yaml_save, increment_path, WorkingDirectory,
+                                      select_device, smart_DDP, smart_optimizer,
+                                      smartCrossEntropyLoss, torch_distributed_zero_first)
+
+from deeplite_torch_zoo import (create_model, get_dataloaders,
                                 get_eval_function)
+from deeplite_torch_zoo.utils.kd import KDTeacher
+
 
 ROOT = Path.cwd()
 
@@ -49,10 +50,9 @@ def train(opt, device):
     logger = GenericLogger(opt=opt, console_logger=LOGGER) if RANK in {-1, 0} else None
 
     # Dataloaders
-    dataloaders = get_data_splits_by_name(
+    dataloaders = get_dataloaders(
         data_root=opt.data_root,
         dataset_name=opt.dataset,
-        model_name=opt.model,
         batch_size=bs,
         test_batch_size=opt.test_batch_size,
         img_size=imgsz,
