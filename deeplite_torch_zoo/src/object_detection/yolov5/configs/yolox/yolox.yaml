@@ -1,3 +1,5 @@
+# Credit: https://github.com/jizhishutong/YOLOU
+
 # Parameters
 nc: 1  # number of classes
 depth_multiple: 1.0  # model depth multiple

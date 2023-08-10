@@ -1,4 +1,6 @@
 # create by pogg
+# Credit: https://github.com/jizhishutong/YOLOU
+
 # parameters
 nc: 80  # number of classes
 depth_multiple: 1.0  # model depth multiple
