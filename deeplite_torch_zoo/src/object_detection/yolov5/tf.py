@@ -9,6 +9,8 @@ Usage:
 Export:
     $ python export.py --weights yolov5s.pt --include saved_model pb tflite tfjs
 """
+# The file is modified by Deeplite Inc. from the original implementation on Mar 10, 2023
+# Added support for ReLU activation
 
 from copy import deepcopy
 from pathlib import Path
