@@ -4,7 +4,7 @@ import glob
 import numpy as np
 import pandas as pd
 from torchvision.transforms import ToTensor
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 import rawpy
 
 from deeplite_torch_zoo.api.datasets.utils import get_dataloader
@@ -28,7 +28,6 @@ def get_raise_6k(
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
-    
     metadata_file = os.path.join(data_root, "RAISE_6k.csv")
     image_folder = os.path.join(data_root, "NEF")
     train_dataset = RAISEDataset(
@@ -62,14 +61,14 @@ def get_raise_6k(
 
 
 class RAISEDataset(Dataset):
-    def __init__(self, 
-                 root, 
-                 metadata_file, 
+    def __init__(self,
+                 root,
+                 metadata_file,
                  split: str = "train",
                  transform = None,
                  split_percentage=0.8,
                  ):
-        
+
         self.data_dir = root
         self.transform = transform
         self.split = split
@@ -83,9 +82,6 @@ class RAISEDataset(Dataset):
             self.image_files = self.image_files[num_train_images:]
 
         self.classes = set()
-        
-    def __len__(self):
-        return len(self.image_files)
 
     def __getitem__(self, index):
         image_path = self.image_files[index]
@@ -94,7 +90,7 @@ class RAISEDataset(Dataset):
         image = rawpy.imread(image_path)
         raw_image = image.raw_image
         raw_image = raw_image.astype(np.float16)
-        
+
         if self.transform:
             raw_image = self.transform(raw_image)
         else:
@@ -104,6 +100,6 @@ class RAISEDataset(Dataset):
         labels_name = keywords.split(";")
         label = 0 if "outdoor" in labels_name else 1
         return image, label
-    
+
     def __len__(self) -> int:
         return len(self.image_files)
