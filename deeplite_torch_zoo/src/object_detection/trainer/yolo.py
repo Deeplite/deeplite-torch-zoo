@@ -2,7 +2,7 @@
 
 from ultralytics.yolo.engine.model import YOLO
 from ultralytics.yolo.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, callbacks
-from deeplite_torch_zoo import create_model
+from deeplite_torch_zoo import get_model
 
 
 def patched_init(obj, model_name, num_classes=None,
@@ -21,9 +21,9 @@ def patched_init(obj, model_name, num_classes=None,
     obj.num_classes = num_classes
 
     obj.cfg = model_name
-    obj.model = create_model(
+    obj.model = get_model(
         model_name=model_name,
-        pretraining_dataset=pretraining_dataset,
+        dataset_name=pretraining_dataset,
         pretrained=pretrained,
         num_classes=num_classes,
         custom_head='v8',  # can only work with v8 head as of now

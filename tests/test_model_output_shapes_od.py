@@ -1,7 +1,6 @@
 import pytest
 
-from deeplite_torch_zoo import (create_model, get_dataloaders,
-                                get_model, list_models_by_dataset)
+from deeplite_torch_zoo import get_dataloaders, get_model, list_models_by_dataset
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 
@@ -66,10 +65,10 @@ def test_detection_model_output_shape_arbitrary_num_clases(
     output_shapes,
     download_checkpoint
     ):
-    model = create_model(
+    model = get_model(
         model_name=model_name,
         num_classes=TEST_NUM_CLASSES,
-        pretraining_dataset='coco',
+        dataset_name='coco',
         pretrained=download_checkpoint,
     )
     dataloader = get_dataloaders(
