@@ -29,7 +29,7 @@ LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable
 RANK = int(os.getenv('RANK', -1))
 WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
-from deeplite_torch_zoo import get_eval_function, get_dataloaders, create_model
+from deeplite_torch_zoo import get_eval_function, get_dataloaders, get_model
 
 from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolov5_loss import YOLOv5Loss
 from deeplite_torch_zoo.utils import strip_optimizer, LOGGER, TQDM_BAR_FORMAT, colorstr, increment_path, \
@@ -63,9 +63,9 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
     init_seeds(opt.seed + 1 + RANK, deterministic=True)
 
     # Image size
-    model = create_model(
+    model = get_model(
         model_name=opt.model_name,
-        pretraining_dataset=opt.pretraining_dataset,
+        dataset_name=opt.pretraining_dataset,
         pretrained=False,
     ).to(device)
 
@@ -104,9 +104,9 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         nc = 1 if single_cls else int(dataset.data['nc'])  # number of classes
 
     # Model
-    model = create_model(
+    model = get_model(
         model_name=opt.model_name,
-        pretraining_dataset=opt.pretraining_dataset,
+        dataset_name=opt.pretraining_dataset,
         pretrained=opt.pretrained,
         num_classes=nc,
     ).to(device)

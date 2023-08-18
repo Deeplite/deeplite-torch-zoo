@@ -37,7 +37,7 @@ from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
-from deeplite_torch_zoo import create_model, get_dataloaders
+from deeplite_torch_zoo import get_model, get_dataloaders
 from deeplite_torch_zoo.utils.kd import KDTeacher
 
 try:
@@ -420,9 +420,9 @@ def main():
     )
     loader_train, loader_eval = data_splits['train'], data_splits['test']
 
-    model = create_model(
+    model = get_model(
         model_name=args.model,
-        pretraining_dataset=args.pretraining_dataset,
+        dataset_name=args.pretraining_dataset,
         num_classes=len(loader_train.dataset.classes),
         pretrained=args.pretrained,
     )

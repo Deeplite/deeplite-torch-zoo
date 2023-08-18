@@ -46,12 +46,10 @@ model = get_model(
 
 # creating a model with 42 classes for transfer learning:
 
-from deeplite_torch_zoo import create_model
-
-model = create_model(
+model = get_model(
     model_name='fasternet_t0',        # model names for imagenet available via `list_models('imagenet')`
     num_classes=42,                   # number of classes for transfer learning
-    pretraining_dataset='imagenet',   # take weights from checkpoint pre-trained on this dataset
+    dataset_name='imagenet',   # take weights from checkpoint pre-trained on this dataset
     pretrained=False,                 # if True, will try to load all weights with matching tensor shapes
 )
 ```
