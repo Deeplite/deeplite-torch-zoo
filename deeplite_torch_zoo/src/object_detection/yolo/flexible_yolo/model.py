@@ -8,10 +8,10 @@ from addict import Dict
 import torch
 from torch import nn
 
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.backbone import (
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.backbone import (
     build_backbone,
 )
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.neck import build_neck
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck import build_neck
 from deeplite_torch_zoo.src.object_detection.yolo.heads import Detect, DetectV8
 from deeplite_torch_zoo.src.object_detection.yolo.yolov5 import (
     Conv,

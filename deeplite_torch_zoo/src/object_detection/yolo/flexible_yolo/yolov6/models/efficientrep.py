@@ -2,7 +2,7 @@
 
 from torch import nn
 
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6.layers.common import (
     CSPSPPF,
     SPPF,
     BepC3,

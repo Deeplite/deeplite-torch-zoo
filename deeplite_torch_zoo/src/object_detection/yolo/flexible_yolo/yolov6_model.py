@@ -1,9 +1,9 @@
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.model import FlexibleYOLO
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6 import build_network
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.config import Config
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.model import FlexibleYOLO
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6 import build_network
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6.config import Config
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6.layers.common import (
     RepVGGBlock,
 )
 
