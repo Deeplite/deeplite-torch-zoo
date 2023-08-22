@@ -12,22 +12,19 @@ from deeplite_torch_zoo.src.object_detection.flexible_yolo.backbone import (
     build_backbone,
 )
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.neck import build_neck
-from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.heads.v8.detect_v8 import (
-    DetectV8,
-)
-from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
-    HEAD_NAME_MAP,
+from deeplite_torch_zoo.src.object_detection.yolo.heads import Detect, DetectV8
+from deeplite_torch_zoo.src.object_detection.yolo.yolov5 import (
     Conv,
     DWConv,
     RepConv,
-    YOLOModel,
+    DetectionModel,
     fuse_conv_and_bn,
 )
+from deeplite_torch_zoo.src.object_detection.yolo.config_parser import HEAD_NAME_MAP
 from deeplite_torch_zoo.utils import initialize_weights, LOGGER
 
 
-class FlexibleYOLO(YOLOModel):
+class FlexibleYOLO(DetectionModel):
     def __init__(
         self,
         model_config,

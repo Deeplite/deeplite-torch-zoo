@@ -59,9 +59,9 @@ class DWConvTranspose2d(nn.ConvTranspose2d):
 
 def attempt_load(weights, device=None, inplace=True, fuse=True):
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
-    from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
+    from deeplite_torch_zoo.src.object_detection.yolo.yolov5 import (
         Detect,
-        YOLOModel,
+        DetectionModel,
     )
 
     model = Ensemble()
@@ -90,7 +90,7 @@ def attempt_load(weights, device=None, inplace=True, fuse=True):
             nn.ReLU6,
             nn.SiLU,
             Detect,
-            YOLOModel,
+            DetectionModel,
         ):
             m.inplace = inplace  # torch 1.7.0 compatibility
             if t is Detect and not isinstance(m.anchor_grid, list):

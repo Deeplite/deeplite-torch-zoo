@@ -6,17 +6,17 @@ from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.config import 
 from deeplite_torch_zoo.src.object_detection.flexible_yolo.yolov6.layers.common import (
     RepVGGBlock,
 )
-from deeplite_torch_zoo.src.object_detection.yolov5.heads.detect import Detect
-from deeplite_torch_zoo.src.object_detection.yolov5.anchors import ANCHOR_REGISTRY
 
-
-from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
-    HEAD_NAME_MAP,
+from deeplite_torch_zoo.src.object_detection.yolo.heads import Detect
+from deeplite_torch_zoo.src.object_detection.yolo.anchors import ANCHOR_REGISTRY
+from deeplite_torch_zoo.src.object_detection.yolo.yolov5 import (
     Conv,
     DWConv,
     RepConv,
     fuse_conv_and_bn,
 )
+from deeplite_torch_zoo.src.object_detection.yolo.config_parser import HEAD_NAME_MAP
+
 from deeplite_torch_zoo.utils import initialize_weights, LOGGER
 
 
@@ -34,7 +34,7 @@ class YOLOv6(FlexibleYOLO):
             'anchors': anchors if anchors is not None \
                 else ANCHOR_REGISTRY.get('default')(),
         }
-        
+
         head_cls = Detect
         if custom_head is not None:
             head_cls = HEAD_NAME_MAP[custom_head]
