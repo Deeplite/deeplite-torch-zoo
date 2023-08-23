@@ -31,7 +31,7 @@ WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 from deeplite_torch_zoo import get_eval_function, get_dataloaders, get_model
 
-from deeplite_torch_zoo.src.object_detection.yolov5.losses.yolov5_loss import YOLOv5Loss
+from deeplite_torch_zoo.src.object_detection.yolo.losses import YOLOv5Loss
 from deeplite_torch_zoo.utils import strip_optimizer, LOGGER, TQDM_BAR_FORMAT, colorstr, increment_path, \
     init_seeds, one_cycle, print_args, yaml_save, check_img_size, \
     EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer

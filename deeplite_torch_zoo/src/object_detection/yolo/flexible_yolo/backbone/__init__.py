@@ -1,4 +1,4 @@
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.backbone.resnet import resnet
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.backbone.resnet import resnet
 
 
 __all__ = ['build_backbone']
