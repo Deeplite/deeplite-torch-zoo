@@ -1,3 +1,5 @@
+import torch
+
 from deeplite_torch_zoo.src.object_detection.eval.evaluate import evaluate
 from deeplite_torch_zoo.api.registries import EVAL_WRAPPER_REGISTRY
 
@@ -17,6 +19,8 @@ def evaluate_detector(
     half=True,
     compute_loss=None,
 ):
+    if not torch.cuda.is_available():
+        device = 'cpu'
     model.to(device)
     ap_dict = evaluate(
         model,
