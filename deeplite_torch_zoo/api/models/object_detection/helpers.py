@@ -11,11 +11,11 @@ from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 
 DATASET_LIST = [
-    ('person_detection', 1),
     ('voc', 20),
     ('coco', 80),
-    ('voc07', 20),
-    ('custom_person_detection', 1),
+    ('coco128', 80),
+    ('coco8', 80),
+    ('SKU-110K', 1),
 ]
 
 

@@ -1,66 +1,38 @@
-import numpy as np
+import torch
 
 from deeplite_torch_zoo.src.object_detection.eval.evaluate import evaluate
 from deeplite_torch_zoo.api.registries import EVAL_WRAPPER_REGISTRY
 
 
-@EVAL_WRAPPER_REGISTRY.register(
-    task_type='object_detection', model_type='yolo', dataset_type='voc07'
-)
-@EVAL_WRAPPER_REGISTRY.register(
-    task_type='object_detection', model_type='yolo', dataset_type='voc'
-)
-def yolo_eval_voc(
+@EVAL_WRAPPER_REGISTRY.register(task_type='object_detection')
+def evaluate_detector(
     model,
     test_dataloader,
-    device="cuda",
-    iou_thresh=0.5,
-    conf_thresh=0.001,
-    nms_thresh=0.5,
-    eval_style='coco',
-    progressbar=False,
-    subclasses=None,
-    num_classes=None,
+    device='cuda',
+    iou_thres=0.6,
+    conf_thres=0.001,
+    num_classes=80,
     v8_eval=False,
-    **kwargs
+    max_det=300,
+    single_cls=False,
+    augment=False,
+    half=True,
+    compute_loss=None,
 ):
+    if not torch.cuda.is_available():
+        device = 'cpu'
     model.to(device)
     ap_dict = evaluate(
         model,
         test_dataloader,
-        conf_thres=conf_thresh,
-        iou_thres=nms_thresh,
-        eval_style=eval_style,
-        map_iou_thresh=iou_thresh,
+        conf_thres=conf_thres,
+        iou_thres=iou_thres,
         num_classes=num_classes,
         v8_eval=v8_eval,
-    )
-    return ap_dict
-
-
-@EVAL_WRAPPER_REGISTRY.register(
-    task_type='object_detection', model_type='yolo', dataset_type='coco'
-)
-def yolo_eval_coco(
-    model,
-    test_dataloader,
-    device="cuda",
-    conf_thresh=0.001,
-    nms_thresh=0.5,
-    eval_style='coco',
-    progressbar=False,
-    subclasses=None,
-    num_classes=None,
-    **kwargs
-):
-    model.to(device)
-    ap_dict = evaluate(
-        model,
-        test_dataloader,
-        conf_thres=conf_thresh,
-        iou_thres=nms_thresh,
-        eval_style=eval_style,
-        map_iou_thresh=np.arange(0.5, 1.0, 0.05),
-        num_classes=num_classes,
+        max_det=max_det,
+        single_cls=single_cls,
+        augment=augment,
+        half=half,
+        compute_loss=compute_loss,
     )
     return ap_dict

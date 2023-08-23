@@ -20,10 +20,6 @@ from deeplite_torch_zoo.api.datasets.classification.mnist import get_mnist
 from deeplite_torch_zoo.api.datasets.classification.tiny_imagenet import \
     get_tinyimagenet
 from deeplite_torch_zoo.api.datasets.classification.vww import get_vww
-from deeplite_torch_zoo.api.datasets.object_detection.yolo import \
-    create_coco_datasets as ccd_yolo
-from deeplite_torch_zoo.api.datasets.object_detection.yolo import \
-    create_widerface_datasets as cwd_yolo
 
 
 @mock.patch('deeplite_torch_zoo.api.datasets.classification.cifar._get_cifar')
@@ -136,10 +132,3 @@ def test_unit_mnist(*args):
 @mock.patch('deeplite_torch_zoo.api.datasets.classification.tiny_imagenet.create_loader', create_loader)
 def test_unit_tinyimagenet(*args):
     get_tinyimagenet('')
-
-
-@mock.patch('deeplite_torch_zoo.api.datasets.object_detection.yolo.CocoDetectionBoundingBox')
-@mock.patch('deeplite_torch_zoo.api.datasets.object_detection.yolo.WiderFace')
-def test_unit_yolo(*args):
-    ccd_yolo('', 0, mock.MagicMock())
-    cwd_yolo('', 0, mock.MagicMock())

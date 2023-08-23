@@ -20,8 +20,7 @@ from deeplite_torch_zoo.utils import (LOGGER, GenericLogger, ModelEMA, colorstr,
                                       select_device, smart_DDP, smart_optimizer,
                                       smartCrossEntropyLoss, torch_distributed_zero_first)
 
-from deeplite_torch_zoo import (create_model, get_dataloaders,
-                                get_eval_function)
+from deeplite_torch_zoo import get_model, get_dataloaders, get_eval_function
 from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss
 
 
@@ -53,7 +52,6 @@ def train(opt, device):
     dataloaders = get_dataloaders(
         data_root=opt.data_root,
         dataset_name=opt.dataset,
-        model_name=opt.model,
         batch_size=bs,
         test_batch_size=opt.test_batch_size,
         img_size=imgsz,
@@ -64,9 +62,9 @@ def train(opt, device):
     # Model
     opt.num_classes = len(trainloader.dataset.classes)
     with torch_distributed_zero_first(LOCAL_RANK), WorkingDirectory(ROOT):
-        model = create_model(
+        model = get_model(
             model_name=opt.model,
-            pretraining_dataset=opt.pretraining_dataset,
+            dataset_name=opt.pretraining_dataset,
             num_classes=opt.num_classes,
             pretrained=pretrained,
         )
@@ -252,7 +250,7 @@ def main(opt):
         print_args(vars(opt))
 
     # DDP mode
-    device = select_device(opt.device)
+    device = select_device(opt.device, batch=opt.batch_size)
     if LOCAL_RANK != -1:
         assert opt.batch_size != -1, 'AutoBatch is coming soon for classification, please pass a valid --batch-size'
         assert opt.batch_size % WORLD_SIZE == 0, f'--batch-size {opt.batch_size} must be multiple of WORLD_SIZE'

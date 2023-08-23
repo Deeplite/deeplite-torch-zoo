@@ -40,9 +40,14 @@ from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler_v2, scheduler_kwargs
 from timm.utils import ApexScaler, NativeScaler
 
+<<<<<<< HEAD
 from deeplite_torch_zoo import create_model, get_dataloaders
 from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss
 from deeplite_torch_zoo.utils.checkpoint_saver import CheckpointSaver
+=======
+from deeplite_torch_zoo import get_model, get_dataloaders
+from deeplite_torch_zoo.utils.kd import KDTeacher
+>>>>>>> develop
 
 try:
     from apex import amp
@@ -452,9 +457,9 @@ def main():
         **args.model_kwargs,
     }
 
-    model = create_model(
+    model = get_model(
         model_name=args.model,
-        pretraining_dataset=args.pretraining_dataset,
+        dataset_name=args.pretraining_dataset,
         pretrained=args.pretrained,
         num_classes=args.num_classes,
         **model_kwargs
@@ -637,7 +642,6 @@ def main():
 
     dataloaders = get_dataloaders(
         dataset_name=args.dataset,
-        model_name=args.model,
         data_root=args.data_dir,
         img_size=data_config['input_size'],
         batch_size=args.batch_size,

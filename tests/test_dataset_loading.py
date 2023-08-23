@@ -8,13 +8,7 @@ from deeplite_torch_zoo import get_dataloaders
 
 DATASETS_ROOT = Path('/neutrino/datasets/')
 BATCH_SIZE = 128
-DATASET_MODEL_MAP = {
-    'cifar100': 'resnet18',
-    'cifar10': 'resnet18',
-    'imagenette': 'resnet18',
-    'imagewoof': 'resnet18',
-    'mnist': 'lenet5_mnist',
-}
+
 
 @pytest.mark.parametrize(
     ('dataset_name', 'tmp_dataset_files', 'tmp_dataset_folders',
@@ -34,7 +28,6 @@ def test_get_dataloaders(dataset_name, tmp_dataset_files, tmp_dataset_folders,
     dataloaders = get_dataloaders(
         data_root=data_root,
         dataset_name=dataset_name,
-        model_name=DATASET_MODEL_MAP[dataset_name],
         batch_size=BATCH_SIZE,
         test_batch_size=BATCH_SIZE,
     )
@@ -62,7 +55,6 @@ def test_get_dataloaders_local(dataset_name, data_root, train_dataloader_len, te
     dataloaders = get_dataloaders(
         data_root=data_root,
         dataset_name=dataset_name,
-        model_name=DATASET_MODEL_MAP[dataset_name],
         batch_size=BATCH_SIZE,
         test_batch_size=BATCH_SIZE,
     )

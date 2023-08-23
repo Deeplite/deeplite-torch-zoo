@@ -1,4 +1,4 @@
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.model import FlexibleYOLO
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.model import FlexibleYOLO
 from deeplite_torch_zoo.api.models.object_detection.helpers import (
     make_wrapper_func, get_project_root, load_pretrained_model, DATASET_LIST
 )

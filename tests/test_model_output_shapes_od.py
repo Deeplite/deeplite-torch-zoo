@@ -1,114 +1,87 @@
-from pathlib import Path
-
 import pytest
-import torch
 
-from deeplite_torch_zoo import (create_model, get_dataloaders,
-                                get_model, list_models_by_dataset)
+from deeplite_torch_zoo import get_dataloaders, get_model, list_models_by_dataset
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
-MOCK_DATASETS_PATH = Path('tests/fixture/datasets')
-MOCK_VOC_PATH = MOCK_DATASETS_PATH / 'VOCdevkit'
-MOCK_PERSONDET_PATH = MOCK_DATASETS_PATH / 'person_detection'
 
-TEST_BATCH_SIZE = 2
+TEST_BATCH_SIZE = 4
 TEST_NUM_CLASSES = 42
+COCO_NUM_CLASSES = 80
 
 BLACKLIST = ('yolo5_6sa', 'yolo3_tiny', 'yolo_fdresnet18x0.25', 'yolo_fdresnet18x0.5')
 
 DETECTION_MODEL_TESTS = []
 
 
-for model_name in list_models_by_dataset('voc'):
-    if 'yolo' in model_name and model_name not in BLACKLIST:
+for model_name in list_models_by_dataset('coco', with_checkpoint=True):
+    if model_name not in BLACKLIST:
         download_checkpoint = False
         if model_name in MODEL_WRAPPER_REGISTRY.pretrained_models:
             download_checkpoint = True
-        DETECTION_MODEL_TESTS.append((model_name, 'voc', {'img_size': 448, 'num_classes': 20},
-            [(3, 56, 56), (3, 28, 28), (3, 14, 14)], MOCK_VOC_PATH, download_checkpoint))
-
-
-for model_name in list_models_by_dataset('person_detection'):
-    if 'yolo' in model_name and model_name not in BLACKLIST:
-        download_checkpoint = False
-        if model_name in MODEL_WRAPPER_REGISTRY.pretrained_models:
-            download_checkpoint = True
-        DETECTION_MODEL_TESTS.append((model_name, 'person_detection', {'img_size': 320, 'num_classes': 1},
-            [(3, 40, 40), (3, 20, 20), (3, 10, 10)], MOCK_PERSONDET_PATH, download_checkpoint))
+        DETECTION_MODEL_TESTS.append((model_name, 'coco8', {'image_size': 480},
+            [(3, 64, 64), (3, 32, 32), (3, 16, 16)], download_checkpoint))
 
 
 @pytest.mark.parametrize(
-    ('model_name', 'dataset_name', 'datasplit_kwargs', 'output_shapes',
-     'mock_dataset_path', 'download_checkpoint'),
+    ('model_name', 'dataset_name', 'dataloader_kwargs', 'output_shapes', 'download_checkpoint'),
     DETECTION_MODEL_TESTS
 )
-def test_detection_model_output_shape(model_name, dataset_name, datasplit_kwargs,
-    output_shapes, mock_dataset_path, download_checkpoint):
+def test_detection_model_output_shape(
+    model_name,
+    dataset_name,
+    dataloader_kwargs,
+    output_shapes,
+    download_checkpoint
+    ):
     model = get_model(
         model_name=model_name,
-        dataset_name=dataset_name,
+        dataset_name='coco',
         pretrained=download_checkpoint,
     )
-    train_loader = get_dataloaders(
-        data_root=mock_dataset_path,
+    dataloader = get_dataloaders(
+        data_root='./',
         dataset_name=dataset_name,
-        model_name=model_name,
         batch_size=TEST_BATCH_SIZE,
         num_workers=0,
-        **datasplit_kwargs,
-    )['train']
-
-    if 'yolo' in model_name:
-        dataset = train_loader.dataset
-        img, *_ = dataset[0]
-        y = model(torch.unsqueeze(img, dim=0))
-        y[0].sum().backward()
-        assert y[0].shape == (1, *output_shapes[0], datasplit_kwargs['num_classes'] + 5)
-        assert y[1].shape == (1, *output_shapes[1], datasplit_kwargs['num_classes'] + 5)
-        assert y[2].shape == (1, *output_shapes[2], datasplit_kwargs['num_classes'] + 5)
-    else:
-        img, _, _ = next(iter(train_loader))
-        model.eval()
-        y1, y2 = model(img)
-        y1.sum().backward()
-        assert y1.shape == (TEST_BATCH_SIZE, *output_shapes[0], datasplit_kwargs['num_classes'] + 1)
-        assert y2.shape == (TEST_BATCH_SIZE, *output_shapes[1])
+        **dataloader_kwargs,
+    )['test']
+    img, *_ = next(iter(dataloader))
+    img = img / 255
+    y = model(img)
+    y[0].sum().backward()
+    assert y[0].shape == (4, *output_shapes[0], COCO_NUM_CLASSES + 5)
+    assert y[1].shape == (4, *output_shapes[1], COCO_NUM_CLASSES + 5)
+    assert y[2].shape == (4, *output_shapes[2], COCO_NUM_CLASSES + 5)
 
 
 @pytest.mark.parametrize(
-    ('model_name', 'dataset_name', 'datasplit_kwargs', 'output_shapes',
-     'mock_dataset_path', 'download_checkpoint'),
+    ('model_name', 'dataset_name', 'dataloader_kwargs', 'output_shapes', 'download_checkpoint'),
     DETECTION_MODEL_TESTS
 )
-def test_detection_model_output_shape_arbitrary_num_clases(model_name, dataset_name, datasplit_kwargs,
-    output_shapes, mock_dataset_path, download_checkpoint):
-    model = create_model(
+def test_detection_model_output_shape_arbitrary_num_clases(
+    model_name,
+    dataset_name,
+    dataloader_kwargs,
+    output_shapes,
+    download_checkpoint
+    ):
+    model = get_model(
         model_name=model_name,
         num_classes=TEST_NUM_CLASSES,
-        pretraining_dataset=dataset_name,
+        dataset_name='coco',
         pretrained=download_checkpoint,
     )
-    train_loader = get_dataloaders(
-        data_root=mock_dataset_path,
+    dataloader = get_dataloaders(
+        data_root='./',
         dataset_name=dataset_name,
-        model_name=model_name,
         batch_size=TEST_BATCH_SIZE,
         num_workers=0,
-        **datasplit_kwargs,
-    )['train']
-
-    if 'yolo' in model_name:
-        dataset = train_loader.dataset
-        img, *_ = dataset[0]
-        y = model(torch.unsqueeze(img, dim=0))
-        y[0].sum().backward()
-        assert y[0].shape == (1, *output_shapes[0], TEST_NUM_CLASSES + 5)
-        assert y[1].shape == (1, *output_shapes[1], TEST_NUM_CLASSES + 5)
-        assert y[2].shape == (1, *output_shapes[2], TEST_NUM_CLASSES + 5)
-    else:
-        img, _, _ = next(iter(train_loader))
-        model.eval()
-        y1, y2 = model(img)
-        y1.sum().backward()
-        assert y1.shape == (TEST_BATCH_SIZE, *output_shapes[0], TEST_NUM_CLASSES + 1)
-        assert y2.shape == (TEST_BATCH_SIZE, *output_shapes[1])
+        **dataloader_kwargs,
+    )['test']
+    img, *_ = next(iter(dataloader))
+    img = img / 255
+    y = model(img)
+    y[0].sum().backward()
+    assert y[0].shape == (4, *output_shapes[0], TEST_NUM_CLASSES + 5)
+    assert y[1].shape == (4, *output_shapes[1], TEST_NUM_CLASSES + 5)
+    assert y[2].shape == (4, *output_shapes[2], TEST_NUM_CLASSES + 5)

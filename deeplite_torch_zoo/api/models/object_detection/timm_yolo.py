@@ -1,4 +1,4 @@
-from deeplite_torch_zoo.src.object_detection.flexible_yolo.timm_model import TimmYOLO
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.timm_model import TimmYOLO
 from deeplite_torch_zoo.api.models.object_detection.helpers import make_wrapper_func, load_pretrained_model, DATASET_LIST
 from deeplite_torch_zoo.api.models.object_detection.timm_yolo_backbones import SUPPORTED_BACKBONES
 

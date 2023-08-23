@@ -1,1 +1,2 @@
 recursive-include deeplite_torch_zoo/src *.yaml
+recursive-include deeplite_torch_zoo/api *.yaml

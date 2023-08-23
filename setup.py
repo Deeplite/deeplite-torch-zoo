@@ -20,7 +20,6 @@ INSTALL_REQUIRES = [
     "opencv-python<=4.6.0.66",
     "scipy>=1.4.1",
     "numpy==1.20.0",
-    "pycocotools==2.0.4",
     "Cython==0.29.30",
     "tqdm>=4.46.0",
     "albumentations==1.0.3",
@@ -40,7 +39,7 @@ INSTALL_REQUIRES = [
 
 setup(
     name="deeplite-torch-zoo",
-    version="2.0.0",
+    version="2.0.1",
     description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
     long_description=long_description,
     long_description_content_type="text/markdown",
