@@ -20,8 +20,7 @@ from deeplite_torch_zoo.utils import (LOGGER, GenericLogger, ModelEMA, colorstr,
                                       select_device, smart_DDP, smart_optimizer,
                                       smartCrossEntropyLoss, torch_distributed_zero_first)
 
-from deeplite_torch_zoo import (create_model, get_dataloaders,
-                                get_eval_function)
+from deeplite_torch_zoo import get_model, get_dataloaders, get_eval_function
 from deeplite_torch_zoo.utils.kd import KDTeacher
 
 
@@ -63,9 +62,9 @@ def train(opt, device):
     # Model
     opt.num_classes = len(trainloader.dataset.classes)
     with torch_distributed_zero_first(LOCAL_RANK), WorkingDirectory(ROOT):
-        model = create_model(
+        model = get_model(
             model_name=opt.model,
-            pretraining_dataset=opt.pretraining_dataset,
+            dataset_name=opt.pretraining_dataset,
             num_classes=opt.num_classes,
             pretrained=pretrained,
         )

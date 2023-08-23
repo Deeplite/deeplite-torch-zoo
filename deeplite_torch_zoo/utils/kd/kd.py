@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as T
 
-from deeplite_torch_zoo import create_model
+from deeplite_torch_zoo import get_model
 from deeplite_torch_zoo.utils import LOGGER
 
 try:
@@ -23,9 +23,9 @@ class KDTeacher(nn.Module):
         if args.kd_model_checkpoint is not None:
             pretrained = False
 
-        model_kd = create_model(
+        model_kd = get_model(
             model_name=args.kd_model_name,
-            pretraining_dataset='imagenet',
+            dataset_name='imagenet',
             pretrained=pretrained,
             num_classes=args.num_classes,
         )
