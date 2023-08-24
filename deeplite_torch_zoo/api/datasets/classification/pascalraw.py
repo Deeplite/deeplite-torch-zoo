@@ -4,18 +4,19 @@ from pathlib import Path
 import glob
 import numpy as np
 import pandas as pd
+import torch
 from torchvision.transforms import ToTensor
 from torch.utils.data import Dataset
 import rawpy
 
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import create_loader
 from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
 
 
 __all__ = ["get_pascal_raw"]
 
 
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="raw_pascal_raw")
+@DATASET_WRAPPER_REGISTRY.register(dataset_name="pascal_raw")
 def get_pascal_raw(
     data_root="",
     batch_size=2,
@@ -29,32 +30,29 @@ def get_pascal_raw(
 ):
     if data_root == "":
         data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
-    image_folder = os.path.join(data_root, "NEF")
-    train_dataset = PASCALRAWDataset(
-        root=image_folder, metadata_file=metadata_file,
-        split='train', transform=train_transforms)
+    image_folder = data_root
+    train_dataset = PASCALRAWDataset(root=image_folder, split='train', transform=train_transforms)
+    test_dataset = PASCALRAWDataset(root=image_folder, split='test', transform=val_transforms)
 
-    test_dataset = PASCALRAWDataset(
-        root=image_folder, metadata_file=metadata_file,
-        split='test', transform=val_transforms)
-
-    train_loader = get_dataloader(
+    train_loader = create_loader(
         train_dataset,
+        input_size=[224, 224, 3],
         batch_size=batch_size,
+        is_training=True,
         num_workers=num_workers,
-        fp16=fp16,
         distributed=distributed,
-        shuffle=not distributed,
+        img_dtype=torch.float16,
     )
 
     test_batch_size = batch_size if test_batch_size is None else test_batch_size
-    test_loader = get_dataloader(
+    test_loader = create_loader(
         test_dataset,
+        input_size=224,
         batch_size=test_batch_size,
+        is_training=False,
         num_workers=num_workers,
-        fp16=fp16,
         distributed=distributed,
-        shuffle=False,
+        img_dtype=torch.float16,
     )
 
     return {"train": train_loader, "test": test_loader}
@@ -73,9 +71,8 @@ class PASCALRAWDataset(Dataset):
         self.data_dir = root
         self.transform = transform
         self.split = split
-        self.image_files = glob.glob(os.path.join(root, "*.NEF"))
-        self.image_files = glob.glob(os.path.join(root, "**/*.tiff", recursive=True))
-        np.random.shuffle(image_files)
+        self.image_files = glob.glob(os.path.join(root, "**/*.tiff"), recursive=True)
+        np.random.shuffle(self.image_files)
         num_train_images = int(len(self.image_files)* split_percentage)
 
         if split == "train":
