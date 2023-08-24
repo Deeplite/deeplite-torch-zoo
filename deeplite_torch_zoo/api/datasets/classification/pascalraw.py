@@ -26,6 +26,7 @@ def get_pascal_raw(
     distributed=False,
     train_transforms=None,
     val_transforms=None,
+    input_size=[224, 224, 3],
     **kwargs,
 ):
     if data_root == "":
@@ -36,7 +37,7 @@ def get_pascal_raw(
 
     train_loader = create_loader(
         train_dataset,
-        input_size=[224, 224, 3],
+        input_size=input_size,
         batch_size=batch_size,
         is_training=True,
         num_workers=num_workers,
@@ -47,7 +48,7 @@ def get_pascal_raw(
     test_batch_size = batch_size if test_batch_size is None else test_batch_size
     test_loader = create_loader(
         test_dataset,
-        input_size=224,
+        input_size=input_size,
         batch_size=test_batch_size,
         is_training=False,
         num_workers=num_workers,
