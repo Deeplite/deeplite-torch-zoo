@@ -25,7 +25,7 @@ INSTALL_REQUIRES = [
     "albumentations==1.0.3",
     "tensorboardX==2.4.1",
     "pyvww==0.1.1",
-    "timm==0.5.4",
+    "timm==0.9.2",
     "pytorchcv==0.0.67",
     "texttable==1.6.4",
     "torchprofile==0.0.4",

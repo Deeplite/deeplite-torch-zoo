@@ -1,3 +1,11 @@
+""" Loader Factory, Fast Collate, CUDA Prefetcher
+
+Prefetcher and Fast Collate inspired by NVIDIA APEX example at
+https://github.com/NVIDIA/apex/commit/d5e2bb4bdeedd27b1dfaf5bb2b24d6c000dee9be#diff-cf86c282ff7fba81fad27a559379d5bf
+
+Hacked together by / Copyright 2019, Ross Wightman
+"""
+
 from functools import partial
 
 import torch
@@ -76,7 +84,7 @@ def create_loader(
     )
     try:
         loader = loader_class(dataset, **loader_args)
-    except TypeError as e:
+    except TypeError:
         loader_args.pop('persistent_workers')  # only in Pytorch 1.7+
         loader = loader_class(dataset, **loader_args)
     if use_prefetcher:

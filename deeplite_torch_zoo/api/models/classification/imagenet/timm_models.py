@@ -10,8 +10,8 @@ def make_wrapper_func(wrapper_fn_name, model_name_key):
     )
     def wrapper_func(pretrained=False, num_classes=NUM_IMAGENET_CLASSES, **model_kwargs):
         model = timm.create_model(
-            model_name_key, 
-            pretrained=pretrained, 
+            model_name_key,
+            pretrained=pretrained,
             num_classes=num_classes,
             **model_kwargs
         )
