@@ -1,306 +1,395 @@
 import os
 from os.path import expanduser
-from pathlib import Path
 
-import PIL.Image
-from torchvision.datasets.utils import download_and_extract_archive, verify_str_arg
-from torchvision.datasets.vision import VisionDataset
+import torch
 
+from deeplite_torch_zoo.src.classification.datasets.imagewoof import Imagewoof
 from deeplite_torch_zoo.src.classification.augmentations.augs import (
     get_imagenet_transforms,
     get_vanilla_transforms,
 )
-from deeplite_torch_zoo.api.datasets.utils import get_dataloader
+from deeplite_torch_zoo.api.datasets.utils import create_loader
 from deeplite_torch_zoo.api.registries import DATASET_WRAPPER_REGISTRY
-
-__all__ = ["get_imagewoof", "get_imagewoof_320", "get_imagewoof_160"]
-
-
-IMAGEWOOF_IMAGENET_CLS_LABEL_MAP = (155, 159, 162, 167, 182, 193, 207, 229, 258, 273)
+from deeplite_torch_zoo.src.classification.augmentations.augs import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, DEFAULT_CROP_PCT
 
 
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagewoof")
-def get_imagewoof(
-    data_root="",
-    batch_size=64,
-    val_batch_size=None,
+__all__ = ['get_imagewoof', 'get_imagewoof_320', 'get_imagewoof_160']
+
+
+def _get_imagewoof(
+    data_root=None,
     img_size=224,
-    num_workers=4,
-    fp16=False,
-    download=True,
-    distributed=False,
-    augmentation_mode='imagenet',
-    **kwargs,
-):
-    if data_root == "":
-        data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
-
-    _URL = "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof.zip"
-
-    if augmentation_mode not in ('vanilla', 'imagenet'):
-        raise ValueError(
-            f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"'
-        )
-
-    if augmentation_mode == 'imagenet':
-        train_transforms, val_transforms = get_imagenet_transforms(img_size)
-    else:
-        train_transforms, val_transforms = get_vanilla_transforms(img_size)
-
-    train_dataset = Imagewoof(
-        root=data_root,
-        split='train',
-        download=download,
-        transform=train_transforms,
-        url=_URL,
-    )
-
-    val_dataset = Imagewoof(
-        root=data_root,
-        split='val',
-        download=download,
-        transform=val_transforms,
-        url=_URL,
-    )
-
-    train_loader = get_dataloader(
-        train_dataset,
-        batch_size=batch_size,
-        num_workers=num_workers,
-        fp16=fp16,
-        distributed=distributed,
-        shuffle=not distributed,
-    )
-
-    val_batch_size = batch_size if val_batch_size is None else val_batch_size
-    val_loader = get_dataloader(
-        val_dataset,
-        batch_size=val_batch_size,
-        num_workers=num_workers,
-        fp16=fp16,
-        distributed=distributed,
-        shuffle=False,
-    )
-
-    return {"train": train_loader, "test": val_loader}
-
-
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagewoof_320")
-def get_imagewoof_320(
-    data_root="",
     batch_size=64,
-    val_batch_size=None,
-    img_size=224,
-    num_workers=4,
-    fp16=False,
+    test_batch_size=None,
     download=True,
-    distributed=False,
-    augmentation_mode='imagenet',
-    **kwargs,
-):
-    if data_root == "":
-        data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
-
-    _URL = (
-        "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof320.zip"
-    )
-
-    if augmentation_mode not in ('vanilla', 'imagenet'):
-        raise ValueError(
-            f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"'
-        )
-
-    if augmentation_mode == 'imagenet':
-        train_transforms, val_transforms = get_imagenet_transforms(img_size)
-    else:
-        train_transforms, val_transforms = get_vanilla_transforms(img_size)
-
-    train_dataset = Imagewoof(
-        root=data_root,
-        split='train',
-        download=download,
-        transform=train_transforms,
-        url=_URL,
-    )
-
-    val_dataset = Imagewoof(
-        root=data_root,
-        split='val',
-        download=download,
-        transform=val_transforms,
-        url=_URL,
-    )
-
-    train_loader = get_dataloader(
-        train_dataset,
-        batch_size=batch_size,
-        num_workers=num_workers,
-        fp16=fp16,
-        distributed=distributed,
-        shuffle=not distributed,
-    )
-
-    val_batch_size = batch_size if val_batch_size is None else val_batch_size
-    val_loader = get_dataloader(
-        val_dataset,
-        batch_size=val_batch_size,
-        num_workers=num_workers,
-        fp16=fp16,
-        distributed=distributed,
-        shuffle=False,
-    )
-
-    return {"train": train_loader, "test": val_loader}
-
-
-@DATASET_WRAPPER_REGISTRY.register(dataset_name="imagewoof_160")
-def get_imagewoof_160(
-    data_root="",
-    batch_size=64,
-    val_batch_size=None,
-    img_size=160,
-    num_workers=4,
-    fp16=False,
-    download=True,
-    distributed=False,
-    augmentation_mode='imagenet',
+    dataset_url=None,
+    use_prefetcher=False,
     map_to_imagenet_labels=False,
-    **kwargs,
+    num_workers=1,
+    distributed=False,
+    pin_memory=False,
+    device=torch.device('cuda'),
+    augmentation_mode='imagenet',
+    train_transforms=None,
+    val_transforms=None,
+    mean=IMAGENET_DEFAULT_MEAN,
+    std=IMAGENET_DEFAULT_STD,
+    crop_pct=DEFAULT_CROP_PCT,
+    scale=(0.08, 1.0),
+    ratio=(3.0 / 4.0, 4.0 / 3.0),
+    hflip=0.5,
+    vflip=0.0,
+    color_jitter=0.4,
+    auto_augment=None,
+    train_interpolation='random',
+    test_interpolation='bilinear',
+    re_prob=0.0,
+    re_mode='pixel',
+    re_count=1,
+    re_split=False,
+    num_aug_splits=0,
+    num_aug_repeats=0,
+    no_aug=False,
+    collate_fn=None,
+    use_multi_epochs_loader=False,
+    worker_seeding='all',
 ):
-    if data_root == "":
-        data_root = os.path.join(expanduser("~"), ".deeplite-torch-zoo")
+    if isinstance(device, str):
+        device = torch.device(device)
 
-    _URL = (
-        "https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof160.zip"
-    )
+    if data_root is None:
+        data_root = os.path.join(expanduser('~'), '.deeplite-torch-zoo')
 
     if augmentation_mode not in ('vanilla', 'imagenet'):
         raise ValueError(
             f'Wrong value of augmentation_mode arg: {augmentation_mode}. Choices: "vanilla", "imagenet"'
         )
 
+    re_num_splits = 0
+    if re_split:
+        # apply RE to second half of batch if no aug split otherwise line up with aug split
+        re_num_splits = num_aug_splits or 2
     if augmentation_mode == 'imagenet':
-        train_transforms, val_transforms = get_imagenet_transforms(img_size)
+        default_train_transforms, default_val_transforms = get_imagenet_transforms(
+            img_size,
+            mean=mean,
+            std=std,
+            crop_pct=crop_pct,
+            scale=scale,
+            ratio=ratio,
+            hflip=hflip,
+            vflip=vflip,
+            color_jitter=color_jitter,
+            auto_augment=auto_augment,
+            train_interpolation=train_interpolation,
+            test_interpolation=test_interpolation,
+            re_prob=re_prob,
+            re_mode=re_mode,
+            re_count=re_count,
+            re_num_splits=re_num_splits,
+            use_prefetcher=use_prefetcher,
+        )
     else:
-        train_transforms, val_transforms = get_vanilla_transforms(img_size)
+        default_train_transforms, default_val_transforms = get_vanilla_transforms(
+            img_size,
+            hflip=hflip,
+            jitter=color_jitter,
+            mean=mean,
+            std=std,
+            crop_pct=crop_pct,
+            use_prefetcher=use_prefetcher,
+        )
 
-    train_dataset = Imagewoof(
+    dataset_train = Imagewoof(
         root=data_root,
         split='train',
         download=download,
-        transform=train_transforms,
-        url=_URL,
+        transform=train_transforms or default_train_transforms,
+        url=dataset_url,
         map_to_imagenet_labels=map_to_imagenet_labels,
     )
 
-    val_dataset = Imagewoof(
+    dataset_eval = Imagewoof(
         root=data_root,
         split='val',
         download=download,
-        transform=val_transforms,
-        url=_URL,
+        transform=val_transforms or default_val_transforms,
+        url=dataset_url,
         map_to_imagenet_labels=map_to_imagenet_labels,
     )
 
-    train_loader = get_dataloader(
-        train_dataset,
+    train_loader = create_loader(
+        dataset_train,
+        input_size=img_size,
         batch_size=batch_size,
+        is_training=True,
+        use_prefetcher=use_prefetcher,
+        no_aug=no_aug,
+        re_prob=re_prob,
+        re_mode=re_mode,
+        re_count=re_count,
+        num_aug_repeats=num_aug_repeats,
+        re_num_splits=re_num_splits,
+        mean=mean,
+        std=std,
         num_workers=num_workers,
-        fp16=fp16,
         distributed=distributed,
-        shuffle=not distributed,
+        collate_fn=collate_fn,
+        pin_memory=pin_memory,
+        device=device,
+        use_multi_epochs_loader=use_multi_epochs_loader,
+        worker_seeding=worker_seeding,
     )
 
-    val_batch_size = batch_size if val_batch_size is None else val_batch_size
-    val_loader = get_dataloader(
-        val_dataset,
-        batch_size=val_batch_size,
+    test_loader = create_loader(
+        dataset_eval,
+        input_size=img_size,
+        batch_size=test_batch_size or batch_size,
+        is_training=False,
+        use_prefetcher=use_prefetcher,
+        mean=mean,
+        std=std,
         num_workers=num_workers,
-        fp16=fp16,
         distributed=distributed,
-        shuffle=False,
+        pin_memory=pin_memory,
+        device=device,
     )
 
-    return {"train": train_loader, "test": val_loader}
+    return {'train': train_loader, 'test': test_loader}
 
 
-class Imagewoof(VisionDataset):
-    def __init__(
-        self,
-        root: str,
-        split: str = "train",
-        transform=None,
-        target_transform=None,
-        download: bool = False,
-        url: str = "",
-        map_to_imagenet_labels=False,
-    ) -> None:
-        super().__init__(root, transform=transform, target_transform=target_transform)
-        self._split = verify_str_arg(split, "split", ("train", "val"))
-        self.url = url
-        if url[-7:] == "320.zip":
-            self._base_folder = Path(self.root) / "imagewoof320"
-        elif url[-7:] == "160.zip":
-            self._base_folder = Path(self.root) / "imagewoof160"
-        else:
-            self._base_folder = Path(self.root) / "imagewoof"
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='imagewoof')
+def get_imagewoof(
+    data_root=None,
+    img_size=224,
+    batch_size=64,
+    test_batch_size=None,
+    download=True,
+    dataset_url='https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof.zip',
+    use_prefetcher=False,
+    map_to_imagenet_labels=False,
+    num_workers=1,
+    distributed=False,
+    pin_memory=False,
+    device=torch.device('cuda'),
+    augmentation_mode='imagenet',
+    train_transforms=None,
+    val_transforms=None,
+    mean=IMAGENET_DEFAULT_MEAN,
+    std=IMAGENET_DEFAULT_STD,
+    crop_pct=DEFAULT_CROP_PCT,
+    scale=(0.08, 1.0),
+    ratio=(3.0 / 4.0, 4.0 / 3.0),
+    hflip=0.5,
+    vflip=0.0,
+    color_jitter=0.4,
+    auto_augment=None,
+    train_interpolation='random',
+    test_interpolation='bilinear',
+    re_prob=0.0,
+    re_mode='pixel',
+    re_count=1,
+    re_split=False,
+    num_aug_splits=0,
+    num_aug_repeats=0,
+    no_aug=False,
+    collate_fn=None,
+    use_multi_epochs_loader=False,
+    worker_seeding='all',
+):
+    return _get_imagewoof(
+        data_root=data_root,
+        img_size=img_size,
+        batch_size=batch_size,
+        test_batch_size=test_batch_size,
+        download=download,
+        dataset_url=dataset_url,
+        use_prefetcher=use_prefetcher,
+        map_to_imagenet_labels=map_to_imagenet_labels,
+        num_workers=num_workers,
+        distributed=distributed,
+        pin_memory=pin_memory,
+        device=device,
+        augmentation_mode=augmentation_mode,
+        train_transforms=train_transforms,
+        val_transforms=val_transforms,
+        mean=mean,
+        std=std,
+        crop_pct=crop_pct,
+        scale=scale,
+        ratio=ratio,
+        hflip=hflip,
+        vflip=vflip,
+        color_jitter=color_jitter,
+        auto_augment=auto_augment,
+        train_interpolation=train_interpolation,
+        test_interpolation=test_interpolation,
+        re_prob=re_prob,
+        re_mode=re_mode,
+        re_count=re_count,
+        re_split=re_split,
+        num_aug_splits=num_aug_splits,
+        num_aug_repeats=num_aug_repeats,
+        no_aug=no_aug,
+        collate_fn=collate_fn,
+        use_multi_epochs_loader=use_multi_epochs_loader,
+        worker_seeding=worker_seeding,
+    )
 
-        if download:
-            self._download()
 
-        if not self._check_exists():
-            raise RuntimeError(
-                "Dataset not found. You can use download=True to download it"
-            )
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='imagewoof_320')
+def get_imagewoof_320(
+    data_root=None,
+    img_size=320,
+    batch_size=64,
+    test_batch_size=None,
+    download=True,
+    dataset_url='https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof320.zip',
+    use_prefetcher=False,
+    map_to_imagenet_labels=False,
+    num_workers=1,
+    distributed=False,
+    pin_memory=False,
+    device=torch.device('cuda'),
+    augmentation_mode='imagenet',
+    train_transforms=None,
+    val_transforms=None,
+    mean=IMAGENET_DEFAULT_MEAN,
+    std=IMAGENET_DEFAULT_STD,
+    crop_pct=DEFAULT_CROP_PCT,
+    scale=(0.08, 1.0),
+    ratio=(3.0 / 4.0, 4.0 / 3.0),
+    hflip=0.5,
+    vflip=0.0,
+    color_jitter=0.4,
+    auto_augment=None,
+    train_interpolation='random',
+    test_interpolation='bilinear',
+    re_prob=0.0,
+    re_mode='pixel',
+    re_count=1,
+    re_split=False,
+    num_aug_splits=0,
+    num_aug_repeats=0,
+    no_aug=False,
+    collate_fn=None,
+    use_multi_epochs_loader=False,
+    worker_seeding='all',
+):
+    return _get_imagewoof(
+        data_root=data_root,
+        img_size=img_size,
+        batch_size=batch_size,
+        test_batch_size=test_batch_size,
+        download=download,
+        dataset_url=dataset_url,
+        use_prefetcher=use_prefetcher,
+        map_to_imagenet_labels=map_to_imagenet_labels,
+        num_workers=num_workers,
+        distributed=distributed,
+        pin_memory=pin_memory,
+        device=device,
+        augmentation_mode=augmentation_mode,
+        train_transforms=train_transforms,
+        val_transforms=val_transforms,
+        mean=mean,
+        std=std,
+        crop_pct=crop_pct,
+        scale=scale,
+        ratio=ratio,
+        hflip=hflip,
+        vflip=vflip,
+        color_jitter=color_jitter,
+        auto_augment=auto_augment,
+        train_interpolation=train_interpolation,
+        test_interpolation=test_interpolation,
+        re_prob=re_prob,
+        re_mode=re_mode,
+        re_count=re_count,
+        re_split=re_split,
+        num_aug_splits=num_aug_splits,
+        num_aug_repeats=num_aug_repeats,
+        no_aug=no_aug,
+        collate_fn=collate_fn,
+        use_multi_epochs_loader=use_multi_epochs_loader,
+        worker_seeding=worker_seeding,
+    )
 
-        self._labels = []
-        self._image_files = []
 
-        self.classes = sorted(
-            entry.name
-            for entry in os.scandir(self._base_folder / "train")
-            if entry.is_dir()
-        )
-        self.class_to_idx = {cls_name: i for i, cls_name in enumerate(self.classes)}
-
-        for target_class in sorted(self.class_to_idx.keys()):
-            class_index = self.class_to_idx[target_class]
-            target_dir = os.path.join(self._base_folder / f"{split}", target_class)
-            for folder, _, fnames in sorted(os.walk(target_dir, followlinks=True)):
-                for fname in sorted(fnames):
-                    path = os.path.join(folder, fname)
-                    self._labels.append(class_index)
-                    self._image_files.append(path)
-
-        self._map_to_imagenet_labels = map_to_imagenet_labels
-
-    def __len__(self) -> int:
-        return len(self._image_files)
-
-    def __getitem__(self, idx):
-        image_file, label = self._image_files[idx], self._labels[idx]
-        image = PIL.Image.open(image_file).convert("RGB")
-
-        if self._map_to_imagenet_labels:
-            label = IMAGEWOOF_IMAGENET_CLS_LABEL_MAP[label]
-
-        if self.transform:
-            image = self.transform(image)
-
-        if self.target_transform:
-            label = self.target_transform(label)
-
-        return image, label
-
-    def extra_repr(self) -> str:
-        return f"split={self._split}"
-
-    def _check_exists(self) -> bool:
-        return all(
-            folder.exists() and folder.is_dir() for folder in (self._base_folder,)
-        )
-
-    def _download(self) -> None:
-        if self._check_exists():
-            return
-        download_and_extract_archive(self.url, download_root=self.root)
+@DATASET_WRAPPER_REGISTRY.register(dataset_name='imagewoof_160')
+def get_imagewoof_160(
+    data_root=None,
+    img_size=160,
+    batch_size=64,
+    test_batch_size=None,
+    download=True,
+    dataset_url='https://github.com/ultralytics/yolov5/releases/download/v1.0/imagewoof160.zip',
+    use_prefetcher=False,
+    map_to_imagenet_labels=False,
+    num_workers=1,
+    distributed=False,
+    pin_memory=False,
+    device=torch.device('cuda'),
+    augmentation_mode='imagenet',
+    train_transforms=None,
+    val_transforms=None,
+    mean=IMAGENET_DEFAULT_MEAN,
+    std=IMAGENET_DEFAULT_STD,
+    crop_pct=DEFAULT_CROP_PCT,
+    scale=(0.08, 1.0),
+    ratio=(3.0 / 4.0, 4.0 / 3.0),
+    hflip=0.5,
+    vflip=0.0,
+    color_jitter=0.4,
+    auto_augment=None,
+    train_interpolation='random',
+    test_interpolation='bilinear',
+    re_prob=0.0,
+    re_mode='pixel',
+    re_count=1,
+    re_split=False,
+    num_aug_splits=0,
+    num_aug_repeats=0,
+    no_aug=False,
+    collate_fn=None,
+    use_multi_epochs_loader=False,
+    worker_seeding='all',
+):
+    return _get_imagewoof(
+        data_root=data_root,
+        img_size=img_size,
+        batch_size=batch_size,
+        test_batch_size=test_batch_size,
+        download=download,
+        dataset_url=dataset_url,
+        use_prefetcher=use_prefetcher,
+        map_to_imagenet_labels=map_to_imagenet_labels,
+        num_workers=num_workers,
+        distributed=distributed,
+        pin_memory=pin_memory,
+        device=device,
+        augmentation_mode=augmentation_mode,
+        train_transforms=train_transforms,
+        val_transforms=val_transforms,
+        mean=mean,
+        std=std,
+        crop_pct=crop_pct,
+        scale=scale,
+        ratio=ratio,
+        hflip=hflip,
+        vflip=vflip,
+        color_jitter=color_jitter,
+        auto_augment=auto_augment,
+        train_interpolation=train_interpolation,
+        test_interpolation=test_interpolation,
+        re_prob=re_prob,
+        re_mode=re_mode,
+        re_count=re_count,
+        re_split=re_split,
+        num_aug_splits=num_aug_splits,
+        num_aug_repeats=num_aug_repeats,
+        no_aug=no_aug,
+        collate_fn=collate_fn,
+        use_multi_epochs_loader=use_multi_epochs_loader,
+        worker_seeding=worker_seeding,
+    )

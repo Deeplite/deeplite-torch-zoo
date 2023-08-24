@@ -14,11 +14,11 @@ BATCH_SIZE = 128
     ('dataset_name', 'tmp_dataset_files', 'tmp_dataset_folders',
      'train_dataloader_len', 'test_dataloader_len'),
     [
-        ('cifar100', ('cifar-100-python.tar.gz', ), ('cifar-100-python', ), 391, 79),
-        ('cifar10', ('cifar-10-python.tar.gz', ), ('cifar-10-batches-py', ), 391, 79),
-        ('imagenette', ('imagenette.zip', ), ('imagenette', ), 74, 31),
-        ('imagewoof', ('imagewoof.zip', ), ('imagewoof', ), 71, 31),
-        ('mnist', (), ('MNIST', ), 469, 79),
+        ('cifar100', ('cifar-100-python.tar.gz', ), ('cifar-100-python', ), 390, 79),
+        ('cifar10', ('cifar-10-python.tar.gz', ), ('cifar-10-batches-py', ), 390, 79),
+        ('imagenette', ('imagenette.zip', ), ('imagenette', ), 73, 31),
+        ('imagewoof', ('imagewoof.zip', ), ('imagewoof', ), 70, 31),
+        ('mnist', (), ('MNIST', ), 468, 79),
     ],
 )
 def test_get_dataloaders(dataset_name, tmp_dataset_files, tmp_dataset_folders,
@@ -28,7 +28,8 @@ def test_get_dataloaders(dataset_name, tmp_dataset_files, tmp_dataset_folders,
     dataloaders = get_dataloaders(
         data_root=data_root,
         dataset_name=dataset_name,
-        batch_size=BATCH_SIZE
+        batch_size=BATCH_SIZE,
+        test_batch_size=BATCH_SIZE,
     )
     assert len(dataloaders['train']) == train_dataloader_len
     assert len(dataloaders['test']) == test_dataloader_len
@@ -54,7 +55,8 @@ def test_get_dataloaders_local(dataset_name, data_root, train_dataloader_len, te
     dataloaders = get_dataloaders(
         data_root=data_root,
         dataset_name=dataset_name,
-        batch_size=BATCH_SIZE
+        batch_size=BATCH_SIZE,
+        test_batch_size=BATCH_SIZE,
     )
     assert len(dataloaders['train']) == train_dataloader_len
     assert len(dataloaders['test']) == test_dataloader_len

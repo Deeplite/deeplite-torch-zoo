@@ -21,7 +21,7 @@ from deeplite_torch_zoo.utils import (LOGGER, GenericLogger, ModelEMA, colorstr,
                                       smartCrossEntropyLoss, torch_distributed_zero_first)
 
 from deeplite_torch_zoo import get_model, get_dataloaders, get_eval_function
-from deeplite_torch_zoo.utils.kd import KDTeacher
+from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss
 
 
 ROOT = Path.cwd()
@@ -132,20 +132,12 @@ def train(opt, device):
                 loss = criterion(output, labels)
 
                 if model_kd is not None:
-                    # student probability calculation
-                    prob_s = F.log_softmax(output, dim=-1)
-
-                    # teacher probability calculation
-                    with torch.no_grad():
-                        input_kd = model_kd.normalize_input(images, model)
-                        out_t = model_kd.model(input_kd.detach())
-                        prob_t = F.softmax(out_t, dim=-1)
-
-                    # adding KL loss
-                    if not opt.use_kd_only_loss:
-                        loss += opt.alpha_kd * F.kl_div(prob_s, prob_t, reduction='batchmean')
-                    else: # only kid
-                        loss = opt.alpha_kd * F.kl_div(prob_s, prob_t, reduction='batchmean')
+                    kd_loss = compute_kd_loss(images, output, model_kd, model)
+                    # adding KD loss
+                    if not opt.use_kd_loss_only:
+                        loss += opt.alpha_kd * kd_loss
+                    else:
+                        loss = opt.alpha_kd * kd_loss
 
             # Backward
             scaler.scale(loss).backward()
@@ -236,7 +228,7 @@ def parse_opt(known=False):
     parser.add_argument('--model', type=str, default='resnet18')
     parser.add_argument('--dataset', type=str, default='cifar100', help='cifar10, cifar100, mnist, imagenet, ...')
     parser.add_argument('--pretraining-dataset', type=str, default='imagenet')
-    parser.add_argument('--epochs', type=int, default=200, help='total training epochs')
+    parser.add_argument('--epochs', type=int, default=300, help='total training epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs')
     parser.add_argument('--test-batch-size', type=int, default=256, help='testing batch size')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=224, help='train, val image size (pixels)')
@@ -258,7 +250,7 @@ def parse_opt(known=False):
     parser.add_argument('--kd_model_name', default=None, type=str)
     parser.add_argument('--kd_model_checkpoint', default=None, type=str)
     parser.add_argument('--alpha_kd', default=5, type=float)
-    parser.add_argument('--use_kd_only_loss', action='store_true', default=False)
+    parser.add_argument('--use_kd_loss_only', action='store_true', default=False)
 
     parser.add_argument('--dryrun', action='store_true', help='Dry run mode for testing')
 

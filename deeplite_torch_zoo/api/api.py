@@ -51,7 +51,7 @@ def get_model(
     dataset_name,
     pretrained=True,
     num_classes=None,
-    **kwargs,
+    **model_kwargs,
 ):
     """
     Tries to find a matching model creation wrapper function in the registry and uses it to create a new model object
@@ -67,7 +67,7 @@ def get_model(
     )
     model_wrapper_kwargs = {
         'pretrained': pretrained,
-        **kwargs,
+        **model_kwargs,
     }
     if num_classes is not None:
         LOGGER.warning(
