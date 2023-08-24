@@ -11,14 +11,15 @@ from deeplite_torch_zoo import get_dataloaders, get_model
 from deeplite_torch_zoo.utils import LOGGER
 
 
-def train_epoch(model, train_loader, optimizer, epoch, writer):
+def train_epoch(model, train_loader, optimizer, epoch, writer, dryrun=False):
     model.train()
 
     total_loss = []
 
     for data, target in tqdm(train_loader):
-        data = data.cuda()
-        target = target.cuda()
+        if torch.cuda.is_available():
+            data = data.cuda()
+            target = target.cuda()
 
         optimizer.zero_grad()
 
@@ -27,8 +28,10 @@ def train_epoch(model, train_loader, optimizer, epoch, writer):
 
         loss.backward()
         optimizer.step()
-
         total_loss.append(loss.item())
+
+        if dryrun:
+            break
 
     avg_loss = sum(total_loss) / len(total_loss)
 
@@ -46,8 +49,9 @@ def test(model, test_loader, epoch, writer):
 
     for data, target in test_loader:
         with torch.no_grad():
-            data = data.cuda()
-            target = target.cuda()
+            if torch.cuda.is_available():
+                data = data.cuda()
+                target = target.cuda()
 
             prediction = model(data)
             loss += F.nll_loss(F.log_softmax(prediction, dim=1), target, reduction="sum")
@@ -87,10 +91,11 @@ def train(args, model=None, data_splits=None):
     model = get_model(
         model_name=args.model,
         dataset_name=args.dataset_name,
-        pretrained=False
+        pretrained=False,
     )
 
-    model = model.cuda()
+    if torch.cuda.is_available():
+        model = model.cuda()
 
     optimizer = torch.optim.SGD(
         model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay
@@ -100,11 +105,15 @@ def train(args, model=None, data_splits=None):
     )
 
     for epoch in range(1, args.epochs + 1):
-        train_epoch(model, train_loader, optimizer, epoch, writer)
-        test(model, test_loader, epoch, writer)
+        train_epoch(model, train_loader, optimizer, epoch, writer, dryrun=args.dryrun)
+        if args.dryrun:
+            break
+        test(model, test_loader, epoch, writer, dryrun=args.dryrun)
         scheduler.step()
 
-    torch.save(model.state_dict(), f"{args.model}_cifar100.pt")
+
+    if not args.dryrun:
+        torch.save(model.state_dict(), f"{args.model}_cifar100.pt")
 
 
 if __name__ == "__main__":
@@ -122,6 +131,8 @@ if __name__ == "__main__":
     parser.add_argument('--model', type=str, default='resnet50', help='Model architecture (default: resnet50)')
     parser.add_argument('--dataset_name', type=str, default='cifar100', help='Name of the dataset (default: cifar100)')
     parser.add_argument('--data_root', type=str, default='./', help='Root directory of the dataset (default: ./)')
+
+    parser.add_argument('--dryrun', action='store_true', help='Dry run mode for testing')
 
     args = parser.parse_args()
     train(args)

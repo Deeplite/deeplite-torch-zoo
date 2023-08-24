@@ -13,8 +13,7 @@ import logging
 import torch
 
 from timm.utils.model import unwrap_model, get_state_dict
-
-_logger = logging.getLogger(__name__)
+from deeplite_torch_zoo.utils import LOGGER
 
 
 class CheckpointSaver:  # don't save optimizer state dict, since it forces specific repo sturcture
@@ -83,7 +82,7 @@ class CheckpointSaver:  # don't save optimizer state dict, since it forces speci
             checkpoints_str = "Current checkpoints:\n"
             for c in self.checkpoint_files:
                 checkpoints_str += ' {}\n'.format(c)
-            _logger.info(checkpoints_str)
+            LOGGER.info(checkpoints_str)
 
             if metric is not None and (self.best_metric is None or self.cmp(metric, self.best_metric)):
                 self.best_epoch = epoch
@@ -124,10 +123,10 @@ class CheckpointSaver:  # don't save optimizer state dict, since it forces speci
         to_delete = self.checkpoint_files[delete_index:]
         for d in to_delete:
             try:
-                _logger.debug("Cleaning checkpoint: {}".format(d))
+                LOGGER.debug("Cleaning checkpoint: {}".format(d))
                 os.remove(d[0])
             except Exception as e:
-                _logger.error("Exception '{}' while deleting checkpoint".format(e))
+                LOGGER.error("Exception '{}' while deleting checkpoint".format(e))
         self.checkpoint_files = self.checkpoint_files[:delete_index]
 
     def save_recovery(self, epoch, batch_idx=0):
@@ -137,10 +136,10 @@ class CheckpointSaver:  # don't save optimizer state dict, since it forces speci
         self._save(save_path, epoch)
         if os.path.exists(self.last_recovery_file):
             try:
-                _logger.debug("Cleaning recovery: {}".format(self.last_recovery_file))
+                LOGGER.debug("Cleaning recovery: {}".format(self.last_recovery_file))
                 os.remove(self.last_recovery_file)
             except Exception as e:
-                _logger.error("Exception '{}' while removing {}".format(e, self.last_recovery_file))
+                LOGGER.error("Exception '{}' while removing {}".format(e, self.last_recovery_file))
         self.last_recovery_file = self.curr_recovery_file
         self.curr_recovery_file = save_path
 

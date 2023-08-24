@@ -34,6 +34,8 @@ script:
   - codecov
   - python training_scripts/object_detection/train.py --model_name yolo8n --dataset coco8 --dryrun
   - python training_scripts/classification/ultralytics/train.py --model resnet12 --dataset imagewoof_160 --dryrun
+  - python training_scripts/classification/cifar/train_cifar.py --model resnet18 --dataset cifar100 --dryrun
+  - python training_scripts/classification/imagenet/train.py --data-dir ./ --dataset imagewoof_160 --model resnet12 --dryrun --dataset-download
 
 before_deploy:
   - pip install markupsafe==2.0.1

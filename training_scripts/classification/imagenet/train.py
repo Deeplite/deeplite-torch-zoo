@@ -41,8 +41,7 @@ from timm.scheduler import create_scheduler_v2, scheduler_kwargs
 from timm.utils import ApexScaler, NativeScaler
 
 from deeplite_torch_zoo import get_model, get_dataloaders
-from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss
-from deeplite_torch_zoo.utils import CheckpointSaver
+from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss, CheckpointSaver
 
 try:
     from apex import amp
@@ -370,6 +369,8 @@ group.add_argument('--kd_model_checkpoint', default=None, type=str)
 group.add_argument('--alpha_kd', default=5, type=float)
 group.add_argument('--use_kd_loss_only', action='store_true', default=False)
 
+group.add_argument('--dryrun', action='store_true')
+
 
 def _parse_args():
     # Do we have a config file to parse?
@@ -635,19 +636,24 @@ def main():
     if args.no_aug or not train_interpolation:
         train_interpolation = data_config['interpolation']
 
+    extra_loader_kwargs = {}
+    if args.dataset == 'imagenet':
+        extra_loader_kwargs = {
+            'train_split': args.train_split,
+            'val_split': args.val_split,
+            'class_map': args.class_map,
+            'seed': args.seed,
+            'repeats': args.epoch_repeats,
+        }
+
     dataloaders = get_dataloaders(
         dataset_name=args.dataset,
         data_root=args.data_dir,
         img_size=data_config['input_size'],
         batch_size=args.batch_size,
         test_batch_size=args.validation_batch_size or args.batch_size,
-        train_split=args.train_split,
-        val_split=args.val_split,
-        class_map=args.class_map,
         download=args.dataset_download,
-        seed=args.seed,
         distributed=args.distributed,
-        repeats=args.epoch_repeats,
         use_prefetcher=args.prefetcher,
         no_aug=args.no_aug,
         re_prob=args.reprob,
@@ -672,6 +678,7 @@ def main():
         device=device,
         use_multi_epochs_loader=args.use_multi_epochs_loader,
         worker_seeding=args.worker_seeding,
+        **extra_loader_kwargs,
     )
     loader_train, loader_eval = dataloaders['train'], dataloaders['test']
     dataset_train = loader_train.dataset
@@ -814,6 +821,9 @@ def main():
                 if ema_eval_metrics[eval_metric] > eval_metrics[eval_metric]: # choose the best model
                     eval_metrics_unite = ema_eval_metrics
 
+            if args.dryrun:
+                break
+
             if output_dir is not None:
                 lrs = [param_group['lr'] for param_group in optimizer.param_groups]
                 if args.log_tb:
@@ -860,7 +870,7 @@ def train_one_epoch(
         optimizer,
         loss_fn,
         args,
-        device=torch.device('cuda'),
+        device=None,
         lr_scheduler=None,
         saver=None,
         output_dir=None,
@@ -870,6 +880,9 @@ def train_one_epoch(
         mixup_fn=None,
         model_kd=None,
 ):
+    if device is None:
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
     if args.mixup_off_epoch and epoch >= args.mixup_off_epoch:
         if args.prefetcher and loader.mixup_enabled:
             loader.mixup_enabled = False
@@ -1002,6 +1015,9 @@ def train_one_epoch(
                         normalize=True
                     )
 
+        if args.dryrun:
+            break
+
         if saver is not None and args.recovery_interval and (
                 (update_idx + 1) % args.recovery_interval == 0):
             saver.save_recovery(epoch, batch_idx=update_idx)
@@ -1024,10 +1040,13 @@ def validate(
         loader,
         loss_fn,
         args,
-        device=torch.device('cuda'),
+        device=None,
         amp_autocast=suppress,
         log_suffix=''
 ):
+    if device is None:
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
     batch_time_m = utils.AverageMeter()
     losses_m = utils.AverageMeter()
     top1_m = utils.AverageMeter()
@@ -1085,6 +1104,8 @@ def validate(
                     f'Acc@1: {top1_m.val:>7.3f} ({top1_m.avg:>7.3f})  '
                     f'Acc@5: {top5_m.val:>7.3f} ({top5_m.avg:>7.3f})'
                 )
+            if args.dryrun:
+                break
 
     metrics = OrderedDict([('loss', losses_m.avg), ('top1', top1_m.avg), ('top5', top5_m.avg)])
 
