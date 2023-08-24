@@ -158,14 +158,25 @@ def train(opt, device):
                 pbar.desc = f"{f'{epoch + 1}/{epochs}':>10}{mem:>10}{tloss:>12.3g}" + ' ' * 36
 
                 # Test
-                if i == len(pbar) - 1:  # last batch
-                    metrics = evaluation_fn(ema.ema, testloader, progressbar=False)
+                if opt.dryrun or i == len(pbar) - 1:  # last batch
+                    metrics = evaluation_fn(
+                        ema.ema,
+                        testloader,
+                        progressbar=False,
+                        break_iter=None if not opt.dryrun else 1
+                    )
                     top1, top5 = metrics['acc'], metrics['acc_top5']
                     fitness = top1  # define fitness as top1 accuracy
                     pbar.desc = f"{pbar.desc[:-36]}{top1:>12.3g}{top5:>12.3g}"
 
+            if opt.dryrun:
+                break
+
         # Scheduler
         scheduler.step()
+
+        if opt.dryrun:
+            break
 
         # Log metrics
         if RANK in {-1, 0}:
@@ -202,7 +213,7 @@ def train(opt, device):
                 del ckpt
 
     # Train complete
-    if RANK in {-1, 0} and final_epoch:
+    if not opt.dryrun and RANK in {-1, 0} and final_epoch:
         LOGGER.info(f'\nTraining complete ({(time.time() - t0) / 3600:.3f} hours)'
                     f"\nResults saved to {colorstr('bold', save_dir)}")
 
@@ -240,6 +251,8 @@ def parse_opt(known=False):
     parser.add_argument('--kd_model_checkpoint', default=None, type=str)
     parser.add_argument('--alpha_kd', default=5, type=float)
     parser.add_argument('--use_kd_loss_only', action='store_true', default=False)
+
+    parser.add_argument('--dryrun', action='store_true', help='Dry run mode for testing')
 
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
