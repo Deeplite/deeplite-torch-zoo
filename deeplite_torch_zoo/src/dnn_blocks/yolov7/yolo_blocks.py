@@ -3,15 +3,20 @@
 # The file is modified by Deeplite Inc. from the original implementation on Feb 23, 2023
 # Refactoring block implementation
 
+import functools
+
+import numpy as np
 
 import torch
 import torch.nn as nn
+
 from deeplite_torch_zoo.src.dnn_blocks.common import (
     ConvBnAct,
     DWConv,
     GhostConv,
     get_activation,
     round_channels,
+    ACT_TYPE_MAP,
 )
 from deeplite_torch_zoo.src.dnn_blocks.resnet.resnet_blocks import (
     GhostBottleneck,
@@ -498,3 +503,141 @@ class DownC(nn.Module):
 
     def forward(self, x):
         return torch.cat((self.cv2(self.cv1(x)), self.cv3(self.mp(x))), dim=1)
+
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class MixConv2d(nn.Module):
+    # Mixed Depthwise Conv https://arxiv.org/abs/1907.09595
+    def __init__(self, c1, c2, k=(1, 3), s=1, equal_ch=True, act='leakyrelu'):
+        super(MixConv2d, self).__init__()
+        groups = len(k)
+        if equal_ch:  # equal c_ per group
+            i = torch.linspace(0, groups - 1e-6, c2).floor()  # c2 indices
+            c_ = [(i == g).sum() for g in range(groups)]  # intermediate channels
+        else:  # equal weight.numel() per group
+            b = [c2] + [0] * groups
+            a = np.eye(groups + 1, groups, k=-1)
+            a -= np.roll(a, 1, axis=1)
+            a *= np.array(k) ** 2
+            a[0] = 1
+            c_ = np.linalg.lstsq(a, b, rcond=None)[
+                0
+            ].round()  # solve for equal weight indices, ax = b
+
+        self.m = nn.ModuleList(
+            [
+                nn.Conv2d(c1, int(c_[g]), k[g], s, k[g] // 2, bias=False)
+                for g in range(groups)
+            ]
+        )
+        self.bn = nn.BatchNorm2d(c2)
+        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
+
+    def forward(self, x):
+        return x + self.act(self.bn(torch.cat([m(x) for m in self.m], 1)))
+
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class YOLOCrossConv(nn.Module):
+    # Ultralytics Cross Convolution Downsample
+    def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, act='relu', shortcut=False):
+        # ch_in, ch_out, kernel, stride, groups, expansion, shortcut
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = ConvBnAct(c1, c_, (1, k), (1, s), act=act)
+        self.cv2 = ConvBnAct(c_, c2, (k, 1), (s, 1), g=g, act=act)
+        self.add = shortcut and c1 == c2
+
+    def forward(self, x):
+        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+
+
+@EXPANDABLE_BLOCKS.register()
+@VARIABLE_CHANNEL_BLOCKS.register()
+class YOLOC4(nn.Module):
+    # CSP Bottleneck with 4 convolutions aka old C3
+    def __init__(
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'
+    ):  # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__()
+        Conv_ = functools.partial(ConvBnAct, act=act)
+        CrossConv_ = functools.partial(YOLOCrossConv, act=act)
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv_(c1, c_, 1, 1)
+        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
+        self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
+        self.cv4 = Conv_(2 * c_, c2, 1, 1)
+        self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
+        self.act = nn.LeakyReLU(0.1, inplace=True)
+        self.m = nn.Sequential(
+            *[CrossConv_(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)]
+        )
+
+    def forward(self, x):
+        y1 = self.cv3(self.m(self.cv1(x)))
+        y2 = self.cv2(x)
+        return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+
+
+class RobustConv(nn.Module):
+    # Robust convolution (use high kernel size 7-11 for: downsampling and other layers). Train for 300 - 450 epochs.
+    def __init__(
+        self,
+        c1,
+        c2,
+        k=7,
+        s=1,
+        p=None,
+        g=1,
+        act=True,
+        layer_scale_init_value=1e-6,
+        residual=False,
+    ):  # ch_in, ch_out, kernel, stride, padding, groups
+        super(RobustConv, self).__init__()
+        self.conv_dw = ConvBnAct(c1, c1, k=k, s=s, p=p, g=c1, act=act)
+        self.conv1x1 = nn.Conv2d(c1, c2, 1, 1, 0, groups=1, bias=True)
+        self.gamma = (
+            nn.Parameter(layer_scale_init_value * torch.ones(c2))
+            if layer_scale_init_value > 0
+            else None
+        )
+
+    def forward(self, x):
+        y = x.to(memory_format=torch.channels_last)
+        y = self.conv1x1(self.conv_dw(y))
+        if self.gamma is not None:
+            y = y.mul(self.gamma.reshape(1, -1, 1, 1))
+        if self.residual:
+            return x + y
+        else:
+            return x
+
+
+class RobustConv2(nn.Module):
+    # Robust convolution 2 (use [32, 5, 2] or [32, 7, 4] or [32, 11, 8] for one of the paths in CSP).
+    def __init__(
+        self, c1, c2, k=7, s=4, p=None, g=1, act=True, layer_scale_init_value=1e-6
+    ):  # ch_in, ch_out, kernel, stride, padding, groups
+        super(RobustConv2, self).__init__()
+        self.conv_strided = ConvBnAct(c1, c1, k=k, s=s, p=p, g=c1, act=act)
+        self.conv_deconv = nn.ConvTranspose2d(
+            in_channels=c1,
+            out_channels=c2,
+            kernel_size=s,
+            stride=s,
+            padding=0,
+            bias=True,
+            dilation=1,
+            groups=1,
+        )
+        self.gamma = (
+            nn.Parameter(layer_scale_init_value * torch.ones(c2))
+            if layer_scale_init_value > 0
+            else None
+        )
+
+    def forward(self, x):
+        x = self.conv_deconv(self.conv_strided(x))
+        if self.gamma is not None:
+            x = x.mul(self.gamma.reshape(1, -1, 1, 1))
+        return x

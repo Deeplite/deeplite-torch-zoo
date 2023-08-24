@@ -5,7 +5,7 @@ import math
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv, Concat
-from deeplite_torch_zoo.src.dnn_blocks.yolo_ultralytics_blocks import YOLOC3 as C3
+from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3 as C3
 
 from deeplite_torch_zoo.utils import LOGGER, make_divisible
 

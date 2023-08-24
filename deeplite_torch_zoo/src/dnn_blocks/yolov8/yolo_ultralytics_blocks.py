@@ -1,31 +1,18 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+
 import functools
 
 import numpy as np
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.common import ACT_TYPE_MAP, ConvBnAct
+from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct
 from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import (
     YOLOBottleneck,
     YOLOGhostBottleneck,
 )
-from deeplite_torch_zoo.src.dnn_blocks.yolo_spp_blocks import YOLOSPP
+from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_spp_blocks import YOLOSPP
 from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNEL_BLOCKS
-
-
-@VARIABLE_CHANNEL_BLOCKS.register()
-class YOLOCrossConv(nn.Module):
-    # Ultralytics Cross Convolution Downsample
-    def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, act='relu', shortcut=False):
-        # ch_in, ch_out, kernel, stride, groups, expansion, shortcut
-        super().__init__()
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = ConvBnAct(c1, c_, (1, k), (1, s), act=act)
-        self.cv2 = ConvBnAct(c_, c2, (k, 1), (s, 1), g=g, act=act)
-        self.add = shortcut and c1 == c2
-
-    def forward(self, x):
-        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
 @EXPANDABLE_BLOCKS.register()
@@ -168,49 +155,6 @@ class YOLOC3Ghost(YOLOC3):
         )
 
 
-@VARIABLE_CHANNEL_BLOCKS.register()
-class YOLOCrossConv(nn.Module):
-    # Cross Convolution Downsample
-    def __init__(self, c1, c2, k=3, s=1, g=1, e=1.0, shortcut=False, act='hardswish'):
-        # ch_in, ch_out, kernel, stride, groups, expansion, shortcut
-        super(YOLOCrossConv, self).__init__()
-        Conv_ = functools.partial(ConvBnAct, act=act)
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv_(c1, c_, (1, k), (1, s))
-        self.cv2 = Conv_(c_, c2, (k, 1), (s, 1), g=g)
-        self.add = shortcut and c1 == c2
-
-    def forward(self, x):
-        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
-
-
-@EXPANDABLE_BLOCKS.register()
-@VARIABLE_CHANNEL_BLOCKS.register()
-class YOLOC4(nn.Module):
-    # CSP Bottleneck with 4 convolutions aka old C3
-    def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'
-    ):  # ch_in, ch_out, number, shortcut, groups, expansion
-        super().__init__()
-        Conv_ = functools.partial(ConvBnAct, act=act)
-        CrossConv_ = functools.partial(YOLOCrossConv, act=act)
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv_(c1, c_, 1, 1)
-        self.cv2 = nn.Conv2d(c1, c_, 1, 1, bias=False)
-        self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
-        self.cv4 = Conv_(2 * c_, c2, 1, 1)
-        self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
-        self.act = nn.LeakyReLU(0.1, inplace=True)
-        self.m = nn.Sequential(
-            *[CrossConv_(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)]
-        )
-
-    def forward(self, x):
-        y1 = self.cv3(self.m(self.cv1(x)))
-        y2 = self.cv2(x)
-        return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-
-
 @EXPANDABLE_BLOCKS.register()
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3TR(YOLOC3):
@@ -280,35 +224,3 @@ class YOLOTransformerBlock(nn.Module):
             .transpose(0, 3)
             .reshape(b, self.c2, w, h)
         )
-
-
-@VARIABLE_CHANNEL_BLOCKS.register()
-class MixConv2d(nn.Module):
-    # Mixed Depthwise Conv https://arxiv.org/abs/1907.09595
-    def __init__(self, c1, c2, k=(1, 3), s=1, equal_ch=True, act='leakyrelu'):
-        super(MixConv2d, self).__init__()
-        groups = len(k)
-        if equal_ch:  # equal c_ per group
-            i = torch.linspace(0, groups - 1e-6, c2).floor()  # c2 indices
-            c_ = [(i == g).sum() for g in range(groups)]  # intermediate channels
-        else:  # equal weight.numel() per group
-            b = [c2] + [0] * groups
-            a = np.eye(groups + 1, groups, k=-1)
-            a -= np.roll(a, 1, axis=1)
-            a *= np.array(k) ** 2
-            a[0] = 1
-            c_ = np.linalg.lstsq(a, b, rcond=None)[
-                0
-            ].round()  # solve for equal weight indices, ax = b
-
-        self.m = nn.ModuleList(
-            [
-                nn.Conv2d(c1, int(c_[g]), k[g], s, k[g] // 2, bias=False)
-                for g in range(groups)
-            ]
-        )
-        self.bn = nn.BatchNorm2d(c2)
-        self.act = ACT_TYPE_MAP[act] if act else nn.Identity()
-
-    def forward(self, x):
-        return x + self.act(self.bn(torch.cat([m(x) for m in self.m], 1)))

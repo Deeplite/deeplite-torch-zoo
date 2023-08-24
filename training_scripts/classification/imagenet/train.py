@@ -40,14 +40,9 @@ from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler_v2, scheduler_kwargs
 from timm.utils import ApexScaler, NativeScaler
 
-<<<<<<< HEAD
-from deeplite_torch_zoo import create_model, get_dataloaders
-from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss
-from deeplite_torch_zoo.utils.checkpoint_saver import CheckpointSaver
-=======
 from deeplite_torch_zoo import get_model, get_dataloaders
-from deeplite_torch_zoo.utils.kd import KDTeacher
->>>>>>> develop
+from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss
+from deeplite_torch_zoo.utils import CheckpointSaver
 
 try:
     from apex import amp

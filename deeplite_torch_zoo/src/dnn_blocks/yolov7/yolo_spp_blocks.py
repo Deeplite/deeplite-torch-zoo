@@ -1,3 +1,6 @@
+# Taken from:
+# https://github.com/WongKinYiu/yolov7/blob/HEAD/models/common.py
+
 import warnings
 
 import torch
