@@ -35,7 +35,7 @@ INSTALL_REQUIRES = [
     "pandas",
     "ultralytics==8.0.107",
     "tensorboard>=2.11.2",
-    "rawpy",
+    "rawpy>=0.18.1",
 ]
 
 setup(
