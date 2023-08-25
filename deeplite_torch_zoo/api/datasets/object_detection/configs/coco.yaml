@@ -99,7 +99,7 @@ names:
 
 # Download script/URL (optional)
 download: |
-  from ultralytics.utils.downloads import download
+  from deeplite_torch_zoo.utils import download
   from pathlib import Path
 
   # Download labels
