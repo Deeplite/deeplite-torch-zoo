@@ -1,6 +1,7 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 
 import os
+import copy
 import math
 import time
 import random
@@ -725,3 +726,11 @@ def get_num_params(model):
 def get_num_gradients(model):
     """Return the total number of parameters with gradients in a YOLO model."""
     return sum(x.numel() for x in model.parameters() if x.requires_grad)
+
+
+def fuse_blocks(model: torch.nn.Module) -> nn.Module:
+    model = copy.deepcopy(model)
+    for module in model.modules():
+        if hasattr(module, 'fuse'):
+            module.fuse()
+    return model

@@ -79,16 +79,3 @@ class ShuffleUnit(nn.Module):
             x = x + identity
         x = self.activ(x)
         return x
-
-
-def _test_blocks(c1, c2, b=2, res=32):
-    # perform a basic forward pass
-    input = torch.rand((b, c1, res, res), device=None, requires_grad=False)
-
-    fire_block = ShuffleUnit(c1, c2)
-    output = fire_block(input)
-    assert output.shape == (b, c2, res, res)
-
-
-if __name__ == "__main__":
-    _test_blocks(32, 32)  #  c1 == c2
