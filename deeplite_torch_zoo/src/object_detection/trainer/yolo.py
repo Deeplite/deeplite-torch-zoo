@@ -26,7 +26,7 @@ def patched_init(obj, model_name, num_classes=None,
         dataset_name=pretraining_dataset,
         pretrained=pretrained,
         num_classes=num_classes,
-        custom_head='v8',  # can only work with v8 head as of now
+        custom_head='yolo8',  # can only work with v8 head as of now
     )
     obj.overrides['model'] = obj.cfg
 

@@ -40,6 +40,8 @@ class TimmYOLO(FlexibleYOLO):
 
         head_cls = Detect
         if custom_head is not None:
+            if custom_head not in HEAD_NAME_MAP:
+                raise ValueError(f'Incorrect YOLO head name {custom_head}. Choices: {list(HEAD_NAME_MAP.keys())}')
             head_cls = HEAD_NAME_MAP[custom_head]
 
         self.backbone = TimmWrapperBackbone(backbone_name)
