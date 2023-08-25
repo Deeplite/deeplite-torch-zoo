@@ -1,11 +1,11 @@
-from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import YOLOModel
+from deeplite_torch_zoo.src.object_detection.yolo import YOLO
 from deeplite_torch_zoo.api.models.object_detection.helpers import (
     make_wrapper_func, load_pretrained_model, get_project_root, DATASET_LIST
 )
 
 __all__ = []
 
-CFG_PATH = "deeplite_torch_zoo/src/object_detection/yolov5/configs"
+CFG_PATH = 'deeplite_torch_zoo/src/object_detection/yolo/configs'
 
 YOLO_CONFIGS = {
     'yolo3': 'yolo3/yolov3.yaml',
@@ -107,7 +107,7 @@ def create_yolo_model(
     pretrained=False,
     **kwargs,
 ):  # pylint: disable=W0621
-    model = YOLOModel(
+    model = YOLO(
         config_path,
         nc=num_classes,
         **kwargs,

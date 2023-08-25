@@ -50,7 +50,8 @@ def get_model(
     model_name,
     dataset_name,
     pretrained=True,
-    **kwargs,
+    num_classes=None,
+    **model_kwargs,
 ):
     """
     Tries to find a matching model creation wrapper function in the registry and uses it to create a new model object
@@ -60,10 +61,21 @@ def get_model(
 
     returns a corresponding model object (optionally with pretrained weights)
     """
+
     model_func = MODEL_WRAPPER_REGISTRY.get(
         model_name=model_name.lower(), dataset_name=dataset_name
     )
-    model = model_func(pretrained=pretrained, **kwargs)
+    model_wrapper_kwargs = {
+        'pretrained': pretrained,
+        **model_kwargs,
+    }
+    if num_classes is not None:
+        LOGGER.warning(
+            f'Overriding the default number of classes for the model {model_name} '
+            f'on dataset {dataset_name} with num_classes={num_classes}'
+        )
+        model_wrapper_kwargs.update({'num_classes': num_classes})
+    model = model_func(**model_wrapper_kwargs)
     return model
 
 
@@ -75,39 +87,6 @@ def get_eval_function(model_name, dataset_name):
         task_type=task_type, model_name=model_name, dataset_name=dataset_name
     )
     return eval_function
-
-
-def create_model(
-    model_name,
-    pretraining_dataset,
-    num_classes=None,
-    pretrained=False,
-    **kwargs,
-):
-    """
-    Tries to find a matching model creation wrapper function in the registry (for the corresponding model name
-    and pretraining dataset name) and uses it to create a new model object, optionally with a custom number
-    of output classes
-
-    :param model_name: Name of the model to create
-    :param pretraining_dataset: Name of pretraining dataset to (partially) load the weights from
-    :param num_classes: Number of output classes in the new model
-    :param fp16: Whether to convert the model to fp16 precision
-    :param device: Loads the model either on a gpu (`cuda`, `cuda:device_id`) or cpu.
-
-    returns a corresponding model object (optionally with a custom number of classes)
-    """
-    model_func = MODEL_WRAPPER_REGISTRY.get(
-        model_name=model_name.lower(), dataset_name=pretraining_dataset
-    )
-    model_wrapper_kwargs = {
-        'pretrained': pretrained,
-        **kwargs,
-    }
-    if num_classes is not None:
-        model_wrapper_kwargs.update({'num_classes': num_classes})
-    model = model_func(**model_wrapper_kwargs)
-    return model
 
 
 def profile(
@@ -229,3 +208,20 @@ def get_model_by_name(model_name, dataset_name, pretrained=True, **kwargs):
 @deprecated
 def get_data_splits_by_name(data_root, dataset_name, **kwargs):
     return get_dataloaders(data_root, dataset_name, **kwargs)
+
+
+@deprecated
+def create_model(
+    model_name,
+    pretraining_dataset,
+    num_classes=None,
+    pretrained=False,
+    **kwargs,
+):
+    return get_model(
+        model_name=model_name,
+        dataset_name=pretraining_dataset,
+        num_classes=num_classes,
+        pretrained=pretrained,
+        **kwargs
+    )

@@ -25,7 +25,7 @@ INSTALL_REQUIRES = [
     "albumentations==1.0.3",
     "tensorboardX==2.4.1",
     "pyvww==0.1.1",
-    "timm==0.5.4",
+    "timm==0.9.2",
     "pytorchcv==0.0.67",
     "texttable==1.6.4",
     "torchprofile==0.0.4",
@@ -39,7 +39,7 @@ INSTALL_REQUIRES = [
 
 setup(
     name="deeplite-torch-zoo",
-    version="2.0.0",
+    version="2.0.1",
     description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
     long_description=long_description,
     long_description_content_type="text/markdown",
