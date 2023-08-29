@@ -5,7 +5,7 @@ from deeplite_torch_zoo.api.models.object_detection.helpers import (
 
 __all__ = []
 
-CFG_PATH = 'deeplite_torch_zoo/src/object_detection/flexible_yolo/configs'
+CFG_PATH = 'deeplite_torch_zoo/src/object_detection/yolo/flexible_yolo/configs'
 
 model_configs = {
     'yolo_resnet18': 'model_resnet.yaml',

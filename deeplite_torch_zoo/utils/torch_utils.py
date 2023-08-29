@@ -708,10 +708,12 @@ def model_info(model, detailed=False, verbose=True, imgsz=640):
             )
 
     fused = ' (fused)' if getattr(model, 'is_fused', lambda: False)() else ''
-    yaml_file = getattr(model, 'yaml_file', '') or getattr(model, 'yaml', {}).get(
-        'yaml_file', ''
-    )
-    model_name = Path(yaml_file).stem.replace('yolo', 'YOLO') or 'Model'
+    model_name = 'Model'
+    if (hasattr(model, 'yaml') and model.yaml is not None) or hasattr(model, 'yaml_file'):
+        yaml_file = getattr(model, 'yaml_file', '') or getattr(model, 'yaml', {}).get(
+            'yaml_file', ''
+        )
+        model_name = Path(yaml_file).stem.replace('yolo', 'YOLO') or 'Model'
     LOGGER.info(
         f'{model_name} summary{fused}: {n_l} layers, {n_p} parameters, {n_g} gradients'
     )
