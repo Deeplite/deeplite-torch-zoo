@@ -39,7 +39,7 @@ INSTALL_REQUIRES = [
 
 setup(
     name="deeplite-torch-zoo",
-    version="2.0.1",
+    version="2.0.2",
     description="The deeplite-torch-zoo package is a collection of popular pretrained deep learning models and their datasets for PyTorch framework.",
     long_description=long_description,
     long_description_content_type="text/markdown",
