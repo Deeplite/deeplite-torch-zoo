@@ -1,3 +1,7 @@
+from torchvision.transforms import ToTensor
+from torch.utils.data import Dataset
+import rawpy
+
 class PASCALRAWMultiLabelCls(Dataset):
     def __init__(self,
                  root,
