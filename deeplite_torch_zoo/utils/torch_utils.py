@@ -491,7 +491,7 @@ def reshape_elements(elements, shapes, device):
             )
         return ret_grads
 
-    if isinstance(elements[0]) == list:
+    if isinstance(elements[0], list):
         outer = []
         for e, sh in zip(elements, shapes):
             outer.append(broadcast_val(e, sh))
