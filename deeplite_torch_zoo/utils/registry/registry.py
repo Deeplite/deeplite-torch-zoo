@@ -14,7 +14,7 @@ class Registry:
         self._name = name if name is not None else ''
         self._error_on_same_key = error_on_same_key
 
-    def register(self, *args, name=None):
+    def register(self, name=None, *args):
         def _register(obj_name, obj):
             if self._error_on_same_key and obj_name in self._registry_dict:
                 raise KeyError(f'{obj_name} is already registered')
