@@ -31,7 +31,7 @@ class Registry:
 
         return wrap
 
-    def get(self, name):
+    def get(self, *args, name):
         if name not in self._registry_dict:
             raise KeyError(f'{name} was not found in the {self._name} registry')
         return self._registry_dict[name]
@@ -124,7 +124,7 @@ class DatasetWrapperRegistry(Registry):
         self._task_type_map = {}
         self._registry_key = namedtuple('RegistryKey', ['dataset_name'])
 
-    def register(self, name):
+    def register(self, dataset_name):
         def _register(obj_name, obj):
             if obj_name in self._registry_dict:
                 raise KeyError(
@@ -133,21 +133,20 @@ class DatasetWrapperRegistry(Registry):
             self._registry_dict[obj_name] = obj
 
         def wrap(obj):
-            cls_name = name
+            cls_name = dataset_name
             if cls_name is None:
                 cls_name = obj.__name__
             cls_name = self._registry_key(dataset_name=cls_name)
             _register(cls_name, obj)
             return obj
-
         return wrap
 
-    def get(self, name):
-        key = self._registry_key(dataset_name=name)
+    def get(self, dataset_name):
+        key = self._registry_key(dataset_name=dataset_name)
         if key not in self._registry_dict:
             registered_dataset_names = [key.dataset_name for key in self.registry_dict]
             raise KeyError(
-                f'Dataset {name} was not found in the dataset registry. '
+                f'Dataset {dataset_name} was not found in the dataset registry. '
                 f'Registered datasets: {registered_dataset_names}'
             )
         return self._registry_dict[key]

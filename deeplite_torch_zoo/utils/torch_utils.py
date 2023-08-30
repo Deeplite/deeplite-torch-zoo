@@ -806,4 +806,3 @@ def fuse_blocks(model: torch.nn.Module) -> nn.Module:
         if hasattr(module, 'fuse'):
             module.fuse()
     return model
-
