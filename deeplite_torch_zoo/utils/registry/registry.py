@@ -31,7 +31,7 @@ class Registry:
 
         return wrap
 
-    def get(self, *args, name):
+    def get(self, name):
         if name not in self._registry_dict:
             raise KeyError(f'{name} was not found in the {self._name} registry')
         return self._registry_dict[name]
