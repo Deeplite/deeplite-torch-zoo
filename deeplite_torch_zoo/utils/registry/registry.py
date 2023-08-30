@@ -142,11 +142,13 @@ class DatasetWrapperRegistry(Registry):
 
         return wrap
 
-    def get(self, name):
-        key = self._registry_key(dataset_name=name)
+    def get(self, dataset_name):
+        key = self._registry_key(dataset_name=dataset_name)
         if key not in self._registry_dict:
+            registered_dataset_names = [key.dataset_name for key in self.registry_dict]
             raise KeyError(
-                f'Dataset {name} was not found in the dataset registry'
+                f'Dataset {dataset_name} was not found in the dataset registry. '
+                f'Registered datasets: {registered_dataset_names}'
             )
         return self._registry_dict[key]
 
