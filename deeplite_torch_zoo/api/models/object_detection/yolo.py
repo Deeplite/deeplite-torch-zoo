@@ -57,6 +57,12 @@ YOLO_CONFIGS = {
     'yolo-picodet-': 'picodet/yolo-picodet.yaml',
     'yolo5-lite-c-': 'yololite/yolov5_lite_c.yaml',
     'yolo5-lite-e-': 'yololite/yolov5_lite_e.yaml',
+    ############################
+    'edgeyolo-': 'edgeyolo/edgeyolo.yaml',
+    'edgeyolo-m-': 'edgeyolo/edgeyolo_m.yaml',
+    'edgeyolo-s-': 'edgeyolo/edgeyolo_m.yaml',
+    'edgeyolo-tiny-': 'edgeyolo/edgeyolo_tiny.yaml',
+    'edgeyolo-tiny-lrelu-': 'edgeyolo/edgeyolo_tiny_lrelu.yaml',
 }
 
 ACT_FN_TAGS = {'': None, '_relu': 'relu', '_hswish': 'hardswish'}
@@ -100,8 +106,8 @@ CUSTOM_MODEL_SCALES = {'yolo8': V8_MODEL_SCALES}
 
 
 def create_yolo_model(
-    model_name="yolo5s",
-    dataset_name="voc",
+    model_name='yolo5s',
+    dataset_name='voc',
     num_classes=20,
     config_path=None,
     pretrained=False,
