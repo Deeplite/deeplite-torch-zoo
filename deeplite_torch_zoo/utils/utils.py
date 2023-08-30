@@ -27,7 +27,7 @@ TQDM_BAR_FORMAT = '{l_bar}{bar:10}{r_bar}'
 
 def set_logging(name=LOGGING_NAME, verbose=True):
     # sets up logging for the given name
-    rank = int(os.getenv('RANK', -1))  # rank in world for Multi-GPU trainings
+    rank = int(os.getenv('RANK', "-1"))  # rank in world for Multi-GPU trainings
     level = logging.INFO if verbose and rank in {-1, 0} else logging.ERROR
     logging.config.dictConfig(
         {
@@ -116,12 +116,13 @@ def print_args(args: Optional[dict] = None, show_file=True, show_func=False):
         args = {k: v for k, v in frm.items() if k in args}
     file = Path(file).stem
     s = (f'{file}: ' if show_file else '') + (f'{func}: ' if show_func else '')
-    LOGGER.info(colorstr(s) + ', '.join(f'{k}={v}' for k, v in args.items()))
+    kv = (', ').join(f'{k}={v}' for k, v in args.items())
+    LOGGER.info("%s",colorstr(s) + kv)
 
 
 def yaml_save(file='data.yaml', data={}):
     # Single-line safe yaml saving
-    with open(file, 'w') as f:
+    with open(file, 'w', encoding="utf-8") as f:
         yaml.safe_dump({k: str(v) if isinstance(v, Path) else v for k, v in data.items()}, f, sort_keys=False)
 
 
@@ -142,11 +143,12 @@ def file_size(path):
     mb = 1 << 20  # bytes to MiB (1024 ** 2)
     path = Path(path)
     if path.is_file():
-        return path.stat().st_size / mb
+        val= path.stat().st_size / mb
     elif path.is_dir():
-        return sum(f.stat().st_size for f in path.glob('**/*') if f.is_file()) / mb
+        val= sum(f.stat().st_size for f in path.glob('**/*') if f.is_file()) / mb
     else:
-        return 0.0
+        val= 0.0
+    return val
 
 
 def get_default_args(func):
