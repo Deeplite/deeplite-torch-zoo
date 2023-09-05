@@ -5,8 +5,11 @@ from ultralytics.yolo.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, callbacks
 from deeplite_torch_zoo import get_model
 
 
-def patched_init(obj, model_name, num_classes=None,
+def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
                  task=None, session=None, pretrained=False, pretraining_dataset='coco'):
+    if model_name is None and torch_model is None:
+        raise ValueError('Either a `model_name` string or a `torch_model` (nn.Module object) must be passed '
+                         'to instantiate a trainer object.')
     obj.callbacks = callbacks.get_default_callbacks()
     obj.predictor = None  # reuse predictor
     obj.model = None  # model object
@@ -21,13 +24,16 @@ def patched_init(obj, model_name, num_classes=None,
     obj.num_classes = num_classes
 
     obj.cfg = model_name
-    obj.model = get_model(
-        model_name=model_name,
-        dataset_name=pretraining_dataset,
-        pretrained=pretrained,
-        num_classes=num_classes,
-        custom_head='v8',  # can only work with v8 head as of now
-    )
+    if model_name is not None:
+        obj.model = get_model(
+            model_name=model_name,
+            dataset_name=pretraining_dataset,
+            pretrained=pretrained,
+            num_classes=num_classes,
+            custom_head='v8',  # can only work with v8 head as of now
+        )
+    else:
+        obj.model = torch_model
     obj.overrides['model'] = obj.cfg
 
     # Below added to allow export from yamls
