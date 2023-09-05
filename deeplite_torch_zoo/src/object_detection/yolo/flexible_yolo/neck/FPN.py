@@ -43,7 +43,8 @@ class FPN(nn.Module):
             default_gw=0.5,
             bottleneck_block_cls=None,
             bottleneck_depth=3,
-        ):
+            no_second_stage_upsampling=False,
+    ):
         super(FPN, self).__init__()
 
         self.C3_size = ch[0]
@@ -51,6 +52,7 @@ class FPN(nn.Module):
         self.C5_size = ch[2]
         self.channels_outs = channel_outs
         self.version = version
+        self._no_second_stage_upsampling = no_second_stage_upsampling
 
         self.gd = default_gd
         self.gw = default_gw
@@ -61,8 +63,9 @@ class FPN(nn.Module):
         self.re_channels_out()
         self.concat = Concat()
 
+        self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest') if not self._no_second_stage_upsampling \
+            else nn.Identity()
         self.P5 = Conv(self.C5_size, self.channels_outs[0], 1, 1)
-        self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
 
         if bottleneck_block_cls is None:
             bottleneck_block_cls = partial(YOLOC3, shortcut=False, n=self.get_depth(bottleneck_depth))
@@ -73,7 +76,7 @@ class FPN(nn.Module):
         )
 
         self.P4 = Conv(self.channels_outs[0], self.channels_outs[1], 1, 1)
-        self.P4_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
+        self.P4_upsampled = nn.Upsample(scale_factor=4, mode='nearest')
 
         self.P3 = bottleneck_block_cls(
             self.channels_outs[1] + self.C3_size,

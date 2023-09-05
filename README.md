@@ -126,7 +126,7 @@ torch_model = get_model(
     model_name='yolo7n',
     dataset_name='coco',
     pretrained=False,
-    custom_head='v8',
+    custom_head='yolo8',
 )
 model = Detector(torch_model=torch_model)    # either `model_name` or `torch_model`
 model.train(data='VOC.yaml', epochs=100)     # should be provided

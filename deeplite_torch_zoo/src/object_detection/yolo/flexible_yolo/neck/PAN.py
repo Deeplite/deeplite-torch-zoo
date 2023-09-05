@@ -40,6 +40,7 @@ class PAN(nn.Module):
         default_gw=0.5,
         bottleneck_block_cls=None,
         bottleneck_depth=3,
+        no_second_stage_upsampling=False,
     ):
         super(PAN, self).__init__()
         self.version = str(version)
@@ -50,6 +51,7 @@ class PAN(nn.Module):
         if self.version.lower() in YOLO_SCALING_GAINS:
             self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
             self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
+        self._no_second_stage_upsampling = no_second_stage_upsampling
 
         self.re_channels_out()
 
@@ -60,13 +62,15 @@ class PAN(nn.Module):
         if bottleneck_block_cls is None:
             bottleneck_block_cls = partial(YOLOC3, shortcut=False, n=self.get_depth(bottleneck_depth))
 
-        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, 2)
+        first_stride = 2 if not no_second_stage_upsampling else 4
+        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, first_stride)
         self.P4 = bottleneck_block_cls(
             self.channels_outs[0] + self.P4_size,
             self.channels_outs[1],
         )
 
-        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, 2)
+        second_stride = 2 if not no_second_stage_upsampling else 1
+        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, second_stride)
         self.P5 = bottleneck_block_cls(
             self.channels_outs[2] + self.P5_size,
             self.channels_outs[3],
@@ -75,11 +79,14 @@ class PAN(nn.Module):
         self.concat = Concat()
         self.out_shape = [self.P3_size, self.channels_outs[2], self.channels_outs[3]]
         LOGGER.info(
-            f'PAN input channel size: P3 {self.P3_size}, P4 {self.P4_size}, P5 {self.P5_size}'
+            'PAN input channel size: P3 {}, P4 {}, P5 {}'.format(
+                self.P3_size, self.P4_size, self.P5_size
+            )
         )
         LOGGER.info(
-            f'PAN output channel size: PP3 {self.P3_size}, PP4 {self.channels_outs[2]}, '
-            f'PP5 {self.channels_outs[3]}'
+            'PAN output channel size: PP3 {}, PP4 {}, PP5 {}'.format(
+                self.P3_size, self.channels_outs[2], self.channels_outs[3]
+            )
         )
 
     def get_depth(self, n):
