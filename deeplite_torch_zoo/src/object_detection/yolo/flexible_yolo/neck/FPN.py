@@ -25,7 +25,13 @@ class PyramidFeatures(nn.Module):
     C5 --->    P5
     """
 
-    def __init__(self, ch=[256, 512, 1024], channel_outs=[512, 256, 256], version='s'):
+    def __init__(
+            self,
+            ch=[256, 512, 1024],
+            channel_outs=[512, 256, 256],
+            version='s',
+            no_second_stage_upsampling=False,
+        ):
         super(PyramidFeatures, self).__init__()
 
         self.C3_size = ch[0]
@@ -33,6 +39,7 @@ class PyramidFeatures(nn.Module):
         self.C5_size = ch[2]
         self.channels_outs = channel_outs
         self.version = version
+        self._no_second_stage_upsampling = no_second_stage_upsampling
 
         gains = {
             'n': {'gd': 0.33, 'gw': 0.25},
@@ -53,7 +60,8 @@ class PyramidFeatures(nn.Module):
         self.concat = Concat()
 
         self.P5 = Conv(self.C5_size, self.channels_outs[0], 1, 1)
-        self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
+        self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest') if not self._no_second_stage_upsampling \
+            else nn.Identity()
         self.conv1 = C3(
             self.channels_outs[0] + self.C4_size,
             self.channels_outs[0],
@@ -62,7 +70,7 @@ class PyramidFeatures(nn.Module):
         )
 
         self.P4 = Conv(self.channels_outs[0], self.channels_outs[1], 1, 1)
-        self.P4_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
+        self.P4_upsampled = nn.Upsample(scale_factor=4, mode='nearest')
 
         self.P3 = C3(
             self.channels_outs[1] + self.C3_size,

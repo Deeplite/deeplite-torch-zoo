@@ -1,7 +1,5 @@
 # Code credit: https://github.com/Bobo-y/flexible-yolov5
 
-import math
-
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv, Concat
@@ -23,11 +21,17 @@ class PAN(nn.Module):
     """
 
     def __init__(
-        self, ch=[256, 256, 512], channel_outs=[256, 512, 512, 1024], version='s'
+        self,
+        ch=[256, 256, 512],
+        channel_outs=[256, 512, 512, 1024],
+        version='s',
+        no_second_stage_upsampling=False,
     ):
         super(PAN, self).__init__()
         self.version = str(version)
         self.channels_outs = channel_outs
+        self._no_second_stage_upsampling = no_second_stage_upsampling
+
         gains = {
             'n': {'gd': 0.33, 'gw': 0.25},
             's': {'gd': 0.33, 'gw': 0.5},
@@ -50,7 +54,8 @@ class PAN(nn.Module):
         self.P4_size = ch[1]
         self.P5_size = ch[2]
 
-        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, 2)
+        first_stride = 2 if not no_second_stage_upsampling else 4
+        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, first_stride)
         self.P4 = C3(
             self.channels_outs[0] + self.P4_size,
             self.channels_outs[1],
@@ -58,7 +63,8 @@ class PAN(nn.Module):
             False,
         )
 
-        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, 2)
+        second_stride = 2 if not no_second_stage_upsampling else 1
+        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, second_stride)
         self.P5 = C3(
             self.channels_outs[2] + self.P5_size,
             self.channels_outs[3],
@@ -69,12 +75,12 @@ class PAN(nn.Module):
         self.concat = Concat()
         self.out_shape = [self.P3_size, self.channels_outs[2], self.channels_outs[3]]
         LOGGER.info(
-            "PAN input channel size: P3 {}, P4 {}, P5 {}".format(
+            'PAN input channel size: P3 {}, P4 {}, P5 {}'.format(
                 self.P3_size, self.P4_size, self.P5_size
             )
         )
         LOGGER.info(
-            "PAN output channel size: PP3 {}, PP4 {}, PP5 {}".format(
+            'PAN output channel size: PP3 {}, PP4 {}, PP5 {}'.format(
                 self.P3_size, self.channels_outs[2], self.channels_outs[3]
             )
         )
