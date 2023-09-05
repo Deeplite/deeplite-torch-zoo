@@ -5,7 +5,7 @@ from deeplite_torch_zoo.api.models.object_detection.helpers import (
 
 __all__ = []
 
-CFG_PATH = 'deeplite_torch_zoo/src/object_detection/flexible_yolo/yolov6/configs'
+CFG_PATH = 'deeplite_torch_zoo/src/object_detection/yolo/flexible_yolo/yolov6/configs'
 
 YOLOV6_CONFIGS = {
     'yolo6s': 'yolov6s.py',

@@ -23,6 +23,15 @@ Standard [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC). Each mode
 
 [WIDER FACE dataset](http://shuoyang1213.me/WIDERFACE/) for face detection. Each model fine-tuned for 100 epochs from COCO pre-trained weights.
 
+#### MSCOCO (trained from scratch for 300 epochs on 640x640 images) - [`COCO_pretrain_300epochs.csv`](COCO_pretrain_300epochs.csv)
+
+MSCOCO dataset. Each model trained for 300 epochs from scratch on 640x640 images. Final (best) weights from these training jobs were used to initialize fine-tuning jobs on other datasets. Accuracy data provided is measured on the minival set, no fine-tuning using corresponding image resolutions is done, models trained on 640x640 are evaluated on multiple resolutions as is.
+
 #### VOC (trained from scratch for 100 epochs) - [`VOC_scratch_100epochs.csv`](VOC_scratch_100epochs.csv)
 
 Accuracy data for the whole YOLOBench search space on the VOC dataset trained from scratch (random initialization) for 100 epochs.
+
+
+#### Latency - [`YOLO_latency.csv`](YOLO_latency.csv)
+
+Latency data for the whole YOLOBench search space measured on 4 embedded platforms (Intel CPU, Raspi4 ARM CPU, Jetson Nano GPU and Khadas VIM3 NPU).

@@ -28,6 +28,7 @@ class YOLOv6(FlexibleYOLO):
         :param model_config:
         """
         nn.Module.__init__(self)
+        self.yaml = None
 
         head_config = {
             'nc': nc,

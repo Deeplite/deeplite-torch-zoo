@@ -1,6 +1,7 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
 
 import os
+import copy
 import math
 import time
 import random
@@ -707,10 +708,12 @@ def model_info(model, detailed=False, verbose=True, imgsz=640):
             )
 
     fused = ' (fused)' if getattr(model, 'is_fused', lambda: False)() else ''
-    yaml_file = getattr(model, 'yaml_file', '') or getattr(model, 'yaml', {}).get(
-        'yaml_file', ''
-    )
-    model_name = Path(yaml_file).stem.replace('yolo', 'YOLO') or 'Model'
+    model_name = 'Model'
+    if (hasattr(model, 'yaml') and model.yaml is not None) or hasattr(model, 'yaml_file'):
+        yaml_file = getattr(model, 'yaml_file', '') or getattr(model, 'yaml', {}).get(
+            'yaml_file', ''
+        )
+        model_name = Path(yaml_file).stem.replace('yolo', 'YOLO') or 'Model'
     LOGGER.info(
         f'{model_name} summary{fused}: {n_l} layers, {n_p} parameters, {n_g} gradients'
     )
@@ -725,3 +728,11 @@ def get_num_params(model):
 def get_num_gradients(model):
     """Return the total number of parameters with gradients in a YOLO model."""
     return sum(x.numel() for x in model.parameters() if x.requires_grad)
+
+
+def fuse_blocks(model: torch.nn.Module) -> nn.Module:
+    model = copy.deepcopy(model)
+    for module in model.modules():
+        if hasattr(module, 'fuse'):
+            module.fuse()
+    return model

@@ -17,6 +17,7 @@ class TimmYOLO(FlexibleYOLO):
         self, backbone_name, nc=80, anchors=None, neck_cfg=None, custom_head=None,
     ):
         nn.Module.__init__(self)
+        self.yaml = None
 
         head_config = {
             'nc': nc,

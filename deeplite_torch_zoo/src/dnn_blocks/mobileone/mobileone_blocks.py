@@ -13,7 +13,7 @@ import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import get_activation
 from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
-from deeplite_torch_zoo.utils import LOGGER
+from deeplite_torch_zoo.utils import fuse_blocks, LOGGER
 
 
 class MobileOneBlock(nn.Module):
@@ -117,12 +117,13 @@ class MobileOneBlock(nn.Module):
 
         return self.activation(self.se(out))
 
-    def reparameterize(self):
+    def fuse(self):
         """Following works like `RepVGG: Making VGG-style ConvNets Great Again` -
         https://arxiv.org/pdf/2101.03697.pdf. We re-parameterize multi-branched
         architecture used at training time to obtain a plain CNN-like structure
         for inference.
         """
+        LOGGER.info(f'fusing a MobileOne block')
         if self.inference_mode:
             return
         kernel, bias = self._get_kernel_bias()
@@ -318,22 +319,6 @@ class MobileOneBlockUnit(nn.Module):
         return x
 
 
-def reparameterize_model(model: torch.nn.Module) -> nn.Module:
-    """Method returns a model where a multi-branched structure
-        used in training is re-parameterized into a single branch
-        for inference.
-
-    :param model: MobileOne model in train mode.
-    :return: MobileOne model in inference mode.
-    """
-    # Avoid editing original graph
-    model = copy.deepcopy(model)
-    for module in model.modules():
-        if hasattr(module, 'reparameterize'):
-            module.reparameterize()
-    return model
-
-
 def _calc_width(net):
     import numpy as np
 
@@ -349,7 +334,7 @@ def _test_reparametrize_model(c1, c2, b=2, res=32):
     input = torch.rand((b, c1, res, res), device=None, requires_grad=False)
     block = MobileOneBlock(c1, c2, 3)
     weight_count1 = _calc_width(block)
-    block = reparameterize_model(block)
+    block = fuse_blocks(block)
     weight_count2 = _calc_width(block)
     output = block(input)  # test forward pass after reparam
     assert weight_count1 != weight_count2
@@ -359,7 +344,7 @@ def _test_reparametrize_model(c1, c2, b=2, res=32):
 
     block = MobileOneBlockUnit(c1, c2, 3)
     weight_count1 = _calc_width(block)
-    block = reparameterize_model(block)
+    block = fuse_blocks(block)
     weight_count2 = _calc_width(block)
     output = block(input)  # test forward pass after reparam
     assert weight_count1 != weight_count2
@@ -368,22 +353,5 @@ def _test_reparametrize_model(c1, c2, b=2, res=32):
     )
 
 
-def _test_blocks(c1, c2, b=2, res=32):
-    # perform a basic forward pass
-    input = torch.rand((b, c1, res, res), device=None, requires_grad=False)
-
-    block = MobileOneBlock(c1, c2, 3)
-    output = block(input)
-    assert output.shape == (b, c2, res, res)
-
-    block = MobileOneBlockUnit(c1, c2, 3)
-    output = block(input)
-    assert output.shape == (b, c2, res, res)
-
-
 if __name__ == "__main__":
-    _test_blocks(64, 64)  #  c1 == c2
-    _test_blocks(64, 32)  #  c1 > c2
-    _test_blocks(32, 64)  #  c1 < c2
-
     _test_reparametrize_model(64, 64, res=16)

@@ -119,6 +119,18 @@ from deeplite_torch_zoo.trainer import Detector
 model = Detector(model_name='yolo7n')        # will create a wrapper around YOLOv7n model
                                              # (YOLOv7n model with YOLOv8 detection head)
 model.train(data='VOC.yaml', epochs=100)     # same arguments as Ultralytics trainer
+
+# alternatively:
+
+torch_model = get_model(
+    model_name='yolo7n',
+    dataset_name='coco',
+    pretrained=False,
+    custom_head='v8',
+)
+model = Detector(torch_model=torch_model)    # either `model_name` or `torch_model`
+model.train(data='VOC.yaml', epochs=100)     # should be provided
+
 ```
 
 ### 🛠 Installation <a name="installation"></a>
