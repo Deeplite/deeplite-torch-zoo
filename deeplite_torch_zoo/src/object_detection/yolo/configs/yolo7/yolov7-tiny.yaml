@@ -112,6 +112,5 @@ head:
    [65, 1, Conv, [256, 3, 1]],
    [73, 1, Conv, [512, 3, 1]],
 
-   # TODO: switch to IDetect
    [[74,75,76], 1, Detect, [nc, anchors]],   # Detect(P3, P4, P5)
   ]

@@ -222,3 +222,9 @@ class Concat(nn.Module):
 
     def forward(self, x):
         return torch.cat(x, self.d)
+
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class ConvTranspose2d(nn.ConvTranspose2d):
+    def forward(self, x):
+        return super().forward(x)

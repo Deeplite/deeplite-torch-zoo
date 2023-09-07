@@ -1,7 +1,8 @@
 from deeplite_torch_zoo.src.object_detection.yolo import YOLO
 from deeplite_torch_zoo.api.models.object_detection.helpers import (
-    make_wrapper_func, load_pretrained_model, get_project_root, DATASET_LIST
+    make_wrapper_func, load_pretrained_model, get_project_root
 )
+from deeplite_torch_zoo.api.datasets.object_detection.yolo import DATASET_CONFIGS
 
 __all__ = []
 
@@ -52,7 +53,7 @@ YOLO_CONFIGS = {
     'yolox': 'yolox/yolox.yaml',
     ############################
     'yolo-r50-csp-': 'misc/r50-csp.yaml',
-    'yolo-x50-csp-': 'misc/x50-csp.yaml',  # to be fixed
+    # 'yolo-x50-csp-': 'misc/x50-csp.yaml',  # to be fixed
     ############################
     'yolo-picodet-': 'picodet/yolo-picodet.yaml',
     'yolo5-lite-c-': 'yololite/yolov5_lite_c.yaml',
@@ -60,9 +61,12 @@ YOLO_CONFIGS = {
     ############################
     'edgeyolo-': 'edgeyolo/edgeyolo.yaml',
     'edgeyolo-m-': 'edgeyolo/edgeyolo_m.yaml',
-    'edgeyolo-s-': 'edgeyolo/edgeyolo_m.yaml',
+    'edgeyolo-s-': 'edgeyolo/edgeyolo_s.yaml',
     'edgeyolo-tiny-': 'edgeyolo/edgeyolo_tiny.yaml',
     'edgeyolo-tiny-lrelu-': 'edgeyolo/edgeyolo_tiny_lrelu.yaml',
+    ############################
+    'yolo6u': 'yolo6u/yolov6.yaml',
+
 }
 
 ACT_FN_TAGS = {'': None, '_relu': 'relu', '_hswish': 'hardswish'}
@@ -102,7 +106,7 @@ V8_MODEL_SCALES = {
     'd67w25': [0.67, 0.25, 768],
 }
 
-CUSTOM_MODEL_SCALES = {'yolo8': V8_MODEL_SCALES}
+CUSTOM_MODEL_SCALES = {'yolo8': V8_MODEL_SCALES, 'yolo6u': V8_MODEL_SCALES}
 
 
 def create_yolo_model(
@@ -142,7 +146,7 @@ for model_key, config_name in YOLO_CONFIGS.items():
             }
 
 
-for dataset_tag, n_classes in DATASET_LIST:
+for dataset_tag, dataset_config in DATASET_CONFIGS.items():
     for model_tag, model_dict in full_model_dict.items():
         name = '_'.join([model_tag, dataset_tag])
         globals()[name] = make_wrapper_func(
@@ -150,7 +154,7 @@ for dataset_tag, n_classes in DATASET_LIST:
             name,
             model_tag,
             dataset_tag,
-            n_classes,
+            dataset_config.num_classes,
             config_path=model_dict['config'],
             **model_dict['params'],
         )
