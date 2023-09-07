@@ -52,7 +52,7 @@ YOLO_CONFIGS = {
     'yolox': 'yolox/yolox.yaml',
     ############################
     'yolo-r50-csp-': 'misc/r50-csp.yaml',
-    'yolo-x50-csp-': 'misc/x50-csp.yaml',  # to be fixed
+    # 'yolo-x50-csp-': 'misc/x50-csp.yaml',  # to be fixed
     ############################
     'yolo-picodet-': 'picodet/yolo-picodet.yaml',
     'yolo5-lite-c-': 'yololite/yolov5_lite_c.yaml',
