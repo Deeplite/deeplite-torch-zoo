@@ -1,6 +1,7 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
 
 import pathlib
+from collections import namedtuple
 from functools import partial
 
 from addict import Dict
@@ -20,20 +21,14 @@ CONFIG_VARS = ['rect', 'cache', 'single_cls', 'task', 'classes', 'fraction',
                'mosaic', 'mixup', 'mask_ratio', 'overlap_mask', 'copy_paste', 'degrees',
                'translate', 'scale', 'shear', 'perspective', 'fliplr', 'flipud', 'hsv_h', 'hsv_s', 'hsv_v']
 
+DEFAULT_IMG_RES = 640
+DatasetConfig = namedtuple('DatasetConfig', ['yaml_file', 'num_classes', 'default_res'])
 DATASET_CONFIGS = {
-    'voc': 'VOC.yaml',
-    'coco': 'coco.yaml',
-    'coco8': 'coco8.yaml',
-    'coco128': 'coco128.yaml',
-    'SKU-110K': 'SKU-110K.yaml',
-}
-
-DEFAULT_RESOLUTIONS = {
-    'voc': 448,
-    'coco': 640,
-    'coco8': 640,
-    'coco128': 640,
-    'SKU-110K': 640,
+    'voc': DatasetConfig('VOC.yaml', 20, 448),
+    'coco': DatasetConfig('coco.yaml', 80, 640),
+    'coco8': DatasetConfig('coco8.yaml', 80, 640),
+    'coco128': DatasetConfig('coco128.yaml', 80, 640),
+    'SKU-110K': DatasetConfig('SKU-110K.yaml', 1, 640),
 }
 
 
@@ -71,14 +66,18 @@ def create_detection_dataloaders(
         cfg[var_name] = locals()[var_name]
 
     if image_size is None:
-        image_size = DEFAULT_RESOLUTIONS.get(dataset_config, 640)
+        if dataset_config in DATASET_CONFIGS:
+            image_size = DATASET_CONFIGS[dataset_config].default_res
+        else:
+            image_size = DEFAULT_IMG_RES
+
     cfg.imgsz = image_size
     cfg.workers = num_workers
 
     if dataset_config.endswith('.yaml'):
         data = check_det_dataset(dataset_config, data_root=data_root)
     elif dataset_config in DATASET_CONFIGS:
-        data = check_det_dataset(HERE / 'configs' / DATASET_CONFIGS[dataset_config], data_root=data_root)
+        data = check_det_dataset(HERE / 'configs' / DATASET_CONFIGS[dataset_config].yaml_file, data_root=data_root)
     else:
         raise ValueError(
             f'Incorrect dataset name/config passed: {dataset_config}. Either pass a path '
