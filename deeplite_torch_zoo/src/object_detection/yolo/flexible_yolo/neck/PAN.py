@@ -48,7 +48,7 @@ class PAN(nn.Module):
 
         self.gd = default_gd
         self.gw = default_gw
-        if self.version.lower() in YOLO_SCALING_GAINS:
+        if self.version is not None and self.version.lower() in YOLO_SCALING_GAINS:
             self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
             self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
         self._no_second_stage_upsampling = no_second_stage_upsampling

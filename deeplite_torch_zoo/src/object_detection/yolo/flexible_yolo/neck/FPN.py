@@ -56,7 +56,7 @@ class FPN(nn.Module):
 
         self.gd = default_gd
         self.gw = default_gw
-        if self.version.lower() in YOLO_SCALING_GAINS:
+        if self.version is not None and self.version.lower() in YOLO_SCALING_GAINS:
             self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
             self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
 
@@ -76,7 +76,8 @@ class FPN(nn.Module):
         )
 
         self.P4 = Conv(self.channels_outs[0], self.channels_outs[1], 1, 1)
-        self.P4_upsampled = nn.Upsample(scale_factor=4, mode='nearest')
+        scale_factor = 2 if not no_second_stage_upsampling else 4
+        self.P4_upsampled = nn.Upsample(scale_factor=scale_factor, mode='nearest')
 
         self.P3 = bottleneck_block_cls(
             self.channels_outs[1] + self.C3_size,

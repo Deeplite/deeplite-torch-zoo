@@ -49,5 +49,5 @@ head:
    [-1, 2, BottleneckCSP2, [512]], # 26
    [-1, 1, Conv, [1024, 3, 1]],
 
-   [[19,23,27], 1, IDetect, [nc, anchors]],   # Detect(P3, P4, P5)
+   [[19,23,27], 1, Detect, [nc, anchors]],   # Detect(P3, P4, P5)
   ]

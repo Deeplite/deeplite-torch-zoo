@@ -3,15 +3,17 @@ import pytest
 from deeplite_torch_zoo import get_model
 from deeplite_torch_zoo.trainer import Detector
 
+TEST_MODELS = [
+    ('yolo7n', ),
+    ('yolo_fdresnet18x0.25', ),
+    ('yolo_timm_tinynet_e', ),
+    ('yolo6s-d33w25', ),
+]
+
 
 @pytest.mark.parametrize(
     ('model_name', ),
-    [
-        ('yolo7n', ),
-        ('yolo_fdresnet18x0.25', ),
-        ('yolo_timm_tinynet_e', ),
-        ('yolo6s-d33w25', ),
-    ],
+    TEST_MODELS,
 )
 def test_detection_trainer(model_name):
     model = Detector(model_name=model_name)
@@ -20,12 +22,7 @@ def test_detection_trainer(model_name):
 
 @pytest.mark.parametrize(
     ('model_name', ),
-    [
-        ('yolo7n', ),
-        ('yolo_fdresnet18x0.25', ),
-        ('yolo_timm_tinynet_e', ),
-        ('yolo6s-d33w25', ),
-    ],
+    TEST_MODELS,
 )
 def test_detection_trainer_torch_model(model_name):
     torch_model = get_model(
