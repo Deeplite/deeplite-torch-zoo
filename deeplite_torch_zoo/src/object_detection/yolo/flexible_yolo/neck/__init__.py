@@ -1,7 +1,7 @@
 # Code credit: https://github.com/Bobo-y/flexible-yolov5
 # The file is modified by Deeplite Inc. from the original implementation on Jan 4, 2023
 
-from .FPN import PyramidFeatures as FPN
+from .FPN import FPN
 from .PAN import PAN
 
 __all__ = ['build_neck']

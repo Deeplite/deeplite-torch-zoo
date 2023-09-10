@@ -26,9 +26,9 @@ from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNE
 
 
 HEAD_NAME_MAP = {
-    'v5': Detect,
-    'v8': DetectV8,
-    'x': DetectX,
+    'yolo5': Detect,
+    'yolo8': DetectV8,
+    'yolox': DetectX,
 }
 
 
@@ -60,6 +60,8 @@ class YOLO(DetectionModel):
                 self.yaml = yaml.safe_load(f)  # model dict
 
         if custom_head is not None:
+            if custom_head not in HEAD_NAME_MAP:
+                raise ValueError(f'Incorrect YOLO head name {custom_head}. Choices: {list(HEAD_NAME_MAP.keys())}')
             self.yaml['head'][-1][2] = HEAD_NAME_MAP[custom_head].__name__
 
         # Define model
