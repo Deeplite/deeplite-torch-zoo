@@ -22,6 +22,7 @@ from zipfile import is_zipfile, ZipFile
 from tarfile import is_tarfile
 from itertools import repeat
 
+import numpy as np
 import torch
 
 
@@ -375,3 +376,27 @@ def download(url, dir='.', unzip=True, delete=True, curl=False, threads=1, retry
     else:
         for u in [url] if isinstance(url, (str, Path)) else url:
             download_one(u, dir)
+
+
+def get_pareto_set(variable1, variable2, ignore_indices=None):
+    array = np.array([variable1, variable2]).T
+    sorting_indices = array[:, 0].argsort()
+    if ignore_indices is not None:
+        sorting_indices = [idx for idx in sorting_indices if idx not in ignore_indices]
+
+    # Sort on first dimension
+    array = array[sorting_indices]
+    ind_list = []
+
+    # Add first row to pareto_frontier
+    pareto_frontier = array[0:1, :]
+    ind_list.append(sorting_indices[0])
+
+    # Test next row against the last row in pareto_frontier
+    for i, row in enumerate(array[1:, :]):
+        if sum([row[x] >= pareto_frontier[-1][x]
+                for x in range(len(row))]) == len(row):
+            # If it is better on all features add the row to pareto_frontier
+            pareto_frontier = np.concatenate((pareto_frontier, [row]))
+            ind_list.append(sorting_indices[i + 1])
+    return ind_list
