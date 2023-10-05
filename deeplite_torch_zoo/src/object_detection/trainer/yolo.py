@@ -77,6 +77,7 @@ def patched_export(obj, model_name='model', **kwargs):
             m.export = True
             m.format = args.format
 
+    model.yaml_file = model_name
     return Exporter(overrides=args, _callbacks=obj.callbacks)(model=model)
 
 
