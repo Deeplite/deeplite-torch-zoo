@@ -64,7 +64,6 @@ class GhostModuleV2(nn.Module):
     def __init__(self, c1, c2, k=1, ratio=2, dw_k=3, s=1, dfc=False, act='relu'):
         super(GhostModuleV2, self).__init__()
         self.dfc = dfc
-        self.gate_fn = nn.Sigmoid()
         self.act = get_activation(act)
 
         self.oup = c2

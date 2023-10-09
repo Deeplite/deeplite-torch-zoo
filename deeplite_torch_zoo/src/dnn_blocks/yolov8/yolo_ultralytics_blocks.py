@@ -20,7 +20,7 @@ from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNE
 class YOLOC3(nn.Module):
     # CSP Bottleneck with 3 convolutions
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu', depth_coef=1
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu', k=3, depth_coef=1
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -30,7 +30,7 @@ class YOLOC3(nn.Module):
         n = n * depth_coef
         self.m = nn.Sequential(
             *(
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, k=k, act=act)
                 for _ in range(n)
             )
         )
