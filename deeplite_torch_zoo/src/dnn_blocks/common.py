@@ -153,45 +153,6 @@ class DWConv(ConvBnAct):
 
 
 @VARIABLE_CHANNEL_BLOCKS.register()
-class GhostConv(nn.Module):
-    # Ghost Convolution https://github.com/huawei-noah/ghostnet
-    def __init__(
-        self,
-        c1,
-        c2,
-        k=1,
-        s=1,
-        g=1,
-        dw_k=5,
-        dw_s=1,
-        act='relu',
-        shrink_factor=0.5,
-        residual=False,
-    ):  # ch_in, ch_out, kernel, stride, groups
-        super(GhostConv, self).__init__()
-        c_ = c2 // 2  # hidden channels
-
-        self.residual = residual
-        self.single_conv = False
-        if c_ < 2:
-            self.single_conv = True
-            self.cv1 = ConvBnAct(c1, c2, k, s, p=None, g=g, act=act)
-        else:
-            self.cv1 = ConvBnAct(c1, c_, k, s, p=None, g=g, act=act)
-            self.cv2 = ConvBnAct(c_, c_, dw_k, dw_s, p=None, g=c_, act=act)
-
-    def forward(self, x):
-        y = self.cv1(x)
-        if self.single_conv:
-            return y
-        return (
-            torch.cat([y, self.cv2(y)], 1)
-            if not self.residual
-            else x + torch.cat([y, self.cv2(y)], 1)
-        )
-
-
-@VARIABLE_CHANNEL_BLOCKS.register()
 class Focus(nn.Module):
     # Focus wh information into c-space
     def __init__(

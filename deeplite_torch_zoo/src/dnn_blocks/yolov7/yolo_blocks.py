@@ -13,7 +13,6 @@ import torch.nn as nn
 from deeplite_torch_zoo.src.dnn_blocks.common import (
     ConvBnAct,
     DWConv,
-    GhostConv,
     get_activation,
     round_channels,
     ACT_TYPE_MAP,
@@ -22,6 +21,7 @@ from deeplite_torch_zoo.src.dnn_blocks.resnet.resnet_blocks import (
     GhostBottleneck,
     ResNetBottleneck,
 )
+from deeplite_torch_zoo.src.dnn_blocks.ghostnetv2.ghostnet_blocks import GhostConv
 from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNEL_BLOCKS
 
 
