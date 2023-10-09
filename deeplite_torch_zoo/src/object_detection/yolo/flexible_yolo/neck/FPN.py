@@ -1,19 +1,28 @@
 # Code credit: https://github.com/Bobo-y/flexible-yolov5
 # The file is modified by Deeplite Inc. from the original implementation on Jan 4, 2023
 
-import math
+from functools import partial
 
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv, Concat
-from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3 as C3
+from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3
 
 from deeplite_torch_zoo.utils import LOGGER, make_divisible
 
 
-class PyramidFeatures(nn.Module):
+YOLO_SCALING_GAINS = {
+    'n': {'gd': 0.33, 'gw': 0.25},
+    's': {'gd': 0.33, 'gw': 0.5},
+    'm': {'gd': 0.67, 'gw': 0.75},
+    'l': {'gd': 1, 'gw': 1},
+    'x': {'gd': 1.33, 'gw': 1.25},
+}
+
+
+class FPN(nn.Module):
     """
-    this FPN refer to yolov5, there are many different versions of implementation, and the details will be different
+    YOLOv5 FPN module
 
          concat
     C3 --->   P3
@@ -25,50 +34,54 @@ class PyramidFeatures(nn.Module):
     C5 --->    P5
     """
 
-    def __init__(self, ch=[256, 512, 1024], channel_outs=[512, 256, 256], version='s'):
-        super(PyramidFeatures, self).__init__()
+    def __init__(
+            self,
+            ch=(256, 512, 1024),
+            channel_outs=(512, 256, 256),
+            version='s',
+            default_gd=0.33,
+            default_gw=0.5,
+            bottleneck_block_cls=None,
+            bottleneck_depth=3,
+            no_second_stage_upsampling=False,
+    ):
+        super(FPN, self).__init__()
 
         self.C3_size = ch[0]
         self.C4_size = ch[1]
         self.C5_size = ch[2]
         self.channels_outs = channel_outs
         self.version = version
+        self._no_second_stage_upsampling = no_second_stage_upsampling
 
-        gains = {
-            'n': {'gd': 0.33, 'gw': 0.25},
-            's': {'gd': 0.33, 'gw': 0.5},
-            'm': {'gd': 0.67, 'gw': 0.75},
-            'l': {'gd': 1, 'gw': 1},
-            'x': {'gd': 1.33, 'gw': 1.25},
-        }
-
-        self.gd = 0.33
-        self.gw = 0.5
-        if self.version.lower() in gains:
-            # only for yolov5
-            self.gd = gains[self.version.lower()]['gd']  # depth gain
-            self.gw = gains[self.version.lower()]['gw']  # width gain
+        self.gd = default_gd
+        self.gw = default_gw
+        if self.version is not None and self.version.lower() in YOLO_SCALING_GAINS:
+            self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
+            self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
 
         self.re_channels_out()
         self.concat = Concat()
 
+        self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest') if not self._no_second_stage_upsampling \
+            else nn.Identity()
         self.P5 = Conv(self.C5_size, self.channels_outs[0], 1, 1)
-        self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
-        self.conv1 = C3(
+
+        if bottleneck_block_cls is None:
+            bottleneck_block_cls = partial(YOLOC3, shortcut=False, n=self.get_depth(bottleneck_depth))
+
+        self.conv1 = bottleneck_block_cls(
             self.channels_outs[0] + self.C4_size,
             self.channels_outs[0],
-            self.get_depth(3),
-            False,
         )
 
         self.P4 = Conv(self.channels_outs[0], self.channels_outs[1], 1, 1)
-        self.P4_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
+        scale_factor = 2 if not no_second_stage_upsampling else 4
+        self.P4_upsampled = nn.Upsample(scale_factor=scale_factor, mode='nearest')
 
-        self.P3 = C3(
+        self.P3 = bottleneck_block_cls(
             self.channels_outs[1] + self.C3_size,
             self.channels_outs[1],
-            self.get_depth(3),
-            False,
         )
 
         self.out_shape = (
@@ -77,14 +90,11 @@ class PyramidFeatures(nn.Module):
             self.channels_outs[0],
         )
         LOGGER.info(
-            "FPN input channel size: C3 {}, C4 {}, C5 {}".format(
-                self.C3_size, self.C4_size, self.C5_size
-            )
+            f'FPN input channel sizes: C3 {self.C3_size}, C4 {self.C4_size}, C5 {self.C5_size}'
         )
         LOGGER.info(
-            "FPN output channel size: P3 {}, P4 {}, P5 {}".format(
-                self.channels_outs[2], self.channels_outs[1], self.channels_outs[0]
-            )
+            f'FPN output channel sizes: P3 {self.channels_outs[2]}, '
+            f'P4 {self.channels_outs[1]}, P5 {self.channels_outs[0]}'
         )
 
     def get_depth(self, n):

@@ -1,8 +1,14 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
 
+from copy import deepcopy
+
+from ultralytics.yolo.cfg import get_cfg
 from ultralytics.yolo.engine.model import YOLO
-from ultralytics.yolo.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, callbacks
+from ultralytics.yolo.engine.exporter import Exporter
+from ultralytics.yolo.utils import DEFAULT_CFG, DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, callbacks
+
 from deeplite_torch_zoo import get_model
+from deeplite_torch_zoo.src.object_detection.yolo.config_parser import HEAD_NAME_MAP
 
 
 def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
@@ -30,10 +36,11 @@ def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
             dataset_name=pretraining_dataset,
             pretrained=pretrained,
             num_classes=num_classes,
-            custom_head='v8',  # can only work with v8 head as of now
+            custom_head='yolo8',  # can only work with v8 head as of now
         )
     else:
         obj.model = torch_model
+    obj.model.names = [''] if not num_classes else [f'class{i}' for i in range(num_classes)]
     obj.overrides['model'] = obj.cfg
 
     # Below added to allow export from yamls
@@ -43,4 +50,36 @@ def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
     obj.model.model_name = model_name
 
 
+def patched_export(obj, model_name='model', **kwargs):
+    obj.model.yaml = {'yaml_file': model_name}
+
+    obj._check_is_pytorch_model()
+    overrides = obj.overrides.copy()
+    overrides.update(kwargs)
+    overrides['mode'] = 'export'
+    args = get_cfg(cfg=DEFAULT_CFG, overrides=overrides)
+    args.task = obj.task
+    if args.imgsz == DEFAULT_CFG.imgsz:
+        args.imgsz = obj.model.args['imgsz']  # use trained imgsz unless custom value is passed
+    if args.batch == DEFAULT_CFG.batch:
+        args.batch = 1  # default to 1 if not modified
+
+    # Update model
+    model = deepcopy(obj.model).to(obj.device)
+    for p in model.parameters():
+        p.requires_grad = False
+    model.eval()
+    model.float()
+    model = model.fuse()
+    for k, m in model.named_modules():
+        if isinstance(m, tuple(HEAD_NAME_MAP.values())):
+            m.dynamic = args.dynamic
+            m.export = True
+            m.format = args.format
+
+    model.yaml_file = model_name
+    return Exporter(overrides=args, _callbacks=obj.callbacks)(model=model)
+
+
 YOLO.__init__ = patched_init
+YOLO.export = patched_export

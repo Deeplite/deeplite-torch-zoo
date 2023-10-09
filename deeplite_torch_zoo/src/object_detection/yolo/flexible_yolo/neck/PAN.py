@@ -1,18 +1,27 @@
 # Code credit: https://github.com/Bobo-y/flexible-yolov5
 
-import math
+from functools import partial
 
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv, Concat
-from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3 as C3
+from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3
 
 from deeplite_torch_zoo.utils import LOGGER, make_divisible
 
 
+YOLO_SCALING_GAINS = {
+    'n': {'gd': 0.33, 'gw': 0.25},
+    's': {'gd': 0.33, 'gw': 0.5},
+    'm': {'gd': 0.67, 'gw': 0.75},
+    'l': {'gd': 1, 'gw': 1},
+    'x': {'gd': 1.33, 'gw': 1.25},
+}
+
+
 class PAN(nn.Module):
     """
-        This PAN  refer to yolov5, there are many different versions of implementation, and the details will be different.
+    YOLOv5 PAN module
     P3 --->  PP3
     ^         |
     | concat  V
@@ -23,26 +32,26 @@ class PAN(nn.Module):
     """
 
     def __init__(
-        self, ch=[256, 256, 512], channel_outs=[256, 512, 512, 1024], version='s'
+        self,
+        ch=(256, 256, 512),
+        channel_outs=(256, 512, 512, 1024),
+        version='s',
+        default_gd=0.33,
+        default_gw=0.5,
+        bottleneck_block_cls=None,
+        bottleneck_depth=3,
+        no_second_stage_upsampling=False,
     ):
         super(PAN, self).__init__()
         self.version = str(version)
         self.channels_outs = channel_outs
-        gains = {
-            'n': {'gd': 0.33, 'gw': 0.25},
-            's': {'gd': 0.33, 'gw': 0.5},
-            'm': {'gd': 0.67, 'gw': 0.75},
-            'l': {'gd': 1, 'gw': 1},
-            'x': {'gd': 1.33, 'gw': 1.25},
-        }
 
-        if self.version.lower() in gains:
-            # only for yolov5
-            self.gd = gains[self.version.lower()]['gd']  # depth gain
-            self.gw = gains[self.version.lower()]['gw']  # width gain
-        else:
-            self.gd = 0.33
-            self.gw = 0.5
+        self.gd = default_gd
+        self.gw = default_gw
+        if self.version is not None and self.version.lower() in YOLO_SCALING_GAINS:
+            self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
+            self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
+        self._no_second_stage_upsampling = no_second_stage_upsampling
 
         self.re_channels_out()
 
@@ -50,31 +59,32 @@ class PAN(nn.Module):
         self.P4_size = ch[1]
         self.P5_size = ch[2]
 
-        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, 2)
-        self.P4 = C3(
+        if bottleneck_block_cls is None:
+            bottleneck_block_cls = partial(YOLOC3, shortcut=False, n=self.get_depth(bottleneck_depth))
+
+        first_stride = 2 if not no_second_stage_upsampling else 4
+        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, first_stride)
+        self.P4 = bottleneck_block_cls(
             self.channels_outs[0] + self.P4_size,
             self.channels_outs[1],
-            self.get_depth(3),
-            False,
         )
 
-        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, 2)
-        self.P5 = C3(
+        second_stride = 2 if not no_second_stage_upsampling else 1
+        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, second_stride)
+        self.P5 = bottleneck_block_cls(
             self.channels_outs[2] + self.P5_size,
             self.channels_outs[3],
-            self.get_depth(3),
-            False,
         )
 
         self.concat = Concat()
         self.out_shape = [self.P3_size, self.channels_outs[2], self.channels_outs[3]]
         LOGGER.info(
-            "PAN input channel size: P3 {}, P4 {}, P5 {}".format(
+            'PAN input channel size: P3 {}, P4 {}, P5 {}'.format(
                 self.P3_size, self.P4_size, self.P5_size
             )
         )
         LOGGER.info(
-            "PAN output channel size: PP3 {}, PP4 {}, PP5 {}".format(
+            'PAN output channel size: PP3 {}, PP4 {}, PP5 {}'.format(
                 self.P3_size, self.channels_outs[2], self.channels_outs[3]
             )
         )
