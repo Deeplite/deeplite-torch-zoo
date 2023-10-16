@@ -14,3 +14,7 @@ from deeplite_torch_zoo.api.eval.zero_cost import get_zero_cost_estimator
 
 # utils
 from deeplite_torch_zoo.utils import LOGGER  # pylint: disable=unused-import
+
+from . import postinstall
+
+postinstall.initialize()
