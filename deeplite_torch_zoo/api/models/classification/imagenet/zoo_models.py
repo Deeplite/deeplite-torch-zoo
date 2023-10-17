@@ -5,10 +5,6 @@ from deeplite_torch_zoo.api.models.classification.imagenet.utils import (
     NUM_IMAGENET_CLASSES,
 )
 
-from deeplite_torch_zoo.src.classification.imagenet_models.mobileone import mobileone
-from deeplite_torch_zoo.src.classification.imagenet_models.ghostnetv2 import (
-    ghostnet_v2,
-)
 from deeplite_torch_zoo.src.classification.imagenet_models.edgevit import (
     edgevit_xxs,
     edgevit_xs,
@@ -22,7 +18,24 @@ from deeplite_torch_zoo.src.classification.imagenet_models.fasternet import (
     fasternet_m,
     fasternet_l,
 )
+from deeplite_torch_zoo.src.classification.imagenet_models.faster_vit import (
+    faster_vit_0_224,
+    faster_vit_1_224,
+    faster_vit_2_224,
+    faster_vit_3_224,
+    faster_vit_4_224,
+    faster_vit_5_224,
+    faster_vit_6_224,
+    faster_vit_4_21k_224,
+    faster_vit_4_21k_384,
+    faster_vit_4_21k_512,
+    faster_vit_4_21k_768,
+)
+from deeplite_torch_zoo.src.classification.imagenet_models.ghostnetv2 import (
+    ghostnet_v2,
+)
 from torchvision.models import MobileNetV2
+from deeplite_torch_zoo.src.classification.imagenet_models.mobileone import mobileone
 
 
 __all__ = []
@@ -52,6 +65,17 @@ MODEL_FNS = {
     'fasternet_s': (fasternet_s, {}),
     'fasternet_m': (fasternet_m, {}),
     'fasternet_l': (fasternet_l, {}),
+    'faster_vit_0_224': (faster_vit_0_224, {}),
+    'faster_vit_1_224': (faster_vit_1_224, {}),
+    'faster_vit_2_224': (faster_vit_2_224, {}),
+    'faster_vit_3_224': (faster_vit_3_224, {}),
+    'faster_vit_4_224': (faster_vit_4_224, {}),
+    'faster_vit_5_224': (faster_vit_5_224, {}),
+    'faster_vit_6_224': (faster_vit_6_224, {}),
+    'faster_vit_4_21k_224': (faster_vit_4_21k_224, {}),
+    'faster_vit_4_21k_384': (faster_vit_4_21k_384, {}),
+    'faster_vit_4_21k_512': (faster_vit_4_21k_512, {}),
+    'faster_vit_4_21k_768': (faster_vit_4_21k_768, {}),
     'mobilenetv2_w035': (MobileNetV2, {'width_mult': 0.35}),
     'mobileone_s0': (mobileone, {'inference_mode': False, 'variant': 's0'}),
     'mobileone_s1': (mobileone, {'inference_mode': False, 'variant': 's1'}),
