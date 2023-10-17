@@ -174,25 +174,3 @@ class GhostBottleneckV2(nn.Module):
         x = self.ghost2(x)
         x += self.shortcut(residual)
         return x
-
-
-def _test_blocks(c1, c2, b=2, res=32):
-    input = torch.rand((b, c1, res, res), device=None, requires_grad=False)
-
-    block = GhostModuleV2(c1, c2, dfc=False)
-    output = block(input)
-    assert output.shape == (b, c2, res, res)
-
-    block = GhostModuleV2(c1, c2, dfc=True)
-    output = block(input)
-    assert output.shape == (b, c2, res, res)
-
-    block = GhostBottleneckV2(c1, c2, 1)
-    output = block(input)
-    assert output.shape == (b, c2, res, res)
-
-
-if __name__ == "__main__":
-    _test_blocks(64, 64)  #  c1 == c2
-    _test_blocks(64, 32)  #  c1 > c2
-    _test_blocks(32, 64)  #  c1 < c2

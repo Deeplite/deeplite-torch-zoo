@@ -9,12 +9,18 @@ import functools
 import os
 import math
 import contextlib
+import subprocess
 import logging.config
 
 import pkg_resources as pkg
 
 from pathlib import Path
 from typing import Optional
+
+from multiprocessing.pool import ThreadPool
+from zipfile import is_zipfile, ZipFile
+from tarfile import is_tarfile
+from itertools import repeat
 
 import torch
 
@@ -296,3 +302,78 @@ class Profile(contextlib.ContextDecorator):
         if self.cuda:
             torch.cuda.synchronize()
         return time.time()
+
+
+def curl_download(url, filename, *, silent: bool = False) -> bool:
+    """
+    Download a file from a url to a filename using curl.
+    """
+    silent_option = 'sS' if silent else ''  # silent
+    proc = subprocess.run([
+        'curl',
+        '-#',
+        f'-{silent_option}L',
+        url,
+        '--output',
+        filename,
+        '--retry',
+        '9',
+        '-C',
+        '-', ])
+    return proc.returncode == 0
+
+
+def unzip_file(file, path=None, exclude=('.DS_Store', '__MACOSX')):
+    # Unzip a *.zip file to path/, excluding files containing strings in exclude list
+    if path is None:
+        path = Path(file).parent  # default path
+    with ZipFile(file) as zipObj:
+        for f in zipObj.namelist():  # list all archived filenames in the zip
+            if all(x not in f for x in exclude):
+                zipObj.extract(f, path=path)
+
+
+def download(url, dir='.', unzip=True, delete=True, curl=False, threads=1, retry=3):
+    # Multithreaded file download and unzip function, used in data.yaml for autodownload
+    def download_one(url, dir):
+        # Download 1 file
+        success = True
+        if os.path.isfile(url):
+            f = Path(url)  # filename
+        else:  # does not exist
+            f = dir / Path(url).name
+            LOGGER.info(f'Downloading {url} to {f}...')
+            for i in range(retry + 1):
+                if curl:
+                    success = curl_download(url, f, silent=(threads > 1))
+                else:
+                    torch.hub.download_url_to_file(url, f, progress=threads == 1)  # torch download
+                    success = f.is_file()
+                if success:
+                    break
+                elif i < retry:
+                    LOGGER.warning(f'⚠️ Download failure, retrying {i + 1}/{retry} {url}...')
+                else:
+                    LOGGER.warning(f'❌ Failed to download {url}...')
+
+        if unzip and success and (f.suffix == '.gz' or is_zipfile(f) or is_tarfile(f)):
+            LOGGER.info(f'Unzipping {f}...')
+            if is_zipfile(f):
+                unzip_file(f, dir)  # unzip
+            elif is_tarfile(f):
+                subprocess.run(['tar', 'xf', f, '--directory', f.parent], check=True)  # unzip
+            elif f.suffix == '.gz':
+                subprocess.run(['tar', 'xfz', f, '--directory', f.parent], check=True)  # unzip
+            if delete:
+                f.unlink()  # remove zip
+
+    dir = Path(dir)
+    dir.mkdir(parents=True, exist_ok=True)  # make directory
+    if threads > 1:
+        pool = ThreadPool(threads)
+        pool.imap(lambda x: download_one(*x), zip(url, repeat(dir)))  # multithreaded
+        pool.close()
+        pool.join()
+    else:
+        for u in [url] if isinstance(url, (str, Path)) else url:
+            download_one(u, dir)

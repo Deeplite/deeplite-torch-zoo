@@ -12,6 +12,7 @@ from deeplite_torch_zoo.src.object_detection.yolo.heads import (
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.dnn_blocks.common import DWConv
 from deeplite_torch_zoo.src.dnn_blocks.yolov7.repvgg_blocks import RepConv
+from deeplite_torch_zoo.src.dnn_blocks.mobileone.mobileone_blocks import MobileOneBlock
 
 from deeplite_torch_zoo.utils import (
     LOGGER,
@@ -117,16 +118,19 @@ class DetectionModel(nn.Module):
                 % (mi.weight.shape[1], *b[:5].mean(1).tolist(), b[5:].mean())
             )
 
-    def fuse(self, verbose=False):  # fuse model Conv2d() + BatchNorm2d() layers
+    def fuse(self, verbose=False):
         LOGGER.info('Fusing layers... ')
         for m in self.model.modules():
             if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
+                if verbose:
+                    LOGGER.info(f'Fusing BN into Conv for module {m}')
                 m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
                 delattr(m, 'bn')  # remove batchnorm
                 m.forward = m.forward_fuse  # update forward
-            if isinstance(m, RepConv):
-                # print(f" fuse_repvgg_block")
-                m.fuse_repvgg_block()
+            if isinstance(m, RepConv) or isinstance(m, MobileOneBlock):
+                if verbose:
+                    LOGGER.info(f'Fusing RepVGG-style module {m}')
+                m.fuse()
         self.info()
         self._is_fused = True
         return self

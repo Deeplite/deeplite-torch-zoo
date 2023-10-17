@@ -1,18 +1,17 @@
-# Credit: https://github.com/WongKinYiu/yolov7
+# https://github.com/LSH9832/edgeyolo
 
 # parameters
 nc: 80  # number of classes
-depth_multiple: 1.0  # model depth multiple
+depth_multiple: 1.0  # models depth multiple
 width_multiple: 1.0  # layer channel multiple
 activation_type: silu
 
-# anchors
 anchors:
-  - [12,16, 19,36, 40,28]  # P3/8
-  - [36,75, 76,55, 72,146]  # P4/16
-  - [142,110, 192,243, 459,401]  # P5/32
+  - [10,13, 16,30, 33,23]  # P3/8
+  - [30,61, 62,45, 59,119]  # P4/16
+  - [116,90, 156,198, 373,326]  # P5/32
 
-# yolov7 backbone
+# edgeyolo backbone
 backbone:
   # [from, number, module, args]
   [[-1, 1, Conv, [32, 3, 1]],  # 0
@@ -73,7 +72,7 @@ backbone:
    [-1, 1, Conv, [1024, 1, 1]],  # 50
   ]
 
-# yolov7 head
+# edgeyolo head
 head:
   [[-1, 1, SPPCSPC, [512]], # 51
 
@@ -135,9 +134,9 @@ head:
    [[-1, -2, -3, -4, -5, -6], 1, Concat, [1]],
    [-1, 1, Conv, [512, 1, 1]], # 101
 
-   [75, 1, RepConv, [256, 3, 1]],
-   [88, 1, RepConv, [512, 3, 1]],
-   [101, 1, RepConv, [1024, 3, 1]],
+   [75, 1, RepConv, [256, 3, 1]],   # 102
+   [88, 1, RepConv, [512, 3, 1]],   # 103
+   [101, 1, RepConv, [1024, 3, 1]], # 104
 
-   [[102,103,104], 1, Detect, [nc, anchors]],   # Detect(P3, P4, P5)
+   [[102,103,104], 1, Detect, [nc, anchors]],
   ]

@@ -162,5 +162,6 @@ head:
    [59, 1, Conv, [960, 3, 1]],
    [47, 1, Conv, [1280, 3, 1]],
 
-   [[114,115,116,117,118,119,120,121], 1, IAuxDetect, [nc, anchors]],   # Detect(P3, P4, P5, P6)
+   # [[114,115,116,117,118,119,120,121], 1, IAuxDetect, [nc, anchors]],   # Detect(P3, P4, P5, P6)
+   [[114,115,116,117], 1, Detect, [nc, anchors]],   # Detect(P3, P4, P5, P6)
   ]

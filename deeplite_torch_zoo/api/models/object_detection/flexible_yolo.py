@@ -1,11 +1,13 @@
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.model import FlexibleYOLO
 from deeplite_torch_zoo.api.models.object_detection.helpers import (
-    make_wrapper_func, get_project_root, load_pretrained_model, DATASET_LIST
+    make_wrapper_func, get_project_root, load_pretrained_model
 )
+from deeplite_torch_zoo.api.datasets.object_detection.yolo import DATASET_CONFIGS
+
 
 __all__ = []
 
-CFG_PATH = 'deeplite_torch_zoo/src/object_detection/flexible_yolo/configs'
+CFG_PATH = 'deeplite_torch_zoo/src/object_detection/yolo/flexible_yolo/configs'
 
 model_configs = {
     'yolo_resnet18': 'model_resnet.yaml',
@@ -70,8 +72,9 @@ def flexible_yolo(
 
 
 model_list = list(model_configs.keys())
-for dataset_tag, n_classes in DATASET_LIST:
+for dataset_tag, dataset_config in DATASET_CONFIGS.items():
     for model_tag in model_list:
         name = '_'.join([model_tag, dataset_tag])
-        globals()[name] = make_wrapper_func(flexible_yolo, name, model_tag, dataset_tag, n_classes)
+        globals()[name] = make_wrapper_func(flexible_yolo, name, model_tag, dataset_tag,
+                                            dataset_config.num_classes)
         __all__.append(name)

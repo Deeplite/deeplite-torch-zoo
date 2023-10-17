@@ -8,8 +8,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-##### ViT transformer #####
+from deeplite_torch_zoo.src.dnn_blocks.timm import DropPath
 
+
+##### ViT transformer #####
 
 class TransformerLayer(nn.Module):
     # Transformer layer https://arxiv.org/abs/2010.11929 (LayerNorm layers removed for better performance)

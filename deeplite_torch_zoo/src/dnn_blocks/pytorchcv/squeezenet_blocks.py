@@ -150,22 +150,3 @@ class SqnxtUnit(nn.Module):
         x = x + identity
         x = self.activ(x)
         return x
-
-
-def _test_blocks(c1, c2, b=2, res=32):
-    # perform a basic forward pass
-    input = torch.rand((b, c1, res, res), device=None, requires_grad=False)
-
-    fire_block = FireUnit(c1, c2)
-    output = fire_block(input)
-    assert output.shape == (b, c2, res, res)
-
-    sqnxrt_block = SqnxtUnit(c1, c2)
-    output = sqnxrt_block(input)
-    assert output.shape == (b, c2, res, res)
-
-
-if __name__ == "__main__":
-    _test_blocks(64, 64)  #  c1 == c2
-    _test_blocks(64, 32)  #  c1 > c2
-    _test_blocks(32, 64)  #  c1 < c2

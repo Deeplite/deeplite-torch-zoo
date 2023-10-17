@@ -10,12 +10,11 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.mobileone.mobileone_blocks import (
-    MobileOneBlock,
-    reparameterize_model,
-)
+from deeplite_torch_zoo.utils import fuse_blocks
+from deeplite_torch_zoo.src.dnn_blocks.mobileone.mobileone_blocks import MobileOneBlock
 
-__all__ = ['MobileOne', 'mobileone', 'reparameterize_model']
+
+__all__ = ['MobileOne', 'mobileone']
 
 
 class MobileOne(nn.Module):
@@ -141,16 +140,16 @@ class MobileOne(nn.Module):
         x = self.linear(x)
         return x
 
-    def get_reparameterize_model(self):
-        return reparameterize_model(self)
+    def fuse(self):
+        return fuse_blocks(self)
 
 
 PARAMS = {
-    "s0": {"width_multipliers": (0.75, 1.0, 1.0, 2.0), "num_conv_branches": 4},
-    "s1": {"width_multipliers": (1.5, 1.5, 2.0, 2.5)},
-    "s2": {"width_multipliers": (1.5, 2.0, 2.5, 4.0)},
-    "s3": {"width_multipliers": (2.0, 2.5, 3.0, 4.0)},
-    "s4": {"width_multipliers": (3.0, 3.5, 3.5, 4.0), "use_se": True},
+    's0': {'width_multipliers': (0.75, 1.0, 1.0, 2.0), 'num_conv_branches': 4},
+    's1': {'width_multipliers': (1.5, 1.5, 2.0, 2.5)},
+    's2': {'width_multipliers': (1.5, 2.0, 2.5, 4.0)},
+    's3': {'width_multipliers': (2.0, 2.5, 3.0, 4.0)},
+    's4': {'width_multipliers': (3.0, 3.5, 3.5, 4.0), 'use_se': True},
 }
 
 
