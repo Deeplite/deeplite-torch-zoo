@@ -309,7 +309,7 @@ def curl_download(url, filename, *, silent: bool = False) -> bool:
     Download a file from a url to a filename using curl.
     """
     silent_option = 'sS' if silent else ''  # silent
-    proc = subprocess.run([
+    proc = subprocess.run([  # pylint: disable=subprocess-run-check
         'curl',
         '-#',
         f'-{silent_option}L',
@@ -345,13 +345,13 @@ def download(url, dir='.', unzip=True, delete=True, curl=False, threads=1, retry
             LOGGER.info(f'Downloading {url} to {f}...')
             for i in range(retry + 1):
                 if curl:
-                    success = curl_download(url, f, silent=(threads > 1))
+                    success = curl_download(url, f, silent=threads > 1)
                 else:
                     torch.hub.download_url_to_file(url, f, progress=threads == 1)  # torch download
                     success = f.is_file()
                 if success:
                     break
-                elif i < retry:
+                if i < retry:
                     LOGGER.warning(f'⚠️ Download failure, retrying {i + 1}/{retry} {url}...')
                 else:
                     LOGGER.warning(f'❌ Failed to download {url}...')

@@ -1,5 +1,7 @@
 # Source: https://github.com/Alibaba-MIIL/Solving_ImageNet/blob/main/kd/kd_utils.py
 
+from functools import partial
+
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -18,7 +20,7 @@ except ImportError:
 
 def compute_kd_loss(inputs, outputs, model, model_kd, proba_distribution_fn=None):
     if proba_distribution_fn is None:
-        proba_distribution_fn = lambda logits: F.softmax(logits, dim=-1)
+        proba_distribution_fn = partial(F.softmax, dim=-1)
     with torch.no_grad():
         student_preds = proba_distribution_fn(outputs)
         input_kd = model_kd.normalize_input(inputs, model)

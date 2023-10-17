@@ -14,7 +14,7 @@ class Registry:
         self._name = name if name is not None else ''
         self._error_on_same_key = error_on_same_key
 
-    def register(self, name=None, *args):
+    def register(self, name=None, **kwargs):
         def _register(obj_name, obj):
             if self._error_on_same_key and obj_name in self._registry_dict:
                 raise KeyError(f'{obj_name} is already registered')
@@ -24,8 +24,8 @@ class Registry:
             cls_name = name
             if cls_name is None:
                 cls_name = obj.__name__
-            if args:
-                cls_name = (cls_name, *args)
+            if kwargs:
+                cls_name = (cls_name, *kwargs)
             _register(cls_name, obj)
             return obj
 
@@ -71,7 +71,7 @@ class ModelWrapperRegistry(Registry):
     def pretrained_models(self):
         return self._registry_pretrained_models
 
-    def register(self, model_name, dataset_name, task_type, has_checkpoint=True):
+    def register(self, model_name, dataset_name, task_type, has_checkpoint=True):  # pylint: disable=arguments-renamed
         def _register(obj_name, obj, task_type):
             if obj_name in self._registry_dict:
                 raise KeyError(
@@ -124,7 +124,7 @@ class DatasetWrapperRegistry(Registry):
         self._task_type_map = {}
         self._registry_key = namedtuple('RegistryKey', ['dataset_name'])
 
-    def register(self, dataset_name):
+    def register(self, dataset_name):  # pylint: disable=arguments-renamed
         def _register(obj_name, obj):
             if obj_name in self._registry_dict:
                 raise KeyError(
@@ -141,7 +141,7 @@ class DatasetWrapperRegistry(Registry):
             return obj
         return wrap
 
-    def get(self, dataset_name):
+    def get(self, dataset_name):  # pylint: disable=arguments-renamed
         key = self._registry_key(dataset_name=dataset_name)
         if key not in self._registry_dict:
             registered_dataset_names = [key.dataset_name for key in self.registry_dict]
@@ -151,6 +151,7 @@ class DatasetWrapperRegistry(Registry):
             )
         return self._registry_dict[key]
 
+
 class EvaluatorWrapperRegistry(Registry):
     def __init__(self):
         super().__init__()
@@ -159,7 +160,7 @@ class EvaluatorWrapperRegistry(Registry):
             'RegistryKey', ['dataset_type', 'model_type', 'task_type']
         )
 
-    def register(self, task_type, model_type=None, dataset_type=None):
+    def register(self, task_type, model_type=None, dataset_type=None):  # pylint: disable=arguments-renamed
         def _register(obj_name, obj):
             if obj_name in self._registry_dict:
                 raise KeyError(
