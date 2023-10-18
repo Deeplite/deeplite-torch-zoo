@@ -8,7 +8,6 @@ Hacked together by / Copyright 2020 Ross Wightman
 import glob
 import operator
 import os
-import logging
 
 import torch
 
@@ -68,7 +67,7 @@ class CheckpointSaver:  # don't save optimizer state dict, since it forces speci
         os.rename(tmp_save_path, last_save_path)
         worst_file = self.checkpoint_files[-1] if self.checkpoint_files else None
         if (len(self.checkpoint_files) < self.max_history
-                or metric is None or self.cmp(metric, worst_file[1])):
+                or metric is None or self.cmp(metric, worst_file)):
             if len(self.checkpoint_files) >= self.max_history:
                 self._cleanup_checkpoints(1)
             filename = '-'.join([self.save_prefix, str(epoch)]) + self.extension
@@ -123,10 +122,10 @@ class CheckpointSaver:  # don't save optimizer state dict, since it forces speci
         to_delete = self.checkpoint_files[delete_index:]
         for d in to_delete:
             try:
-                LOGGER.debug("Cleaning checkpoint: {}".format(d))
+                LOGGER.debug("Cleaning checkpoint: %s", d)
                 os.remove(d[0])
             except Exception as e:
-                LOGGER.error("Exception '{}' while deleting checkpoint".format(e))
+                LOGGER.error("Exception '%s' while deleting checkpoint", e)
         self.checkpoint_files = self.checkpoint_files[:delete_index]
 
     def save_recovery(self, epoch, batch_idx=0):
@@ -136,10 +135,10 @@ class CheckpointSaver:  # don't save optimizer state dict, since it forces speci
         self._save(save_path, epoch)
         if os.path.exists(self.last_recovery_file):
             try:
-                LOGGER.debug("Cleaning recovery: {}".format(self.last_recovery_file))
+                LOGGER.debug("Cleaning recovery: %s", self.last_recovery_file)
                 os.remove(self.last_recovery_file)
             except Exception as e:
-                LOGGER.error("Exception '{}' while removing {}".format(e, self.last_recovery_file))
+                LOGGER.error("Exception '%s' while removing %s", e, self.last_recovery_file)
         self.last_recovery_file = self.curr_recovery_file
         self.curr_recovery_file = save_path
 
