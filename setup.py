@@ -34,6 +34,7 @@ INSTALL_REQUIRES = [
     'pandas',
     'ultralytics==8.0.107',
     'tensorboard>=2.11.2',
+    'openmim==0.3.7',
 ]
 
 setup(
@@ -62,6 +63,7 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Operating System :: POSIX :: Linux',
+        'Operating System :: MacOS :: MacOS X',
         'Natural Language :: English',
         'License :: Other/Proprietary License',
         'Environment :: Console',
