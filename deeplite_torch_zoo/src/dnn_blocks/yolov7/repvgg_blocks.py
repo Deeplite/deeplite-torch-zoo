@@ -137,10 +137,10 @@ class RepConv(nn.Module):
         conv.bias = torch.nn.Parameter(bias)
         return conv
 
-    def fuse_repvgg_block(self):
+    def fuse(self):
         if self.deploy:
             return
-        LOGGER.info(f"Executing RepConv.fuse_repvgg_block")
+        LOGGER.info(f'fusing a RepConv block')
 
         self.rbr_dense = self.fuse_conv_bn(self.rbr_dense[0], self.rbr_dense[1])
 

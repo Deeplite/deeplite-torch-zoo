@@ -17,7 +17,7 @@ Note: We will get combined VOC2007 and VOC2012 dataset when we will use name 'vo
 
 ```{.python}
     data_splits = get_dataloaders(
-        dataset_name="voc", model_name="yolo-v5s", batch_size=64
+        dataset_name='voc', batch_size=64
     )
     train_split = data_splits['train']
     test_split = data_splits['test']
@@ -48,11 +48,11 @@ List of models and corresponding datasets used to train it can be found [here](#
 One could create a model with a custom number of classes, while loading the pretrained weights from one of the pretrained models available in the zoo for the modules where weight reusage is possible. An example below creates a ``yolo5_6m`` model with 8 output classes, with weights loaded from a COCO checkpoint (except for the layers whise shape depends on the number of classes):
 
 ```{.python}
-    from deeplite_torch_zoo import create_model
+    from deeplite_torch_zoo import get_model
 
-    model = create_model(
+    model = get_model(
         model_name="yolo5_6m",
-        pretraining_dataset="coco",
+        dataset_name="coco",
         num_classes=8,
         pretrained=True, # or False, if pretrained weights are not required
     )

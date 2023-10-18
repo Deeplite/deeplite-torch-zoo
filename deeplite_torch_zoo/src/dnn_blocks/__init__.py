@@ -13,5 +13,5 @@ from .pytorchcv.squeezenet_blocks import *  # pylint: disable=unused-import
 from .yolov7.transformer_blocks import *  # pylint: disable=unused-import
 from .yolov7.transformer_common import *  # pylint: disable=unused-import
 from .yolov7.yolo_blocks import *  # pylint: disable=unused-import
-from .yolo_spp_blocks import *  # pylint: disable=unused-import
-from .yolo_ultralytics_blocks import *  # pylint: disable=unused-import
+from .yolov7.yolo_spp_blocks import *  # pylint: disable=unused-import
+from .yolov8.yolo_ultralytics_blocks import *  # pylint: disable=unused-import

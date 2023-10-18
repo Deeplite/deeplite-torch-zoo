@@ -1,1 +1,0 @@
-tests/fixture/datasets/person_detection/JPEGImages/000017.jpg 185,62,279,199,person

@@ -65,8 +65,8 @@ from torch.utils.mobile_optimizer import optimize_for_mobile
 from deeplite_torch_zoo import get_model
 from deeplite_torch_zoo.utils import (LOGGER, select_device, smart_inference_mode, colorstr, print_args,
                                       Profile, check_version, check_img_size, file_size, get_default_args)
-from deeplite_torch_zoo.src.object_detection.yolov5.yolov5 import (
-    Detect, YOLOModel)
+from deeplite_torch_zoo.src.object_detection.yolo.yolov5 import (
+    Detect, DetectionModel)
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -325,7 +325,7 @@ def export_saved_model(model,
     from tensorflow.python.framework.convert_to_constants import \
         convert_variables_to_constants_v2
 
-    from deeplite_torch_zoo.src.object_detection.yolov5.tf import TFModel
+    from deeplite_torch_zoo.src.object_detection.yolo.tf import TFModel
 
     LOGGER.info(f'\n{prefix} starting export with tensorflow {tf.__version__}...')
     f = str(file).replace('.pt', '_saved_model')
@@ -568,7 +568,7 @@ def run(
     # Module compatibility updates
     for m in model.modules():
         t = type(m)
-        if t in (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, YOLOModel):
+        if t in (nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU, Detect, DetectionModel):
             m.inplace = inplace  # torch 1.7.0 compatibility
             if t is Detect and not isinstance(m.anchor_grid, list):
                 delattr(m, 'anchor_grid')
