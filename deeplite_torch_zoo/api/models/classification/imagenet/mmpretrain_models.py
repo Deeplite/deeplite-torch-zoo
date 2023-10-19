@@ -1,6 +1,5 @@
 import torch
-import torch.nn as nn
-
+import torch.nn as nn  # pylint: disable=consider-using-from-import
 import mmpretrain
 
 from deeplite_torch_zoo.utils import LOGGER
@@ -18,7 +17,7 @@ class MMPretrainWrapper(nn.Module):
             dummy_input_size=(2, 3, 224, 224),
         ):
         super().__init__()
-        self.model = mmpretrain.get_model(model_name, pretrained=pretrained, device='cuda')
+        self.model = mmpretrain.get_model(model_name, pretrained=pretrained, device='cpu')
         device = next(self.model.parameters()).device
 
         if hasattr(self.model.backbone, 'img_size'):

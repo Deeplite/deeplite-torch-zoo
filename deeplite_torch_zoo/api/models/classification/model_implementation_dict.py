@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 
 MODEL_IMPLEMENTATIONS = {
     'torchvision': [
