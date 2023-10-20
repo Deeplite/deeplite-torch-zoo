@@ -51,11 +51,14 @@ IMAGENET_MODEL_NAMES = [
     'proxylessnas_mobile',
     # zoo:
     'mobilenetv2_w035',
-    'mobileone_s0',
-    'mobileone_s4',
+    'mobileone_s0_zoo',
+    'mobileone_s4_zoo',
     'fasternet_t2',
     'fasternet_s',
     'edgevit_xxs',
+    # mmpretrain:
+    'hornet-base_3rdparty_in1k_mmpretrain',
+    'edgenext-base_3rdparty-usi_in1k_mmpretrain',
 ]
 
 NO_PRETRAINED_WEIGHTS = [
