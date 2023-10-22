@@ -14,6 +14,9 @@ YOLOV6_CONFIGS = {
     'yolo6s': 'yolov6s.py',
     'yolo6m': 'yolov6m.py',
     'yolo6l': 'yolov6l.py',
+    'yolo6s_lite_s': 'yolov6_lite_s.py',
+    'yolo6s_lite_m': 'yolov6_lite_m.py',
+    'yolo6s_lite_l': 'yolov6_lite_l.py',
 }
 
 DEFAULT_MODEL_SCALES = {
@@ -41,7 +44,7 @@ def yolov6(
     num_classes=20,
     **kwargs,
 ):
-    model = YOLOv6(model_config=config_path, nc=num_classes, **kwargs)
+    model = YOLOv6(model_config=config_path, nc=num_classes, is_lite='lite' in model_name, **kwargs)
     if pretrained:
         model = load_pretrained_model(model, model_name, dataset_name)
     return model
