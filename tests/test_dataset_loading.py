@@ -19,7 +19,7 @@ BATCH_SIZE = 128
         ('imagenette', ('imagenette.zip', ), ('imagenette', ), 73, 31),
         ('imagewoof', ('imagewoof.zip', ), ('imagewoof', ), 70, 31),
         ('mnist', (), ('MNIST', ), 468, 79),
-        ('voc', (), ('VOC', ), 130, 20),
+        ('coco128', (), (), 1, 1),
     ],
 )
 def test_get_dataloaders(dataset_name, tmp_dataset_files, tmp_dataset_folders,
@@ -28,7 +28,7 @@ def test_get_dataloaders(dataset_name, tmp_dataset_files, tmp_dataset_folders,
     p = Path(data_root)
 
     extra_loader_kwargs = {}
-    if dataset_name not in ('voc', ):
+    if dataset_name not in ('coco128', ):
         extra_loader_kwargs = {'test_batch_size': BATCH_SIZE}
     dataloaders = get_dataloaders(
         data_root=data_root,
