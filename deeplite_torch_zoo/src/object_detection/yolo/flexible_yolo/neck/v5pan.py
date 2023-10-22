@@ -19,7 +19,7 @@ YOLO_SCALING_GAINS = {
 }
 
 
-class PAN(nn.Module):
+class YOLOv5PAN(nn.Module):
     """
     YOLOv5 PAN module
     P3 --->  PP3
@@ -40,9 +40,9 @@ class PAN(nn.Module):
         default_gw=0.5,
         bottleneck_block_cls=None,
         bottleneck_depth=3,
-        no_second_stage_upsampling=False,
+        act='silu',
     ):
-        super(PAN, self).__init__()
+        super().__init__()
         self.version = str(version)
         self.channels_outs = channel_outs
 
@@ -51,7 +51,6 @@ class PAN(nn.Module):
         if self.version is not None and self.version.lower() in YOLO_SCALING_GAINS:
             self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
             self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
-        self._no_second_stage_upsampling = no_second_stage_upsampling
 
         self.re_channels_out()
 
@@ -60,17 +59,22 @@ class PAN(nn.Module):
         self.P5_size = ch[2]
 
         if bottleneck_block_cls is None:
-            bottleneck_block_cls = partial(YOLOC3, shortcut=False, n=self.get_depth(bottleneck_depth))
+            bottleneck_block_cls = partial(
+                YOLOC3,
+                shortcut=False,
+                n=self.get_depth(bottleneck_depth),
+                act=act,
+            )
 
-        first_stride = 2 if not no_second_stage_upsampling else 4
-        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, first_stride)
+        first_stride = 2
+        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, first_stride, act=act)
         self.P4 = bottleneck_block_cls(
             self.channels_outs[0] + self.P4_size,
             self.channels_outs[1],
         )
 
-        second_stride = 2 if not no_second_stage_upsampling else 1
-        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, second_stride)
+        second_stride = 2
+        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, second_stride, act=act)
         self.P5 = bottleneck_block_cls(
             self.channels_outs[2] + self.P5_size,
             self.channels_outs[3],
