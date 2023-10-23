@@ -1,11 +1,15 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
 
+import types
 from copy import deepcopy
 
-from ultralytics.yolo.cfg import get_cfg
-from ultralytics.yolo.engine.model import YOLO
-from ultralytics.yolo.engine.exporter import Exporter
-from ultralytics.yolo.utils import DEFAULT_CFG, DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, callbacks
+import torch.nn as nn
+
+from ultralytics.cfg import get_cfg
+from ultralytics.engine.exporter import Exporter
+from ultralytics.utils import DEFAULT_CFG, DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, callbacks
+from ultralytics.utils.loss import v8DetectionLoss
+from ultralytics.models.yolo.model import YOLO
 
 from deeplite_torch_zoo import get_model
 from deeplite_torch_zoo.src.object_detection.yolo.config_parser import HEAD_NAME_MAP
@@ -13,6 +17,7 @@ from deeplite_torch_zoo.src.object_detection.yolo.config_parser import HEAD_NAME
 
 def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
                  task=None, session=None, pretrained=False, pretraining_dataset='coco'):
+    nn.Module.__init__(obj)
     if model_name is None and torch_model is None:
         raise ValueError('Either a `model_name` string or a `torch_model` (nn.Module object) must be passed '
                          'to instantiate a trainer object.')
@@ -30,6 +35,8 @@ def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
     obj.num_classes = num_classes
 
     obj.cfg = model_name
+    if model_name == 'yolov8n.pt':
+        model_name = 'yolo8n'
     if model_name is not None:
         obj.model = get_model(
             model_name=model_name,
@@ -40,6 +47,23 @@ def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
         )
     else:
         obj.model = torch_model
+
+    obj.model._forward = obj.model.forward
+
+    def forward(self, x, *args, **kwargs):
+        if isinstance(x, dict):  # for cases of training and validating while training.
+            return self.loss(x, *args, **kwargs)
+        return self._forward(x, *args, **kwargs)
+
+    def loss(self, batch, preds=None):
+        if not hasattr(self, 'criterion'):
+            self.criterion = v8DetectionLoss(self)
+        preds = self._forward(batch['img']) if preds is None else preds
+        return self.criterion(preds, batch)
+
+    obj.model.loss = types.MethodType(loss, obj.model)
+    obj.model.forward = types.MethodType(forward, obj.model)
+
     obj.model.names = [''] if not num_classes else [f'class{i}' for i in range(num_classes)]
     obj.overrides['model'] = obj.cfg
 
