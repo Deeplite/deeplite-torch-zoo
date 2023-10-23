@@ -3,12 +3,15 @@
 
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck.v5fpn import YOLOv5FPN
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck.v5pan import YOLOv5PAN
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck.mmyolo_necks import YOLOv8PAFPNWrapper, YOLOv7PAFPNWrapper
 
 __all__ = ['build_neck']
 
 NECK_MAP = {
     'FPN': YOLOv5FPN,
     'PAN': YOLOv5PAN,
+    'v8PAFPN': YOLOv8PAFPNWrapper,
+    'v7PAFPN': YOLOv7PAFPNWrapper,
 }
 
 
