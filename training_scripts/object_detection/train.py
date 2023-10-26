@@ -225,9 +225,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
             verbose=False
         )
 
-        trainer = Detector(torch_model=de_parallel(model), overrides=overrides)  # sets model.args param so the loss func, validator will work
-        # model.args.update()
-        
+        trainer = Detector(torch_model=de_parallel(model), overrides=overrides)  # sets model.args param so the loss func, validator will work        
         eval_kwargs = dict(v8_eval_args=de_parallel(model).args)
         compute_loss = Loss(de_parallel(model))
         debatchify = lambda b, device_: (b['img'], b, b['batch_idx'].shape[0])
