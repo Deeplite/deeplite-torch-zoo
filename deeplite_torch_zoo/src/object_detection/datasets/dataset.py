@@ -203,8 +203,6 @@ class YOLODataset(BaseDataset):
             new_batch['cls'],
             new_batch['bboxes']
         ], axis=1)
-        # print(targets)
-        # breakpoint()
         shapes = None
         if 'ratio_pad' in new_batch:
             shapes = [(ori_shape, ratio_pad) for ori_shape, ratio_pad

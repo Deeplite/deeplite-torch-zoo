@@ -1,7 +1,7 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
 
 from copy import deepcopy
-from easydict import EasyDict
+from addict import Dict
 
 from ultralytics.yolo.cfg import get_cfg
 from ultralytics.yolo.engine.model import YOLO
@@ -46,7 +46,7 @@ def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
 
     # Below added to allow export from yamls
     args = {**DEFAULT_CFG_DICT, **obj.overrides}  # combine model and default args, preferring model args
-    obj.model.args = EasyDict({k: v for k, v in args.items() if k in DEFAULT_CFG_KEYS})  # attach args to model
+    obj.model.args = Dict({k: v for k, v in args.items() if k in DEFAULT_CFG_KEYS})  # attach args to model
     obj.model.task = obj.task
     obj.model.model_name = model_name
 

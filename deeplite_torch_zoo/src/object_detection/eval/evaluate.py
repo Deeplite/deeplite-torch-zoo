@@ -115,7 +115,6 @@ def evaluate(
     jdict, stats, ap, ap_class = [], [], [], []
     pbar = tqdm(dataloader, desc=s, bar_format=TQDM_BAR_FORMAT)  # progress bar
     for batch_i, (im, targets, paths, shapes) in enumerate(pbar):
-        # print(targets.shape)
         with dt[0]:
             if cuda:
                 im = im.to(device, non_blocking=True)
