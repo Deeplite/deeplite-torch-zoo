@@ -2,14 +2,10 @@
 
 import torch
 import torch.nn as nn
-import numpy as np
 
 from ultralytics.models.yolo.detect.train import DetectionTrainer
 from ultralytics.utils.loss import v8DetectionLoss, BboxLoss
 from ultralytics.utils.tal import TaskAlignedAssigner
-
-from deeplite_torch_zoo.src.object_detection.trainer.yolo import YOLO
-from deeplite_torch_zoo.utils import LOGGER, colorstr
 
 
 def patched_get_model(obj, weights=None, cfg=None):
@@ -34,6 +30,7 @@ def patched_loss_init(obj, model):  # model must be de-paralleled
     obj.assigner = TaskAlignedAssigner(topk=10, num_classes=obj.nc, alpha=0.5, beta=6.0)
     obj.bbox_loss = BboxLoss(m.reg_max - 1, use_dfl=obj.use_dfl).to(device)
     obj.proj = torch.arange(m.reg_max, dtype=torch.float, device=device)
+
 
 DetectionTrainer.get_model = patched_get_model
 v8DetectionLoss.__init__ = patched_loss_init
