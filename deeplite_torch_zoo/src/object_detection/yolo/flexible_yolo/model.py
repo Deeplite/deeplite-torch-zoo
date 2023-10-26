@@ -119,16 +119,20 @@ class FlexibleYOLO(DetectionModel):
         return self
 
     def fuse(self, verbose=False):  # fuse model Conv2d() + BatchNorm2d() layers
-        LOGGER.info('Fusing layers... ')
-        for m in self.modules():
-            if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
-                m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
-                delattr(m, 'bn')  # remove batchnorm
-                m.forward = m.forward_fuse  # update forward
-            if isinstance(m, RepConv):
-                m.fuse_repvgg_block()
-        self.info()
-        self._is_fused = True
+        # LOGGER.info('Fusing layers... ')
+        # for m in self.modules():
+        #     if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
+        #         # try:
+        #         m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
+        #         delattr(m, 'bn')  # remove batchnorm
+        #         m.forward = m.forward_fuse  # update forward
+        #         # except AttributeError:
+        #         #     breakpoint()
+        #         #     print(type(m))
+        #     if isinstance(m, RepConv):
+        #         m.fuse_repvgg_block()
+        # self.info()
+        # self._is_fused = True
         return self
 
     def is_fused(self):

@@ -14,6 +14,8 @@ class DFL(nn.Module):
     # Proposed in Generalized Focal Loss https://ieeexplore.ieee.org/document/9792391
     def __init__(self, c1=16):
         super().__init__()
+        # Can cause DDP error https://github.com/pytorch/pytorch/issues/43259
+        # if you set requires_grad=True in train script
         self.conv = nn.Conv2d(c1, 1, 1, bias=False).requires_grad_(False)
         x = torch.arange(c1, dtype=torch.float)
         self.conv.weight.data[:] = nn.Parameter(x.view(1, c1, 1, 1))
@@ -105,6 +107,7 @@ class DetectV8(nn.Module):
 
     def forward(self, x):
         shape = x[0].shape  # BCHW
+        # device = x[0].device
         for i in range(self.nl):
             x[i] = torch.cat((self.cv2[i](x[i]), self.cv3[i](x[i])), 1)
         if self.training or self.no_post_processing:
@@ -114,6 +117,9 @@ class DetectV8(nn.Module):
                 x.transpose(0, 1) for x in make_anchors(x, self.stride, 0.5)
             )
             self.shape = shape
+        # elif self.anchors.device != x[0].device:
+        # self.anchors = self.anchors.to(device)
+        # self.strides = self.strides.to(device)
 
         x_cat = torch.cat([xi.view(shape[0], self.no, -1) for xi in x], 2)
         if self.export and self.format in (
@@ -127,6 +133,7 @@ class DetectV8(nn.Module):
             cls = x_cat[:, self.reg_max * 4 :]
         else:
             box, cls = x_cat.split((self.reg_max * 4, self.nc), 1)
+        # print(box.device, self.anchors.device)
         dbox = (
             dist2bbox(self.dfl(box), self.anchors.unsqueeze(0), xywh=True, dim=1)
             * self.strides

@@ -35,6 +35,7 @@ INSTALL_REQUIRES = [
     "pandas",
     "ultralytics==8.0.107",
     "tensorboard>=2.11.2",
+    "google-auth-oauthlib<=1.0.0"
 ]
 
 setup(

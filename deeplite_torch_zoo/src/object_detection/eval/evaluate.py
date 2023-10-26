@@ -17,6 +17,7 @@ from deeplite_torch_zoo.src.object_detection.eval.v8.v8_nms import (
     non_max_suppression as non_max_suppression_v8,
 )
 from deeplite_torch_zoo.utils import LOGGER, smart_inference_mode, Profile, TQDM_BAR_FORMAT
+from ultralytics.yolo.v8.detect import DetectionValidator
 
 
 def clip_boxes(boxes, shape):
@@ -85,8 +86,14 @@ def evaluate(
         half=True,  # use FP16 half-precision inference
         compute_loss=None,
         num_classes=80,
-        v8_eval=False,
+        v8_eval_args=None
     ):
+    if v8_eval_args:
+        model.eval()
+        validator = DetectionValidator(dataloader=dataloader, args=v8_eval_args)
+        stats = validator(model=model)
+        return stats
+
     device = next(model.parameters()).device
     half &= device.type != 'cpu'  # half precision only supported on CUDA
     model.half() if half else model.float()
@@ -95,7 +102,6 @@ def evaluate(
     model.eval()
     cuda = device.type != 'cpu'
     nc = num_classes
-
     iouv = torch.linspace(0.5, 0.95, 10, device=device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
     seen = 0
@@ -109,6 +115,7 @@ def evaluate(
     jdict, stats, ap, ap_class = [], [], [], []
     pbar = tqdm(dataloader, desc=s, bar_format=TQDM_BAR_FORMAT)  # progress bar
     for batch_i, (im, targets, paths, shapes) in enumerate(pbar):
+        # print(targets.shape)
         with dt[0]:
             if cuda:
                 im = im.to(device, non_blocking=True)
