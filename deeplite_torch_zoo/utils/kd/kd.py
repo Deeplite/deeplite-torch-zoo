@@ -1,7 +1,9 @@
 # Source: https://github.com/Alibaba-MIIL/Solving_ImageNet/blob/main/kd/kd_utils.py
 
+from functools import partial
+
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 import torchvision.transforms as T
 
@@ -18,7 +20,7 @@ except ImportError:
 
 def compute_kd_loss(inputs, outputs, model, model_kd, proba_distribution_fn=None):
     if proba_distribution_fn is None:
-        proba_distribution_fn = lambda logits: F.softmax(logits, dim=-1)
+        proba_distribution_fn = partial(F.softmax, dim=-1)
     with torch.no_grad():
         student_preds = proba_distribution_fn(outputs)
         input_kd = model_kd.normalize_input(inputs, model)
@@ -30,7 +32,7 @@ def compute_kd_loss(inputs, outputs, model, model_kd, proba_distribution_fn=None
 
 class KDTeacher(nn.Module):
     def __init__(self, args=None, handle_inplace_abn=True):
-        super(KDTeacher, self).__init__()
+        super().__init__()
 
         pretrained = True
         if args.kd_model_checkpoint is not None:
@@ -209,7 +211,7 @@ def fuse_bn_to_linear(bn_layer, linear_layer):
 
 def extract_layers(model):
     list_layers = []
-    for n, p in model.named_modules():
+    for n, _ in model.named_modules():
         list_layers.append(n)
     return list_layers
 
