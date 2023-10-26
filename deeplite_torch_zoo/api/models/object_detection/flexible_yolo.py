@@ -21,6 +21,7 @@ model_configs = {
     'yolo_resnet50': 'model_resnet.yaml',
     'yolo_resnet101': 'model_resnet.yaml',
     'yolo_resnet152': 'model_resnet.yaml',
+    'yolo_resnet18_rtdetr':'model_resnet_rtdetr.yaml',
 }
 
 model_kwargs = {
@@ -34,15 +35,15 @@ model_kwargs = {
         'backbone': {'version': 18, 'width': 0.5, 'first_block_downsampling': True},
         'neck': None,
     },
-    'yolo_resnet18': {'backbone': {'version': 18}, 'neck': None},
+    'yolo_resnet18': {'backbone': {'version': 18}, 'neck': None,},
     'yolo_resnet34': {'backbone': {'version': 34}, 'neck': None},
-    'yolo_resnet34x0.25': {'backbone': {'version': 34, 'width': 0.25}, 'neck': None},
-    'yolo_resnet34x0.5': {'backbone': {'version': 34, 'width': 0.5}, 'neck': None},
-    'yolo_resnet50': {'backbone': {'version': 50}, 'neck': None},
-    'yolo_resnet101': {'backbone': {'version': 101}, 'neck': None},
-    'yolo_resnet152': {'backbone': {'version': 152}, 'neck': None},
+    'yolo_resnet34x0.25': {'backbone': {'version': 34, 'width': 0.25}, 'neck': None,},
+    'yolo_resnet34x0.5': {'backbone': {'version': 34, 'width': 0.5}, 'neck': None,},
+    'yolo_resnet50': {'backbone': {'version': 50}, 'neck': None,},
+    'yolo_resnet101': {'backbone': {'version': 101}, 'neck': None,},
+    'yolo_resnet152': {'backbone': {'version': 152}, 'neck': None,},
+    'yolo_resnet18_rtdetr': {'backbone': {'version': 18, 'width': 0.25}, 'neck': None,}
 }
-
 
 def flexible_yolo(
     model_name='yolo_resnet18',

@@ -17,7 +17,7 @@ import numpy as np
 
 import torch
 import torchvision
-from torch import nn
+import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
 
@@ -29,13 +29,14 @@ import deeplite_torch_zoo
 from deeplite_torch_zoo.utils import LOGGER, get_file_hash, colorstr, check_version
 
 LOCAL_RANK = int(
-    os.getenv('LOCAL_RANK', "-1")
+    os.getenv('LOCAL_RANK', -1)
 )  # https://pytorch.org/docs/stable/elastic/run.html
-RANK = int(os.getenv('RANK', "-1"))
-WORLD_SIZE = int(os.getenv('WORLD_SIZE', "1"))
+RANK = int(os.getenv('RANK', -1))
+WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 TORCHVISION_0_10 = check_version(torchvision.__version__, '0.10.0')
 TORCH_1_9 = check_version(torch.__version__, '1.9.0')
+TORCH_1_10 = check_version(torch.__version__, '1.10.0')
 TORCH_1_11 = check_version(torch.__version__, '1.11.0')
 TORCH_1_12 = check_version(torch.__version__, '1.12.0')
 TORCH_2_0 = check_version(torch.__version__, minimum='2.0')
@@ -195,7 +196,7 @@ class GenericLogger:
                 if self.csv.exists()
                 else (('%23s,' * n % tuple(['epoch'] + keys)).rstrip(',') + '\n')
             )  # header
-            with open(self.csv, 'a', encoding="utf-8") as f:
+            with open(self.csv, 'a') as f:
                 f.write(s + ('%23.5g,' * n % tuple([epoch] + vals)).rstrip(',') + '\n')
 
         if self.tb:
@@ -318,7 +319,8 @@ def smart_DDP(model):
         return DDP(
             model, device_ids=[LOCAL_RANK], output_device=LOCAL_RANK, static_graph=True
         )
-    return DDP(model, device_ids=[LOCAL_RANK], output_device=LOCAL_RANK)
+    else:
+        return DDP(model, device_ids=[LOCAL_RANK], output_device=LOCAL_RANK)
 
 
 def smart_optimizer(model, name='Adam', lr=0.001, momentum=0.9, decay=1e-5):
@@ -363,15 +365,6 @@ def smart_optimizer(model, name='Adam', lr=0.001, momentum=0.9, decay=1e-5):
     )
     return optimizer
 
-
-def smooth_crossentropy(pred, gold, label_smoothing=0.1):
-    n_class = pred.size(1)
-
-    one_hot = torch.full_like(pred, fill_value=label_smoothing / (n_class - 1))
-    one_hot.scatter_(dim=1, index=gold.unsqueeze(1), value=1.0 - label_smoothing)
-    log_prob = F.log_softmax(pred, dim=1)
-
-    return F.kl_div(input=log_prob, target=one_hot, reduction='none').sum(-1)
 
 def smartCrossEntropyLoss(label_smoothing=0.0):
     # Returns nn.CrossEntropyLoss with label smoothing enabled for torch>=1.10.0
@@ -423,13 +416,13 @@ def reshape_elements(elements, shapes, device):
             )
         return ret_grads
 
-    if isinstance(elements[0], list):
+    if type(elements[0]) == list:
         outer = []
         for e, sh in zip(elements, shapes):
             outer.append(broadcast_val(e, sh))
+        return outer
     else:
         return broadcast_val(elements, shapes)
-    return outer
 
 
 def get_layerwise_metric_values(model, metric_fn, target_layer_types=None):
@@ -510,10 +503,10 @@ def scale_img(img, ratio=1.0, same_shape=False, gs=32):  # img(16,3,256,416)
 def copy_attr(a, b, include=(), exclude=()):
     """Copies attributes from object 'b' to object 'a', with options to include/exclude certain attributes."""
     for k, v in b.__dict__.items():
-        inc_len = len(include)
-        if inc_len and k not in include or k.startswith('_') or k in exclude:
+        if (len(include) and k not in include) or k.startswith('_') or k in exclude:
             continue
-        setattr(a, k, v)
+        else:
+            setattr(a, k, v)
 
 
 class ModelEMA:
@@ -690,7 +683,7 @@ class Profile(contextlib.ContextDecorator):
 def model_info(model, detailed=False, verbose=True, imgsz=640):
     """Model information. imgsz may be int or list, i.e. imgsz=640 or imgsz=[640, 320]."""
     if not verbose:
-        return None
+        return
     n_p = get_num_params(model)  # number of parameters
     n_g = get_num_gradients(model)  # number of gradients
     n_l = len(list(model.modules()))  # number of layers
@@ -701,15 +694,17 @@ def model_info(model, detailed=False, verbose=True, imgsz=640):
         for i, (name, p) in enumerate(model.named_parameters()):
             name = name.replace('module_list.', '')
             LOGGER.info(
-                '%5g %40s %9s %12g %20s %10.3g %10.3g %10s',
-                i,
-                name,
-                p.requires_grad,
-                p.numel(),
-                list(p.shape),
-                p.mean(),
-                p.std(),
-                p.dtype,
+                '%5g %40s %9s %12g %20s %10.3g %10.3g %10s'
+                % (
+                    i,
+                    name,
+                    p.requires_grad,
+                    p.numel(),
+                    list(p.shape),
+                    p.mean(),
+                    p.std(),
+                    p.dtype,
+                )
             )
 
     fused = ' (fused)' if getattr(model, 'is_fused', lambda: False)() else ''
