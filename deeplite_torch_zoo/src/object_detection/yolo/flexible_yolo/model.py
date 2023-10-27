@@ -12,7 +12,7 @@ from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.backbone import 
     build_backbone,
 )
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck import build_neck
-from deeplite_torch_zoo.src.object_detection.yolo.heads import Detect, DetectV8
+from deeplite_torch_zoo.src.object_detection.yolo.heads import Detect, DetectV8, RTDETRDecoder
 from deeplite_torch_zoo.src.object_detection.yolo.yolov5 import (
     Conv,
     DWConv,
@@ -99,6 +99,12 @@ class FlexibleYOLO(DetectionModel):
             )  # forward
             self.stride = self.detection.stride
             self.detection.bias_init()  # only run once
+
+        if isinstance(self.detection, RTDETRDecoder):
+            forward = lambda x: self.forward(x)
+            self.detection.stride = torch.tensor([32]) # Default stride for RTDETR
+            self.stride = self.detection.stride
+            #self.detection.bias_init()  # only run once
 
     def forward(self, x, augment=False, profile=False, visualize=False):
         if augment:
