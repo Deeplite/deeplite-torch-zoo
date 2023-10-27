@@ -17,7 +17,8 @@ from deeplite_torch_zoo.src.object_detection.yolo.config_parser import HEAD_NAME
 
 def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
                  task=None, session=None, pretrained=False, pretraining_dataset='coco'):
-    nn.Module.__init__(obj)
+    if isinstance(obj, nn.Module):
+        nn.Module.__init__(obj)
     if model_name is None and torch_model is None:
         raise ValueError('Either a `model_name` string or a `torch_model` (nn.Module object) must be passed '
                          'to instantiate a trainer object.')
