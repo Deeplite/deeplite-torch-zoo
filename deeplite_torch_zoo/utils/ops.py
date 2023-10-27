@@ -1,7 +1,7 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
 
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 from scipy.optimize import linear_sum_assignment
 

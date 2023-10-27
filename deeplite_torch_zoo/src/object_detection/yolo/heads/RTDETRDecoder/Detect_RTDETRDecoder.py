@@ -1,4 +1,4 @@
-
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 import torch
 import torch.nn as nn
 from torch.nn.init import constant_, xavier_uniform_
