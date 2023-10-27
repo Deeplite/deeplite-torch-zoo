@@ -99,21 +99,12 @@ class FlexibleYOLO(DetectionModel):
             )  # forward
             self.stride = self.detection.stride
             self.detection.bias_init()  # only run once
-
         if isinstance(self.detection, RTDETRDecoder):
             forward = lambda x: self.forward(x)
             self.detection.stride = torch.tensor([32]) # Default stride for RTDETR
             self.stride = self.detection.stride
-            #self.detection.bias_init()  # only run once
 
-    def forward(self, x, augment=False, profile=False, visualize=False):
-        if augment:
-            return self._forward_augment(x)  # augmented inference, None
-        return self._forward_once(
-            x
-        )  # single-scale inference, train
-
-    def _forward_once(self, x):
+    def forward(self, x):
         out = self.backbone(x)
         for neck in self.necks:
             out = neck(out)
