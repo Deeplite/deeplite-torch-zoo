@@ -83,7 +83,7 @@ class YOLOv5PAN(nn.Module):
         )
 
         self.concat = Concat()
-        self.out_shape = [self.P3_size, self.channels_outs[2], self.channels_outs[3]]
+        self.out_shape = [self.P3_size, self.channels_outs[1], self.channels_outs[3]]
         LOGGER.info(
             'PAN input channel size: P3 {}, P4 {}, P5 {}'.format(
                 self.P3_size, self.P4_size, self.P5_size
@@ -91,7 +91,7 @@ class YOLOv5PAN(nn.Module):
         )
         LOGGER.info(
             'PAN output channel size: PP3 {}, PP4 {}, PP5 {}'.format(
-                self.P3_size, self.channels_outs[2], self.channels_outs[3]
+                self.P3_size, self.channels_outs[1], self.channels_outs[3]
             )
         )
 
