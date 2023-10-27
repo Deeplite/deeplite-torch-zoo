@@ -1,3 +1,4 @@
+import sys
 import pathlib
 from setuptools import find_packages, setup
 
@@ -18,7 +19,6 @@ INSTALL_REQUIRES = [
     'torch>=1.4, <=2.0.1',
     'opencv-python<=4.6.0.66',
     'scipy>=1.4.1',
-    'numpy==1.20.0',
     'Cython==0.29.30',
     'tqdm>=4.46.0',
     'albumentations==1.0.3',
@@ -32,10 +32,15 @@ INSTALL_REQUIRES = [
     'Wand==0.6.11',
     'pytz',
     'pandas',
-    'ultralytics==8.0.107',
     'tensorboard>=2.11.2',
     'openmim==0.3.7',
 ]
+
+if sys.version_info.minor > 7:
+    INSTALL_REQUIRES += ['numpy==1.22.2', 'ultralytics==8.0.200']
+else:
+    INSTALL_REQUIRES += ['numpy==1.21.6', 'ultralytics==8.0.145']
+
 
 setup(
     name='deeplite-torch-zoo',
