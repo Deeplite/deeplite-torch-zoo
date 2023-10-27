@@ -5,16 +5,16 @@ from functools import partial
 
 import torch.nn as nn
 
-from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv, Concat
-from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3
+from deeplite_torch_zoo.src.dnn_blocks.common import Concat
+from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC2f
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck.neck_utils import YOLO_SCALING_GAINS
 
 from deeplite_torch_zoo.utils import LOGGER, make_divisible
 
 
-class YOLOv5FPN(nn.Module):
+class YOLOv8FPN(nn.Module):
     """
-    YOLOv5 FPN module
+    YOLOv8 FPN module
 
          concat
     C3 --->   P3
@@ -29,8 +29,7 @@ class YOLOv5FPN(nn.Module):
     def __init__(
             self,
             ch=(256, 512, 1024),
-            channel_outs=(512, 256, 256),
-            internal_channels=None,
+            channel_outs=(512, 256),
             version='s',
             default_gd=0.33,
             default_gw=0.5,
@@ -55,46 +54,41 @@ class YOLOv5FPN(nn.Module):
             self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
 
         self.re_channels_out()
-        if internal_channels is None:
-            internal_channels = channel_outs[0]
-
         self.concat = Concat()
 
         self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
-        self.P5 = Conv(self.C5_size, self.channels_outs[0], 1, 1, act=act)
 
         if bottleneck_block_cls is None:
             bottleneck_block_cls = partial(
-                YOLOC3,
+                YOLOC2f,
                 shortcut=False,
                 n=self.get_depth(bottleneck_depth),
                 act=act,
             )
 
         self.conv1 = bottleneck_block_cls(
-            self.channels_outs[0] + self.C4_size,
-            internal_channels,
+            self.C5_size + self.C4_size,
+            self.channels_outs[0]
         )
 
-        self.P4 = Conv(internal_channels, self.channels_outs[1], 1, 1, act=act)
         self.P4_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
 
         self.P3 = bottleneck_block_cls(
-            self.channels_outs[1] + self.C3_size,
-            self.channels_outs[2],
+            self.channels_outs[0] + self.C3_size,
+            self.channels_outs[1],
         )
 
         self.out_shape = (
-            self.channels_outs[2],
             self.channels_outs[1],
             self.channels_outs[0],
+            self.C5_size
         )
         LOGGER.info(
             f'FPN input channel sizes: C3 {self.C3_size}, C4 {self.C4_size}, C5 {self.C5_size}'
         )
         LOGGER.info(
-            f'FPN output channel sizes: P3 {self.channels_outs[2]}, '
-            f'P4 {self.channels_outs[1]}, P5 {self.channels_outs[0]}'
+            f'FPN output channel sizes: P3 {self.channels_outs[1]}, '
+            f'P4 {self.channels_outs[0]}, P5 {self.C5_size}'
         )
 
     def get_depth(self, n):
@@ -110,15 +104,13 @@ class YOLOv5FPN(nn.Module):
     def forward(self, inputs):
         C3, C4, C5 = inputs
 
-        P5 = self.P5(C5)
-        up5 = self.P5_upsampled(P5)
+        up5 = self.P5_upsampled(C5)
         concat1 = self.concat([up5, C4])
-        conv1 = self.conv1(concat1)
+        P4 = self.conv1(concat1)
 
-        P4 = self.P4(conv1)
         up4 = self.P4_upsampled(P4)
         concat2 = self.concat([C3, up4])
 
         PP3 = self.P3(concat2)
 
-        return PP3, P4, P5
+        return PP3, P4, C5

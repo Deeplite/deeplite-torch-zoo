@@ -26,11 +26,11 @@ class TimmYOLO(FlexibleYOLO):
         }
 
         default_neck_cfg = {
-            'FPN': {
+            'v5FPN': {
                 'channel_outs': [512, 256, 256],
                 'version': 's',
             },
-            'PAN': {
+            'v5PAN': {
                 'channel_outs': [256, 512, 512, 1024],
                 'version': 's'
             }
