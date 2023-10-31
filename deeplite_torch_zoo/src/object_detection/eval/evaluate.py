@@ -1,5 +1,5 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
-
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +18,7 @@ from deeplite_torch_zoo.src.object_detection.eval.v8.v8_nms import (
 )
 from deeplite_torch_zoo.utils import LOGGER, smart_inference_mode, Profile, TQDM_BAR_FORMAT
 from ultralytics.yolo.v8.detect import DetectionValidator
+
 
 
 def clip_boxes(boxes, shape):
@@ -86,14 +87,9 @@ def evaluate(
         half=True,  # use FP16 half-precision inference
         compute_loss=None,
         num_classes=80,
-        v8_eval_args=None
+        v8_eval=False
     ):
-    if v8_eval_args:
-        model.eval()
-        validator = DetectionValidator(dataloader=dataloader, args=v8_eval_args)
-        stats = validator(model=model)
-        return stats
-
+    augment_kwargs = {} if v8_eval else {'augment': augment}  # flexible yolo doesnt have augment in forward
     device = next(model.parameters()).device
     half &= device.type != 'cpu'  # half precision only supported on CUDA
     model.half() if half else model.float()
@@ -114,7 +110,14 @@ def evaluate(
     loss = torch.zeros(3, device=device)
     jdict, stats, ap, ap_class = [], [], [], []
     pbar = tqdm(dataloader, desc=s, bar_format=TQDM_BAR_FORMAT)  # progress bar
-    for batch_i, (im, targets, paths, shapes) in enumerate(pbar):
+    for batch_i, (batch) in enumerate(pbar):
+        if v8_eval:
+            im = batch['img']
+            paths = batch['im_file']
+            shapes = batch['shapes']
+            targets = torch.cat((batch['batch_idx'].view(-1, 1), batch['cls'].view(-1, 1), batch['bboxes']), 1)
+        else:
+            im, targets, paths, shapes = batch
         with dt[0]:
             if cuda:
                 im = im.to(device, non_blocking=True)
@@ -125,7 +128,20 @@ def evaluate(
 
         # Inference
         with dt[1]:
-            preds, train_out = model(im) if compute_loss else (model(im, augment=augment), None)
+            preds, train_out = model(im) if compute_loss else (model(im, **augment_kwargs), None)
+        if v8_eval:  # reshape outputs to same shape as v5
+            if isinstance(preds, (list, tuple)):  # YOLOv5 model in validation model, output = (inference_out, loss_out)
+                prediction = preds[0]  # select only inference output
+            else:
+                prediction = preds
+            bs = prediction.shape[0]  # batch size
+            nc = nc or (prediction.shape[1] - 4)  # number of classes
+            nm = prediction.shape[1] - nc - 4
+            mi = 4 + nc  # mask start index
+            v5_pred = prediction.transpose(1,2)  # switch to batch, box, cls
+            confidence = v5_pred[:, :, 4:mi].amax(2, keepdim=True)
+            v5_pred = torch.cat((v5_pred[:, :, :4], confidence, v5_pred[:, :, 4:]), 2)
+            preds = (v5_pred, preds[1])
 
         # Loss
         if compute_loss:
@@ -188,3 +204,5 @@ def evaluate(
     for i, c in enumerate(ap_class):
         maps[c] = ap[i]
     return {'mAP@0.5': map50, 'mAP@0.5:0.95': map, 'P': mp, 'R' : mr}
+
+

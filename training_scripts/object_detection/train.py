@@ -37,7 +37,7 @@ from deeplite_torch_zoo.src.object_detection.yolo.losses import YOLOv5Loss
 from deeplite_torch_zoo.utils import strip_optimizer, LOGGER, TQDM_BAR_FORMAT, colorstr, increment_path, \
     init_seeds, one_cycle, print_args, yaml_save, check_img_size, \
     EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer
-from deeplite_torch_zoo.src.object_detection.trainer.trainer import Loss, patched_collate_fn
+from deeplite_torch_zoo.src.object_detection.trainer.trainer import Loss, patched_collate_fn #, patched_validate_call
 from deeplite_torch_zoo.trainer import Detector
 from deeplite_torch_zoo.src.object_detection.datasets.dataset import YOLODataset
 # from deeplite_torch_zoo.utils import load_state_dict_partial
@@ -86,7 +86,6 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         opt.v8 = True
         custom_head = 'yolo8'
         YOLODataset.collate_fn = patched_collate_fn  # load batch as dict
-        eval_key = 'metrics/mAP50-95(B)'
 
     # if RANK in {-1, 0}:
     dataloaders = get_dataloaders(
@@ -226,11 +225,11 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         )
 
         trainer = Detector(torch_model=de_parallel(model), overrides=overrides)  # sets model.args param so the loss func, validator will work        
-        eval_kwargs = dict(v8_eval_args=de_parallel(model).args)
+        # eval_kwargs = dict(v8_eval=True)
         compute_loss = Loss(de_parallel(model))
         debatchify = lambda b, device_: (b['img'], b, b['batch_idx'].shape[0])
     else:
-        eval_kwargs = {}
+        # eval_kwargs = {}
         compute_loss = YOLOv5Loss(model)  # init loss class
         debatchify = lambda b, device_: (b[0], b[1].to(device_), b[0].shape[0])
 
@@ -329,13 +328,11 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
                     val_loader,
                     half=amp,
                     single_cls=single_cls,
-                    compute_loss=compute_loss,
-                    **eval_kwargs
+                    compute_loss=compute_loss if not opt.v8 else None,
+                    v8_eval=opt.v8
                 )
 
             # Update best mAP
-            if opt.v8:
-                eval_key = 'metrics/mAP50-95(B)'
             fi = ap_dict[eval_key]
             stop = stopper(epoch=epoch, fitness=fi)  # early stop check
             if fi > best_fitness:
@@ -391,8 +388,8 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
                         val_loader,
                         iou_thres=0.65 if 'coco' in opt.dataset else 0.60,  # best pycocotools at iou 0.65
                         single_cls=single_cls,
-                        compute_loss=compute_loss,
-                        **eval_kwargs
+                        compute_loss=compute_loss if not opt.v8 else None,
+                        v8_eval=opt.v8
                     )
                     LOGGER.info(f'Final eval metrics: {ap_dict}')
         LOGGER.info(f'Results saved to {colorstr("bold", save_dir)}')

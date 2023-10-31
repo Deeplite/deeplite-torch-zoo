@@ -90,6 +90,18 @@ def patched_collate_fn(obj, batch):
     return new_batch
 
 
+# def patched_validate_call(obj, model):
+#     self.device = trainer.device
+#     self.data = trainer.data
+#     model = trainer.ema.ema or trainer.model
+#     self.args.half = self.device.type != 'cpu'  # force FP16 val during training
+#     model = model.half() if self.args.half else model.float()
+#     self.model = model
+#     self.loss = torch.zeros_like(trainer.loss_items, device=trainer.device)
+#     self.args.plots = trainer.stopper.possible_stop or (trainer.epoch == trainer.epochs - 1)
+#     model.eval()
+
+
 DetectionTrainer.get_model = patched_get_model
 Loss.__init__ = patched_loss_init
 ultralytics.yolo.engine.trainer.check_amp = patched_check_amp
