@@ -29,6 +29,7 @@ DATASET_CONFIGS = {
     'coco8': DatasetConfig('coco8.yaml', 80, 640),
     'coco128': DatasetConfig('coco128.yaml', 80, 640),
     'SKU-110K': DatasetConfig('SKU-110K.yaml', 1, 640),
+    'person_detection': DatasetConfig('person_detection.yaml', 1, 640)
 }
 
 
