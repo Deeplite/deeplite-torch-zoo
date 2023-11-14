@@ -34,6 +34,7 @@ INSTALL_REQUIRES = [
     'pandas',
     'tensorboard>=2.11.2',
     'openmim==0.3.7',
+    'super-gradients==3.3.0',
 ]
 
 if sys.version_info.minor > 7:
