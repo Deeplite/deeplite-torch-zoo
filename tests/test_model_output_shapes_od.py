@@ -1,29 +1,27 @@
 import pytest
 
 from deeplite_torch_zoo import get_dataloaders, get_model, list_models_by_dataset
-from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
+from deeplite_torch_zoo.api.models.object_detection.yolo import YOLO_CONFIGS
 
 
 TEST_BATCH_SIZE = 4
 TEST_NUM_CLASSES = 42
 COCO_NUM_CLASSES = 80
 
-BLACKLIST = ('yolo5_6sa', 'yolo3_tiny', 'yolo_fdresnet18x0.25', 'yolo_fdresnet18x0.5')
-
 DETECTION_MODEL_TESTS = []
 
+for model_key in YOLO_CONFIGS:
+    DETECTION_MODEL_TESTS.append((f'{model_key}t', 'coco8', {'image_size': 480},
+        [(3, 64, 64), (3, 32, 32), (3, 16, 16)], False, False))
 
 for model_name in list_models_by_dataset('coco', with_checkpoint=True):
-    if model_name not in BLACKLIST:
-        download_checkpoint = False
-        if model_name in MODEL_WRAPPER_REGISTRY.pretrained_models:
-            download_checkpoint = True
-        DETECTION_MODEL_TESTS.append((model_name, 'coco8', {'image_size': 480},
-            [(3, 64, 64), (3, 32, 32), (3, 16, 16)], download_checkpoint))
+    DETECTION_MODEL_TESTS.append((model_name, 'coco8', {'image_size': 480},
+        [(3, 64, 64), (3, 32, 32), (3, 16, 16)], True, True))
 
 
 @pytest.mark.parametrize(
-    ('model_name', 'dataset_name', 'dataloader_kwargs', 'output_shapes', 'download_checkpoint'),
+    ('model_name', 'dataset_name', 'dataloader_kwargs',
+     'output_shapes', 'download_checkpoint', 'check_shape'),
     DETECTION_MODEL_TESTS
 )
 def test_detection_model_output_shape(
@@ -31,7 +29,8 @@ def test_detection_model_output_shape(
     dataset_name,
     dataloader_kwargs,
     output_shapes,
-    download_checkpoint
+    download_checkpoint,
+    check_shape,
     ):
     model = get_model(
         model_name=model_name,
@@ -49,13 +48,16 @@ def test_detection_model_output_shape(
     img = img / 255
     y = model(img)
     y[0].sum().backward()
-    assert y[0].shape == (4, *output_shapes[0], COCO_NUM_CLASSES + 5)
-    assert y[1].shape == (4, *output_shapes[1], COCO_NUM_CLASSES + 5)
-    assert y[2].shape == (4, *output_shapes[2], COCO_NUM_CLASSES + 5)
+
+    if check_shape:
+        assert y[0].shape == (4, *output_shapes[0], COCO_NUM_CLASSES + 5)
+        assert y[1].shape == (4, *output_shapes[1], COCO_NUM_CLASSES + 5)
+        assert y[2].shape == (4, *output_shapes[2], COCO_NUM_CLASSES + 5)
 
 
 @pytest.mark.parametrize(
-    ('model_name', 'dataset_name', 'dataloader_kwargs', 'output_shapes', 'download_checkpoint'),
+    ('model_name', 'dataset_name', 'dataloader_kwargs',
+     'output_shapes', 'download_checkpoint', 'check_shape'),
     DETECTION_MODEL_TESTS
 )
 def test_detection_model_output_shape_arbitrary_num_clases(
@@ -63,7 +65,8 @@ def test_detection_model_output_shape_arbitrary_num_clases(
     dataset_name,
     dataloader_kwargs,
     output_shapes,
-    download_checkpoint
+    download_checkpoint,
+    check_shape,
     ):
     model = get_model(
         model_name=model_name,
@@ -82,6 +85,8 @@ def test_detection_model_output_shape_arbitrary_num_clases(
     img = img / 255
     y = model(img)
     y[0].sum().backward()
-    assert y[0].shape == (4, *output_shapes[0], TEST_NUM_CLASSES + 5)
-    assert y[1].shape == (4, *output_shapes[1], TEST_NUM_CLASSES + 5)
-    assert y[2].shape == (4, *output_shapes[2], TEST_NUM_CLASSES + 5)
+
+    if check_shape:
+        assert y[0].shape == (4, *output_shapes[0], TEST_NUM_CLASSES + 5)
+        assert y[1].shape == (4, *output_shapes[1], TEST_NUM_CLASSES + 5)
+        assert y[2].shape == (4, *output_shapes[2], TEST_NUM_CLASSES + 5)

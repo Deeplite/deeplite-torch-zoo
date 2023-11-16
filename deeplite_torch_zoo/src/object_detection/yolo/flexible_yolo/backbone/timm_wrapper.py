@@ -17,6 +17,7 @@ class TimmWrapperBackbone(nn.Module):
         pretrained=False,
         checkpoint_path=None,
         in_channels=3,
+        feature_map_indices=(-3, -2, -1),
         **kwargs,
     ):
         super(TimmWrapperBackbone, self).__init__()
@@ -28,6 +29,7 @@ class TimmWrapperBackbone(nn.Module):
             checkpoint_path=checkpoint_path,
             **kwargs,
         )
+        self.feature_map_indices = feature_map_indices
 
         # Remove unused layers
         self.backbone.global_pool = None
@@ -37,7 +39,7 @@ class TimmWrapperBackbone(nn.Module):
         feature_info = getattr(self.backbone, 'feature_info', None)
         if feature_info:
             LOGGER.info(f'timm backbone feature channels: {feature_info.channels()}')
-        self.out_shape = feature_info.channels()[-3:]
+        self.out_shape = [feature_info.channels()[idx] for idx in self.feature_map_indices]
 
     def forward(self, x):
         outs = self.backbone(x)
@@ -45,4 +47,4 @@ class TimmWrapperBackbone(nn.Module):
             features = tuple(outs)
         else:
             features = (outs,)
-        return features[-3:]
+        return tuple(features[idx] for idx in self.feature_map_indices)

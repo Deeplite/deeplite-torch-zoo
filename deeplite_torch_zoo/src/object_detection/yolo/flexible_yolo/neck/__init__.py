@@ -1,14 +1,14 @@
 # Code credit: https://github.com/Bobo-y/flexible-yolov5
 # The file is modified by Deeplite Inc. from the original implementation on Jan 4, 2023
 
-from .FPN import PyramidFeatures as FPN
-from .PAN import PAN
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck.v5fpn import YOLOv5FPN
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck.v5pan import YOLOv5PAN
 
 __all__ = ['build_neck']
 
 NECK_MAP = {
-    'FPN': FPN,
-    'PAN': PAN,
+    'FPN': YOLOv5FPN,
+    'PAN': YOLOv5PAN,
 }
 
 

@@ -72,7 +72,7 @@ model = get_model(
     model_name='yolo_timm_fbnetv3_d',    # creates a YOLO with FBNetV3-d backbone from timm
     dataset_name='coco',                 #
     pretrained=False,                    # if True, will try to load a pre-trained checkpoint
-    custom_head='v8',                    # will replace default detection head
+    custom_head='yolo8',                 # will replace default detection head
                                          # with YOLOv8 detection head
 )
 ```
@@ -119,6 +119,18 @@ from deeplite_torch_zoo.trainer import Detector
 model = Detector(model_name='yolo7n')        # will create a wrapper around YOLOv7n model
                                              # (YOLOv7n model with YOLOv8 detection head)
 model.train(data='VOC.yaml', epochs=100)     # same arguments as Ultralytics trainer
+
+# alternatively:
+
+torch_model = get_model(
+    model_name='yolo7n',
+    dataset_name='coco',
+    pretrained=False,
+    custom_head='yolo8',
+)
+model = Detector(torch_model=torch_model)    # either `model_name` or `torch_model`
+model.train(data='VOC.yaml', epochs=100)     # should be provided
+
 ```
 
 ### 🛠 Installation <a name="installation"></a>

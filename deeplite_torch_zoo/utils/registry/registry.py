@@ -5,17 +5,16 @@
 # https://github.com/openvinotoolkit/openvino/blob/master/tools/pot/openvino/tools/pot/utils/registry.py
 #
 
-import re
 from collections import namedtuple
 
 
 class Registry:
     def __init__(self, name=None, error_on_same_key=True):
-        self._registry_dict = dict()
+        self._registry_dict = {}
         self._name = name if name is not None else ''
         self._error_on_same_key = error_on_same_key
 
-    def register(self, name=None, *args):
+    def register(self, name=None, **kwargs):
         def _register(obj_name, obj):
             if self._error_on_same_key and obj_name in self._registry_dict:
                 raise KeyError(f'{obj_name} is already registered')
@@ -25,8 +24,8 @@ class Registry:
             cls_name = name
             if cls_name is None:
                 cls_name = obj.__name__
-            if args:
-                cls_name = (cls_name, *args)
+            if kwargs:
+                cls_name = (cls_name, *kwargs)
             _register(cls_name, obj)
             return obj
 
@@ -60,7 +59,7 @@ class Registry:
 class ModelWrapperRegistry(Registry):
     def __init__(self):
         super().__init__()
-        self._task_type_map = dict()
+        self._task_type_map = {}
         self._registry_key = namedtuple('RegistryKey', ['model_name', 'dataset_name'])
         self._registry_pretrained_models = {}
 
@@ -72,7 +71,7 @@ class ModelWrapperRegistry(Registry):
     def pretrained_models(self):
         return self._registry_pretrained_models
 
-    def register(self, model_name, dataset_name, task_type, has_checkpoint=True):
+    def register(self, model_name, dataset_name, task_type, has_checkpoint=True):  # pylint: disable=arguments-renamed
         def _register(obj_name, obj, task_type):
             if obj_name in self._registry_dict:
                 raise KeyError(
@@ -109,7 +108,7 @@ class ModelWrapperRegistry(Registry):
             'voc_format_dataset': 'voc',
         }
         if dataset_name in GENERIC_DATASET_TASK_TYPE_MAP:
-            dataset_name = GENERIC_DATASET_TASK_TYPE_MAP[dataset_name]
+            dataset_name = GENERIC_DATASET_TASK_TYPE_MAP.get(dataset_name)
         key = self._registry_key(model_name=model_name, dataset_name=dataset_name)
         if key not in self._registry_dict:
             raise KeyError(
@@ -122,10 +121,10 @@ class ModelWrapperRegistry(Registry):
 class DatasetWrapperRegistry(Registry):
     def __init__(self):
         super().__init__()
-        self._task_type_map = dict()
+        self._task_type_map = {}
         self._registry_key = namedtuple('RegistryKey', ['dataset_name'])
 
-    def register(self, dataset_name):
+    def register(self, dataset_name):  # pylint: disable=arguments-renamed
         def _register(obj_name, obj):
             if obj_name in self._registry_dict:
                 raise KeyError(
@@ -140,10 +139,9 @@ class DatasetWrapperRegistry(Registry):
             cls_name = self._registry_key(dataset_name=cls_name)
             _register(cls_name, obj)
             return obj
-
         return wrap
 
-    def get(self, dataset_name):
+    def get(self, dataset_name):  # pylint: disable=arguments-renamed
         key = self._registry_key(dataset_name=dataset_name)
         if key not in self._registry_dict:
             registered_dataset_names = [key.dataset_name for key in self.registry_dict]
@@ -157,12 +155,12 @@ class DatasetWrapperRegistry(Registry):
 class EvaluatorWrapperRegistry(Registry):
     def __init__(self):
         super().__init__()
-        self._task_type_map = dict()
+        self._task_type_map = {}
         self._registry_key = namedtuple(
             'RegistryKey', ['dataset_type', 'model_type', 'task_type']
         )
 
-    def register(self, task_type, model_type=None, dataset_type=None):
+    def register(self, task_type, model_type=None, dataset_type=None):  # pylint: disable=arguments-renamed
         def _register(obj_name, obj):
             if obj_name in self._registry_dict:
                 raise KeyError(

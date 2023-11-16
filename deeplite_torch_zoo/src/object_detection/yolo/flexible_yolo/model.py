@@ -41,6 +41,8 @@ class FlexibleYOLO(DetectionModel):
 
         head_cls = Detect
         if custom_head is not None:
+            if custom_head not in HEAD_NAME_MAP:
+                raise ValueError(f'Incorrect YOLO head name {custom_head}. Choices: {list(HEAD_NAME_MAP.keys())}')
             head_cls = HEAD_NAME_MAP[custom_head]
 
         if type(model_config) is str:
@@ -98,7 +100,14 @@ class FlexibleYOLO(DetectionModel):
             self.stride = self.detection.stride
             self.detection.bias_init()  # only run once
 
-    def forward(self, x):
+    def forward(self, x, augment=False, profile=False, visualize=False):
+        if augment:
+            return self._forward_augment(x)  # augmented inference, None
+        return self._forward_once(
+            x
+        )  # single-scale inference, train
+
+    def _forward_once(self, x):
         out = self.backbone(x)
         for neck in self.necks:
             out = neck(out)

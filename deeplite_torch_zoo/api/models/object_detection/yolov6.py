@@ -1,9 +1,12 @@
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6_model import YOLOv6
 from deeplite_torch_zoo.api.models.object_detection.helpers import (
-    make_wrapper_func, get_project_root, load_pretrained_model, DATASET_LIST
+    make_wrapper_func, get_project_root, load_pretrained_model
 )
+from deeplite_torch_zoo.api.datasets.object_detection.yolo import DATASET_CONFIGS
+
 
 __all__ = []
+
 
 CFG_PATH = 'deeplite_torch_zoo/src/object_detection/yolo/flexible_yolo/yolov6/configs'
 
@@ -11,6 +14,9 @@ YOLOV6_CONFIGS = {
     'yolo6s': 'yolov6s.py',
     'yolo6m': 'yolov6m.py',
     'yolo6l': 'yolov6l.py',
+    'yolo6s_lite_s': 'yolov6_lite_s.py',
+    'yolo6s_lite_m': 'yolov6_lite_m.py',
+    'yolo6s_lite_l': 'yolov6_lite_l.py',
 }
 
 DEFAULT_MODEL_SCALES = {
@@ -38,7 +44,7 @@ def yolov6(
     num_classes=20,
     **kwargs,
 ):
-    model = YOLOv6(model_config=config_path, nc=num_classes, **kwargs)
+    model = YOLOv6(model_config=config_path, nc=num_classes, is_lite='lite' in model_name, **kwargs)
     if pretrained:
         model = load_pretrained_model(model, model_name, dataset_name)
     return model
@@ -62,7 +68,7 @@ for model_key, config_name in YOLOV6_CONFIGS.items():
         }
 
 
-for dataset_tag, n_classes in DATASET_LIST:
+for dataset_tag, dataset_config in DATASET_CONFIGS.items():
     for model_tag, model_dict in full_model_dict.items():
         name = '_'.join([model_tag, dataset_tag])
         globals()[name] = make_wrapper_func(
@@ -70,7 +76,7 @@ for dataset_tag, n_classes in DATASET_LIST:
             name,
             model_tag,
             dataset_tag,
-            n_classes,
+            dataset_config.num_classes,
             config_path=model_dict['config'],
             **model_dict['params'],
         )

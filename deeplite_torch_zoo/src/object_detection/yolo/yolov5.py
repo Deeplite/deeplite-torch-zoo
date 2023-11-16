@@ -177,3 +177,6 @@ class DetectionModel(nn.Module):
             )  # forward
             self.stride = m.stride
             m.bias_init()  # only run once
+
+    def loss(self, batch, preds=None):
+        raise NotImplementedError
