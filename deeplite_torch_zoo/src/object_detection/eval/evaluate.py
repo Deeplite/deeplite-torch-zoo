@@ -17,7 +17,6 @@ from deeplite_torch_zoo.src.object_detection.eval.v8.v8_nms import (
     non_max_suppression as non_max_suppression_v8,
 )
 from deeplite_torch_zoo.utils import LOGGER, smart_inference_mode, Profile, TQDM_BAR_FORMAT
-from ultralytics.yolo.v8.detect import DetectionValidator
 
 
 
@@ -116,8 +115,10 @@ def evaluate(
             paths = batch['im_file']
             shapes = batch['shapes']
             targets = torch.cat((batch['batch_idx'].view(-1, 1), batch['cls'].view(-1, 1), batch['bboxes']), 1)
+            nms = non_max_suppression_v8
         else:
             im, targets, paths, shapes = batch
+            nms = non_max_suppression
         with dt[0]:
             if cuda:
                 im = im.to(device, non_blocking=True)
@@ -129,19 +130,19 @@ def evaluate(
         # Inference
         with dt[1]:
             preds, train_out = model(im) if compute_loss else (model(im, **augment_kwargs), None)
-        if v8_eval:  # reshape outputs to same shape as v5
-            if isinstance(preds, (list, tuple)):  # YOLOv5 model in validation model, output = (inference_out, loss_out)
-                prediction = preds[0]  # select only inference output
-            else:
-                prediction = preds
-            bs = prediction.shape[0]  # batch size
-            nc = nc or (prediction.shape[1] - 4)  # number of classes
-            nm = prediction.shape[1] - nc - 4
-            mi = 4 + nc  # mask start index
-            v5_pred = prediction.transpose(1,2)  # switch to batch, box, cls
-            confidence = v5_pred[:, :, 4:mi].amax(2, keepdim=True)
-            v5_pred = torch.cat((v5_pred[:, :, :4], confidence, v5_pred[:, :, 4:]), 2)
-            preds = (v5_pred, preds[1])
+        # if v8_eval:  # reshape outputs to same shape as v5
+        #     if isinstance(preds, (list, tuple)):  # YOLOv5 model in validation model, output = (inference_out, loss_out)
+        #         prediction = preds[0]  # select only inference output
+        #     else:
+        #         prediction = preds
+        #     bs = prediction.shape[0]  # batch size
+        #     nc = nc or (prediction.shape[1] - 4)  # number of classes
+        #     nm = prediction.shape[1] - nc - 4
+        #     mi = 4 + nc  # mask start index
+        #     v5_pred = prediction.transpose(1,2)  # switch to batch, box, cls
+        #     confidence = v5_pred[:, :, 4:mi].amax(2, keepdim=True)
+        #     v5_pred = torch.cat((v5_pred[:, :, :4], confidence, v5_pred[:, :, 4:]), 2)
+        #     preds = (v5_pred, preds[1])
 
         # Loss
         if compute_loss:
@@ -151,13 +152,15 @@ def evaluate(
         targets[:, 2:] *= torch.tensor((width, height, width, height), device=device)  # to pixels
         lb = []  # for autolabelling
         with dt[2]:
-            preds = non_max_suppression(preds,
-                                        conf_thres,
-                                        iou_thres,
-                                        labels=lb,
-                                        multi_label=True,
-                                        agnostic=single_cls,
-                                        max_det=max_det)
+            preds = nms(
+                preds,
+                conf_thres,
+                iou_thres,
+                labels=lb,
+                multi_label=True,
+                agnostic=single_cls,
+                max_det=max_det
+            )
 
         # Metrics
         for si, pred in enumerate(preds):

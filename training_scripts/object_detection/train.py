@@ -18,8 +18,6 @@ import yaml
 from torch.optim import lr_scheduler
 from tqdm import tqdm
 from addict import Dict
-from ultralytics.yolo.cfg import get_cfg
-from ultralytics.yolo.utils import DEFAULT_CFG
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -37,10 +35,9 @@ from deeplite_torch_zoo.src.object_detection.yolo.losses import YOLOv5Loss
 from deeplite_torch_zoo.utils import strip_optimizer, LOGGER, TQDM_BAR_FORMAT, colorstr, increment_path, \
     init_seeds, one_cycle, print_args, yaml_save, check_img_size, \
     EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer
-from deeplite_torch_zoo.src.object_detection.trainer.trainer import Loss, patched_collate_fn #, patched_validate_call
+from deeplite_torch_zoo.src.object_detection.trainer.trainer import Loss, patched_collate_fn
 from deeplite_torch_zoo.trainer import Detector
 from deeplite_torch_zoo.src.object_detection.datasets.dataset import YOLODataset
-# from deeplite_torch_zoo.utils import load_state_dict_partial
 from deeplite_torch_zoo.api.datasets.object_detection.yolo import DATASET_CONFIGS, HERE as DETECTION_CONFIGS_HOME
 
 
@@ -224,12 +221,11 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
             verbose=False
         )
 
-        trainer = Detector(torch_model=de_parallel(model), overrides=overrides)  # sets model.args param so the loss func, validator will work        
-        # eval_kwargs = dict(v8_eval=True)
+        # sets model.args param so the v8 loss works
+        trainer = Detector(torch_model=de_parallel(model), overrides=overrides)
         compute_loss = Loss(de_parallel(model))
         debatchify = lambda b, device_: (b['img'], b, b['batch_idx'].shape[0])
     else:
-        # eval_kwargs = {}
         compute_loss = YOLOv5Loss(model)  # init loss class
         debatchify = lambda b, device_: (b[0], b[1].to(device_), b[0].shape[0])
 
@@ -369,9 +365,6 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training -----------------------------------------------------------------------------------------------------
-
-    if opt.v8:
-        eval_kwargs['v8_eval_args']['verbose'] = True  # print class mAP for final eval
 
     if RANK in {-1, 0} and not opt.dryrun:
         LOGGER.info(f'\n{epoch - start_epoch + 1} epochs completed in {(time.time() - t0) / 3600:.3f} hours.')
