@@ -36,8 +36,10 @@ from deeplite_torch_zoo.utils import strip_optimizer, LOGGER, TQDM_BAR_FORMAT, c
     init_seeds, one_cycle, print_args, yaml_save, check_img_size, \
     EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer
 from deeplite_torch_zoo.src.object_detection.trainer.trainer import V8UltralyticsLoss
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.model import FlexibleYOLO
 from deeplite_torch_zoo.trainer import Detector
 from deeplite_torch_zoo.api.datasets.object_detection.yolo import DATASET_CONFIGS, HERE as DETECTION_CONFIGS_HOME
+
 
 
 def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
@@ -182,10 +184,13 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         model = smart_DDP(model)
 
     # Model attributes
-    # nl = de_parallel(model).nl  # number of detection layers (to scale hyps)
-    # hyp['box'] *= 3 / nl  # scale to layers
-    hyp['cls'] *= nc / 80 #* 3 / nl  # scale to classes and layers
-    hyp['obj'] *= (imgsz / 640) ** 2 #* 3 / nl  # scale to image size and layers
+    if isinstance(de_parallel(model), FlexibleYOLO):
+        nl = de_parallel(model).detection.nl
+    else:
+        nl = de_parallel(model).model[-1].nl # number of detection layers (to scale hyps)\
+    hyp['box'] *= 3 / nl  # scale to layers
+    hyp['cls'] *= nc / 80 * 3 / nl  # scale to classes and layers
+    hyp['obj'] *= (imgsz / 640) ** 2 * 3 / nl  # scale to image size and layers
     hyp['label_smoothing'] = opt.label_smoothing
     model.nc = nc  # attach number of classes to model
     model.hyp = hyp  # attach hyperparameters to model
