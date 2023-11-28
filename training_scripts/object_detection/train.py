@@ -251,8 +251,8 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         if RANK in {-1, 0}:
             pbar = tqdm(pbar, total=nb, bar_format=TQDM_BAR_FORMAT)  # progress bar
         optimizer.zero_grad()
-        for i, (imgs, targets, _) in pbar:  # batch -------------------------------------------------------------
-            targets.to(device)
+        for i, (imgs, targets, _, shapes) in pbar:  # batch -------------------------------------------------------------
+            targets = targets.to(device)
             n_obj = imgs.shape[0]
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
@@ -321,7 +321,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
                     val_loader,
                     half=amp,
                     single_cls=single_cls,
-                    compute_loss=compute_loss if not opt.v8 else None,
+                    compute_loss=compute_loss,
                     v8_eval=opt.v8
                 )
 
@@ -378,7 +378,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
                         val_loader,
                         iou_thres=0.65 if 'coco' in opt.dataset else 0.60,  # best pycocotools at iou 0.65
                         single_cls=single_cls,
-                        compute_loss=compute_loss if not opt.v8 else None,
+                        compute_loss=compute_loss,
                         v8_eval=opt.v8
                     )
                     LOGGER.info(f'Final eval metrics: {ap_dict}')
@@ -424,7 +424,6 @@ def parse_opt(known=False):
     parser.add_argument('--no_amp', action='store_true')
     parser.add_argument('--local_rank', type=int, default=-1, help='Automatic DDP Multi-GPU argument, do not modify')
     parser.add_argument('--dryrun', action='store_true', help='Dry run mode for testing')
-    parser.add_argument('--backbone_path', type=str, default=None, help='weight path')
 
 
     return parser.parse_known_args()[0] if known else parser.parse_args()
