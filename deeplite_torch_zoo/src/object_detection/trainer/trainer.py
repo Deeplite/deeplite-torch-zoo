@@ -90,16 +90,14 @@ def patched_collate_fn(obj, batch):
     return new_batch
 
 
-# def patched_validate_call(obj, model):
-#     self.device = trainer.device
-#     self.data = trainer.data
-#     model = trainer.ema.ema or trainer.model
-#     self.args.half = self.device.type != 'cpu'  # force FP16 val during training
-#     model = model.half() if self.args.half else model.float()
-#     self.model = model
-#     self.loss = torch.zeros_like(trainer.loss_items, device=trainer.device)
-#     self.args.plots = trainer.stopper.possible_stop or (trainer.epoch == trainer.epochs - 1)
-#     model.eval()
+class V8UltralyticsLoss(Loss):
+    def __call__(self, pred, batch):
+        batch = {
+            'batch_idx': batch[:, 0],
+            'cls': batch[:, 1],
+            'bboxes': batch[:, 2:],
+        }
+        return super().__call__(pred, batch)  # ultralytics takes batch dict as targets instead of tensor
 
 
 DetectionTrainer.get_model = patched_get_model

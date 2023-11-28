@@ -35,9 +35,8 @@ from deeplite_torch_zoo.src.object_detection.yolo.losses import YOLOv5Loss
 from deeplite_torch_zoo.utils import strip_optimizer, LOGGER, TQDM_BAR_FORMAT, colorstr, increment_path, \
     init_seeds, one_cycle, print_args, yaml_save, check_img_size, \
     EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer
-from deeplite_torch_zoo.src.object_detection.trainer.trainer import Loss, patched_collate_fn
+from deeplite_torch_zoo.src.object_detection.trainer.trainer import V8UltralyticsLoss
 from deeplite_torch_zoo.trainer import Detector
-from deeplite_torch_zoo.src.object_detection.datasets.dataset import YOLODataset
 from deeplite_torch_zoo.api.datasets.object_detection.yolo import DATASET_CONFIGS, HERE as DETECTION_CONFIGS_HOME
 
 
@@ -82,7 +81,6 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
     if 'yolo8' in opt.model_name or 'yolo_resnet' in opt.model_name:
         opt.v8 = True
         custom_head = 'yolo8'
-        YOLODataset.collate_fn = patched_collate_fn  # load batch as dict
 
     # if RANK in {-1, 0}:
     dataloaders = get_dataloaders(
@@ -223,11 +221,9 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
 
         # sets model.args param so the v8 loss works
         trainer = Detector(torch_model=de_parallel(model), overrides=overrides)
-        compute_loss = Loss(de_parallel(model))
-        debatchify = lambda b, device_: (b['img'], b, b['batch_idx'].shape[0])
+        compute_loss = V8UltralyticsLoss(de_parallel(model))
     else:
         compute_loss = YOLOv5Loss(model)  # init loss class
-        debatchify = lambda b, device_: (b[0], b[1].to(device_), b[0].shape[0])
 
     LOGGER.info(f'Image sizes {imgsz} train, {imgsz} val\n'
                 f'Using {train_loader.num_workers * WORLD_SIZE} dataloader workers\n'
@@ -255,8 +251,9 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         if RANK in {-1, 0}:
             pbar = tqdm(pbar, total=nb, bar_format=TQDM_BAR_FORMAT)  # progress bar
         optimizer.zero_grad()
-        for i, (batch) in pbar:  # batch -------------------------------------------------------------
-            imgs, targets, n_obj = debatchify(batch, device)
+        for i, (imgs, targets, _) in pbar:  # batch -------------------------------------------------------------
+            targets.to(device)
+            n_obj = imgs.shape[0]
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
 
@@ -362,7 +359,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
                 stop = broadcast_list[0]
         if stop or opt.dryrun:
             break  # must break all DDP ranks
-        
+
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training -----------------------------------------------------------------------------------------------------
 
