@@ -35,7 +35,7 @@ from deeplite_torch_zoo.src.object_detection.yolo.losses import YOLOv5Loss
 from deeplite_torch_zoo.utils import strip_optimizer, LOGGER, TQDM_BAR_FORMAT, colorstr, increment_path, \
     init_seeds, one_cycle, print_args, yaml_save, check_img_size, \
     EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer
-from deeplite_torch_zoo.src.object_detection.trainer.trainer import V8UltralyticsLoss
+from deeplite_torch_zoo.src.object_detection.trainer.trainer import v8DetectionTupleLoss
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.model import FlexibleYOLO
 from deeplite_torch_zoo.trainer import Detector
 from deeplite_torch_zoo.api.datasets.object_detection.yolo import DATASET_CONFIGS, HERE as DETECTION_CONFIGS_HOME
@@ -123,6 +123,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         num_classes=nc,
         custom_head=custom_head
     ).to(device)
+    print(device)
     amp = not opt.no_amp
 
     # Freeze
@@ -226,7 +227,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
 
         # sets model.args param so the v8 loss works
         trainer = Detector(torch_model=de_parallel(model), overrides=overrides)
-        compute_loss = V8UltralyticsLoss(de_parallel(model))
+        compute_loss = v8DetectionTupleLoss(de_parallel(model))
     else:
         compute_loss = YOLOv5Loss(model)  # init loss class
 

@@ -107,5 +107,19 @@ def patched_export(obj, model_name='model', **kwargs):
     return Exporter(overrides=args, _callbacks=obj.callbacks)(model=model)
 
 
+
+class v8DetectionTupleLoss(v8DetectionLoss):
+    """
+    Ultralytics detection loss which takes batch as tuple
+    """
+    def __call__(self, pred, batch):
+        if isinstance(batch, tuple):
+            batch = {
+                'batch_idx': batch[:, 0],
+                'cls': batch[:, 1],
+                'bboxes': batch[:, 2:],
+            }
+        return super().__call__(pred, batch)
+
 YOLO.__init__ = patched_init
 YOLO.export = patched_export

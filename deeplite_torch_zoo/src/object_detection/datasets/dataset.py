@@ -198,7 +198,7 @@ class YOLODataset(BaseDataset):
             new_batch['batch_idx'][i] += i  # add target image index for build_targets()
         new_batch['batch_idx'] = torch.cat(new_batch['batch_idx'], 0)
 
-        targets = torch.cat([  # yolov8 loss performs concatenation in loss function
+        targets = torch.cat([
             new_batch['batch_idx'].unsqueeze(-1),
             new_batch['cls'],
             new_batch['bboxes']

@@ -1,5 +1,4 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
-from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +16,6 @@ from deeplite_torch_zoo.src.object_detection.eval.v8.v8_nms import (
     non_max_suppression as non_max_suppression_v8,
 )
 from deeplite_torch_zoo.utils import LOGGER, smart_inference_mode, Profile, TQDM_BAR_FORMAT
-
 
 
 def clip_boxes(boxes, shape):
