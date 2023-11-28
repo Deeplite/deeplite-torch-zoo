@@ -75,7 +75,7 @@ class YOLOv6(FlexibleYOLO):
         initialize_weights(self)
         self._is_fused = False
 
-    def forward(self, x):
+    def _forward_once(self, x):
         out = self.backbone(x)
         for neck in self.necks:
             out = neck(out)

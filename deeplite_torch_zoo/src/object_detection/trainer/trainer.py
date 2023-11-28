@@ -2,15 +2,16 @@
 
 import torch
 import torch.nn as nn
-import numpy as np
 
 from ultralytics.yolo.v8.detect.train import DetectionTrainer, Loss, make_anchors
 from ultralytics.yolo.utils.tal import TaskAlignedAssigner
 from ultralytics.yolo.utils.loss import BboxLoss
-import ultralytics.yolo.engine.trainer
 
 from deeplite_torch_zoo.src.object_detection.trainer.yolo import YOLO
 from deeplite_torch_zoo.utils import LOGGER, colorstr
+from ultralytics.models.yolo.detect.train import DetectionTrainer
+from ultralytics.utils.loss import v8DetectionLoss, BboxLoss
+from ultralytics.utils.tal import TaskAlignedAssigner
 
 
 def patched_get_model(obj, weights=None, cfg=None):
@@ -101,5 +102,4 @@ class V8UltralyticsLoss(Loss):
 
 
 DetectionTrainer.get_model = patched_get_model
-Loss.__init__ = patched_loss_init
-ultralytics.yolo.engine.trainer.check_amp = patched_check_amp
+v8DetectionLoss.__init__ = patched_loss_init

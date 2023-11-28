@@ -38,6 +38,7 @@ class YOLOv5FPN(nn.Module):
             self,
             ch=(256, 512, 1024),
             channel_outs=(512, 256, 256),
+            internal_channels=None,
             version='s',
             default_gd=0.33,
             default_gw=0.5,
@@ -62,6 +63,9 @@ class YOLOv5FPN(nn.Module):
             self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
 
         self.re_channels_out()
+        if internal_channels is None:
+            internal_channels = channel_outs[0]
+
         self.concat = Concat()
 
         self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
@@ -77,15 +81,15 @@ class YOLOv5FPN(nn.Module):
 
         self.conv1 = bottleneck_block_cls(
             self.channels_outs[0] + self.C4_size,
-            self.channels_outs[0],
+            internal_channels,
         )
 
-        self.P4 = Conv(self.channels_outs[0], self.channels_outs[1], 1, 1, act=act)
+        self.P4 = Conv(internal_channels, self.channels_outs[1], 1, 1, act=act)
         self.P4_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
 
         self.P3 = bottleneck_block_cls(
             self.channels_outs[1] + self.C3_size,
-            self.channels_outs[1],
+            self.channels_outs[2],
         )
 
         self.out_shape = (
