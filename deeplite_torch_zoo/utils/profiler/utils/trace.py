@@ -54,4 +54,5 @@ def trace(model, args=(), kwargs=None):
         outputs=[variables[v] for v in graph.outputs() if v in variables],
         nodes=nodes,
     )
+
     return graph
