@@ -1,6 +1,6 @@
 import warnings
 
-import pandas as pd
+from pandas import DataFrame
 
 from .handlers import handlers
 from .utils.trace import trace
@@ -23,13 +23,12 @@ def profile_macs(model, args=(), kwargs=None, reduction=sum):
                     results[node] = func(node)
                 break
         else:
-            warnings.warn('No handlers found: "{}". Skipped.'.format(
-                node.operator))
+            warnings.warn(f'No handlers found: "{node.operator}". Skipped.')
 
     if reduction is not None:
         return reduction(results.values())
-    else:
-        return results
+
+    return results
 
 
 def profile_ram(model, args=(), kwargs=None):
@@ -38,11 +37,18 @@ def profile_ram(model, args=(), kwargs=None):
     placer = Placer(nodes)
     nodes = placer.place(num_bytes=4)
 
-
-    df = pd.DataFrame(
-        index=[node.name for node in nodes], columns=[
-        'weight', 'bias', 'input_shape', 'output_shape', 'in_tensors', 'out_tensors',
-        'active_blocks', 'ram']
+    df = DataFrame(
+        index=[node.name for node in nodes],
+        columns=[
+            'weight',
+            'bias',
+            'input_shape',
+            'output_shape',
+            'in_tensors',
+            'out_tensors',
+            'active_blocks',
+            'ram'
+        ]
     )
 
     for node in nodes:

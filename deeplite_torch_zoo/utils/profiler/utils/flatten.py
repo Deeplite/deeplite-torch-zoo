@@ -17,6 +17,7 @@ def flatten(inputs):
             queue.extend(x.values())
         elif isinstance(x, torch.Tensor):
             outputs.append(x)
+
     return outputs
 
 
