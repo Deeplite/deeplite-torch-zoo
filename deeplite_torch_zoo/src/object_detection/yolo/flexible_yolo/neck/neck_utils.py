@@ -1,4 +1,3 @@
-
 NECK_ACT_TYPE_MAP = {
     'relu': dict(type='ReLU', inplace=True),
     'relu6': dict(type='ReLU6', inplace=True),
