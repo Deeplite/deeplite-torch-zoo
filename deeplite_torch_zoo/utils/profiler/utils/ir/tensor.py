@@ -1,6 +1,3 @@
-__all__ = ['Tensor']
-
-
 class Tensor:
     def __init__(self, name, dtype, shape=None):
         self.name = name
@@ -33,5 +30,6 @@ class Tensor:
 
     def __repr__(self):
         text = "Tensor (name: {}, dtype: {}, shape: {})".format(
-                self.name, self.dtype, self.shape)
+            self.name, self.dtype, self.shape
+        )
         return text

@@ -1,6 +1,3 @@
-__all__ = ['Layer']
-
-
 class Layer:
     def __init__(self, name, inputs, outputs, weights=None, bias=None):
         self.name = name
@@ -51,6 +48,6 @@ class Layer:
 
     def __repr__(self):
         text = "Node (name: {}, inputs: {}, outputs: {}, w: {}, b: {})".format(
-                self.name, len(self.inputs), len(self.outputs), self.weights,
-                self.bias)
+            self.name, len(self.inputs), len(self.outputs), self.weights, self.bias
+        )
         return text

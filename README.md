@@ -212,5 +212,6 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 - Cutout implementation: [uoguelph-mlrg/Cutout](https://github.com/uoguelph-mlrg/Cutout)
 - Robustness measurement image distortions: [hendrycks/robustness](https://github.com/hendrycks/robustness)
 - Registry implementation: [openvinotoolkit/openvino/tools/pot](https://github.com/openvinotoolkit/openvino/blob/master/tools/pot)
+- Torch profiler implementation: [zhijian-liu/torchprofile](https://github.com/zhijian-liu/torchprofile)
 
 </details>

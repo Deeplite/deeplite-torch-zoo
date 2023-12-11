@@ -3,8 +3,6 @@ from collections import deque
 import torch
 import torch.nn as nn
 
-__all__ = ['flatten', 'Flatten']
-
 
 def flatten(inputs):
     queue = deque([inputs])

@@ -1,6 +1,3 @@
-__all__ = ['Node']
-
-
 class Node:
     def __init__(self, operator, attributes, inputs, outputs, scope):
         self.operator = operator
@@ -53,8 +50,12 @@ class Node:
         text = ', '.join([str(v) for v in self.outputs])
         text += ' = ' + self.operator
         if self.attributes:
-            text += '[' + ', '.join(
-                [str(k) + ' = ' + str(v)
-                 for k, v in self.attributes.items()]) + ']'
+            text += (
+                '['
+                + ', '.join(
+                    [str(k) + ' = ' + str(v) for k, v in self.attributes.items()]
+                )
+                + ']'
+            )
         text += '(' + ', '.join([str(v) for v in self.inputs]) + ')'
         return text

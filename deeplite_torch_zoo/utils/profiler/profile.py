@@ -2,16 +2,13 @@ import warnings
 
 from pandas import DataFrame
 
-from .handlers import handlers
-from .utils.trace import trace
-from .utils.placer import Placer, get_nodes
-
-
-__all__ = ['profile_macs', 'profile_ram']
+from deeplite_torch_zoo.utils.profiler.handlers import handlers
+from deeplite_torch_zoo.utils.profiler.utils.trace import trace
+from deeplite_torch_zoo.utils.profiler.utils.placer import Placer, get_nodes
 
 
 def profile_macs(model, args=(), kwargs=None, reduction=sum):
-    results = dict()
+    results = {}
 
     graph = trace(model, args, kwargs)
     for node in graph.nodes:
@@ -31,11 +28,11 @@ def profile_macs(model, args=(), kwargs=None, reduction=sum):
     return results
 
 
-def profile_ram(model, args=(), kwargs=None):
+def profile_ram(model, args=(), kwargs=None, num_bytes=4):
     graph = trace(model, args, kwargs)
     nodes = get_nodes(graph)
     placer = Placer(nodes)
-    nodes = placer.place(num_bytes=4)
+    nodes = placer.place(num_bytes=num_bytes)
 
     df = DataFrame(
         index=[node.name for node in nodes],
@@ -47,8 +44,8 @@ def profile_ram(model, args=(), kwargs=None):
             'in_tensors',
             'out_tensors',
             'active_blocks',
-            'ram'
-        ]
+            'ram',
+        ],
     )
 
     for node in nodes:
@@ -61,4 +58,4 @@ def profile_ram(model, args=(), kwargs=None):
         df.active_blocks[node.name] = node.malloc_blocks
         df.ram[node.name] = node.malloc_val
 
-    return df.ram.max() / 2 ** 20
+    return df.ram.max() / 2**20

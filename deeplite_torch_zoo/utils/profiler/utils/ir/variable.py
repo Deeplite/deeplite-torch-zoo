@@ -1,6 +1,3 @@
-__all__ = ['Variable']
-
-
 class Variable:
     def __init__(self, name, dtype, shape=None):
         self.name = name

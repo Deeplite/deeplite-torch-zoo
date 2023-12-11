@@ -3,15 +3,15 @@ import warnings
 import torch
 import torch.jit
 
-from .flatten import Flatten
-from .ir import Graph, Node, Variable
-
-__all__ = ['trace']
+from deeplite_torch_zoo.utils.profiler.utils.flatten import Flatten
+from deeplite_torch_zoo.utils.profiler.utils.ir import Graph, Node, Variable
 
 
 def trace(model, args=(), kwargs=None):
-    assert kwargs is None, 'Keyword arguments are not supported for now. ' \
-                           'Please use positional arguments instead!'
+    assert kwargs is None, (
+        'Keyword arguments are not supported for now. '
+        'Please use positional arguments instead!'
+    )
 
     with warnings.catch_warnings(record=True):
         graph, _ = torch.jit._get_trace_graph(Flatten(model), args, kwargs)
@@ -35,15 +35,10 @@ def trace(model, args=(), kwargs=None):
     for x in graph.nodes():
         node = Node(
             operator=x.kind(),
-            attributes={
-                s: getattr(x, x.kindOf(s))(s)
-                for s in x.attributeNames()
-            },
+            attributes={s: getattr(x, x.kindOf(s))(s) for s in x.attributeNames()},
             inputs=[variables[v] for v in x.inputs() if v in variables],
             outputs=[variables[v] for v in x.outputs() if v in variables],
-            scope=x.scopeName() \
-                .replace('Flatten/', '', 1) \
-                .replace('Flatten', '', 1),
+            scope=x.scopeName().replace('Flatten/', '', 1).replace('Flatten', '', 1),
         )
         nodes.append(node)
 
