@@ -374,7 +374,7 @@ class ResCSPC(BottleneckCSPC):
 class GhostCSPA(BottleneckCSPA):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
@@ -391,7 +391,7 @@ class GhostCSPA(BottleneckCSPA):
 class GhostCSPB(BottleneckCSPB):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2)  # hidden channels
@@ -408,7 +408,7 @@ class GhostCSPB(BottleneckCSPB):
 class GhostCSPC(BottleneckCSPC):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=2, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, shrink_factor=0.5, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
