@@ -31,7 +31,7 @@ class YOLOv8PAN(nn.Module):
         default_gd=0.33,
         default_gw=0.5,
         bottleneck_block_cls=None,
-        bottleneck_depth=3,
+        bottleneck_depth=(3, 3),
         act='silu',
         channel_divisor=8,
     ):
@@ -53,23 +53,26 @@ class YOLOv8PAN(nn.Module):
         self.P5_size = ch[2]
 
         if bottleneck_block_cls is None:
-            bottleneck_block_cls = partial(
-                YOLOC2f,
-                shortcut=False,
-                n=self.get_depth(bottleneck_depth),
-                act=act,
-            )
+            bottleneck_block_cls = [
+                partial(
+                    YOLOC2f,
+                    shortcut=False,
+                    n=self.get_depth(n),
+                    act=act,
+                )
+                for n in bottleneck_depth
+            ]
 
         first_stride = 2
         self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, first_stride, act=act)
-        self.P4 = bottleneck_block_cls(
+        self.P4 = bottleneck_block_cls[0](
             self.channels_outs[0] + self.P4_size,
             self.channels_outs[1],
         )
 
         second_stride = 2
         self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, second_stride, act=act)
-        self.P5 = bottleneck_block_cls(
+        self.P5 = bottleneck_block_cls[0](
             self.channels_outs[2] + self.P5_size,
             self.channels_outs[3],
         )

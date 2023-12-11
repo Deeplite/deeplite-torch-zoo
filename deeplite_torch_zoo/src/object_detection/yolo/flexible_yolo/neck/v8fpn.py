@@ -34,7 +34,7 @@ class YOLOv8FPN(nn.Module):
             default_gd=0.33,
             default_gw=0.5,
             bottleneck_block_cls=None,
-            bottleneck_depth=3,
+            bottleneck_depth=(3, 3),
             act='silu',
             channel_divisor=8,
         ):
@@ -59,21 +59,24 @@ class YOLOv8FPN(nn.Module):
         self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
 
         if bottleneck_block_cls is None:
-            bottleneck_block_cls = partial(
-                YOLOC2f,
-                shortcut=False,
-                n=self.get_depth(bottleneck_depth),
-                act=act,
-            )
+            bottleneck_block_cls = [
+                partial(
+                    YOLOC2f,
+                    shortcut=False,
+                    n=self.get_depth(n),
+                    act=act,
+                )
+                for n in bottleneck_depth
+            ]
 
-        self.conv1 = bottleneck_block_cls(
+        self.conv1 = bottleneck_block_cls[0](
             self.C5_size + self.C4_size,
             self.channels_outs[0]
         )
 
         self.P4_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
 
-        self.P3 = bottleneck_block_cls(
+        self.P3 = bottleneck_block_cls[1](
             self.channels_outs[0] + self.C3_size,
             self.channels_outs[1],
         )
