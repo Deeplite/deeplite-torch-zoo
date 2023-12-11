@@ -1,14 +1,11 @@
 backbone:
-  type: resnet
-  version: '18'  # choices: 18, 34, 50, 101, 152
-  width: 1.0
-  dcn: False
-  cbam: False
+  type: yolo8
+  version: s
 neck:
-  v5FPN:
+  v8FPN:
     channel_outs: [512, 256, 256]
     version: s
-  v5PAN:
+  v8PAN:
     channel_outs: [256, 512, 512, 1024]
     version: s
 head:

@@ -5,15 +5,15 @@ from functools import partial
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv, Concat
-from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3
+from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC2f
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.neck.neck_utils import YOLO_SCALING_GAINS
 
 from deeplite_torch_zoo.utils import LOGGER, make_divisible
 
 
-class YOLOv5PAN(nn.Module):
+class YOLOv8PAN(nn.Module):
     """
-    YOLOv5 PAN module
+    YOLOv8 PAN module
     P3 --->  PP3
     ^         |
     | concat  V
@@ -25,7 +25,7 @@ class YOLOv5PAN(nn.Module):
 
     def __init__(
         self,
-        ch=(256, 256, 512),
+        ch=(256, 512, 1024),
         channel_outs=(256, 512, 512, 1024),
         version='s',
         default_gd=0.33,
@@ -55,7 +55,7 @@ class YOLOv5PAN(nn.Module):
         if bottleneck_block_cls is None:
             bottleneck_block_cls = [
                 partial(
-                    YOLOC3,
+                    YOLOC2f,
                     shortcut=False,
                     n=self.get_depth(n),
                     act=act,
@@ -72,7 +72,7 @@ class YOLOv5PAN(nn.Module):
 
         second_stride = 2
         self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, second_stride, act=act)
-        self.P5 = bottleneck_block_cls[1](
+        self.P5 = bottleneck_block_cls[0](
             self.channels_outs[2] + self.P5_size,
             self.channels_outs[3],
         )

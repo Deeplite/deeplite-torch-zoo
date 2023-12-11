@@ -10,6 +10,7 @@ __all__ = []
 CFG_PATH = 'deeplite_torch_zoo/src/object_detection/yolo/flexible_yolo/configs'
 
 model_configs = {
+    'yolo_v8': 'model_yolov8.yaml',
     'yolo_resnet18': 'model_resnet.yaml',
     'yolo_resnet18x0.5': 'model_resnet.yaml',
     'yolo_fdresnet18x0.5': 'model_resnet.yaml',
