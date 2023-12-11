@@ -1,7 +1,7 @@
 from collections import deque
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 def flatten(inputs):

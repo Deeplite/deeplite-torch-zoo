@@ -16,7 +16,7 @@ def trace(model, args=(), kwargs=None):
     with warnings.catch_warnings(record=True):
         graph, _ = torch.jit._get_trace_graph(Flatten(model), args, kwargs)
 
-    variables = dict()
+    variables = {}
     for x in graph.nodes():
         for v in list(x.inputs()) + list(x.outputs()):
             if 'tensor' in v.type().kind().lower():
@@ -44,7 +44,7 @@ def trace(model, args=(), kwargs=None):
 
     graph = Graph(
         name=model.__class__.__module__ + '.' + model.__class__.__name__,
-        variables=[v for v in variables.values()],
+        variables=list(variables.values()),
         inputs=[variables[v] for v in graph.inputs() if v in variables],
         outputs=[variables[v] for v in graph.outputs() if v in variables],
         nodes=nodes,
