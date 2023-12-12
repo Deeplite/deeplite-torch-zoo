@@ -23,12 +23,20 @@ class YOLOv5Backbone(nn.Module):
         bottleneck_block_cls=None,
         act='silu',
         channels_out=(64, 128, 128, 256, 256, 512, 512, 1024, 1024, 1024),
+        depth_factor=None,
+        width_factor=None,
     ):
         super().__init__()
 
         self.version = version
-        self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
-        self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
+        if depth_factor is None:
+            self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
+        else:
+            self.gd = depth_factor
+        if width_factor is None:
+            self.gw = YOLO_SCALING_GAINS[self.version.lower()]['gw']  # width gain
+        else:
+            self.gw = width_factor
 
         if bottleneck_block_cls is None:
             bottleneck_block_cls = [
@@ -65,7 +73,12 @@ class YOLOv5Backbone(nn.Module):
         self.conv4 = bottleneck_block_cls[3](
             self.channels_out[7], self.channels_out[8]
         )
-        self.sppf = YOLOSPPF(self.channels_out[8], self.channels_out[9], 5)
+        self.sppf = YOLOSPPF(
+            self.channels_out[8],
+            self.channels_out[9],
+            k=5,
+            act=act,
+        )
 
         self.out_shape = [
             self.channels_out[3],
@@ -116,7 +129,14 @@ class YOLOv8Backbone(YOLOv5Backbone):
         bottleneck_block_cls=None,
         act='silu',
         channels_out=(64, 128, 128, 256, 256, 512, 512, 1024, 1024, 1024),
+        depth_factor=None,
+        width_factor=None,
     ):
+        self.version = version
+        if depth_factor is None:
+            self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
+        else:
+            self.gd = depth_factor
         if bottleneck_block_cls is None:
             bottleneck_block_cls = [
                 partial(
@@ -133,5 +153,7 @@ class YOLOv8Backbone(YOLOv5Backbone):
             bottleneck_block_cls=bottleneck_block_cls,
             act=act,
             channels_out=channels_out,
+            depth_factor=depth_factor,
+            width_factor=width_factor,
         )
         self.C1 = Conv(3, self.channels_out[0], 3, 2)
