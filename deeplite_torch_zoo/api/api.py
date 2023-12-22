@@ -90,7 +90,7 @@ def get_eval_function(model_name, dataset_name):
 
 
 def profile(
-    model, img_size=224, fuse=True, eval_mode=True, include_frozen_params=False
+    model, img_size=224, in_ch=3, fuse=True, eval_mode=True, include_frozen_params=False
 ):
     """
     Do model profiling to calculate the MAC count, the number of parameters and weight size of the model.
@@ -111,7 +111,7 @@ def profile(
             'or a tuple of integers (e.g. (3, 224, 224))'
         )
     if not isinstance(img_size, tuple):
-        img_size = (3, img_size, img_size)
+        img_size = (in_ch, img_size, img_size)
 
     if fuse and hasattr(model, 'fuse'):
         model = model.fuse()

@@ -12,11 +12,11 @@ from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
 class MBConv(nn.Module):
     # Taken from: https://github.com/d-li14/mobilenetv2.pytorch/blob/master/models/imagenet/mobilenetv2.py
     def __init__(
-        self, c1, c2, e=1.0, k=3, stride=1, act='relu', se_ratio=None, channel_divisor=1
+        self, c1, c2, e=1.0, k=3, stride=1, act='relu', se_ratio=None, channel_divisor=1, shortcut=True,
     ):
         super().__init__()
         assert stride in (1, 2)
-
+        self.shortcut = shortcut
         if e == 1.0:
             self.conv = nn.Sequential(
                 # dw
@@ -44,4 +44,4 @@ class MBConv(nn.Module):
             )
 
     def forward(self, x):
-        return x + self.conv(x)
+        return self.conv(x) if not self.shortcut else x + self.conv(x)
