@@ -1,3 +1,6 @@
+from . import postinstall
+postinstall.initialize()
+
 # main zoo API
 from deeplite_torch_zoo.api import (  # pylint: disable=unused-import
     get_model,

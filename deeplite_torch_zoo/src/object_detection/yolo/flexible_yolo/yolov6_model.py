@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.model import FlexibleYOLO
-from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6 import build_network
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6 import build_network, build_network_lite
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6.config import Config
 from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.yolov6.layers.common import (
     RepVGGBlock,
@@ -22,18 +22,26 @@ from deeplite_torch_zoo.utils import initialize_weights, LOGGER
 
 class YOLOv6(FlexibleYOLO):
     def __init__(
-        self, model_config, nc=80, anchors=None, custom_head=None, width_mul=None, depth_mul=None
+        self,
+        model_config,
+        nc=80,
+        anchors=None,
+        custom_head=None,
+        width_mul=None,
+        depth_mul=None,
+        is_lite=False,
     ):
         """
         :param model_config:
         """
         nn.Module.__init__(self)
         self.yaml = None
+        self._is_lite = is_lite
 
         head_config = {
             'nc': nc,
             'anchors': anchors if anchors is not None \
-                else ANCHOR_REGISTRY.get('default')(),
+                else ANCHOR_REGISTRY.get('default')() if not self._is_lite else ANCHOR_REGISTRY.get('default_p6')(),
         }
 
         head_cls = Detect
@@ -51,7 +59,8 @@ class YOLOv6(FlexibleYOLO):
         if depth_mul is not None:
             cfg.model.depth_multiple = depth_mul
 
-        self.backbone, self.neck, channel_counts = build_network(cfg)
+        builder_fn = build_network if not self._is_lite else build_network_lite
+        self.backbone, self.neck, channel_counts = builder_fn(cfg)
 
         self.necks = nn.ModuleList()
         self.necks.append(self.neck)
@@ -66,7 +75,7 @@ class YOLOv6(FlexibleYOLO):
         initialize_weights(self)
         self._is_fused = False
 
-    def forward(self, x):
+    def _forward_once(self, x):
         out = self.backbone(x)
         for neck in self.necks:
             out = neck(out)

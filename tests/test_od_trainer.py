@@ -8,6 +8,7 @@ TEST_MODELS = [
     ('yolo_fdresnet18x0.25', ),
     ('yolo_timm_tinynet_e', ),
     ('yolo6s-d33w25', ),
+    ('yolonas_s', ),
 ]
 
 

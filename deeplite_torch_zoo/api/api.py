@@ -3,12 +3,12 @@ import fnmatch
 
 import texttable
 import torch
-from torchprofile import profile_macs
 
 import deeplite_torch_zoo.api.datasets  # pylint: disable=unused-import
 import deeplite_torch_zoo.api.eval  # pylint: disable=unused-import
 import deeplite_torch_zoo.api.models  # pylint: disable=unused-import
 from deeplite_torch_zoo.utils import switch_train_mode, deprecated, LOGGER
+from deeplite_torch_zoo.utils.profiler import profile_macs, profile_ram
 from deeplite_torch_zoo.api.registries import (
     DATASET_WRAPPER_REGISTRY,
     EVAL_WRAPPER_REGISTRY,
@@ -123,8 +123,9 @@ def profile(
             if include_frozen_params or p.requires_grad
         )
         macs = profile_macs(model, torch.randn(1, *img_size).to(device))
+        peak_ram = profile_ram(model, torch.randn(1, *img_size).to(device))
 
-    return {'GMACs': macs / 1e9, 'Mparams': num_params / 1e6}
+    return {'GMACs': macs / 1e9, 'Mparams': num_params / 1e6, 'PeakRAM': peak_ram}
 
 
 def list_models(
