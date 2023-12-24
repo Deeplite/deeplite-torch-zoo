@@ -28,7 +28,7 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOBottleneckCSP',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 2, 3),
+    n=(1, 3, 6, 9),
 )(YOLOBottleneckCSP)
 
 
@@ -36,7 +36,7 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOBottleneckCSP2',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 2, 3),
+    n=(1, 3, 6, 9),
 )(YOLOBottleneckCSP2)
 
 
@@ -44,7 +44,7 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOC3',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 2, 3),
+    n=(1, 3, 6, 9),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOC3)
 
@@ -53,7 +53,7 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOC2',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 2, 3),
+    n=(1, 3, 6, 9),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOC2)
 
@@ -62,7 +62,7 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOC2f',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 2, 3),
+    n=(1, 3, 6, 9),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOC2f)
 
@@ -70,7 +70,7 @@ YOLO_BLOCK_REGISTRY.register(
 YOLO_BLOCK_REGISTRY.register(
     name='YOLOC1',
     k=(3, 5),
-    n=(1, 2, 3),
+    n=(1, 3, 6, 9),
 )(YOLOC1)
 
 
@@ -78,6 +78,6 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOC3x',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 2, 3),
+    n=(1, 3, 6, 9),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOC3x)

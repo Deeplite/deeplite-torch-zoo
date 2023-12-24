@@ -38,15 +38,17 @@ class YOLOv5Backbone(nn.Module):
         else:
             self.gw = width_factor
 
-        if bottleneck_block_cls is None:
-            bottleneck_block_cls = [
-                partial(
-                    YOLOC3,
-                    act=act,
-                    n=self.get_depth(n),
-                )
-                for n in num_blocks
-            ]
+        # if bottleneck_block_cls is None:
+        #     bottleneck_block_cls2 = [
+        #         partial(
+        #             YOLOC3,
+        #             act=act,
+        #             n=self.get_depth(n),
+        #         )
+        #         for n in num_blocks
+        #     ]
+
+        # raise RuntimeError(bottleneck_block_cls, bottleneck_block_cls2)
 
         self.channels_out = list(channels_out)
         self.re_channels_out()
