@@ -2,6 +2,16 @@ from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import (
     YOLOBottleneck,
     YOLOBottleneckCSP,
     YOLOBottleneckCSP2,
+    YOLOVoVCSP,
+    YOLOBottleneckCSPF,
+    YOLOBottleneckCSPL,
+    YOLOBottleneckCSPLG,
+    BottleneckCSPA,
+    BottleneckCSPB,
+    BottleneckCSPC,
+    ResCSPA,
+    ResCSPB,
+    ResCSPC,
 )
 from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3, YOLOC2, YOLOC2f, YOLOC1, YOLOC3x
 
@@ -28,7 +38,8 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOBottleneckCSP',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 3, 6, 9),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOBottleneckCSP)
 
 
@@ -36,7 +47,8 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOBottleneckCSP2',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 3, 6, 9),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOBottleneckCSP2)
 
 
@@ -44,16 +56,23 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOC3',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 3, 6, 9),
+    n=(1, 2, 3),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOC3)
 
+# YOLO_BLOCK_REGISTRY.register(
+#     name='YOLOC3x',
+#     e=EXPANSION_FACTOR_RANGE,
+#     k=(3, 5),
+#     n=(1, 2, 3),
+#     in_e=IN_EXPANSION_FACTOR_RANGE,
+# )(YOLOC3x)
 
 YOLO_BLOCK_REGISTRY.register(
     name='YOLOC2',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 3, 6, 9),
+    n=(1, 2, 3),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOC2)
 
@@ -62,7 +81,7 @@ YOLO_BLOCK_REGISTRY.register(
     name='YOLOC2f',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 3, 6, 9),
+    n=(1, 2, 3),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOC2f)
 
@@ -70,14 +89,90 @@ YOLO_BLOCK_REGISTRY.register(
 YOLO_BLOCK_REGISTRY.register(
     name='YOLOC1',
     k=(3, 5),
-    n=(1, 3, 6, 9),
+    n=(1, 2, 3),
 )(YOLOC1)
 
 
 YOLO_BLOCK_REGISTRY.register(
-    name='YOLOC3x',
+    name='YOLOVoVCSP',
+    k=(3, 5),
+)(YOLOVoVCSP)
+
+
+YOLO_BLOCK_REGISTRY.register(
+    name='YOLOBottleneckCSPF',
     e=EXPANSION_FACTOR_RANGE,
     k=(3, 5),
-    n=(1, 3, 6, 9),
+    n=(1, 2, 3),
     in_e=IN_EXPANSION_FACTOR_RANGE,
-)(YOLOC3x)
+)(YOLOBottleneckCSPF)
+
+
+YOLO_BLOCK_REGISTRY.register(
+    name='YOLOBottleneckCSPL',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(YOLOBottleneckCSPL)
+
+
+# YOLO_BLOCK_REGISTRY.register(
+#     name='YOLOBottleneckCSPLG',
+#     e=EXPANSION_FACTOR_RANGE,
+#     k=(3, 5),
+#     n=(1, 2, 3),
+#     in_e=IN_EXPANSION_FACTOR_RANGE,
+# )(YOLOBottleneckCSPLG)
+
+
+YOLO_BLOCK_REGISTRY.register(
+    name='BottleneckCSPA',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(BottleneckCSPA)
+
+YOLO_BLOCK_REGISTRY.register(
+    name='BottleneckCSPB',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(BottleneckCSPB)
+
+YOLO_BLOCK_REGISTRY.register(
+    name='BottleneckCSPC',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(BottleneckCSPC)
+
+YOLO_BLOCK_REGISTRY.register(
+    name='ResCSPA',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(ResCSPA)
+
+YOLO_BLOCK_REGISTRY.register(
+    name='ResCSPB',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(ResCSPB)
+
+
+YOLO_BLOCK_REGISTRY.register(
+    name='ResCSPC',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(ResCSPC)
+
+
