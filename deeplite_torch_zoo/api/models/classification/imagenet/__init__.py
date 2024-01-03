@@ -2,11 +2,12 @@ from deeplite_torch_zoo.api.models.classification.imagenet.timm_models import * 
 from deeplite_torch_zoo.api.models.classification.imagenet.torchvision_models import *  # pylint: disable=unused-import
 from deeplite_torch_zoo.api.models.classification.imagenet.pytorchcv_models import *  # pylint: disable=unused-import
 from deeplite_torch_zoo.api.models.classification.imagenet.zoo_models import *  # pylint: disable=unused-import
+from deeplite_torch_zoo.api.models.classification.imagenet.mmpretrain_models import *  # pylint: disable=unused-import
 
 from deeplite_torch_zoo.api.registries import MODEL_WRAPPER_REGISTRY
 
 
-REGISTER_PRIORITY = ('zoo', 'timm', 'torchvision', 'pytorchcv')
+REGISTER_PRIORITY = ('zoo', 'timm', 'mmpretrain', 'torchvision', 'pytorchcv')
 
 model_names = [
     model_key.model_name
