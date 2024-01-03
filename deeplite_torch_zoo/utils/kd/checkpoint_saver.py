@@ -65,7 +65,7 @@ class CheckpointSaver:  # don't save optimizer state dict, since it forces speci
         if os.path.exists(last_save_path):
             os.unlink(last_save_path)  # required for Windows support.
         os.rename(tmp_save_path, last_save_path)
-        worst_file = self.checkpoint_files[-1] if self.checkpoint_files else None
+        worst_file = self.checkpoint_files[-1][1] if self.checkpoint_files else None
         if (len(self.checkpoint_files) < self.max_history
                 or metric is None or self.cmp(metric, worst_file)):
             if len(self.checkpoint_files) >= self.max_history:
