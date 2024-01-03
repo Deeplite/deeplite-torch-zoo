@@ -6,6 +6,7 @@ from deeplite_torch_zoo.src.dnn_blocks.resnet.resnet_blocks import (
 from deeplite_torch_zoo.src.dnn_blocks.search_spaces.block_registry import (
     DNNBlockRegistry,
 )
+from deeplite_torch_zoo.src.dnn_blocks.search_spaces.spaces import INCLUDE_DW
 
 SE_RATIO_RANGE = (None, 8, 16, 32)
 EXPANSION_FACTOR_RANGE = (0.05, 0.1, 0.15, 0.2, 0.25)
@@ -30,14 +31,14 @@ RESNET_BLOCK_REGISTRY.register(
     se_ratio=SE_RATIO_RANGE,
 )(ResNetBottleneck)
 
-
-RESNET_BLOCK_REGISTRY.register(
-    name='ResNeXtBottleneck',
-    e=EXPANSION_FACTOR_RANGE,
-    k=(3, 5),
-    se_ratio=SE_RATIO_RANGE,
-    groups=(16, 32),
-)(ResNeXtBottleneck)
+if INCLUDE_DW:
+    RESNET_BLOCK_REGISTRY.register(
+        name='ResNeXtBottleneck',
+        e=EXPANSION_FACTOR_RANGE,
+        k=(3, 5),
+        se_ratio=SE_RATIO_RANGE,
+        groups=(16, 32),
+    )(ResNeXtBottleneck)
 
 
 RESNET_BLOCK_REGISTRY.register(

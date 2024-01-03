@@ -20,7 +20,7 @@ from deeplite_torch_zoo.src.registries import EXPANDABLE_BLOCKS, VARIABLE_CHANNE
 class YOLOC3(nn.Module):
     # CSP Bottleneck with 3 convolutions
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu', k=3, depth_coef=1
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu', k=3, depth_coef=1, in_e=1.0,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -30,7 +30,7 @@ class YOLOC3(nn.Module):
         n = n * depth_coef
         self.m = nn.Sequential(
             *(
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, k=k, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=in_e, k=k, act=act)
                 for _ in range(n)
             )
         )
@@ -44,7 +44,7 @@ class YOLOC3(nn.Module):
 class YOLOC2(nn.Module):
     # CSP Bottleneck with 2 convolutions
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu', k=3, in_e=1.0,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         self.c = int(c2 * e)  # hidden channels
@@ -58,8 +58,8 @@ class YOLOC2(nn.Module):
                     self.c,
                     shortcut=shortcut,
                     g=g,
-                    k=((3, 3), (3, 3)),
-                    e=1.0,
+                    k=((k, k), (k, k)),
+                    e=in_e,
                     act=act,
                 )
                 for _ in range(n)
@@ -76,7 +76,7 @@ class YOLOC2(nn.Module):
 class YOLOC2f(nn.Module):
     # CSP Bottleneck with 2 convolutions
     def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='relu', k=3, in_e=1.0,
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         self.c = int(c2 * e)  # hidden channels
@@ -88,8 +88,8 @@ class YOLOC2f(nn.Module):
                 self.c,
                 shortcut=shortcut,
                 g=g,
-                k=((3, 3), (3, 3)),
-                e=1.0,
+                k=((k, k), (k, k)),
+                e=in_e,
                 act=act,
             )
             for _ in range(n)
@@ -110,10 +110,10 @@ class YOLOC2f(nn.Module):
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC1(nn.Module):
     # CSP Bottleneck with 1 convolution
-    def __init__(self, c1, c2, n=1, act='relu'):  # ch_in, ch_out, number
+    def __init__(self, c1, c2, n=1, act='relu', k=3):  # ch_in, ch_out, number
         super().__init__()
         self.cv1 = ConvBnAct(c1, c2, 1, 1, act=act)
-        self.m = nn.Sequential(*(ConvBnAct(c2, c2, 3) for _ in range(n)))
+        self.m = nn.Sequential(*(ConvBnAct(c2, c2, k) for _ in range(n)))
 
     def forward(self, x):
         y = self.cv1(x)
@@ -124,7 +124,7 @@ class YOLOC1(nn.Module):
 @VARIABLE_CHANNEL_BLOCKS.register()
 class YOLOC3x(YOLOC3):
     # C3 module with cross-convolutions
-    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'):
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu', k=3, in_e=1.0):
         super().__init__(c1, c2, n, shortcut, g, e, act)
         self.c_ = int(c2 * e)
         self.m = nn.Sequential(
@@ -134,8 +134,8 @@ class YOLOC3x(YOLOC3):
                     self.c_,
                     shortcut=shortcut,
                     g=g,
-                    k=((1, 3), (3, 1)),
-                    e=1,
+                    k=((1, k), (k, 1)),
+                    e=in_e,
                     act=act,
                 )
                 for _ in range(n)

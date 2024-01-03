@@ -1,0 +1,1 @@
+from deeplite_torch_zoo.src.dnn_blocks.search_spaces.search_spaces import SEARCH_SPACES
