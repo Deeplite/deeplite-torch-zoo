@@ -6,11 +6,11 @@ from torch import Tensor
 from deeplite_torch_zoo.src.dnn_blocks.common import (
     ConvBnAct,
     DWConv,
-    GhostConv,
     get_activation,
     round_channels,
 )
 from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
+from deeplite_torch_zoo.src.dnn_blocks.ghostnetv2.ghostnet_blocks import GhostConv
 
 
 class ResNetBottleneck(nn.Module):
@@ -135,7 +135,7 @@ class ResNeXtBottleneck(ResNetBottleneck):
 class GhostBottleneck(nn.Module):
     # Ghost Bottleneck as described in https://github.com/huawei-noah/ghostnet
     def __init__(
-        self, c1, c2, k=3, s=1, shrink_factor=2
+        self, c1, c2, k=3, s=1, shrink_factor=0.5
     ):  # ch_in, ch_out, kernel, stride
         super(GhostBottleneck, self).__init__()
         c_ = c2 // 2

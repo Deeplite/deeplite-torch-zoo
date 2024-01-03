@@ -16,7 +16,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from deeplite_torch_zoo.src.dnn_blocks.common import get_activation
+from deeplite_torch_zoo.src.registries import VARIABLE_CHANNEL_BLOCKS
+from deeplite_torch_zoo.src.dnn_blocks.common import get_activation, ConvBnAct
 from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.cnn_attention import SELayer
 
 
@@ -63,7 +64,6 @@ class GhostModuleV2(nn.Module):
     def __init__(self, c1, c2, k=1, ratio=2, dw_k=3, s=1, dfc=False, act='relu'):
         super(GhostModuleV2, self).__init__()
         self.dfc = dfc
-        self.gate_fn = nn.Sigmoid()
         self.act = get_activation(act)
 
         self.oup = c2
@@ -95,7 +95,7 @@ class GhostModuleV2(nn.Module):
         x1 = self.primary_conv(x)
         x2 = self.cheap_operation(x1)
         out = torch.cat([x1, x2], dim=1)
-        res = out[:, : self.oup, :, :]
+        res = out[:, :self.oup, :, :]
         if self.dfc:
             res = res * self.dfc(x)
         return res
@@ -174,3 +174,47 @@ class GhostBottleneckV2(nn.Module):
         x = self.ghost2(x)
         x += self.shortcut(residual)
         return x
+
+
+@VARIABLE_CHANNEL_BLOCKS.register()
+class GhostConv(nn.Module):
+    # Ghost Convolution https://github.com/huawei-noah/ghostnet
+    def __init__(
+        self,
+        c1,
+        c2,
+        k=1,
+        s=1,
+        g=1,
+        dw_k=5,
+        dw_s=1,
+        act='relu',
+        shrink_factor=0.5,
+        residual=False,
+        dfc=False,
+    ):  # ch_in, ch_out, kernel, stride, groups
+        super(GhostConv, self).__init__()
+        c_ = int(c2 * shrink_factor)  # hidden channels
+
+        self.residual = residual
+        self.dfc = None
+        if dfc:
+            self.dfc = DFCModule(c1, c2, k, s)
+
+        self.single_conv = False
+        if c_ < 2:
+            self.single_conv = True
+            self.cv1 = ConvBnAct(c1, c2, k, s, p=None, g=g, act=act)
+        else:
+            self.cv1 = ConvBnAct(c1, c_, k, s, p=None, g=g, act=act)
+            self.cv2 = ConvBnAct(c_, c_, dw_k, dw_s, p=None, g=c_, act=act)
+
+    def forward(self, x):
+        y = self.cv1(x)
+        if self.single_conv:
+            return y
+        res = torch.cat([y, self.cv2(y)], 1) if not self.residual \
+            else x + torch.cat([y, self.cv2(y)], 1)
+        if self.dfc:
+            res = res * self.dfc(x)
+        return res
