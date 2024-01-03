@@ -1,7 +1,9 @@
 import argparse
 import torch
+
 from deeplite_torch_zoo import get_model
 from deeplite_torch_zoo.utils.profiler import profile_ram, ram_report
+
 
 def parse_opt():
     parser = argparse.ArgumentParser()
@@ -11,7 +13,9 @@ def parse_opt():
     parser.add_argument('--pretrained', action='store_true')
     parser.add_argument('--img-size', type=int, default=224, help='Image size (pixels)')
     parser.add_argument('--verbose', action='store_true', help='Verbose mode')
+
     return parser.parse_args()
+
 
 def main(opt):
     model = get_model(
