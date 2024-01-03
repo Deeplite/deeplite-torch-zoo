@@ -135,7 +135,7 @@ class ResNeXtBottleneck(ResNetBottleneck):
 class GhostBottleneck(nn.Module):
     # Ghost Bottleneck as described in https://github.com/huawei-noah/ghostnet
     def __init__(
-        self, c1, c2, k=3, s=1, shrink_factor=2
+        self, c1, c2, k=3, s=1, shrink_factor=0.5
     ):  # ch_in, ch_out, kernel, stride
         super(GhostBottleneck, self).__init__()
         c_ = c2 // 2

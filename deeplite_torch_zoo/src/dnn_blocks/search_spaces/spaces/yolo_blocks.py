@@ -60,13 +60,15 @@ YOLO_BLOCK_REGISTRY.register(
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOC3)
 
-# YOLO_BLOCK_REGISTRY.register(
-#     name='YOLOC3x',
-#     e=EXPANSION_FACTOR_RANGE,
-#     k=(3, 5),
-#     n=(1, 2, 3),
-#     in_e=IN_EXPANSION_FACTOR_RANGE,
-# )(YOLOC3x)
+
+YOLO_BLOCK_REGISTRY.register(
+    name='YOLOC3x',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(YOLOC3x)
+
 
 YOLO_BLOCK_REGISTRY.register(
     name='YOLOC2',
@@ -117,13 +119,13 @@ YOLO_BLOCK_REGISTRY.register(
 )(YOLOBottleneckCSPL)
 
 
-# YOLO_BLOCK_REGISTRY.register(
-#     name='YOLOBottleneckCSPLG',
-#     e=EXPANSION_FACTOR_RANGE,
-#     k=(3, 5),
-#     n=(1, 2, 3),
-#     in_e=IN_EXPANSION_FACTOR_RANGE,
-# )(YOLOBottleneckCSPLG)
+YOLO_BLOCK_REGISTRY.register(
+    name='YOLOBottleneckCSPLG',
+    e=EXPANSION_FACTOR_RANGE,
+    k=(3, 5),
+    n=(1, 2, 3),
+    in_e=IN_EXPANSION_FACTOR_RANGE,
+)(YOLOBottleneckCSPLG)
 
 
 YOLO_BLOCK_REGISTRY.register(
@@ -134,6 +136,7 @@ YOLO_BLOCK_REGISTRY.register(
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(BottleneckCSPA)
 
+
 YOLO_BLOCK_REGISTRY.register(
     name='BottleneckCSPB',
     e=EXPANSION_FACTOR_RANGE,
@@ -141,6 +144,7 @@ YOLO_BLOCK_REGISTRY.register(
     n=(1, 2, 3),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(BottleneckCSPB)
+
 
 YOLO_BLOCK_REGISTRY.register(
     name='BottleneckCSPC',
@@ -150,6 +154,7 @@ YOLO_BLOCK_REGISTRY.register(
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(BottleneckCSPC)
 
+
 YOLO_BLOCK_REGISTRY.register(
     name='ResCSPA',
     e=EXPANSION_FACTOR_RANGE,
@@ -157,6 +162,7 @@ YOLO_BLOCK_REGISTRY.register(
     n=(1, 2, 3),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(ResCSPA)
+
 
 YOLO_BLOCK_REGISTRY.register(
     name='ResCSPB',
@@ -174,5 +180,3 @@ YOLO_BLOCK_REGISTRY.register(
     n=(1, 2, 3),
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(ResCSPC)
-
-

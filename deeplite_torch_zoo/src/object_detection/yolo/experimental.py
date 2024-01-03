@@ -182,19 +182,6 @@ class CBH(nn.Module):
         return self.act(self.conv(x))
 
 
-# class GhostConv(nn.Module):
-#     # Ghost Convolution https://github.com/huawei-noah/ghostnet
-#     def __init__(self, c1, c2, k=3, s=1, g=1, act='relu'):  # ch_in, ch_out, kernel, stride, groups
-#         super().__init__()
-#         c_ = c2 // 2  # hidden channels
-#         self.cv1 = ConvBnAct(c1, c_, 1, s, None, g, act=act)
-#         self.cv2 = ConvBnAct(c_, c_, k, s, None, c_, act=act)
-
-#     def forward(self, x):
-#         y = self.cv1(x)
-#         return torch.cat((y, self.cv2(y)), dim=1)
-
-
 def channel_shuffle(x, groups):
     batchsize, num_channels, height, width = x.data.size()
     channels_per_group = num_channels // groups

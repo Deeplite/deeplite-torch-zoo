@@ -103,14 +103,18 @@ def deprecated(func):
     as deprecated. It will result in a warning being emitted
     when the function is used.
     """
+
     @functools.wraps(func)
     def new_func(*args, **kwargs):
         warnings.simplefilter('always', DeprecationWarning)  # turn off filter
-        warnings.warn(f'Method {func.__name__} is deprecated.',
-                      category=DeprecationWarning,
-                      stacklevel=2)
+        warnings.warn(
+            f'Method {func.__name__} is deprecated.',
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
         warnings.simplefilter('default', DeprecationWarning)  # reset filter
         return func(*args, **kwargs)
+
     return new_func
 
 
@@ -124,13 +128,17 @@ def print_args(args: Optional[dict] = None, show_file=True, show_func=False):
     file = Path(file).stem
     s = (f'{file}: ' if show_file else '') + (f'{func}: ' if show_func else '')
     kv = (', ').join(f'{k}={v}' for k, v in args.items())
-    LOGGER.info("%s",colorstr(s) + kv)
+    LOGGER.info("%s", colorstr(s) + kv)
 
 
 def yaml_save(file='data.yaml', data={}):
     # Single-line safe yaml saving
     with open(file, 'w', encoding="utf-8") as f:
-        yaml.safe_dump({k: str(v) if isinstance(v, Path) else v for k, v in data.items()}, f, sort_keys=False)
+        yaml.safe_dump(
+            {k: str(v) if isinstance(v, Path) else v for k, v in data.items()},
+            f,
+            sort_keys=False,
+        )
 
 
 def check_img_size(imgsz, s=32, floor=0):
@@ -141,7 +149,9 @@ def check_img_size(imgsz, s=32, floor=0):
         imgsz = list(imgsz)  # convert to list if tuple
         new_size = [max(make_divisible(x, int(s)), floor) for x in imgsz]
     if new_size != imgsz:
-        LOGGER.warning(f'WARNING ⚠️ --img-size {imgsz} must be multiple of max stride {s}, updating to {new_size}')
+        LOGGER.warning(
+            f'WARNING ⚠️ --img-size {imgsz} must be multiple of max stride {s}, updating to {new_size}'
+        )
     return new_size
 
 
@@ -150,23 +160,29 @@ def file_size(path):
     mb = 1 << 20  # bytes to MiB (1024 ** 2)
     path = Path(path)
     if path.is_file():
-        val= path.stat().st_size / mb
+        val = path.stat().st_size / mb
     elif path.is_dir():
-        val= sum(f.stat().st_size for f in path.glob('**/*') if f.is_file()) / mb
+        val = sum(f.stat().st_size for f in path.glob('**/*') if f.is_file()) / mb
     else:
-        val= 0.0
+        val = 0.0
     return val
 
 
 def get_default_args(func):
     # Get func() default arguments
     signature = inspect.signature(func)
-    return {k: v.default for k, v in signature.parameters.items() if v.default is not inspect.Parameter.empty}
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
 
 
 def colorstr(*input):
     """Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code, i.e.  colorstr('blue', 'hello world')."""
-    *args, string = input if len(input) > 1 else ('blue', 'bold', input[0])  # color arguments, string
+    *args, string = (
+        input if len(input) > 1 else ('blue', 'bold', input[0])
+    )  # color arguments, string
     colors = {
         'black': '\033[30m',  # basic colors
         'red': '\033[31m',
@@ -186,7 +202,8 @@ def colorstr(*input):
         'bright_white': '\033[97m',
         'end': '\033[0m',  # misc
         'bold': '\033[1m',
-        'underline': '\033[4m'}
+        'underline': '\033[4m',
+    }
     return ''.join(colors[x] for x in args) + f'{string}' + colors['end']
 
 
@@ -210,7 +227,9 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
     """
     path = Path(path)  # os-agnostic
     if path.exists() and not exist_ok:
-        path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
+        path, suffix = (
+            (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
+        )
 
         # Method 1
         for n in range(2, 9999):
@@ -242,12 +261,14 @@ class WorkingDirectory(contextlib.ContextDecorator):
         os.chdir(self.cwd)
 
 
-def check_version(current: str = '0.0.0',
-                  minimum: str = '0.0.0',
-                  name: str = 'version ',
-                  pinned: bool = False,
-                  hard: bool = False,
-                  verbose: bool = False) -> bool:
+def check_version(
+    current: str = '0.0.0',
+    minimum: str = '0.0.0',
+    name: str = 'version ',
+    pinned: bool = False,
+    hard: bool = False,
+    verbose: bool = False,
+) -> bool:
     """
     Check current version against the required minimum version.
 
@@ -310,17 +331,20 @@ def curl_download(url, filename, *, silent: bool = False) -> bool:
     Download a file from a url to a filename using curl.
     """
     silent_option = 'sS' if silent else ''  # silent
-    proc = subprocess.run([  # pylint: disable=subprocess-run-check
-        'curl',
-        '-#',
-        f'-{silent_option}L',
-        url,
-        '--output',
-        filename,
-        '--retry',
-        '9',
-        '-C',
-        '-', ])
+    proc = subprocess.run(  # pylint: disable=subprocess-run-check
+        [
+            'curl',
+            '-#',
+            f'-{silent_option}L',
+            url,
+            '--output',
+            filename,
+            '--retry',
+            '9',
+            '-C',
+            '-',
+        ]
+    )
     return proc.returncode == 0
 
 
@@ -348,12 +372,16 @@ def download(url, dir='.', unzip=True, delete=True, curl=False, threads=1, retry
                 if curl:
                     success = curl_download(url, f, silent=threads > 1)
                 else:
-                    torch.hub.download_url_to_file(url, f, progress=threads == 1)  # torch download
+                    torch.hub.download_url_to_file(
+                        url, f, progress=threads == 1
+                    )  # torch download
                     success = f.is_file()
                 if success:
                     break
                 if i < retry:
-                    LOGGER.warning(f'⚠️ Download failure, retrying {i + 1}/{retry} {url}...')
+                    LOGGER.warning(
+                        f'⚠️ Download failure, retrying {i + 1}/{retry} {url}...'
+                    )
                 else:
                     LOGGER.warning(f'❌ Failed to download {url}...')
 
@@ -362,9 +390,13 @@ def download(url, dir='.', unzip=True, delete=True, curl=False, threads=1, retry
             if is_zipfile(f):
                 unzip_file(f, dir)  # unzip
             elif is_tarfile(f):
-                subprocess.run(['tar', 'xf', f, '--directory', f.parent], check=True)  # unzip
+                subprocess.run(
+                    ['tar', 'xf', f, '--directory', f.parent], check=True
+                )  # unzip
             elif f.suffix == '.gz':
-                subprocess.run(['tar', 'xfz', f, '--directory', f.parent], check=True)  # unzip
+                subprocess.run(
+                    ['tar', 'xfz', f, '--directory', f.parent], check=True
+                )  # unzip
             if delete:
                 f.unlink()  # remove zip
 
@@ -381,24 +413,23 @@ def download(url, dir='.', unzip=True, delete=True, curl=False, threads=1, retry
 
 
 def get_pareto_set(variable1, variable2, ignore_indices=None):
-   array = np.array([variable1, variable2]).T
-   sorting_indices = array[:, 0].argsort()
-   if ignore_indices is not None:
-       sorting_indices = [idx for idx in sorting_indices if idx not in ignore_indices]
+    array = np.array([variable1, variable2]).T
+    sorting_indices = array[:, 0].argsort()
+    if ignore_indices is not None:
+        sorting_indices = [idx for idx in sorting_indices if idx not in ignore_indices]
 
-   # Sort on first dimension
-   array = array[sorting_indices]
-   ind_list = []
+    # Sort on first dimension
+    array = array[sorting_indices]
+    ind_list = []
 
-   # Add first row to pareto_frontier
-   pareto_frontier = array[0:1, :]
-   ind_list.append(sorting_indices[0])
+    # Add first row to pareto_frontier
+    pareto_frontier = array[0:1, :]
+    ind_list.append(sorting_indices[0])
 
-   # Test next row against the last row in pareto_frontier
-   for i, row in enumerate(array[1:, :]):
-       if sum([row[x] >= pareto_frontier[-1][x]
-               for x in range(len(row))]) == len(row):
-           # If it is better on all features add the row to pareto_frontier
-           pareto_frontier = np.concatenate((pareto_frontier, [row]))
-           ind_list.append(sorting_indices[i + 1])
-   return ind_list
+    # Test next row against the last row in pareto_frontier
+    for i, row in enumerate(array[1:, :]):
+        if sum(row[x] >= pareto_frontier[-1][x] for x in range(len(row))) == len(row):
+            # If it is better on all features add the row to pareto_frontier
+            pareto_frontier = np.concatenate((pareto_frontier, [row]))
+            ind_list.append(sorting_indices[i + 1])
+    return ind_list

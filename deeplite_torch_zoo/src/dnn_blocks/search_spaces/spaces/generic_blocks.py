@@ -8,8 +8,12 @@ from deeplite_torch_zoo.src.dnn_blocks.search_spaces.block_registry import (
 )
 
 GENERIC_BLOCK_REGISTRY = DNNBlockRegistry('generic')
+<<<<<<< HEAD
 
 # GENERIC_BLOCK_REGISTRY.register(name='Identity')(nn.Identity)
+=======
+GENERIC_BLOCK_REGISTRY.register(name='Identity')(nn.Identity)
+>>>>>>> develop
 
 
 GENERIC_BLOCK_REGISTRY.register(
