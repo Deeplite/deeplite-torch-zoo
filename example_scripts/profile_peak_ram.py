@@ -34,6 +34,9 @@ def main(opt):
     detailed_ram_data = profile_ram(model, input_tensor, detailed=True)
     ram_report(detailed_ram_data, verbose=opt.verbose, export=True, filename="ram_usage_report")
 
+    return
+
+
 if __name__ == '__main__':
     opt = parse_opt()
     main(opt)

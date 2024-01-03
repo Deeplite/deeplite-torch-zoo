@@ -45,6 +45,7 @@ def profile_ram(model, args=(), kwargs=None, num_bytes=4, detailed=False):
             'out_tensors',
             'active_blocks',
             'ram',
+            'scope',
         ],
     )
 
@@ -57,6 +58,7 @@ def profile_ram(model, args=(), kwargs=None, num_bytes=4, detailed=False):
         df.out_tensors[node.name] = [x.name for x in node.outputs]
         df.active_blocks[node.name] = node.malloc_blocks
         df.ram[node.name] = node.malloc_val
+        df.scope[node.name] = node.scope
 
     if detailed:
         return df

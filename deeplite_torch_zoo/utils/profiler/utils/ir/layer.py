@@ -1,10 +1,11 @@
 class Layer:
-    def __init__(self, name, inputs, outputs, weights=None, bias=None):
+    def __init__(self, name, inputs, outputs, weights=None, bias=None, scope=None):
         self.name = name
         self.inputs = inputs
         self.outputs = outputs
         self.weights = weights
         self.bias = bias
+        self.scope = scope
 
     @property
     def name(self):
@@ -45,6 +46,14 @@ class Layer:
     @bias.setter
     def bias(self, bias):
         self._bias = bias
+
+    @property
+    def scope(self):
+        return self._scope
+
+    @scope.setter
+    def scope(self, scope):
+        self._scope = scope.lower()
 
     def __repr__(self):
         text = "Node (name: {}, inputs: {}, outputs: {}, w: {}, b: {})".format(
