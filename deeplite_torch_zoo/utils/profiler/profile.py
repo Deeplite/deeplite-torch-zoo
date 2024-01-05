@@ -60,10 +60,11 @@ def profile_ram(model, args=(), kwargs=None, num_bytes=4, detailed=False):
         df.ram[node.name] = node.malloc_val
         df.scope[node.name] = node.scope
 
-    if detailed:
-        return df
-    else:
+    if not detailed:
         return df.ram.max() / 2**20
+
+    return df
+
 
 
 def ram_report(df, topk='top1', verbose=False, export=False, filename="report"):
@@ -81,4 +82,3 @@ def ram_report(df, topk='top1', verbose=False, export=False, filename="report"):
         export_path = f"{filename}.csv"
         df.to_csv(export_path)
         print(f"RAM usage report exported to {export_path}")
-
