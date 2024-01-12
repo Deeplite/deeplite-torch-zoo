@@ -58,7 +58,7 @@ class FireUnit(nn.Module):
         )
 
         self.expand3x3 = ConvBnAct(
-            c1=squeeze_channels, c2=expand3x3_channels, k=k, p=1, act=act, use_bn=use_bn
+            c1=squeeze_channels, c2=expand3x3_channels, k=k, act=act, use_bn=use_bn
         )
 
     def forward(self, x):
@@ -119,7 +119,6 @@ class SqnxtUnit(nn.Module):
             c2=(c1 // reduction_den),
             k=(1, k),
             s=1,
-            p=(0, 1),
             act=act,
         )
 
@@ -128,7 +127,6 @@ class SqnxtUnit(nn.Module):
             c2=(c1 // reduction_den),
             k=(k, 1),
             s=1,
-            p=(1, 0),
             act=act,
         )
 
