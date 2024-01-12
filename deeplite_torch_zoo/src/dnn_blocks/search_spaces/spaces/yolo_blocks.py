@@ -14,6 +14,7 @@ from deeplite_torch_zoo.src.dnn_blocks.yolov7.yolo_blocks import (
     ResCSPC,
 )
 from deeplite_torch_zoo.src.dnn_blocks.yolov8.yolo_ultralytics_blocks import YOLOC3, YOLOC2, YOLOC2f, YOLOC1, YOLOC3x
+from deeplite_torch_zoo.src.dnn_blocks.search_spaces.spaces import INCLUDE_DW
 
 from deeplite_torch_zoo.src.dnn_blocks.search_spaces.block_registry import (
     DNNBlockRegistry,
@@ -118,14 +119,14 @@ YOLO_BLOCK_REGISTRY.register(
     in_e=IN_EXPANSION_FACTOR_RANGE,
 )(YOLOBottleneckCSPL)
 
-
-YOLO_BLOCK_REGISTRY.register(
-    name='YOLOBottleneckCSPLG',
-    e=EXPANSION_FACTOR_RANGE,
-    k=(3, 5),
-    n=(1, 2, 3),
-    in_e=IN_EXPANSION_FACTOR_RANGE,
-)(YOLOBottleneckCSPLG)
+if INCLUDE_DW:
+    YOLO_BLOCK_REGISTRY.register(
+        name='YOLOBottleneckCSPLG',
+        e=EXPANSION_FACTOR_RANGE,
+        k=(3, 5),
+        n=(1, 2, 3),
+        in_e=IN_EXPANSION_FACTOR_RANGE,
+    )(YOLOBottleneckCSPLG)
 
 
 YOLO_BLOCK_REGISTRY.register(

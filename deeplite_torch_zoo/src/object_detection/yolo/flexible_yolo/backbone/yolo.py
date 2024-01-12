@@ -28,6 +28,8 @@ class YOLOv5Backbone(nn.Module):
     ):
         super().__init__()
 
+        Conv_ = partial(Conv, act=act)
+
         self.version = version
         if depth_factor is None:
             self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
@@ -38,39 +40,37 @@ class YOLOv5Backbone(nn.Module):
         else:
             self.gw = width_factor
 
-        # if bottleneck_block_cls is None:
-        #     bottleneck_block_cls2 = [
-        #         partial(
-        #             YOLOC3,
-        #             act=act,
-        #             n=self.get_depth(n),
-        #         )
-        #         for n in num_blocks
-        #     ]
-
-        # raise RuntimeError(bottleneck_block_cls, bottleneck_block_cls2)
+        if bottleneck_block_cls is None:
+            bottleneck_block_cls = [
+                partial(
+                    YOLOC3,
+                    act=act,
+                    n=self.get_depth(n),
+                )
+                for n in num_blocks
+            ]
 
         self.channels_out = list(channels_out)
         self.re_channels_out()
 
-        self.C1 = Conv(3, self.channels_out[0], 6, 2, 2)
+        self.C1 = Conv_(3, self.channels_out[0], 6, 2, 2)
 
-        self.C2 = Conv(self.channels_out[0], self.channels_out[1], 3, 2)
+        self.C2 = Conv_(self.channels_out[0], self.channels_out[1], 3, 2)
         self.conv1 = bottleneck_block_cls[0](
             self.channels_out[1], self.channels_out[2]
         )
 
-        self.C3 = Conv(self.channels_out[2], self.channels_out[3], 3, 2)
+        self.C3 = Conv_(self.channels_out[2], self.channels_out[3], 3, 2)
         self.conv2 = bottleneck_block_cls[1](
             self.channels_out[3], self.channels_out[4]
         )
 
-        self.C4 = Conv(self.channels_out[4], self.channels_out[5], 3, 2)
+        self.C4 = Conv_(self.channels_out[4], self.channels_out[5], 3, 2)
         self.conv3 = bottleneck_block_cls[2](
             self.channels_out[5], self.channels_out[6]
         )
 
-        self.C5 = Conv(self.channels_out[6], self.channels_out[7], 3, 2)
+        self.C5 = Conv_(self.channels_out[6], self.channels_out[7], 3, 2)
 
         self.conv4 = bottleneck_block_cls[3](
             self.channels_out[7], self.channels_out[8]
@@ -135,6 +135,7 @@ class YOLOv8Backbone(YOLOv5Backbone):
         width_factor=None,
     ):
         self.version = version
+        Conv_ = partial(Conv, act=act)
         if depth_factor is None:
             self.gd = YOLO_SCALING_GAINS[self.version.lower()]['gd']  # depth gain
         else:
@@ -158,4 +159,4 @@ class YOLOv8Backbone(YOLOv5Backbone):
             depth_factor=depth_factor,
             width_factor=width_factor,
         )
-        self.C1 = Conv(3, self.channels_out[0], 3, 2)
+        self.C1 = Conv_(3, self.channels_out[0], 3, 2)
