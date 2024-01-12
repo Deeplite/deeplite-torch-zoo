@@ -29,6 +29,7 @@ class FireUnit(nn.Module):
         self,
         c1,
         c2,
+        k=3,
         e=0.125,
         act='relu',
         residual=True,
@@ -57,7 +58,7 @@ class FireUnit(nn.Module):
         )
 
         self.expand3x3 = ConvBnAct(
-            c1=squeeze_channels, c2=expand3x3_channels, k=3, p=1, act=act, use_bn=use_bn
+            c1=squeeze_channels, c2=expand3x3_channels, k=k, p=1, act=act, use_bn=use_bn
         )
 
     def forward(self, x):
@@ -88,17 +89,17 @@ class SqnxtUnit(nn.Module):
         Strides of the convolution.
     """
 
-    def __init__(self, c1, c2, s=1, act='relu'):
+    def __init__(self, c1, c2, e=2, k=3, s=1, act='relu'):
         super(SqnxtUnit, self).__init__()
 
         if s == 2:
             reduction_den = 1
             self.resize_identity = True
         elif c1 > c2:
-            reduction_den = 4
+            reduction_den = e * 2
             self.resize_identity = True
         elif c1 <= c2:
-            reduction_den = 2
+            reduction_den = e
             self.resize_identity = False
 
         self.conv1 = ConvBnAct(
@@ -116,7 +117,7 @@ class SqnxtUnit(nn.Module):
         self.conv3 = ConvBnAct(
             c1=(c1 // (2 * reduction_den)),
             c2=(c1 // reduction_den),
-            k=(1, 3),
+            k=(1, k),
             s=1,
             p=(0, 1),
             act=act,
@@ -125,7 +126,7 @@ class SqnxtUnit(nn.Module):
         self.conv4 = ConvBnAct(
             c1=(c1 // reduction_den),
             c2=(c1 // reduction_den),
-            k=(3, 1),
+            k=(k, 1),
             s=1,
             p=(1, 0),
             act=act,

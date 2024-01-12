@@ -3,6 +3,9 @@ from deeplite_torch_zoo.src.dnn_blocks.resnet.resnet_blocks import (
     ResNetBottleneck,
     ResNeXtBottleneck,
 )
+from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.shufflenet_blocks import ShuffleUnit
+from deeplite_torch_zoo.src.dnn_blocks.pytorchcv.squeezenet_blocks import FireUnit, SqnxtUnit
+
 from deeplite_torch_zoo.src.dnn_blocks.search_spaces.block_registry import (
     DNNBlockRegistry,
 )
@@ -30,6 +33,7 @@ RESNET_BLOCK_REGISTRY.register(
     se_ratio=SE_RATIO_RANGE,
 )(ResNetBottleneck)
 
+
 RESNET_BLOCK_REGISTRY.register(
     name='ResNeXtBottleneck',
     e=EXPANSION_FACTOR_RANGE,
@@ -44,3 +48,25 @@ RESNET_BLOCK_REGISTRY.register(
     k=(1, 3),
     se_ratio=SE_RATIO_RANGE,
 )(ResNetBasicBlock)
+
+
+RESNET_BLOCK_REGISTRY.register(
+    name='ShuffleNetBlock',
+    dw_k=(3, 5),
+    e=(2, 4, 8),
+    g=(1, 2, 4),
+)(ShuffleUnit, flags=('groupconv', ))
+
+
+RESNET_BLOCK_REGISTRY.register(
+    name='SqueezeNetBlock',
+    k=(3, 5),
+    e=(0.5, 0.25, 0.125),
+)(FireUnit)
+
+
+RESNET_BLOCK_REGISTRY.register(
+    name='SqueezeNextBlock',
+    k=(3, 5),
+    e=(1, 2, 4),
+)(SqnxtUnit)
