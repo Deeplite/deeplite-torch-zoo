@@ -1,5 +1,6 @@
 import itertools
 from functools import partial
+from collections import defaultdict
 
 from deeplite_torch_zoo.utils.registry import Registry
 
@@ -8,6 +9,7 @@ class DNNBlockRegistry(Registry):
     def __init__(self, name):
         super().__init__(name)
         self._registry_dict_block_name = {}
+        self._flagged_keys = defaultdict(list)
 
     @property
     def block_name_dict(self):
@@ -30,15 +32,18 @@ class DNNBlockRegistry(Registry):
         return res
 
     def register(self, name: str = None, **kwargs):
-        def _register(obj_name, obj):
+        def _register(obj_name, obj, flags):
             registry_key = str(obj_name)
             if registry_key in self._registry_dict:
                 raise KeyError(f'{registry_key} is already registered')
 
             self._registry_dict[registry_key] = obj
             self._registry_dict_block_name[registry_key] = obj_name
+            if flags is not None:
+                for flag in flags:
+                    self._flagged_keys[flag].append(registry_key)
 
-        def wrap(obj):
+        def wrap(obj, flags=None):
             cls_name = name
             if kwargs:
                 # Register objects with all combinations of kwarg values
@@ -50,12 +55,12 @@ class DNNBlockRegistry(Registry):
                     obj_kwargs = dict(zip(list(kwargs.keys()), combination))
                     new_obj = partial(obj, **obj_kwargs)
                     cls_name = (cls_name, tuple(obj_kwargs.items()))
-                    _register(cls_name, new_obj)
+                    _register(cls_name, new_obj, flags)
             else:
                 if cls_name is None:
                     cls_name = obj.__name__
                 cls_name = (cls_name, {})
-                _register(cls_name, obj)
+                _register(cls_name, obj, flags)
             return obj
 
         return wrap
