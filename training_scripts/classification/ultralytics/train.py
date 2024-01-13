@@ -23,6 +23,26 @@ from deeplite_torch_zoo.utils import (LOGGER, GenericLogger, ModelEMA, colorstr,
 from deeplite_torch_zoo import get_model, get_dataloaders, get_eval_function
 from deeplite_torch_zoo.utils.kd import KDTeacher, compute_kd_loss
 
+from torch.optim.lr_scheduler import _LRScheduler
+
+
+class WarmUpLR(_LRScheduler):
+    """warmup_training learning rate scheduler
+    Args:
+        optimizer: optimzier(e.g. SGD)
+        total_iters: totoal_iters of warmup phase
+    """
+    def __init__(self, optimizer, total_iters, last_epoch=-1):
+
+        self.total_iters = total_iters
+        super().__init__(optimizer, last_epoch)
+
+    def get_lr(self):
+        """we will use the first m batches, and set the learning
+        rate to base_lr * m / total_iters
+        """
+        return [base_lr * self.last_epoch / (self.total_iters + 1e-8) for base_lr in self.base_lrs]
+
 
 ROOT = Path.cwd()
 
@@ -31,7 +51,8 @@ RANK = int(os.getenv('RANK', -1))
 WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 
-def train(opt, device):
+def train(opt, model, device):
+
     init_seeds(opt.seed + 1 + RANK, deterministic=True)
     save_dir, bs, epochs, nw, imgsz, pretrained = \
         opt.save_dir, opt.batch_size, opt.epochs, min(os.cpu_count() - 1, opt.workers), \
@@ -41,12 +62,9 @@ def train(opt, device):
     # Directories
     wdir = save_dir / 'weights'
     wdir.mkdir(parents=True, exist_ok=True)  # make dir
-    last, best, best_sd = wdir / 'last.pt', wdir / 'best.pt', wdir / 'best_state_dict.pt'
 
     # Save run settings
     yaml_save(save_dir / 'opt.yaml', vars(opt))
-
-    logger = GenericLogger(opt=opt, console_logger=LOGGER) if RANK in {-1, 0} else None
 
     # Dataloaders
     dataloaders = get_dataloaders(
@@ -62,17 +80,9 @@ def train(opt, device):
     # Model
     opt.num_classes = len(trainloader.dataset.classes)
     with torch_distributed_zero_first(LOCAL_RANK), WorkingDirectory(ROOT):
-        model = get_model(
-            model_name=opt.model,
-            dataset_name=opt.pretraining_dataset,
-            num_classes=opt.num_classes,
-            pretrained=pretrained,
-        )
-
         model_kd = None
         if opt.kd_model_name is not None:
             model_kd = KDTeacher(opt)
-
 
     for p in model.parameters():
         p.requires_grad = True  # for training
@@ -90,15 +100,12 @@ def train(opt, device):
             LOGGER.info(model)
 
     # Optimizer
-    optimizer = smart_optimizer(model, opt.optimizer, opt.lr0, momentum=0.9, decay=opt.decay)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
     # Scheduler
-    lrf = 0.01  # final lr (fraction of lr0)
-    # lf = lambda x: ((1 + math.cos(x * math.pi / epochs)) / 2) * (1 - lrf) + lrf  # cosine
-    lf = lambda x: (1 - x / epochs) * (1 - lrf) + lrf  # linear
-    scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
-    # scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=lr0, total_steps=epochs, pct_start=0.1,
-    #                                    final_div_factor=1 / 25 / lrf)
+    scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[150, 225], gamma=0.1)
+    warmup_scheduler = WarmUpLR(optimizer, len(trainloader))
+    eval_from = 220
 
     # EMA
     ema = ModelEMA(model) if RANK in {-1, 0} else None
@@ -111,12 +118,14 @@ def train(opt, device):
     t0 = time.time()
     criterion = smartCrossEntropyLoss(label_smoothing=opt.label_smoothing)  # loss function
     best_fitness = 0.0
+    best_top5 = 0.0
     scaler = amp.GradScaler(enabled=cuda)
     LOGGER.info(f'Image sizes {imgsz} train, {imgsz} test\n'
                 f'Using {nw * WORLD_SIZE} dataloader workers\n'
                 f"Logging results to {colorstr('bold', save_dir)}\n"
                 f'Starting {opt.model} training on {opt.dataset} dataset for {epochs} epochs...\n\n'
                 f"{'Epoch':>10}{'GPU_mem':>10}{'train_loss':>12}{'top1_acc':>12}{'top5_acc':>12}")
+
     for epoch in range(epochs):  # loop over the dataset multiple times
         tloss, vloss, fitness = 0.0, 0.0, 0.0  # train loss, val loss, fitness
         model.train()
@@ -151,6 +160,9 @@ def train(opt, device):
             if ema:
                 ema.update(model)
 
+            if epoch <= (opt.warmup_epochs - 1):
+                warmup_scheduler.step()
+
             if RANK in {-1, 0}:
                 # Print
                 tloss = (tloss * i + loss.item()) / (i + 1)  # update mean losses
@@ -158,7 +170,7 @@ def train(opt, device):
                 pbar.desc = f"{f'{epoch + 1}/{epochs}':>10}{mem:>10}{tloss:>12.3g}" + ' ' * 36
 
                 # Test
-                if opt.dryrun or i == len(pbar) - 1:  # last batch
+                if (epoch >= eval_from) and (i == len(pbar) - 1):  # last batch
                     metrics = evaluation_fn(
                         ema.ema,
                         testloader,
@@ -173,7 +185,8 @@ def train(opt, device):
                 break
 
         # Scheduler
-        scheduler.step()
+        if epoch > (opt.warmup_epochs - 1):
+            scheduler.step()
 
         if opt.dryrun:
             break
@@ -183,43 +196,47 @@ def train(opt, device):
             # Best fitness
             if fitness > best_fitness:
                 best_fitness = fitness
+                best_top5 = top5
 
             # Log
-            metrics = {
-                "train/loss": tloss,
-                "metrics/accuracy_top1": top1,
-                "metrics/accuracy_top5": top5,
-                "lr/0": optimizer.param_groups[0]['lr']}  # learning rate
-            logger.log_metrics(metrics, epoch)
+            # metrics = {
+            #     "train/loss": tloss,
+            #     "metrics/accuracy_top1": top1,
+            #     "metrics/accuracy_top5": top5,
+            #     "lr/0": optimizer.param_groups[0]['lr']}  # learning rate
+            # logger.log_metrics(metrics, epoch)
 
             # Save model
             final_epoch = epoch + 1 == epochs
-            if (not opt.nosave) or final_epoch:
-                ckpt = {
-                    'epoch': epoch,
-                    'best_fitness': best_fitness,
-                    'model': deepcopy(ema.ema).half(),  # deepcopy(de_parallel(model)).half(),
-                    'ema': None,  # deepcopy(ema.ema).half(),
-                    'updates': ema.updates,
-                    'optimizer': None,  # optimizer.state_dict(),
-                    'opt': vars(opt),
-                    'date': datetime.now().isoformat()}
 
-                # Save last, best and delete
-                torch.save(ckpt, last)
-                if best_fitness == fitness:
-                    torch.save(ckpt, best)
-                    torch.save(ckpt['model'].state_dict(), best_sd)
-                del ckpt
+            # if (not opt.nosave) or final_epoch:
+            #     ckpt = {
+            #         'epoch': epoch,
+            #         'best_fitness': best_fitness,
+            #         'model': deepcopy(ema.ema).half(),  # deepcopy(de_parallel(model)).half(),
+            #         'ema': None,  # deepcopy(ema.ema).half(),
+            #         'updates': ema.updates,
+            #         'optimizer': None,  # optimizer.state_dict(),
+            #         'opt': vars(opt),
+            #         'date': datetime.now().isoformat()}
+
+            #     # Save last, best and delete
+            #     torch.save(ckpt, last)
+            #     if best_fitness == fitness:
+            #         torch.save(ckpt, best)
+            #         torch.save(ckpt['model'].state_dict(), best_sd)
+            #     del ckpt
 
     # Train complete
     if not opt.dryrun and RANK in {-1, 0} and final_epoch:
-        LOGGER.info(f'\nTraining complete ({(time.time() - t0) / 3600:.3f} hours)'
-                    f"\nResults saved to {colorstr('bold', save_dir)}")
+        return {'top1': best_fitness, 'top5': best_top5}
+
+        # LOGGER.info(f'\nTraining complete ({(time.time() - t0) / 3600:.3f} hours)'
+        #             f"\nResults saved to {colorstr('bold', save_dir)}")
 
         # Log results
-        meta = {"epochs": epochs, "top1_acc": best_fitness, "date": datetime.now().isoformat()}
-        logger.log_model(best, epochs, metadata=meta)
+        # meta = {"epochs": epochs, "top1_acc": best_fitness, "date": datetime.now().isoformat()}
+        # logger.log_model(best, epochs, metadata=meta)
 
 
 def parse_opt(known=False):
@@ -229,7 +246,7 @@ def parse_opt(known=False):
     parser.add_argument('--dataset', type=str, default='cifar100', help='cifar10, cifar100, mnist, imagenet, ...')
     parser.add_argument('--pretraining-dataset', type=str, default='imagenet')
     parser.add_argument('--epochs', type=int, default=300, help='total training epochs')
-    parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs')
+    parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs')
     parser.add_argument('--test-batch-size', type=int, default=256, help='testing batch size')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=224, help='train, val image size (pixels)')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
@@ -246,6 +263,7 @@ def parse_opt(known=False):
     parser.add_argument('--verbose', action='store_true', help='Verbose mode')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
     parser.add_argument('--local_rank', type=int, default=-1, help='Automatic DDP Multi-GPU argument, do not modify')
+    parser.add_argument('--warmup_epochs', type=int, default=1, help='Warmup epochs')
 
     parser.add_argument('--kd_model_name', default=None, type=str)
     parser.add_argument('--kd_model_checkpoint', default=None, type=str)
@@ -257,7 +275,7 @@ def parse_opt(known=False):
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
 
-def main(opt):
+def main(opt, model):
     # Checks
     if RANK in {-1, 0}:
         print_args(vars(opt))
@@ -276,9 +294,4 @@ def main(opt):
     opt.save_dir = increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok)  # increment run
 
     # Train
-    train(opt, device)
-
-
-if __name__ == "__main__":
-    opt = parse_opt()
-    main(opt)
+    return train(opt, model, device)
