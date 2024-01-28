@@ -28,7 +28,7 @@ def profile_macs(model, args=(), kwargs=None, reduction=sum):
     return results
 
 
-def profile_ram(model, args=(), kwargs=None, num_bytes=4):
+def profile_ram(model, args=(), kwargs=None, num_bytes=4, detailed=False):
     graph = trace(model, args, kwargs)
     nodes = get_nodes(graph)
     placer = Placer(nodes)
@@ -45,6 +45,7 @@ def profile_ram(model, args=(), kwargs=None, num_bytes=4):
             'out_tensors',
             'active_blocks',
             'ram',
+            'scope',
         ],
     )
 
@@ -57,5 +58,27 @@ def profile_ram(model, args=(), kwargs=None, num_bytes=4):
         df.out_tensors[node.name] = [x.name for x in node.outputs]
         df.active_blocks[node.name] = node.malloc_blocks
         df.ram[node.name] = node.malloc_val
+        df.scope[node.name] = node.scope
 
-    return df.ram.max() / 2**20
+    if not detailed:
+        return df.ram.max() / 2**20
+
+    return df
+
+
+
+def ram_report(df, topk='top1', verbose=False, export=False, filename="report"):
+    if verbose:
+        idx_max = df.index[df.ram == df.ram.max()]
+        print('-' * 120)
+        print(df.to_string())
+        print('-' * 120)
+        print(f' >> Peak Memory of {df.ram.max() / (2**10):.0f} kB found in the following node(s):')
+        if topk == 'top1':
+            for idx in idx_max:
+                print(df.loc[idx].to_string())
+                print()
+    if export:
+        export_path = f"{filename}.csv"
+        df.to_csv(export_path)
+        print(f"RAM usage report exported to {export_path}")
