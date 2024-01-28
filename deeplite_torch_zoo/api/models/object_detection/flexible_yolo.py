@@ -22,6 +22,7 @@ model_configs = {
     'yolo_resnet50': 'model_resnet.yaml',
     'yolo_resnet101': 'model_resnet.yaml',
     'yolo_resnet152': 'model_resnet.yaml',
+    'yolo_resnet18_rtdetr':'model_resnet_rtdetr.yaml',
 }
 
 model_kwargs = {
@@ -42,8 +43,8 @@ model_kwargs = {
     'yolo_resnet50': {'backbone': {'version': 50}, 'neck': None},
     'yolo_resnet101': {'backbone': {'version': 101}, 'neck': None},
     'yolo_resnet152': {'backbone': {'version': 152}, 'neck': None},
+    'yolo_resnet18_rtdetr': {'backbone': {'version': 18, 'width': 0.25}, 'neck': None},
 }
-
 
 def flexible_yolo(
     model_name='yolo_resnet18',

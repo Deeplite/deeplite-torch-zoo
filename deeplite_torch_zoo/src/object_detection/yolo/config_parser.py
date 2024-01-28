@@ -13,7 +13,7 @@ from deeplite_torch_zoo.src.dnn_blocks.common import ConvBnAct as Conv
 from deeplite_torch_zoo.src.object_detection.yolo.common import *
 from deeplite_torch_zoo.src.object_detection.yolo.experimental import *
 from deeplite_torch_zoo.src.object_detection.yolo.heads import (
-    Detect, DetectV8, DetectX
+    Detect, DetectV8, DetectX, RTDETRDecoder
 )
 from deeplite_torch_zoo.src.object_detection.yolo.yolov5 import DetectionModel
 
@@ -29,6 +29,7 @@ HEAD_NAME_MAP = {
     'yolo5': Detect,
     'yolo8': DetectV8,
     'yolox': DetectX,
+    'rtdetr': RTDETRDecoder,
 }
 
 
@@ -159,6 +160,8 @@ def parse_model(
         elif m is DetectV8:
             args = args[:1]
             args.append([ch[x] for x in f])
+        elif m is RTDETRDecoder:
+            args.insert(1, [ch[x] for x in f])
         elif m is Contract:
             c2 = ch[f] * args[0] ** 2
         elif m is Expand:
