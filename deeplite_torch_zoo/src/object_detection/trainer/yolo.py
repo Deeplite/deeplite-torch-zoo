@@ -2,6 +2,7 @@
 
 import types
 from copy import deepcopy
+from addict import Dict
 
 import torch.nn as nn
 
@@ -16,7 +17,7 @@ from deeplite_torch_zoo.src.object_detection.yolo.config_parser import HEAD_NAME
 
 
 def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
-                 task=None, session=None, pretrained=False, pretraining_dataset='coco'):
+                 task=None, session=None, pretrained=False, pretraining_dataset='coco', overrides=None):
     if isinstance(obj, nn.Module):
         nn.Module.__init__(obj)
     if model_name is None and torch_model is None:
@@ -30,7 +31,7 @@ def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
     obj.ckpt = True  # if loaded from *.pt
     obj.cfg = None  # if loaded from *.yaml
     obj.ckpt_path = None
-    obj.overrides = {}  # overrides for trainer object
+    obj.overrides = {} if overrides is None else overrides  # overrides for trainer object
     obj.metrics = None  # validation/training metrics
     obj.session = session  # HUB session
     obj.num_classes = num_classes
@@ -70,7 +71,7 @@ def patched_init(obj, model_name=None, torch_model=None, num_classes=None,
 
     # Below added to allow export from yamls
     args = {**DEFAULT_CFG_DICT, **obj.overrides}  # combine model and default args, preferring model args
-    obj.model.args = {k: v for k, v in args.items() if k in DEFAULT_CFG_KEYS}  # attach args to model
+    obj.model.args = Dict({k: v for k, v in args.items() if k in DEFAULT_CFG_KEYS})  # attach args to model
     obj.model.task = obj.task
     obj.model.model_name = model_name
 

@@ -35,6 +35,11 @@ from deeplite_torch_zoo.src.object_detection.yolo.losses import YOLOv5Loss
 from deeplite_torch_zoo.utils import strip_optimizer, LOGGER, TQDM_BAR_FORMAT, colorstr, increment_path, \
     init_seeds, one_cycle, print_args, yaml_save, check_img_size, \
     EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer
+from deeplite_torch_zoo.src.object_detection.trainer.trainer import v8DetectionTupleLoss
+from deeplite_torch_zoo.src.object_detection.yolo.flexible_yolo.model import FlexibleYOLO
+from deeplite_torch_zoo.trainer import Detector
+from deeplite_torch_zoo.api.datasets.object_detection.yolo import DATASET_CONFIGS, HERE as DETECTION_CONFIGS_HOME
+
 
 
 def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
@@ -72,36 +77,43 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
     gs = max(int(model.stride.max()), 32)  # grid size (max stride)
     imgsz = check_img_size(opt.imgsz, gs, floor=gs * 2)  # verify imgsz is gs-multiple
 
-    if RANK in {-1, 0}:
-        dataloaders = get_dataloaders(
-            data_root=opt.data_root,
-            image_size=imgsz,
-            dataset_name=opt.dataset,
-            batch_size=batch_size // WORLD_SIZE,
-            num_workers=workers,
-            gs=gs,
-            single_cls=single_cls,
-            cache=opt.cache,
-            rect=opt.rect,
-            hsv_h=hyp.hsv_h,
-            hsv_s=hyp.hsv_s,
-            hsv_v=hyp.hsv_v,
-            degrees=hyp.degrees,
-            translate=hyp.translate,
-            scale=hyp.scale,
-            shear=hyp.shear,
-            perspective=hyp.perspective,
-            flipud=hyp.flipud,
-            fliplr=hyp.fliplr,
-            mosaic=hyp.mosaic,
-            mixup=hyp.mixup,
-            copy_paste=hyp.copy_paste,
-        )
-        train_loader = dataloaders['train']
-        val_loader = dataloaders['test']
-        dataset = train_loader.dataset
-        names = {0: 'item'} if single_cls and len(dataset.data['names']) != 1 else dataset.data['names']  # class names
-        nc = 1 if single_cls else int(dataset.data['nc'])  # number of classes
+    opt.v8 = False
+    custom_head = None
+    eval_key = 'mAP@0.5:0.95'
+    if 'yolo8' in opt.model_name or 'yolo_resnet' in opt.model_name:
+        opt.v8 = True
+        custom_head = 'yolo8'
+
+    # if RANK in {-1, 0}:
+    dataloaders = get_dataloaders(
+        data_root=opt.data_root,
+        image_size=imgsz,
+        dataset_name=opt.dataset,
+        batch_size=batch_size // WORLD_SIZE,
+        num_workers=workers,
+        gs=gs,
+        single_cls=single_cls,
+        cache=opt.cache,
+        rect=opt.rect,
+        hsv_h=hyp.hsv_h,
+        hsv_s=hyp.hsv_s,
+        hsv_v=hyp.hsv_v,
+        degrees=hyp.degrees,
+        translate=hyp.translate,
+        scale=hyp.scale,
+        shear=hyp.shear,
+        perspective=hyp.perspective,
+        flipud=hyp.flipud,
+        fliplr=hyp.fliplr,
+        mosaic=hyp.mosaic,
+        mixup=hyp.mixup,
+        copy_paste=hyp.copy_paste,
+    )
+    train_loader = dataloaders['train']
+    val_loader = dataloaders['test']
+    dataset = train_loader.dataset
+    names = {0: 'item'} if single_cls and len(dataset.data['names']) != 1 else dataset.data['names']  # class names
+    nc = 1 if single_cls else int(dataset.data['nc'])  # number of classes
 
     # Model
     model = get_model(
@@ -109,13 +121,15 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         dataset_name=opt.pretraining_dataset,
         pretrained=opt.pretrained,
         num_classes=nc,
+        custom_head=custom_head
     ).to(device)
+    print(device)
     amp = not opt.no_amp
 
     # Freeze
     freeze = [f'model.{x}.' for x in (freeze if len(freeze) > 1 else range(freeze[0]))]  # layers to freeze
     for k, v in model.named_parameters():
-        v.requires_grad = True  # train all layers
+        # v.requires_grad = True  # train all layers  # this breaks DFL loss in Detectv8. Need to leave requires_grad=False
         # v.register_hook(lambda x: torch.nan_to_num(x))  # NaN to 0 (commented for erratic training results)
         if any(x in k for x in freeze):
             LOGGER.info(f'freezing {k}')
@@ -163,7 +177,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
 
     eval_function = get_eval_function(
         dataset_name=opt.dataset,
-        model_name=opt.model_name,
+        model_name=opt.model_name
     )
 
     # DDP mode
@@ -171,7 +185,10 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         model = smart_DDP(model)
 
     # Model attributes
-    nl = de_parallel(model).model[-1].nl  # number of detection layers (to scale hyps)
+    if isinstance(de_parallel(model), FlexibleYOLO):
+        nl = de_parallel(model).detection.nl
+    else:
+        nl = de_parallel(model).model[-1].nl # number of detection layers (to scale hyps)\
     hyp['box'] *= 3 / nl  # scale to layers
     hyp['cls'] *= nc / 80 * 3 / nl  # scale to classes and layers
     hyp['obj'] *= (imgsz / 640) ** 2 * 3 / nl  # scale to image size and layers
@@ -192,11 +209,33 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
     scheduler.last_epoch = start_epoch - 1  # do not move
     scaler = torch.cuda.amp.GradScaler(enabled=amp)
     stopper, stop = EarlyStopping(patience=opt.patience), False
-    compute_loss = YOLOv5Loss(model)  # init loss class
+
+    if opt.v8:
+        data_path = str(DETECTION_CONFIGS_HOME / 'configs' / DATASET_CONFIGS[opt.dataset].yaml_file)
+        overrides = Dict(
+            data=data_path,
+            epochs=opt.epochs,
+            patience=510,
+            imgsz=imgsz,
+            amp=True,
+            device=device,
+            batch=opt.batch_size,
+            name='yolo8n',
+            project='yolo8-runs',
+            verbose=False
+        )
+
+        # sets model.args param so the v8 loss works
+        trainer = Detector(torch_model=de_parallel(model), overrides=overrides)
+        compute_loss = v8DetectionTupleLoss(de_parallel(model))
+    else:
+        compute_loss = YOLOv5Loss(model)  # init loss class
+
     LOGGER.info(f'Image sizes {imgsz} train, {imgsz} val\n'
                 f'Using {train_loader.num_workers * WORLD_SIZE} dataloader workers\n'
                 f"Logging results to {colorstr('bold', save_dir)}\n"
                 f'Starting training for {epochs} epochs...')
+
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         model.train()
 
@@ -218,7 +257,9 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
         if RANK in {-1, 0}:
             pbar = tqdm(pbar, total=nb, bar_format=TQDM_BAR_FORMAT)  # progress bar
         optimizer.zero_grad()
-        for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
+        for i, (imgs, targets, _, shapes) in pbar:  # batch -------------------------------------------------------------
+            targets = targets.to(device)
+            n_obj = imgs.shape[0]
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
 
@@ -244,7 +285,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
             # Forward
             with torch.cuda.amp.autocast(amp):
                 pred = model(imgs)  # forward
-                loss, loss_items = compute_loss(pred, targets.to(device))  # loss scaled by batch_size
+                loss, loss_items = compute_loss(pred, targets)  # loss scaled by batch_size.
                 if RANK != -1:
                     loss *= WORLD_SIZE  # gradient averaged between devices in DDP mode
                 if opt.quad:
@@ -269,7 +310,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
                 mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
                 mem = f'{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g}G'  # (GB)
                 pbar.set_description(('%11s' * 2 + '%11.4g' * 5) %
-                                     (f'{epoch}/{epochs - 1}', mem, *mloss, targets.shape[0], imgs.shape[-1]))
+                                     (f'{epoch}/{epochs - 1}', mem, *mloss, n_obj, imgs.shape[-1]))
             # end batch ------------------------------------------------------------------------------------------------
 
         # Scheduler
@@ -287,10 +328,11 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
                     half=amp,
                     single_cls=single_cls,
                     compute_loss=compute_loss,
+                    v8_eval=opt.v8
                 )
 
             # Update best mAP
-            fi = ap_dict['mAP@0.5:0.95']
+            fi = ap_dict[eval_key]
             stop = stopper(epoch=epoch, fitness=fi)  # early stop check
             if fi > best_fitness:
                 best_fitness = fi
@@ -326,6 +368,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
 
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training -----------------------------------------------------------------------------------------------------
+
     if RANK in {-1, 0} and not opt.dryrun:
         LOGGER.info(f'\n{epoch - start_epoch + 1} epochs completed in {(time.time() - t0) / 3600:.3f} hours.')
         for f in last, best:
@@ -342,6 +385,7 @@ def train(opt, device):  # hyp is path/to/hyp.yaml or hyp dictionary
                         iou_thres=0.65 if 'coco' in opt.dataset else 0.60,  # best pycocotools at iou 0.65
                         single_cls=single_cls,
                         compute_loss=compute_loss,
+                        v8_eval=opt.v8
                     )
                     LOGGER.info(f'Final eval metrics: {ap_dict}')
         LOGGER.info(f'Results saved to {colorstr("bold", save_dir)}')
@@ -386,6 +430,7 @@ def parse_opt(known=False):
     parser.add_argument('--no_amp', action='store_true')
     parser.add_argument('--local_rank', type=int, default=-1, help='Automatic DDP Multi-GPU argument, do not modify')
     parser.add_argument('--dryrun', action='store_true', help='Dry run mode for testing')
+
 
     return parser.parse_known_args()[0] if known else parser.parse_args()
 

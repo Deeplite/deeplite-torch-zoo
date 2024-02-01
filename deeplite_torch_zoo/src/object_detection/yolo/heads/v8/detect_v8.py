@@ -14,6 +14,8 @@ class DFL(nn.Module):
     # Proposed in Generalized Focal Loss https://ieeexplore.ieee.org/document/9792391
     def __init__(self, c1=16):
         super().__init__()
+        # Can cause DDP error https://github.com/pytorch/pytorch/issues/43259
+        # if you set requires_grad=True in train script
         self.conv = nn.Conv2d(c1, 1, 1, bias=False).requires_grad_(False)
         x = torch.arange(c1, dtype=torch.float)
         self.conv.weight.data[:] = nn.Parameter(x.view(1, c1, 1, 1))

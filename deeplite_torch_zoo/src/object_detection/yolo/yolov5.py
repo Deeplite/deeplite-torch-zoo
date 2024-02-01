@@ -122,15 +122,16 @@ class DetectionModel(nn.Module):
         LOGGER.info('Fusing layers... ')
         for m in self.model.modules():
             if isinstance(m, (Conv, DWConv)) and hasattr(m, 'bn'):
-                if verbose:
-                    LOGGER.info(f'Fusing BN into Conv for module {m}')
-                m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
-                delattr(m, 'bn')  # remove batchnorm
-                m.forward = m.forward_fuse  # update forward
-            if isinstance(m, RepConv) or isinstance(m, MobileOneBlock):
-                if verbose:
-                    LOGGER.info(f'Fusing RepVGG-style module {m}')
-                m.fuse()
+                if hasattr(m, 'conv') and isinstance(m.conv, nn.Conv2d):
+                    if verbose:
+                        LOGGER.info(f'Fusing BN into Conv for module {m}')
+                    m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
+                    delattr(m, 'bn')  # remove batchnorm
+                    m.forward = m.forward_fuse  # update forward
+                if isinstance(m, RepConv) or isinstance(m, MobileOneBlock):
+                    if verbose:
+                        LOGGER.info(f'Fusing RepVGG-style module {m}')
+                        m.fuse()
         self.info()
         self._is_fused = True
         return self

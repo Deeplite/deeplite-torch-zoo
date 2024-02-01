@@ -32,5 +32,18 @@ def patched_loss_init(obj, model):  # model must be de-paralleled
     obj.proj = torch.arange(m.reg_max, dtype=torch.float, device=device)
 
 
+class v8DetectionTupleLoss(v8DetectionLoss):
+    """
+    Ultralytics detection loss which takes batch as tuple
+    """
+    def __call__(self, pred, batch):
+        batch = {
+            'batch_idx': batch[:, 0],
+            'cls': batch[:, 1],
+            'bboxes': batch[:, 2:],
+        }
+        return super().__call__(pred, batch)
+
+
 DetectionTrainer.get_model = patched_get_model
 v8DetectionLoss.__init__ = patched_loss_init

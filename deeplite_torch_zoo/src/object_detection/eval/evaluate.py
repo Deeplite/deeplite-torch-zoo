@@ -1,5 +1,4 @@
 # YOLOv5 🚀 by Ultralytics, GPL-3.0 license
-
 from pathlib import Path
 
 import numpy as np
@@ -85,8 +84,9 @@ def evaluate(
         half=True,  # use FP16 half-precision inference
         compute_loss=None,
         num_classes=80,
-        v8_eval=False,
+        v8_eval=False
     ):
+    augment_kwargs = {} if v8_eval else {'augment': augment}  # flexible yolo doesnt have augment in forward
     device = next(model.parameters()).device
     half &= device.type != 'cpu'  # half precision only supported on CUDA
     model.half() if half else model.float()
@@ -95,7 +95,6 @@ def evaluate(
     model.eval()
     cuda = device.type != 'cpu'
     nc = num_classes
-
     iouv = torch.linspace(0.5, 0.95, 10, device=device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
     seen = 0
@@ -108,7 +107,12 @@ def evaluate(
     loss = torch.zeros(3, device=device)
     jdict, stats, ap, ap_class = [], [], [], []
     pbar = tqdm(dataloader, desc=s, bar_format=TQDM_BAR_FORMAT)  # progress bar
-    for batch_i, (im, targets, paths, shapes) in enumerate(pbar):
+    for i, (batch) in enumerate(pbar):
+        im, targets, paths, shapes = batch
+        if v8_eval:
+            nms = non_max_suppression_v8
+        else:
+            nms = non_max_suppression
         with dt[0]:
             if cuda:
                 im = im.to(device, non_blocking=True)
@@ -119,7 +123,7 @@ def evaluate(
 
         # Inference
         with dt[1]:
-            preds, train_out = model(im) if compute_loss else (model(im, augment=augment), None)
+            preds, train_out = model(im) if compute_loss else (model(im, **augment_kwargs), None)
 
         # Loss
         if compute_loss:
@@ -129,13 +133,15 @@ def evaluate(
         targets[:, 2:] *= torch.tensor((width, height, width, height), device=device)  # to pixels
         lb = []  # for autolabelling
         with dt[2]:
-            preds = non_max_suppression(preds,
-                                        conf_thres,
-                                        iou_thres,
-                                        labels=lb,
-                                        multi_label=True,
-                                        agnostic=single_cls,
-                                        max_det=max_det)
+            preds = nms(
+                preds,
+                conf_thres,
+                iou_thres,
+                labels=lb,
+                multi_label=True,
+                agnostic=single_cls,
+                max_det=max_det
+            )
 
         # Metrics
         for si, pred in enumerate(preds):
