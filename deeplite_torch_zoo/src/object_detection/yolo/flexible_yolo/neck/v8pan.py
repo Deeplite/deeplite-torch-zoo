@@ -36,6 +36,9 @@ class YOLOv8PAN(nn.Module):
         channel_divisor=8,
     ):
         super().__init__()
+
+        Conv_ = partial(Conv, act=act)
+
         self.version = str(version)
         self.channels_outs = channel_outs
         self.channel_divisor = channel_divisor
@@ -64,14 +67,14 @@ class YOLOv8PAN(nn.Module):
             ]
 
         first_stride = 2
-        self.convP3 = Conv(self.P3_size, self.channels_outs[0], 3, first_stride, act=act)
+        self.convP3 = Conv_(self.P3_size, self.channels_outs[0], 3, first_stride)
         self.P4 = bottleneck_block_cls[0](
             self.channels_outs[0] + self.P4_size,
             self.channels_outs[1],
         )
 
         second_stride = 2
-        self.convP4 = Conv(self.channels_outs[1], self.channels_outs[2], 3, second_stride, act=act)
+        self.convP4 = Conv_(self.channels_outs[1], self.channels_outs[2], 3, second_stride)
         self.P5 = bottleneck_block_cls[0](
             self.channels_outs[2] + self.P5_size,
             self.channels_outs[3],

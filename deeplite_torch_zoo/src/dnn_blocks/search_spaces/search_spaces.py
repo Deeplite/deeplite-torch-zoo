@@ -16,6 +16,9 @@ from deeplite_torch_zoo.src.dnn_blocks.search_spaces.spaces.resnet_blocks import
 from deeplite_torch_zoo.src.dnn_blocks.search_spaces.spaces.yolo_blocks import (
     YOLO_BLOCK_REGISTRY,
 )
+from deeplite_torch_zoo.src.dnn_blocks.search_spaces.spaces.meta_blocks import (
+    META_BLOCK_REGISTRY,
+)
 
 
 CNN_BLOCKS_REGISTRY = DNNBlockRegistry('cnn')
@@ -24,6 +27,7 @@ CNN_BLOCKS_REGISTRY += (
     + RESNET_BLOCK_REGISTRY
     + MBNET_BLOCK_REGISTRY
     + YOLO_BLOCK_REGISTRY
+    + META_BLOCK_REGISTRY
 )
 
 FULL_BLOCKS_REGISTRY = DNNBlockRegistry('full')

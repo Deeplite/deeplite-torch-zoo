@@ -55,7 +55,7 @@ class YOLOBottleneck(nn.Module):
 class YOLOBottleneckCSP(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, k=3, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, k=3, in_e=1.0, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -67,7 +67,7 @@ class YOLOBottleneckCSP(nn.Module):
         self.act = get_activation(act)
         self.m = nn.Sequential(
             *(
-                YOLOBottleneck(c_, c_, shortcut=shortcut, k=k, g=g, e=1.0, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, k=k, g=g, e=in_e, act=act)
                 for _ in range(n)
             )
         )
@@ -83,7 +83,7 @@ class YOLOBottleneckCSP(nn.Module):
 class YOLOBottleneckCSP2(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=1.0, k=3, act='relu'
+        self, c1, c2, n=1, shortcut=False, g=1, e=1.0, k=3, in_e=1.0, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -94,7 +94,7 @@ class YOLOBottleneckCSP2(nn.Module):
         self.act = get_activation(act)
         self.m = nn.Sequential(
             *(
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, k=k, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=in_e, k=k, act=act)
                 for _ in range(n)
             )
         )
@@ -113,23 +113,25 @@ class YOLOVoVCSP(nn.Module):
         self,
         c1,
         c2,
-        n=1,
+        k=3,
         shortcut=True,
         g=1,
         e=0.5,
         act='hswish',
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
+        self.shortcut = shortcut
         c_ = int(c2)  # hidden channels
-        self.cv1 = ConvBnAct(c1 // 2, c_ // 2, 3, 1, act=act)
-        self.cv2 = ConvBnAct(c_ // 2, c_ // 2, 3, 1, act=act)
+        self.cv1 = ConvBnAct(c1 // 2, c_ // 2, k, 1, act=act)
+        self.cv2 = ConvBnAct(c_ // 2, c_ // 2, k, 1, act=act)
         self.cv3 = ConvBnAct(c_, c2, 1, 1, act=act)
 
     def forward(self, x):
         _, x1 = x.chunk(2, dim=1)
         x1 = self.cv1(x1)
         x2 = self.cv2(x1)
-        return self.cv3(torch.cat((x1, x2), dim=1))
+        return x + self.cv3(torch.cat((x1, x2), dim=1)) if self.shortcut else \
+            self.cv3(torch.cat((x1, x2), dim=1))
 
 
 @VARIABLE_CHANNEL_BLOCKS.register()
@@ -160,7 +162,7 @@ class YOLOGhostBottleneck(nn.Module):
 class YOLOBottleneckCSPF(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, in_e=1.0, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -172,7 +174,7 @@ class YOLOBottleneckCSPF(nn.Module):
         self.act = get_activation(act)
         self.m = nn.Sequential(
             *[
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=in_e, k=k, act=act)
                 for _ in range(n)
             ]
         )
@@ -189,7 +191,7 @@ class YOLOBottleneckCSPL(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     # modified by @ivan-lazarevich to have c2 out channels
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, in_e=1.0, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -201,7 +203,7 @@ class YOLOBottleneckCSPL(nn.Module):
         self.act = get_activation(act)
         self.m = nn.Sequential(
             *[
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=in_e, k=k, act=act)
                 for _ in range(n)
             ]
         )
@@ -218,7 +220,7 @@ class YOLOBottleneckCSPLG(nn.Module):
     # CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
     # modified by @lzrvch to have c2 out channels
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=3, e=0.25, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=3, e=0.25, in_e=1.0, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -230,7 +232,7 @@ class YOLOBottleneckCSPLG(nn.Module):
         self.act = get_activation(act)
         self.m = nn.Sequential(
             *[
-                YOLOBottleneck(g * c_, g * c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                YOLOBottleneck(g * c_, g * c_, shortcut=shortcut, g=g, e=in_e, k=k, act=act)
                 for _ in range(n)
             ]
         )
@@ -246,7 +248,7 @@ class YOLOBottleneckCSPLG(nn.Module):
 class BottleneckCSPA(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, in_e=1.0, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSPA, self).__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -255,7 +257,7 @@ class BottleneckCSPA(nn.Module):
         self.cv3 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
         self.m = nn.Sequential(
             *[
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=in_e, k=k, act=act)
                 for _ in range(n)
             ]
         )
@@ -271,7 +273,7 @@ class BottleneckCSPA(nn.Module):
 class BottleneckCSPB(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=False, g=1, e=0.5, in_e=1.0, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSPB, self).__init__()
         c_ = int(c2)  # hidden channels
@@ -280,7 +282,7 @@ class BottleneckCSPB(nn.Module):
         self.cv3 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
         self.m = nn.Sequential(
             *[
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=in_e, k=k, act=act)
                 for _ in range(n)
             ]
         )
@@ -297,7 +299,7 @@ class BottleneckCSPB(nn.Module):
 class BottleneckCSPC(nn.Module):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, in_e=1.0, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super(BottleneckCSPC, self).__init__()
         c_ = int(c2 * e)  # hidden channels
@@ -307,7 +309,7 @@ class BottleneckCSPC(nn.Module):
         self.cv4 = ConvBnAct(2 * c_, c2, 1, 1, act=act)
         self.m = nn.Sequential(
             *[
-                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=1.0, act=act)
+                YOLOBottleneck(c_, c_, shortcut=shortcut, g=g, e=in_e, k=k, act=act)
                 for _ in range(n)
             ]
         )
@@ -323,13 +325,13 @@ class BottleneckCSPC(nn.Module):
 class ResCSPA(BottleneckCSPA):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, in_e=0.5, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(
             *[
-                ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut)
+                ResNetBottleneck(c_, c_, groups=g, e=in_e, k=k, act=act, shortcut=shortcut)
                 for _ in range(n)
             ]
         )
@@ -340,13 +342,13 @@ class ResCSPA(BottleneckCSPA):
 class ResCSPB(BottleneckCSPB):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, in_e=0.5, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2)  # hidden channels
         self.m = nn.Sequential(
             *[
-                ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut)
+                ResNetBottleneck(c_, c_, groups=g, e=in_e, k=k, act=act, shortcut=shortcut)
                 for _ in range(n)
             ]
         )
@@ -357,13 +359,13 @@ class ResCSPB(BottleneckCSPB):
 class ResCSPC(BottleneckCSPC):
     # CSP https://github.com/WongKinYiu/CrossStagePartialNetworks
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='relu'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, in_e=0.5, k=3, act='relu'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__(c1, c2, n, shortcut, g, e, act=act)
         c_ = int(c2 * e)  # hidden channels
         self.m = nn.Sequential(
             *[
-                ResNetBottleneck(c_, c_, groups=g, e=0.5, act=act, shortcut=shortcut)
+                ResNetBottleneck(c_, c_, groups=g, e=in_e, k=k, act=act, shortcut=shortcut)
                 for _ in range(n)
             ]
         )
@@ -557,7 +559,7 @@ class YOLOCrossConv(nn.Module):
 class YOLOC4(nn.Module):
     # CSP Bottleneck with 4 convolutions aka old C3
     def __init__(
-        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, act='hardswish'
+        self, c1, c2, n=1, shortcut=True, g=1, e=0.5, in_e=1.0, k=3, act='hardswish'
     ):  # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         Conv_ = functools.partial(ConvBnAct, act=act)
@@ -570,7 +572,7 @@ class YOLOC4(nn.Module):
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
         self.act = nn.LeakyReLU(0.1, inplace=True)
         self.m = nn.Sequential(
-            *[CrossConv_(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)]
+            *[CrossConv_(c_, c_, k, 1, g, in_e, shortcut) for _ in range(n)]
         )
 
     def forward(self, x):

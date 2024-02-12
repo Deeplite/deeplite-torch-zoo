@@ -41,6 +41,8 @@ class YOLOv5FPN(nn.Module):
         ):
         super().__init__()
 
+        Conv_ = partial(Conv, act=act)
+
         self.C3_size = ch[0]
         self.C4_size = ch[1]
         self.C5_size = ch[2]
@@ -61,7 +63,7 @@ class YOLOv5FPN(nn.Module):
         self.concat = Concat()
 
         self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
-        self.P5 = Conv(self.C5_size, self.channels_outs[0], 1, 1, act=act)
+        self.P5 = Conv_(self.C5_size, self.channels_outs[0], 1, 1)
 
         if bottleneck_block_cls is None:
             bottleneck_block_cls = [
@@ -79,7 +81,7 @@ class YOLOv5FPN(nn.Module):
             internal_channels,
         )
 
-        self.P4 = Conv(internal_channels, self.channels_outs[1], 1, 1, act=act)
+        self.P4 = Conv_(internal_channels, self.channels_outs[1], 1, 1)
         self.P4_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
 
         self.P3 = bottleneck_block_cls[1](
